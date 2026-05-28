@@ -39,10 +39,13 @@ fun AddTaskScreen(
   var fotoUri by remember { mutableStateOf<String?>(null) }
   var expanded by remember { mutableStateOf(false) }
   
-  // Estado para la fecha
+  // Estado para la fecha y hora
   var selectedDateMillis by remember { mutableStateOf<Long?>(null) }
+  var selectedAnticipacion by remember { mutableStateOf(0) }
   var showDatePicker by remember { mutableStateOf(false) }
+  var showTimePicker by remember { mutableStateOf(false) }
   val datePickerState = rememberDatePickerState()
+  val timePickerState = rememberTimePickerState()
 
   if (showDatePicker) {
     DatePickerDialog(
@@ -51,11 +54,55 @@ fun AddTaskScreen(
         TextButton(onClick = {
           selectedDateMillis = datePickerState.selectedDateMillis
           showDatePicker = false
-        }) { Text("OK") }
+          showTimePicker = true
+        }) { Text("Siguiente (Hora)") }
+      },
+      dismissButton = {
+        TextButton(onClick = { 
+          selectedDateMillis = datePickerState.selectedDateMillis?.let {
+            val cal = Calendar.getInstance().apply { 
+              timeInMillis = it 
+              set(Calendar.HOUR_OF_DAY, 0)
+              set(Calendar.MINUTE, 0)
+            }
+            cal.timeInMillis
+          }
+          showDatePicker = false 
+        }) { Text("Todo el día") }
       }
     ) {
       DatePicker(state = datePickerState)
     }
+  }
+
+  if (showTimePicker) {
+    AlertDialog(
+      onDismissRequest = { showTimePicker = false },
+      confirmButton = {
+        TextButton(onClick = {
+          val cal = Calendar.getInstance().apply {
+            timeInMillis = selectedDateMillis ?: System.currentTimeMillis()
+            set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+            set(Calendar.MINUTE, timePickerState.minute)
+          }
+          selectedDateMillis = cal.timeInMillis
+          showTimePicker = false
+        }) { Text("OK") }
+      },
+      dismissButton = {
+        TextButton(onClick = {
+          val cal = Calendar.getInstance().apply {
+            timeInMillis = selectedDateMillis ?: System.currentTimeMillis()
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+          }
+          selectedDateMillis = cal.timeInMillis
+          showTimePicker = false
+        }) { Text("Todo el día") }
+      },
+      title = { Text("Seleccionar Hora") },
+      text = { TimePicker(state = timePickerState) }
+    )
   }
 
   val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -97,10 +144,38 @@ fun AddTaskScreen(
       ) {
         Icon(Icons.Default.CalendarToday, contentDescription = null)
         Spacer(Modifier.width(8.dp))
-        Text(
-          if (selectedDateMillis == null) "Añadir Fecha Límite (Opcional)"
-          else "Fecha: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(selectedDateMillis!!))}"
-        )
+        
+        val dateLabel = if (selectedDateMillis == null) {
+          "Añadir Fecha Límite (Opcional)"
+        } else {
+          val date = Date(selectedDateMillis!!)
+          val cal = Calendar.getInstance().apply { time = date }
+          val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
+            "dd/MM/yyyy '(Todo el día)'"
+          } else {
+            "dd/MM/yyyy HH:mm"
+          }
+          "Vence: ${SimpleDateFormat(format, Locale.getDefault()).format(date)}"
+        }
+        Text(dateLabel)
+      }
+
+      if (selectedDateMillis != null) {
+        Text("Avisar antes:", style = MaterialTheme.typography.labelSmall)
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+          val options = listOf(0 to "En punto", 5 to "5 min", 15 to "15 min", 30 to "30 min")
+          options.forEach { (mins, label) ->
+            FilterChip(
+              selected = selectedAnticipacion == mins,
+              onClick = { selectedAnticipacion = mins },
+              label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+              modifier = Modifier.weight(1f)
+            )
+          }
+        }
       }
 
       // Adjuntar Foto
@@ -191,7 +266,7 @@ fun AddTaskScreen(
 
       Button(
         onClick = {
-          viewModel.addTask(titulo, prioridad, selectedMemberId, esPersonal, fotoUri, selectedDateMillis)
+          viewModel.addTask(titulo, prioridad, selectedMemberId, esPersonal, fotoUri, selectedDateMillis, selectedAnticipacion)
           navController.popBackStack()
         },
         modifier = Modifier.fillMaxWidth(),

@@ -95,7 +95,8 @@ class TaskDetailViewModel @Inject constructor(
     prioridad: String, 
     esPersonal: Boolean, 
     fotoUri: String?,
-    fechaLimite: Long?
+    fechaLimite: Long?,
+    anticipacionMins: Int = 0
   ) {
     viewModelScope.launch {
       val current = _task.value ?: return@launch
@@ -111,14 +112,15 @@ class TaskDetailViewModel @Inject constructor(
       tareaDao.updateTarea(updated)
       _task.value = updated
       
-      // Reprogramar notificación si tiene fecha
+      // Reprogramar notificación con anticipación
       fechaLimite?.let { deadline ->
-        if (deadline > System.currentTimeMillis()) {
+        val scheduledTime = deadline - (anticipacionMins * 60 * 1000)
+        if (scheduledTime > System.currentTimeMillis()) {
           reminderScheduler.scheduleReminder(
             id = (updated.id + 20000).toInt(),
             title = "Tarea próxima: $titulo",
-            message = "Tienes una tarea que vence hoy",
-            timeInMillis = deadline
+            message = if (anticipacionMins > 0) "Aviso: En $anticipacionMins minutos vence tu tarea" else "Tienes una tarea que vence pronto",
+            timeInMillis = scheduledTime
           )
         }
       } ?: run {

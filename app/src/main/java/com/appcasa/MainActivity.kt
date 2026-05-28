@@ -6,15 +6,16 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.navigation.AppNavigation
 import com.appcasa.presentation.viewmodel.GlobalViewModel
+import com.appcasa.core.utils.NotificationHelper
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -26,6 +27,9 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     
+    // Inicializar el canal de notificaciones al arrancar
+    NotificationHelper(this)
+
     setContent {
       val isDarkMode by globalViewModel.isDarkMode.collectAsState()
       val isShopMode by globalViewModel.isShopMode.collectAsState()

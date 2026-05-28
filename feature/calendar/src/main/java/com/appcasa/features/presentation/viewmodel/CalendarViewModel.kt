@@ -64,10 +64,10 @@ class CalendarViewModel @Inject constructor(
   fun updateEvento(evento: EventoEntity) {
     viewModelScope.launch {
       eventoDao.updateEvento(evento)
-      // Reprogramar notificación
+      // Notificación por defecto a las 9 AM si es futuro
       if (evento.fecha > System.currentTimeMillis()) {
         reminderScheduler.scheduleReminder(
-          id = (evento.id + 10000).toInt(), // Offset para evitar colisión con recordatorios
+          id = (evento.id + 10000).toInt(),
           title = "Evento: ${evento.titulo}",
           message = "Hoy tienes este evento programado",
           timeInMillis = evento.fecha
@@ -104,7 +104,6 @@ class CalendarViewModel @Inject constructor(
                 )
               )
               
-              // Notificación para el turno si es futuro (a las 8:00 AM del día del turno)
               if (date > System.currentTimeMillis()) {
                 reminderScheduler.scheduleReminder(
                   id = (id + 10000).toInt(),

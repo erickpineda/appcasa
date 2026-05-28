@@ -55,8 +55,8 @@ fun TaskDetailScreen(
       fechaLimite = task!!.fechaLimite,
       fotoUri = task!!.fotoUri,
       onDismiss = { showEditDialog = false },
-      onConfirm = { t, d, p, esp, fecha, f ->
-        viewModel.updateTask(t, d.takeIf { it.isNotBlank() }, p.name, esp, f, fecha)
+      onConfirm = { t, d, p, esp, fecha, f, anticipacion ->
+        viewModel.updateTask(t, d.takeIf { it.isNotBlank() }, p.name, esp, f, fecha, anticipacion)
         showEditDialog = false
       }
     )
@@ -141,16 +141,18 @@ fun TaskDetailScreen(
             item {
               AnimatedVisibility(visible = !isSelectionMode) {
                 currentTask.fotoUri?.let { uri ->
-                  AsyncImage(
-                    model = uri,
-                    contentDescription = "Foto",
-                    modifier = Modifier
-                      .fillMaxWidth()
-                      .height(220.dp)
-                      .padding(16.dp)
-                      .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
-                  )
+                  key(uri) {
+                    AsyncImage(
+                      model = uri,
+                      contentDescription = "Foto",
+                      modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .padding(16.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                      contentScale = ContentScale.Crop
+                    )
+                  }
                 }
               }
             }
@@ -162,8 +164,17 @@ fun TaskDetailScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                       Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                       Spacer(Modifier.width(8.dp))
+                      
+                      val date = Date(currentTask.fechaLimite!!)
+                      val cal = Calendar.getInstance().apply { time = date }
+                      val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
+                        "d 'de' MMMM '(Todo el día)'"
+                      } else {
+                        "d 'de' MMMM HH:mm"
+                      }
+                      
                       Text(
-                        text = "Vence: ${SimpleDateFormat("d 'de' MMMM", Locale("es", "ES")).format(Date(currentTask.fechaLimite!!))}",
+                        text = "Vence: ${SimpleDateFormat(format, Locale("es", "ES")).format(date)}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -380,7 +391,7 @@ fun EditTaskMainDialog(
   fechaLimite: Long?,
   fotoUri: String?,
   onDismiss: () -> Unit,
-  onConfirm: (String, String, Prioridad, Boolean, Long?, String?) -> Unit
+  onConfirm: (String, String, Prioridad, Boolean, Long?, String?, Int) -> Unit
 ) {
   var t by remember { mutableStateOf(titulo) }
   var d by remember { mutableStateOf(descripcion) }
@@ -389,8 +400,14 @@ fun EditTaskMainDialog(
   var f by remember { mutableStateOf(fotoUri) }
   
   var selectedFecha by remember { mutableStateOf(fechaLimite) }
+  var selectedAnticipacion by remember { mutableStateOf(0) }
   var showDatePicker by remember { mutableStateOf(false) }
-  val datePickerState = rememberDatePickerState(initialSelectedDateMillis = fechaLimite)
+  var showTimePicker by remember { mutableStateOf(false) }
+  
+  val initialDate = fechaLimite ?: System.currentTimeMillis()
+  val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDate)
+  val initialCal = Calendar.getInstance().apply { timeInMillis = initialDate }
+  val timePickerState = rememberTimePickerState(initialHour = initialCal.get(Calendar.HOUR_OF_DAY), initialMinute = initialCal.get(Calendar.MINUTE))
 
   val imagePickerLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.GetContent()
@@ -403,11 +420,55 @@ fun EditTaskMainDialog(
         TextButton(onClick = {
           selectedFecha = datePickerState.selectedDateMillis
           showDatePicker = false
-        }) { Text("OK") }
+          showTimePicker = true
+        }) { Text("Siguiente (Hora)") }
+      },
+      dismissButton = {
+        TextButton(onClick = { 
+          selectedFecha = datePickerState.selectedDateMillis?.let { 
+            val cal = Calendar.getInstance().apply { 
+              timeInMillis = it 
+              set(Calendar.HOUR_OF_DAY, 0)
+              set(Calendar.MINUTE, 0)
+            }
+            cal.timeInMillis
+          }
+          showDatePicker = false 
+        }) { Text("Todo el día") }
       }
     ) {
       DatePicker(state = datePickerState)
     }
+  }
+
+  if (showTimePicker) {
+    AlertDialog(
+      onDismissRequest = { showTimePicker = false },
+      confirmButton = {
+        TextButton(onClick = {
+          val cal = Calendar.getInstance().apply {
+            timeInMillis = selectedFecha ?: System.currentTimeMillis()
+            set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+            set(Calendar.MINUTE, timePickerState.minute)
+          }
+          selectedFecha = cal.timeInMillis
+          showTimePicker = false
+        }) { Text("OK") }
+      },
+      dismissButton = {
+        TextButton(onClick = {
+          val cal = Calendar.getInstance().apply {
+            timeInMillis = selectedFecha ?: System.currentTimeMillis()
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+          }
+          selectedFecha = cal.timeInMillis
+          showTimePicker = false
+        }) { Text("Todo el día") }
+      },
+      title = { Text("Seleccionar Hora") },
+      text = { TimePicker(state = timePickerState) }
+    )
   }
 
   AlertDialog(
@@ -426,7 +487,37 @@ fun EditTaskMainDialog(
           OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text(if (selectedFecha == null) "Añadir Fecha Límite" else SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(selectedFecha!!)))
+            val dateLabel = if (selectedFecha == null) {
+              "Añadir Fecha Límite"
+            } else {
+              val cal = Calendar.getInstance().apply { timeInMillis = selectedFecha!! }
+              if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
+                SimpleDateFormat("dd/MM/yyyy '(Todo el día)'", Locale.getDefault()).format(Date(selectedFecha!!))
+              } else {
+                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(selectedFecha!!))
+              }
+            }
+            Text(dateLabel)
+          }
+        }
+
+        if (selectedFecha != null) {
+          item {
+            Text("Avisar antes:", style = MaterialTheme.typography.labelSmall)
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+              val options = listOf(0 to "En punto", 5 to "5 min", 15 to "15 min", 30 to "30 min")
+              options.forEach { (mins, label) ->
+                FilterChip(
+                  selected = selectedAnticipacion == mins,
+                  onClick = { selectedAnticipacion = mins },
+                  label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                  modifier = Modifier.weight(1f)
+                )
+              }
+            }
           }
         }
 
@@ -460,7 +551,7 @@ fun EditTaskMainDialog(
       }
     },
     confirmButton = {
-      Button(onClick = { if (t.isNotBlank()) onConfirm(t, d, p, esp, selectedFecha, f) }) {
+      Button(onClick = { if (t.isNotBlank()) onConfirm(t, d, p, esp, selectedFecha, f, selectedAnticipacion) }) {
         Text("Guardar")
       }
     },

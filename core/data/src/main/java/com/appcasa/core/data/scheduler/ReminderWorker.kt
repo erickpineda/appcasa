@@ -4,21 +4,34 @@ import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.appcasa.core.utils.NotificationHelper
+import java.util.Calendar
 
 class ReminderWorker(
-    private val context: Context,
-    workerParams: WorkerParameters
+  private val context: Context,
+  workerParams: WorkerParameters
 ) : Worker(context, workerParams) {
 
-    override fun doWork(): Result {
-        val title = inputData.getString("title") ?: "Recordatorio AppCasa"
-        val message = inputData.getString("message") ?: "Tienes una tarea pendiente"
-        val id = inputData.getInt("id", 0)
+  override fun doWork(): Result {
+    val title = inputData.getString("title") ?: "Recordatorio AppCasa"
+    val message = inputData.getString("message") ?: "Tienes una tarea pendiente"
+    val id = inputData.getInt("id", 0)
+    val timeMillis = inputData.getLong("timeMillis", 0L)
 
-        // Asumimos que NotificationHelper fue refactorizado para enviar la notificación directamente
-        // En este diseño, NotificationHelper.showNotification debe existir
-        NotificationHelper.showNotification(context, id, title, message)
-
-        return Result.success()
+    // Lógica para eventos de "Todo el día"
+    if (timeMillis > 0) {
+      val cal = Calendar.getInstance().apply { timeInMillis = timeMillis }
+      val isAllDay = cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0
+      
+      // Si es todo el día y ya es tarde (ej: pasadas las 9 AM), no notificamos 
+      // (evita notificaciones nocturnas si el worker se retrasa)
+      if (isAllDay) {
+        val now = Calendar.getInstance()
+        if (now.get(Calendar.HOUR_OF_DAY) > 22) return Result.success()
+      }
     }
+
+    NotificationHelper.showNotification(context, id, title, message)
+
+    return Result.success()
+  }
 }

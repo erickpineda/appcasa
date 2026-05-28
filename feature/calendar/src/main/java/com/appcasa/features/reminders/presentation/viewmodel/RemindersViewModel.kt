@@ -28,7 +28,7 @@ class RemindersViewModel @Inject constructor(
   val reminders: StateFlow<List<RecordatorioEntity>> = recordatorioDao.getRecordatoriosByHogar(1L)
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-  fun addReminder(title: String, message: String, dateTime: Long) {
+  fun addReminder(title: String, message: String, dateTime: Long, anticipacionMins: Int = 0) {
     viewModelScope.launch(ioDispatcher) {
       val hogarId = configuracionDao.getHogarActual().first()?.id ?: 1L
       val reminder = RecordatorioEntity(
@@ -39,24 +39,28 @@ class RemindersViewModel @Inject constructor(
         activo = true
       )
       val id = recordatorioDao.insertRecordatorio(reminder)
+      
+      // Programamos con anticipación
+      val scheduledTime = dateTime - (anticipacionMins * 60 * 1000)
       reminderScheduler.scheduleReminder(
         id = id.toInt(),
         title = title,
-        message = message,
-        timeInMillis = dateTime
+        message = if (anticipacionMins > 0) "Aviso: En $anticipacionMins minutos: $message" else message,
+        timeInMillis = scheduledTime
       )
     }
   }
 
-  fun updateReminder(reminder: RecordatorioEntity) {
+  fun updateReminder(reminder: RecordatorioEntity, anticipacionMins: Int = 0) {
     viewModelScope.launch(ioDispatcher) {
       recordatorioDao.updateRecordatorio(reminder)
       if (reminder.activo) {
+        val scheduledTime = reminder.fechaHora - (anticipacionMins * 60 * 1000)
         reminderScheduler.scheduleReminder(
           id = reminder.id.toInt(),
           title = reminder.titulo,
-          message = reminder.descripcion ?: "",
-          timeInMillis = reminder.fechaHora
+          message = if (anticipacionMins > 0) "Aviso: En $anticipacionMins min: ${reminder.descripcion ?: ""}" else (reminder.descripcion ?: ""),
+          timeInMillis = scheduledTime
         )
       } else {
         reminderScheduler.cancelReminder(reminder.id.toInt())

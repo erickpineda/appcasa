@@ -39,7 +39,8 @@ class AddTaskViewModel @Inject constructor(
     asignadoId: Long? = null, 
     esPersonal: Boolean = false, 
     fotoUri: String? = null,
-    fechaLimite: Long? = null
+    fechaLimite: Long? = null,
+    anticipacionMins: Int = 0
   ) {
     viewModelScope.launch {
       val hogarId = configuracionDao.getHogarActual().first()?.id ?: 1L
@@ -63,14 +64,15 @@ class AddTaskViewModel @Inject constructor(
         )
       }
 
-      // Si tiene fecha límite, programar notificación (Offset de 20000 para tareas)
+      // Programar notificación con anticipación (Offset de 20000 para tareas)
       fechaLimite?.let { deadline ->
-        if (deadline > System.currentTimeMillis()) {
+        val scheduledTime = deadline - (anticipacionMins * 60 * 1000)
+        if (scheduledTime > System.currentTimeMillis()) {
           reminderScheduler.scheduleReminder(
             id = (tareaId + 20000).toInt(),
             title = "Tarea próxima: $titulo",
-            message = "Tienes una tarea que vence hoy",
-            timeInMillis = deadline
+            message = if (anticipacionMins > 0) "Aviso: En $anticipacionMins minutos vence tu tarea" else "Tienes una tarea que vence hoy",
+            timeInMillis = scheduledTime
           )
         }
       }

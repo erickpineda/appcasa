@@ -137,8 +137,8 @@ class DashboardViewModel @Inject constructor(
     results.addAll(
       members.filter { it.nombre.contains(query, ignoreCase = true) }
         .map { 
-            val route = if (it.tipo == TipoMiembro.PERSONA.name) Screen.MemberDetail.createRoute(it.id) else Screen.PetDetail.createRoute(it.id)
-            SearchItem(it.id, it.nombre, SearchType.MEMBER, if (it.tipo == TipoMiembro.PERSONA.name) Icons.Default.Person else Icons.Default.Pets, route) 
+          val route = if (it.tipo == TipoMiembro.PERSONA.name) Screen.MemberDetail.createRoute(it.id) else Screen.PetDetail.createRoute(it.id)
+          SearchItem(it.id, it.nombre, SearchType.MEMBER, if (it.tipo == TipoMiembro.PERSONA.name) Icons.Default.Person else Icons.Default.Pets, route) 
         }
     )
     results.addAll(
@@ -213,8 +213,15 @@ class DashboardViewModel @Inject constructor(
   }
 
   private fun formatDate(timestamp: Long): String {
-    val sdf = java.text.SimpleDateFormat("d 'de' MMMM", java.util.Locale("es", "ES"))
-    return sdf.format(java.util.Date(timestamp))
+    val date = java.util.Date(timestamp)
+    val cal = Calendar.getInstance().apply { time = date }
+    val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
+      "d 'de' MMMM '(Todo el día)'"
+    } else {
+      "d 'de' MMMM HH:mm"
+    }
+    val sdf = java.text.SimpleDateFormat(format, java.util.Locale("es", "ES"))
+    return sdf.format(date)
   }
 
   private fun getStartOfMonth(): Long {
