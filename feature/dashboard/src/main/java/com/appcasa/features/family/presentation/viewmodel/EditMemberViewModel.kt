@@ -15,41 +15,51 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EditMemberViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
-    private val miembroDao: MiembroDao
+  private val savedStateHandle: SavedStateHandle,
+  private val miembroDao: MiembroDao
 ) : ViewModel() {
 
-    private val memberId: Long = checkNotNull(savedStateHandle["memberId"])
+  private val memberId: Long = checkNotNull(savedStateHandle["memberId"])
 
-    private val _member = MutableStateFlow<MiembroEntity?>(null)
-    val member: StateFlow<MiembroEntity?> = _member.asStateFlow()
+  private val _member = MutableStateFlow<MiembroEntity?>(null)
+  val member: StateFlow<MiembroEntity?> = _member.asStateFlow()
 
-    init {
-        loadMember()
+  init {
+    loadMember()
+  }
+
+  private fun loadMember() {
+    viewModelScope.launch {
+      _member.value = miembroDao.getMiembroById(memberId)
     }
+  }
 
-    private fun loadMember() {
-        viewModelScope.launch {
-            _member.value = miembroDao.getMiembroById(memberId)
-        }
+  fun updateMember(
+    nombre: String, 
+    tipo: TipoMiembro, 
+    raza: String? = null, 
+    color: String? = null,
+    chip: String? = null, 
+    vetNombre: String? = null, 
+    vetTlf: String? = null, 
+    fotoUri: String? = null
+  ) {
+    viewModelScope.launch {
+      _member.value?.let { current ->
+        miembroDao.updateMiembro(
+          current.copy(
+            nombre = nombre,
+            tipo = tipo.name,
+            raza = raza,
+            colorPelaje = color,
+            numeroChip = chip,
+            veterinarioNombre = vetNombre,
+            veterinarioTelefono = vetTlf,
+            fotoUri = fotoUri ?: current.fotoUri,
+            updatedAt = System.currentTimeMillis()
+          )
+        )
+      }
     }
-
-    fun updateMember(nombre: String, tipo: TipoMiembro, raza: String? = null, chip: String? = null, vetNombre: String? = null, vetTlf: String? = null, fotoUri: String? = null) {
-        viewModelScope.launch {
-            _member.value?.let { current ->
-                miembroDao.updateMiembro(
-                    current.copy(
-                        nombre = nombre,
-                        tipo = tipo.name,
-                        raza = raza,
-                        numeroChip = chip,
-                        veterinarioNombre = vetNombre,
-                        veterinarioTelefono = vetTlf,
-                        fotoUri = fotoUri ?: current.fotoUri,
-                        updatedAt = System.currentTimeMillis()
-                    )
-                )
-            }
-        }
-    }
+  }
 }

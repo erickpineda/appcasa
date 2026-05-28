@@ -13,23 +13,31 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddMemberViewModel @Inject constructor(
-    private val miembroDao: MiembroDao,
-    private val configuracionDao: ConfiguracionDao
+  private val miembroDao: MiembroDao,
+  private val configuracionDao: ConfiguracionDao
 ) : ViewModel() {
 
-    fun addMember(nombre: String, tipo: TipoMiembro, raza: String? = null, chip: String? = null, fotoUri: String? = null) {
-        viewModelScope.launch {
-            val hogarId = configuracionDao.getHogarActual().first()?.id ?: 1L
-            miembroDao.insertMiembro(
-                MiembroEntity(
-                    hogarId = hogarId,
-                    nombre = nombre,
-                    tipo = tipo.name,
-                    raza = raza,
-                    numeroChip = chip,
-                    fotoUri = fotoUri
-                )
-            )
-        }
+  fun addMember(
+    nombre: String, 
+    tipo: TipoMiembro, 
+    raza: String? = null, 
+    color: String? = null,
+    chip: String? = null, 
+    fotoUri: String? = null
+  ) {
+    viewModelScope.launch {
+      val hogarId = configuracionDao.getHogarActual().first()?.id ?: 1L
+      miembroDao.insertMiembro(
+        MiembroEntity(
+          hogarId = hogarId,
+          nombre = nombre,
+          tipo = tipo.name,
+          raza = raza,
+          colorPelaje = color,
+          numeroChip = chip,
+          fotoUri = fotoUri
+        )
+      )
     }
+  }
 }

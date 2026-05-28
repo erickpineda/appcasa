@@ -257,7 +257,8 @@ fun CalendarContent(
           
           LazyVerticalGrid(
             columns = GridCells.Fixed(7),
-            modifier = Modifier.height(180.dp)
+            modifier = Modifier.height(260.dp), // Aumentado para evitar scroll y ver todas las semanas (max 6 filas)
+            userScrollEnabled = false // Deshabilitamos scroll interno para que sea fluido
           ) {
             items(firstDayOfWeek) { Box(modifier = Modifier.aspectRatio(1f)) }
             items(daysInMonth) { day ->
@@ -285,7 +286,7 @@ fun CalendarContent(
                   .clickable { onDateSelected(dateAtDay) },
                 contentAlignment = Alignment.Center
               ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                   Text(
                     text = dayNum.toString(),
                     style = MaterialTheme.typography.labelMedium,
@@ -298,6 +299,7 @@ fun CalendarContent(
                   if (hasEvent) {
                     Box(
                       modifier = Modifier
+                        .padding(top = 2.dp)
                         .size(4.dp)
                         .clip(CircleShape)
                         .background(
@@ -747,7 +749,6 @@ fun EditCalendarItemDialog(
   var showTimePicker by remember { mutableStateOf(false) }
   var selectedDateMillis by remember { mutableStateOf(item.timestamp) }
   
-  // Anticipación por defecto para edición
   var selectedAnticipacion by remember { mutableStateOf(0) }
 
   if (showDatePicker) {
@@ -831,7 +832,7 @@ fun EditCalendarItemDialog(
             "dd/MM/yyyy HH:mm"
           }
           val sdf = SimpleDateFormat(format, Locale.getDefault())
-          Text("Fecha y Hora: ${sdf.format(date)}")
+          Text("Fecha: ${sdf.format(date)}")
         }
 
         Text("Avisar antes:", style = MaterialTheme.typography.labelSmall)
