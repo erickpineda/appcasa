@@ -3,6 +3,7 @@ package com.appcasa.features.tasks.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.Prioridad
+import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.features.tasks.data.local.TareaEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,40 +20,60 @@ import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 class AddTaskViewModel @Inject constructor(
-    private val tareaDao: TareaDao,
-    private val miembroDao: MiembroDao,
-    private val configuracionDao: ConfiguracionDao
+  private val tareaDao: TareaDao,
+  private val miembroDao: MiembroDao,
+  private val configuracionDao: ConfiguracionDao,
+  private val reminderScheduler: ReminderScheduler
 ) : ViewModel() {
 
-    val familyMembers: StateFlow<List<MiembroEntity>> = miembroDao.getMiembrosByHogar(1L)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+  val familyMembers: StateFlow<List<MiembroEntity>> = miembroDao.getMiembrosByHogar(1L)
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = emptyList()
+    )
 
-    fun addTask(titulo: String, prioridad: Prioridad, asignadoId: Long? = null, esPersonal: Boolean = false, fotoUri: String? = null) {
-        viewModelScope.launch {
-            val hogarId = configuracionDao.getHogarActual().first()?.id ?: 1L
-            val tareaId = tareaDao.insertTarea(
-                TareaEntity(
-                    hogarId = hogarId,
-                    titulo = titulo,
-                    prioridad = prioridad.name,
-                    esPersonal = esPersonal,
-                    fotoUri = fotoUri
-                )
-            )
-//... (el resto igual) ...
-            
-            if (asignadoId != null) {
-                tareaDao.insertAsignacion(
-                    com.appcasa.features.tasks.data.local.TareaAsignacionEntity(
-                        tareaId = tareaId,
-                        miembroId = asignadoId
-                    )
-                )
-            }
+  fun addTask(
+    titulo: String, 
+    prioridad: Prioridad, 
+    asignadoId: Long? = null, 
+    esPersonal: Boolean = false, 
+    fotoUri: String? = null,
+    fechaLimite: Long? = null
+  ) {
+    viewModelScope.launch {
+      val hogarId = configuracionDao.getHogarActual().first()?.id ?: 1L
+      val tareaId = tareaDao.insertTarea(
+        TareaEntity(
+          hogarId = hogarId,
+          titulo = titulo,
+          prioridad = prioridad.name,
+          esPersonal = esPersonal,
+          fotoUri = fotoUri,
+          fechaLimite = fechaLimite
+        )
+      )
+      
+      if (asignadoId != null) {
+        tareaDao.insertAsignacion(
+          com.appcasa.features.tasks.data.local.TareaAsignacionEntity(
+            tareaId = tareaId,
+            miembroId = asignadoId
+          )
+        )
+      }
+
+      // Si tiene fecha límite, programar notificación (Offset de 20000 para tareas)
+      fechaLimite?.let { deadline ->
+        if (deadline > System.currentTimeMillis()) {
+          reminderScheduler.scheduleReminder(
+            id = (tareaId + 20000).toInt(),
+            title = "Tarea próxima: $titulo",
+            message = "Tienes una tarea que vence hoy",
+            timeInMillis = deadline
+          )
         }
+      }
     }
+  }
 }

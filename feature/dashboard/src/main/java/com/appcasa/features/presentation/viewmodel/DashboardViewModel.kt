@@ -189,8 +189,14 @@ class DashboardViewModel @Inject constructor(
     }
 
     viewModelScope.launch {
-      combine(eventoDao.getEventosByHogar(1L), recordatorioDao.getRecordatoriosByHogar(1L)) { eventos, recordatorios ->
-        (eventos.map { it.titulo to it.fecha } + recordatorios.map { it.titulo to it.fechaHora })
+      combine(
+        eventoDao.getEventosByHogar(1L), 
+        recordatorioDao.getRecordatoriosByHogar(1L),
+        tareaDao.getTareasByHogar(1L)
+      ) { eventos, recordatorios, tareas ->
+        (eventos.map { it.titulo to it.fecha } + 
+         recordatorios.map { it.titulo to it.fechaHora } +
+         tareas.filter { it.fechaLimite != null && it.estado != EstadoTarea.COMPLETADA.name }.map { it.titulo to it.fechaLimite!! })
           .filter { it.second >= System.currentTimeMillis() }
           .sortedBy { it.second }
           .firstOrNull()

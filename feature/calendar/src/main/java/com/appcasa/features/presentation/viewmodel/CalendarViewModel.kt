@@ -2,6 +2,7 @@ package com.appcasa.features.calendar.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.features.calendar.data.local.EventoDao
 import com.appcasa.features.calendar.data.local.EventoEntity
 import com.appcasa.features.tasks.data.local.TareaDao
@@ -24,7 +25,8 @@ import javax.inject.Inject
 class CalendarViewModel @Inject constructor(
   private val eventoDao: EventoDao,
   private val tareaDao: TareaDao,
-  private val recordatorioDao: RecordatorioDao
+  private val recordatorioDao: RecordatorioDao,
+  private val reminderScheduler: ReminderScheduler
 ) : ViewModel() {
 
   private val _historyPage = MutableStateFlow(0)
@@ -35,7 +37,6 @@ class CalendarViewModel @Inject constructor(
     tareaDao.getTareasByHogar(1L),
     recordatorioDao.getRecordatoriosByHogar(1L)
   ) { eventos, tareas, recordatorios ->
-    // Calculamos el inicio del día de hoy en milisegundos para una clasificación correcta
     val startOfToday = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     
     val allItems = (eventos.map { CalendarItem.Evento(it) } +
@@ -63,12 +64,22 @@ class CalendarViewModel @Inject constructor(
   fun updateEvento(evento: EventoEntity) {
     viewModelScope.launch {
       eventoDao.updateEvento(evento)
+      // Reprogramar notificación
+      if (evento.fecha > System.currentTimeMillis()) {
+        reminderScheduler.scheduleReminder(
+          id = (evento.id + 10000).toInt(), // Offset para evitar colisión con recordatorios
+          title = "Evento: ${evento.titulo}",
+          message = "Hoy tienes este evento programado",
+          timeInMillis = evento.fecha
+        )
+      }
     }
   }
 
   fun deleteEvento(evento: EventoEntity) {
     viewModelScope.launch {
       eventoDao.deleteEvento(evento)
+      reminderScheduler.cancelReminder((evento.id + 10000).toInt())
     }
   }
 
@@ -84,7 +95,7 @@ class CalendarViewModel @Inject constructor(
             val title = parts[1].trim()
             val date = dateFormat.parse(dateStr)?.time
             if (date != null) {
-              eventoDao.insertEvento(
+              val id = eventoDao.insertEvento(
                 EventoEntity(
                   hogarId = 1L,
                   titulo = "Turno: $title",
@@ -92,6 +103,16 @@ class CalendarViewModel @Inject constructor(
                   tipo = com.appcasa.core.domain.model.TipoEvento.REUNION.name
                 )
               )
+              
+              // Notificación para el turno si es futuro (a las 8:00 AM del día del turno)
+              if (date > System.currentTimeMillis()) {
+                reminderScheduler.scheduleReminder(
+                  id = (id + 10000).toInt(),
+                  title = "Turno hoy: $title",
+                  message = "Recuerda tu turno de trabajo para hoy",
+                  timeInMillis = date + (8 * 60 * 60 * 1000) // 8 AM
+                )
+              }
             }
           }
         }
