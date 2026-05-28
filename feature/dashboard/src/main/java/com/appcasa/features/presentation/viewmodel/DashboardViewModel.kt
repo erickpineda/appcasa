@@ -96,8 +96,8 @@ class DashboardViewModel @Inject constructor(
     viewModelScope.launch {
       val currentHogar = configuracionDao.getHogarActual().first()
       if (currentHogar == null) {
-        configuracionDao.insertHogar(HogarEntity(id = 1L, nombre = "Mi Hogar", descripcion = "Bienvenido a AppCasa"))
-        configuracionDao.insertUsuario(UsuarioEntity(hogarId = 1L, nombre = "Usuario Principal", email = "admin@appcasa.com"))
+        configuracionDao.insertHogar(HogarEntity(id = 1L, nombre = "Hogar de Erick", descripcion = "Bienvenido a AppCasa"))
+        configuracionDao.insertUsuario(UsuarioEntity(hogarId = 1L, nombre = "Erick", email = "erick@appcasa.com"))
       }
     }
   }
@@ -239,45 +239,53 @@ class DashboardViewModel @Inject constructor(
       utilidadDao.deleteAll(); miembroDao.deleteAll(); tareaDao.deleteAll(); tareaDao.deleteAllCategorias()
       eventoDao.deleteAll(); recordatorioDao.deleteAll(); listaDao.deleteAll(); stockDao.deleteAll(); expenseDao.deleteAll()
       val hogarId = 1L
-      configuracionDao.insertHogar(HogarEntity(id = hogarId, nombre = "Mi Hogar", descripcion = "AppCasa de la familia"))
-      configuracionDao.insertUsuario(UsuarioEntity(hogarId = hogarId, nombre = "Usuario Principal", email = "admin@appcasa.com"))
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Yo", tipo = TipoMiembro.PERSONA.name))
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Mi mujer", tipo = TipoMiembro.PERSONA.name))
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Mi hijo", tipo = TipoMiembro.PERSONA.name, fechaNacimiento = 1435356000000L))
-      repeat(2) { miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Perro ${it+1}", tipo = TipoMiembro.PERRO.name)) }
-      repeat(4) { miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Gato ${it+1}", tipo = TipoMiembro.GATO.name)) }
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Tortuga", tipo = TipoMiembro.TORTUGA.name))
+      
+      configuracionDao.insertHogar(HogarEntity(id = hogarId, nombre = "Hogar de Erick", descripcion = "Gestión familiar oficial"))
+      configuracionDao.insertUsuario(UsuarioEntity(hogarId = hogarId, nombre = "Erick", email = "erick@appcasa.com"))
+      
+      // Miembros - Humanos
+      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Erick", tipo = TipoMiembro.PERSONA.name))
+      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Alicia", tipo = TipoMiembro.PERSONA.name))
+      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Brian", tipo = TipoMiembro.PERSONA.name))
+      
+      // Miembros - Perros
+      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Goofy", tipo = TipoMiembro.PERRO.name, raza = "Beagador"))
+      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Daisy", tipo = TipoMiembro.PERRO.name, raza = "Beagle"))
+      
+      // Miembros - Gatos
+      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Salem", tipo = TipoMiembro.GATO.name, colorPelaje = "Negro de mucho pelo"))
+      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Toby", tipo = TipoMiembro.GATO.name, colorPelaje = "Negro con una pequeña manchita blanca en el pecho"))
+      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Sabrina", tipo = TipoMiembro.GATO.name, colorPelaje = "Blanco con algunas partes negras"))
+      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Tom", tipo = TipoMiembro.GATO.name, colorPelaje = "Blanco con algunas partes negras y gordo"))
+      
+      // Miembros - Otros
+      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Super", tipo = TipoMiembro.TORTUGA.name, raza = "Testudo marginata"))
+
+      // Tareas iniciales
       tareaDao.insertTarea(TareaEntity(hogarId = hogarId, titulo = "Sacar la basura", prioridad = com.appcasa.core.domain.model.Prioridad.ALTA.name))
-      tareaDao.insertTarea(TareaEntity(hogarId = hogarId, titulo = "Regar las plantas", prioridad = com.appcasa.core.domain.model.Prioridad.MEDIA.name))
-      tareaDao.insertTarea(TareaEntity(hogarId = hogarId, titulo = "Comprar pienso para gatos", prioridad = com.appcasa.core.domain.model.Prioridad.ALTA.name))
-      val cal = Calendar.getInstance()
-      cal.set(2025, Calendar.JUNE, 27); val birthdayTime = cal.timeInMillis
-      eventoDao.insertEvento(EventoEntity(hogarId = hogarId, titulo = "Cumpleaños de mi hijo 🎂", fecha = birthdayTime, tipo = com.appcasa.core.domain.model.TipoEvento.CUMPLEANOS.name))
-      reminderScheduler.scheduleReminder(101, "¡Cumpleaños Familiar!", "Hoy cumple años tu hijo 🎂", birthdayTime)
-      cal.set(2025, Calendar.JUNE, 15); recordatorioDao.insertRecordatorio(RecordatorioEntity(hogarId = hogarId, titulo = "Vacuna Rabia 💉", fechaHora = cal.timeInMillis))
-      cal.set(2025, Calendar.JULY, 10); val itvTime = cal.timeInMillis
-      eventoDao.insertEvento(EventoEntity(hogarId = hogarId, titulo = "Pasar ITV Coche 🚗", fecha = itvTime, tipo = com.appcasa.core.domain.model.TipoEvento.ITV.name))
-      reminderScheduler.scheduleReminder(102, "Trámites Hogar", "Recuerda pasar la ITV al coche 🚗", itvTime - (7 * 24 * 60 * 60 * 1000))
-      val listaCompraId = listaDao.insertLista(ListaEntity(hogarId = hogarId, nombre = "Lista de la Compra", tipo = com.appcasa.core.domain.model.TipoLista.COMPRA.name))
-      listaDao.insertItem(com.appcasa.features.lists.data.local.ListaItemEntity(listaId = listaCompraId, texto = "Leche"))
-      listaDao.insertItem(com.appcasa.features.lists.data.local.ListaItemEntity(listaId = listaCompraId, texto = "Pienso Perros"))
-      stockDao.insertItem(StockEntity(hogarId = hogarId, nombre = "Pienso Gatos", categoria = "Mascotas", cantidadActual = 2.0, cantidadMinima = 1.0, unidad = "Sacos"))
-      stockDao.insertItem(StockEntity(hogarId = hogarId, nombre = "Leche", categoria = "Despensa", cantidadActual = 6.0, cantidadMinima = 2.0, unidad = "Litros"))
-      stockDao.insertItem(StockEntity(hogarId = hogarId, nombre = "Papel Higiénico", categoria = "Limpieza", cantidadActual = 1.0, cantidadMinima = 4.0, unidad = "Paquetes"))
-      expenseDao.insertExpense(ExpenseEntity(hogarId = hogarId, concepto = "Súper Semanal", importe = 85.50, categoria = "Comida"))
-      expenseDao.insertExpense(ExpenseEntity(hogarId = hogarId, concepto = "Veterinario", importe = 45.00, categoria = "Mascotas"))
+      tareaDao.insertTarea(TareaEntity(hogarId = hogarId, titulo = "Revisar stock despensa", prioridad = com.appcasa.core.domain.model.Prioridad.MEDIA.name))
+      
+      // Listas por defecto
+      listaDao.insertLista(ListaEntity(hogarId = hogarId, nombre = "Lista de la Compra", tipo = com.appcasa.core.domain.model.TipoLista.COMPRA.name))
+      
+      // Utilidades por defecto
       val initial = listOf(
         UtilidadEntity(codigo = "CALC_DOSIS", nombre = "Dosis Mascotas", descripcion = "Cálculo según peso", icono = "medication", orden = 1, categoria = "Salud"),
         UtilidadEntity(codigo = "CALC_IMC", nombre = "IMC Familiar", descripcion = "Índice de Masa Corporal", icono = "monitor_weight", orden = 2, categoria = "Salud"),
         UtilidadEntity(codigo = "CALC_HIPOTECA", nombre = "Hipoteca", descripcion = "Cuota mensual", icono = "home", orden = 3, categoria = "Finanzas"),
-        UtilidadEntity(codigo = "CALC_EDAD", nombre = "Edad Exacta", descripcion = "Años, meses y días", icono = "cake", orden = 4, categoria = "General"),
-        UtilidadEntity(codigo = "CALC_CONSUMO", nombre = "Consumo Eléctrico", icono = "bolt", orden = 5, categoria = "Finanzas"),
-        UtilidadEntity(codigo = "CALC_AHORRO", nombre = "Ahorro Mensual", icono = "savings", orden = 6, categoria = "Finanzas"),
-        UtilidadEntity(codigo = "CALC_UNIDADES", nombre = "Conversor Unidades", descripcion = "Cocina y medidas", icono = "straighten", orden = 7, categoria = "General"),
-        UtilidadEntity(codigo = "FIN_GASTOS", nombre = "Diario de Gastos", descripcion = "Control de dinero", icono = "payments", orden = 8, categoria = "Finanzas"),
-        UtilidadEntity(codigo = "VEH_MGR", nombre = "Mi Vehículo", descripcion = "Seguro y Matrícula", icono = "directions_car", orden = 9, categoria = "Varios")
+        UtilidadEntity(codigo = "FIN_GASTOS", nombre = "Diario de Gastos", descripcion = "Control de presupuesto", icono = "payments", orden = 4, categoria = "Finanzas"),
+        UtilidadEntity(codigo = "VEH_MGR", nombre = "Mi Vehículo", descripcion = "Seguro y Matrícula", icono = "directions_car", orden = 5, categoria = "Varios"),
+        UtilidadEntity(codigo = "CALC_EDAD", nombre = "Edad Exacta", descripcion = "Años, meses y días", icono = "cake", orden = 6, categoria = "Varios")
       )
       initial.forEach { utilidadDao.insertUtilidad(it) }
+      
+      // Programar una notificación de prueba para Erick
+      reminderScheduler.scheduleReminder(
+        id = 999,
+        title = "¡Bienvenido Erick!",
+        message = "AppCasa está lista para gestionar tu hogar.",
+        timeInMillis = System.currentTimeMillis() + 60000 // En 1 minuto
+      )
     }
   }
 }
