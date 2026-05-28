@@ -84,7 +84,7 @@ fun TasksContent(
         .fillMaxSize()
         .padding(scaffoldPadding),
       contentPadding = PaddingValues(16.dp),
-      verticalArrangement = Arrangement.spacedBy(if (isCompact) 4.dp else 8.dp)
+      verticalArrangement = Arrangement.spacedBy(if (isCompact) 2.dp else 8.dp)
     ) {
       val pendingTasks = tasks.filter { it.estado != EstadoTarea.COMPLETADA.name }
       val completedTasks = tasks.filter { it.estado == EstadoTarea.COMPLETADA.name }
@@ -132,7 +132,7 @@ fun TasksContent(
 
       if (completedTasks.isNotEmpty()) {
         item {
-          Spacer(modifier = Modifier.height(16.dp))
+          Spacer(modifier = Modifier.height(if (isCompact) 8.dp else 16.dp))
           Text("Completadas", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         items(completedTasks) { tarea ->
@@ -173,15 +173,16 @@ fun TaskItem(
   ) {
     Row(
       modifier = Modifier
-        .padding(if (isCompact) 4.dp else 8.dp)
+        .padding(horizontal = if (isCompact) 4.dp else 8.dp, vertical = if (isCompact) 2.dp else 8.dp)
         .fillMaxWidth(),
       verticalAlignment = Alignment.CenterVertically
     ) {
-      IconButton(onClick = onToggle, enabled = !isEditing) {
+      IconButton(onClick = onToggle, enabled = !isEditing, modifier = Modifier.size(if (isCompact) 32.dp else 48.dp)) {
         Icon(
           imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
           contentDescription = null,
-          tint = if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+          tint = if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+          modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
         )
       }
       
@@ -199,20 +200,20 @@ fun TaskItem(
                               onUpdate(editedText)
                               isEditing = false
                           }
-                      }) {
-                          Icon(Icons.Default.Check, contentDescription = "Guardar", tint = MaterialTheme.colorScheme.primary)
+                      }, modifier = Modifier.size(28.dp)) {
+                          Icon(Icons.Default.Check, contentDescription = "Guardar", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                       }
                       IconButton(onClick = { 
                           editedText = tarea.titulo
                           isEditing = false 
-                      }) {
-                          Icon(Icons.Default.Close, contentDescription = "Cancelar")
+                      }, modifier = Modifier.size(28.dp)) {
+                          Icon(Icons.Default.Close, contentDescription = "Cancelar", modifier = Modifier.size(18.dp))
                       }
                   }
               }
           )
       } else {
-          Column(modifier = Modifier.weight(1f)) {
+          Column(modifier = Modifier.weight(1f).padding(vertical = if (isCompact) 4.dp else 0.dp)) {
             Text(
               text = tarea.titulo,
               style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
@@ -253,12 +254,12 @@ fun TaskItem(
             )
           }
 
-          IconButton(onClick = onDelete) {
+          IconButton(onClick = onDelete, modifier = Modifier.size(if (isCompact) 32.dp else 48.dp)) {
             Icon(
                 Icons.Default.Delete, 
                 contentDescription = "Borrar", 
                 tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-                modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
+                modifier = Modifier.size(if (isCompact) 18.dp else 24.dp)
             )
           }
       }

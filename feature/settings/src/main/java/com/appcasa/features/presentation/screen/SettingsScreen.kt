@@ -33,24 +33,24 @@ fun SettingsScreen(
   val listas by settingsViewModel.todasLasListas.collectAsState()
 
   Column(modifier = Modifier.fillMaxSize()) {
-      TopAppBar(
-        title = { Text("Ajustes") },
-        colors = TopAppBarDefaults.topAppBarColors(
-          containerColor = MaterialTheme.colorScheme.primary,
-          titleContentColor = MaterialTheme.colorScheme.onPrimary
-        )
+    TopAppBar(
+      title = { Text("Ajustes") },
+      colors = TopAppBarDefaults.topAppBarColors(
+        containerColor = MaterialTheme.colorScheme.primary,
+        titleContentColor = MaterialTheme.colorScheme.onPrimary
       )
-      SettingsContent(
-        modifier = Modifier.weight(1f),
-        userName = usuario?.nombre ?: "Usuario",
-        householdName = hogar?.nombre ?: "Mi Hogar",
-        configs = configs,
-        listas = listas,
-        onUpdateName = { settingsViewModel.updateUsuario(it) },
-        onUpdateHouseholdName = { settingsViewModel.updateHogar(it) },
-        onUpdateConfig = { clave, valor -> settingsViewModel.updateConfig(clave, valor) },
-        onSeedData = { dashboardViewModel.seedRealData() }
-      )
+    )
+    SettingsContent(
+      modifier = Modifier.weight(1f),
+      userName = usuario?.nombre ?: "Usuario",
+      householdName = hogar?.nombre ?: "Mi Hogar",
+      configs = configs,
+      listas = listas,
+      onUpdateName = { settingsViewModel.updateUsuario(it) },
+      onUpdateHouseholdName = { settingsViewModel.updateHogar(it) },
+      onUpdateConfig = { clave, valor -> settingsViewModel.updateConfig(clave, valor) },
+      onSeedData = { dashboardViewModel.seedRealData() }
+    )
   }
 }
 
@@ -80,38 +80,38 @@ fun SettingsContent(
   var showListSelector by remember { mutableStateOf(false) }
 
   if (showNameDialog) {
-      EditValueDialog(
-          title = "Nombre de Usuario",
-          initialValue = userName,
-          onDismiss = { showNameDialog = false },
-          onConfirm = { onUpdateName(it); showNameDialog = false }
-      )
+    EditValueDialog(
+      title = "Nombre de Usuario",
+      initialValue = userName,
+      onDismiss = { showNameDialog = false },
+      onConfirm = { onUpdateName(it); showNameDialog = false }
+    )
   }
 
   if (showHogarDialog) {
-      EditValueDialog(
-          title = "Nombre del Hogar",
-          initialValue = householdName,
-          onDismiss = { showHogarDialog = false },
-          onConfirm = { onUpdateHouseholdName(it); showHogarDialog = false }
-      )
+    EditValueDialog(
+      title = "Nombre del Hogar",
+      initialValue = householdName,
+      onDismiss = { showHogarDialog = false },
+      onConfirm = { onUpdateHouseholdName(it); showHogarDialog = false }
+    )
   }
 
   if (showCurrencyDialog) {
-      CurrencySelectorDialog(
-          selectedCurrency = currency,
-          onDismiss = { showCurrencyDialog = false },
-          onSelect = { onUpdateConfig("moneda", it); showCurrencyDialog = false }
-      )
+    CurrencySelectorDialog(
+      selectedCurrency = currency,
+      onDismiss = { showCurrencyDialog = false },
+      onSelect = { onUpdateConfig("moneda", it); showCurrencyDialog = false }
+    )
   }
 
   if (showListSelector) {
-      ListSelectorDialog(
-          listas = listas,
-          selectedListId = preferredListId,
-          onDismiss = { showListSelector = false },
-          onSelect = { onUpdateConfig("lista_compra_id", it.toString()); showListSelector = false }
-      )
+    ListSelectorDialog(
+      listas = listas,
+      selectedListId = preferredListId,
+      onDismiss = { showListSelector = false },
+      onSelect = { onUpdateConfig("lista_compra_id", it.toString()); showListSelector = false }
+    )
   }
 
   LazyColumn(
@@ -159,42 +159,42 @@ fun SettingsContent(
       )
     }
     item {
-        SettingsToggleItem(
-            icon = Icons.Default.Compress,
-            title = "Vista Compacta",
-            subtitle = "Mostrar listas con menos espacio",
-            checked = compactView,
-            onCheckedChange = { onUpdateConfig("vista_compacta", it.toString()) }
-        )
+      SettingsToggleItem(
+        icon = Icons.Default.Compress,
+        title = "Vista Compacta",
+        subtitle = "Mostrar listas con menos espacio",
+        checked = compactView,
+        onCheckedChange = { onUpdateConfig("vista_compacta", it.toString()) }
+      )
     }
 
     item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
     item { SettingsSectionHeader("Preferencias de Uso") }
 
     item {
-        SettingsItem(
-            icon = Icons.Default.Payments,
-            title = "Moneda Local",
-            subtitle = "Símbolo: $currency",
-            onClick = { showCurrencyDialog = true }
-        )
+      SettingsItem(
+        icon = Icons.Default.Payments,
+        title = "Moneda Local",
+        subtitle = "Símbolo: $currency",
+        onClick = { showCurrencyDialog = true }
+      )
     }
     item {
-        SettingsItem(
-            icon = Icons.Default.ShoppingCart,
-            title = "Lista de la Compra Principal",
-            subtitle = preferredListName,
-            onClick = { showListSelector = true }
-        )
+      SettingsItem(
+        icon = Icons.Default.ShoppingCart,
+        title = "Lista de la Compra Principal",
+        subtitle = preferredListName,
+        onClick = { showListSelector = true }
+      )
     }
     item {
-        SettingsToggleItem(
-            icon = Icons.Default.Storefront,
-            title = "Modo Tienda",
-            subtitle = "Mantener pantalla encendida en listas",
-            checked = shopMode,
-            onCheckedChange = { onUpdateConfig("modo_tienda", it.toString()) }
-        )
+      SettingsToggleItem(
+        icon = Icons.Default.Storefront,
+        title = "Modo Tienda",
+        subtitle = "Mantener pantalla encendida en listas",
+        checked = shopMode,
+        onCheckedChange = { onUpdateConfig("modo_tienda", it.toString()) }
+      )
     }
 
     item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
@@ -219,106 +219,106 @@ fun SettingsContent(
     }
     
     item {
-        Spacer(modifier = Modifier.height(24.dp))
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Text(
-                text = "Hecho con ❤️ para la familia",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-            )
-        }
+      Spacer(modifier = Modifier.height(24.dp))
+      Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Text(
+          text = "Hecho con ❤️ para la familia",
+          style = MaterialTheme.typography.labelSmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        )
+      }
     }
   }
 }
 
 @Composable
 fun EditValueDialog(
-    title: String,
-    initialValue: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+  title: String,
+  initialValue: String,
+  onDismiss: () -> Unit,
+  onConfirm: (String) -> Unit
 ) {
-    var text by remember { mutableStateOf(initialValue) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        confirmButton = {
-            Button(onClick = { if (text.isNotBlank()) onConfirm(text) }) { Text("Guardar") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        }
-    )
+  var text by remember { mutableStateOf(initialValue) }
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text(title) },
+    text = {
+      OutlinedTextField(
+        value = text,
+        onValueChange = { text = it },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth()
+      )
+    },
+    confirmButton = {
+      Button(onClick = { if (text.isNotBlank()) onConfirm(text) }) { Text("Guardar") }
+    },
+    dismissButton = {
+      TextButton(onClick = onDismiss) { Text("Cancelar") }
+    }
+  )
 }
 
 @Composable
 fun CurrencySelectorDialog(
-    selectedCurrency: String,
-    onDismiss: () -> Unit,
-    onSelect: (String) -> Unit
+  selectedCurrency: String,
+  onDismiss: () -> Unit,
+  onSelect: (String) -> Unit
 ) {
-    val currencies = listOf("€", "$", "£", "¥", "₣")
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Seleccionar Moneda") },
-        text = {
-            Column {
-                currencies.forEach { curr ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().clickable { onSelect(curr) }.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(selected = curr == selectedCurrency, onClick = null)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(curr)
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } }
-    )
+  val currencies = listOf("€", "$", "£", "¥", "₣")
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text("Seleccionar Moneda") },
+    text = {
+      Column {
+        currencies.forEach { curr ->
+          Row(
+            modifier = Modifier.fillMaxWidth().clickable { onSelect(curr) }.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            RadioButton(selected = curr == selectedCurrency, onClick = null)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(curr)
+          }
+        }
+      }
+    },
+    confirmButton = {},
+    dismissButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } }
+  )
 }
 
 @Composable
 fun ListSelectorDialog(
-    listas: List<com.appcasa.features.lists.data.local.ListaEntity>,
-    selectedListId: Long?,
-    onDismiss: () -> Unit,
-    onSelect: (Long) -> Unit
+  listas: List<com.appcasa.features.lists.data.local.ListaEntity>,
+  selectedListId: Long?,
+  onDismiss: () -> Unit,
+  onSelect: (Long) -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Lista de la Compra") },
-        text = {
-            if (listas.isEmpty()) {
-                Text("No hay listas creadas. Crea una en la sección de Listas.")
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)) {
-                    items(listas) { lista ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().clickable { onSelect(lista.id) }.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(selected = lista.id == selectedListId, onClick = null)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(lista.nombre)
-                        }
-                    }
-                }
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text("Lista de la Compra") },
+    text = {
+      if (listas.isEmpty()) {
+        Text("No hay listas creadas. Crea una en la sección de Listas.")
+      } else {
+        LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)) {
+          items(listas) { lista ->
+            Row(
+              modifier = Modifier.fillMaxWidth().clickable { onSelect(lista.id) }.padding(12.dp),
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              RadioButton(selected = lista.id == selectedListId, onClick = null)
+              Spacer(modifier = Modifier.width(12.dp))
+              Text(lista.nombre)
             }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } }
-    )
+          }
+        }
+      }
+    },
+    confirmButton = {},
+    dismissButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } }
+  )
 }
 
 @Composable

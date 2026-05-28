@@ -164,7 +164,7 @@ fun MemberCard(
   ) {
     Row(
       modifier = Modifier
-        .padding(8.dp)
+        .padding(4.dp)
         .fillMaxWidth(),
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.spacedBy(12.dp)

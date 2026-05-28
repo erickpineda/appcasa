@@ -30,6 +30,7 @@ fun ListsScreen(
   viewModel: ListsViewModel = hiltViewModel()
 ) {
   val lists by viewModel.lists.collectAsState()
+  val isCompact by viewModel.isCompactView.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
 
   if (showAddDialog) {
@@ -45,6 +46,7 @@ fun ListsScreen(
   PullToRefreshWrapper {
     ListsContent(
       lists = lists,
+      isCompact = isCompact,
       onListClick = { listId ->
         navController.navigate(Screen.ListDetail.createRoute(listId))
       },
@@ -59,6 +61,7 @@ fun ListsScreen(
 @Composable
 fun ListsContent(
   lists: List<ListaEntity>,
+  isCompact: Boolean,
   onListClick: (Long) -> Unit,
   onDeleteList: (ListaEntity) -> Unit,
   onAddClick: () -> Unit,
@@ -84,8 +87,8 @@ fun ListsContent(
       modifier = Modifier
         .fillMaxSize()
         .padding(scaffoldPadding),
-      contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-      verticalArrangement = Arrangement.spacedBy(8.dp)
+      contentPadding = PaddingValues(16.dp),
+      verticalArrangement = Arrangement.spacedBy(if (isCompact) 2.dp else 8.dp)
     ) {
       if (lists.isEmpty()) {
         item {
@@ -97,6 +100,7 @@ fun ListsContent(
         items(lists) { lista ->
           CompactListCard(
             lista = lista, 
+            isCompact = isCompact,
             onClick = { onListClick(lista.id) },
             onDelete = { onDeleteList(lista) },
             onUpdate = { onUpdateList(lista, it) }
@@ -109,10 +113,11 @@ fun ListsContent(
 
 @Composable
 fun CompactListCard(
-    lista: ListaEntity, 
-    onClick: () -> Unit, 
-    onDelete: () -> Unit,
-    onUpdate: (String) -> Unit
+  lista: ListaEntity, 
+  isCompact: Boolean,
+  onClick: () -> Unit, 
+  onDelete: () -> Unit,
+  onUpdate: (String) -> Unit
 ) {
   var isEditing by remember { mutableStateOf(false) }
   var editedText by remember { mutableStateOf(lista.nombre) }
@@ -133,75 +138,77 @@ fun CompactListCard(
   ) {
     Row(
       modifier = Modifier
-        .padding(horizontal = 12.dp, vertical = 8.dp)
+        .padding(horizontal = if (isCompact) 8.dp else 12.dp, vertical = if (isCompact) 4.dp else 8.dp)
         .fillMaxWidth(),
       verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(12.dp)
+      horizontalArrangement = Arrangement.spacedBy(if (isCompact) 8.dp else 12.dp)
     ) {
       Surface(
         shape = MaterialTheme.shapes.small,
         color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = Modifier.size(40.dp)
+        modifier = Modifier.size(if (isCompact) 32.dp else 40.dp)
       ) {
         Box(contentAlignment = Alignment.Center) {
           Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(if (isCompact) 16.dp else 20.dp),
             tint = MaterialTheme.colorScheme.onSecondaryContainer
           )
         }
       }
       
       if (isEditing) {
-          OutlinedTextField(
-              value = editedText,
-              onValueChange = { editedText = it },
-              modifier = Modifier.weight(1f),
-              singleLine = true,
-              textStyle = MaterialTheme.typography.titleMedium,
-              trailingIcon = {
-                  Row {
-                      IconButton(onClick = { 
-                          if (editedText.isNotBlank()) {
-                              onUpdate(editedText)
-                              isEditing = false
-                          }
-                      }) {
-                          Icon(Icons.Default.Check, contentDescription = "Guardar", tint = MaterialTheme.colorScheme.primary)
-                      }
-                      IconButton(onClick = { 
-                          editedText = lista.nombre
-                          isEditing = false 
-                      }) {
-                          Icon(Icons.Default.Close, contentDescription = "Cancelar")
-                      }
-                  }
+        OutlinedTextField(
+          value = editedText,
+          onValueChange = { editedText = it },
+          modifier = Modifier.weight(1f),
+          singleLine = true,
+          textStyle = MaterialTheme.typography.titleMedium,
+          trailingIcon = {
+            Row {
+              IconButton(onClick = { 
+                if (editedText.isNotBlank()) {
+                  onUpdate(editedText)
+                  isEditing = false
+                }
+              }, modifier = Modifier.size(28.dp)) {
+                Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
               }
-          )
+              IconButton(onClick = { 
+                editedText = lista.nombre
+                isEditing = false 
+              }, modifier = Modifier.size(28.dp)) {
+                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(18.dp))
+              }
+            }
+          }
+        )
       } else {
-          Column(modifier = Modifier.weight(1f)) {
-            Text(
-              text = lista.nombre, 
-              style = MaterialTheme.typography.titleMedium,
-              fontWeight = FontWeight.Bold,
-              modifier = Modifier.clickable { isEditing = true }
-            )
+        Column(modifier = Modifier.weight(1f)) {
+          Text(
+            text = lista.nombre, 
+            style = if (isCompact) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.clickable { isEditing = true }
+          )
+          if (!isCompact) {
             Text(
               text = lista.tipo, 
               style = MaterialTheme.typography.labelSmall,
               color = MaterialTheme.colorScheme.primary
             )
           }
+        }
 
-          IconButton(onClick = onDelete) {
-            Icon(
-              Icons.Default.Delete, 
-              contentDescription = "Borrar", 
-              tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
-              modifier = Modifier.size(20.dp)
-            )
-          }
+        IconButton(onClick = onDelete, modifier = Modifier.size(if (isCompact) 32.dp else 48.dp)) {
+          Icon(
+            Icons.Default.Delete, 
+            contentDescription = "Borrar", 
+            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+            modifier = Modifier.size(if (isCompact) 18.dp else 20.dp)
+          )
+        }
       }
     }
   }
@@ -209,23 +216,23 @@ fun CompactListCard(
 
 @Composable
 fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
-    var name by remember { mutableStateOf("") }
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Nueva Lista") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre de la lista") }, modifier = Modifier.fillMaxWidth())
-            }
-        },
-        confirmButton = {
-            Button(onClick = { if (name.isNotBlank()) onConfirm(name, "PERSONALIZADA") }) { Text("Crear") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        }
-    )
+  var name by remember { mutableStateOf("") }
+  
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text("Nueva Lista") },
+    text = {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre de la lista") }, modifier = Modifier.fillMaxWidth())
+      }
+    },
+    confirmButton = {
+      Button(onClick = { if (name.isNotBlank()) onConfirm(name, "PERSONALIZADA") }) { Text("Crear") }
+    },
+    dismissButton = {
+      TextButton(onClick = onDismiss) { Text("Cancelar") }
+    }
+  )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -238,6 +245,7 @@ fun ListsPreview() {
         ListaEntity(id = 1, hogarId = 1, nombre = "Compra Mercadona", tipo = TipoLista.COMPRA.name),
         ListaEntity(id = 2, hogarId = 1, nombre = "Botiquín Verano", tipo = TipoLista.FARMACIA.name)
       ),
+      isCompact = false,
       onListClick = {},
       onDeleteList = {},
       onAddClick = {},

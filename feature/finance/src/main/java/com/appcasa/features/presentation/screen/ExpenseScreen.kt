@@ -61,21 +61,21 @@ fun ExpenseScreen(
           },
           actions = {
             if (expenses.isNotEmpty()) {
-                IconButton(onClick = {
-                    val total = expenses.sumOf { it.importe }
-                    val shareText = "💰 *Resumen de Gastos AppCasa*:\n" + 
-                        expenses.joinToString("\n") { "- ${it.concepto}: ${String.format("%.2f", it.importe)} $currency" } +
-                        "\n\n*TOTAL: ${String.format("%.2f", total)} $currency*"
-                    
-                    val sendIntent: Intent = Intent().apply {
-                        action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_TEXT, shareText)
-                        type = "text/plain"
-                    }
-                    context.startActivity(Intent.createChooser(sendIntent, null))
-                }) {
-                    Icon(Icons.Default.Share, contentDescription = "Compartir gastos")
+              IconButton(onClick = {
+                val total = expenses.sumOf { it.importe }
+                val shareText = "💰 *Resumen de Gastos AppCasa*:\n" + 
+                  expenses.joinToString("\n") { "- ${it.concepto}: ${String.format("%.2f", it.importe)} $currency" } +
+                  "\n\n*TOTAL: ${String.format("%.2f", total)} $currency*"
+                
+                val sendIntent: Intent = Intent().apply {
+                  action = Intent.ACTION_SEND
+                  putExtra(Intent.EXTRA_TEXT, shareText)
+                  type = "text/plain"
                 }
+                context.startActivity(Intent.createChooser(sendIntent, null))
+              }) {
+                Icon(Icons.Default.Share, contentDescription = "Compartir gastos")
+              }
             }
           }
         )

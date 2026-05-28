@@ -64,7 +64,7 @@ fun StockScreen(
           .fillMaxSize()
           .padding(padding),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(if (isCompact) 4.dp else 12.dp)
+        verticalArrangement = Arrangement.spacedBy(if (isCompact) 2.dp else 12.dp)
       ) {
         if (stockItems.isEmpty()) {
           item {
@@ -91,54 +91,54 @@ fun StockScreen(
 
 @Composable
 fun AddStockDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (String, String, Double, Double, String) -> Unit
+  onDismiss: () -> Unit,
+  onConfirm: (String, String, Double, Double, String) -> Unit
 ) {
-    var nombre by remember { mutableStateOf("") }
-    var categoria by remember { mutableStateOf("Despensa") }
-    var cantidad by remember { mutableStateOf("") }
-    var minima by remember { mutableStateOf("") }
-    var unidad by remember { mutableStateOf("uds") }
+  var nombre by remember { mutableStateOf("") }
+  var categoria by remember { mutableStateOf("Despensa") }
+  var cantidad by remember { mutableStateOf("") }
+  var minima by remember { mutableStateOf("") }
+  var unidad by remember { mutableStateOf("uds") }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Nuevo Artículo") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = categoria, onValueChange = { categoria = it }, label = { Text("Categoría") }, modifier = Modifier.fillMaxWidth())
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = cantidad, 
-                        onValueChange = { cantidad = it }, 
-                        label = { Text("Cant.") }, 
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                    )
-                    OutlinedTextField(
-                        value = minima, 
-                        onValueChange = { minima = it }, 
-                        label = { Text("Mín.") }, 
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                    )
-                }
-                OutlinedTextField(value = unidad, onValueChange = { unidad = it }, label = { Text("Unidad (kg, sacos...)") }, modifier = Modifier.fillMaxWidth())
-            }
-        },
-        confirmButton = {
-            Button(onClick = { 
-                if (nombre.isNotBlank()) {
-                    onConfirm(nombre, categoria, cantidad.toDoubleOrNull() ?: 0.0, minima.toDoubleOrNull() ?: 0.0, unidad)
-                }
-            }) {
-                Text("Añadir")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text("Nuevo Artículo") },
+    text = {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = categoria, onValueChange = { categoria = it }, label = { Text("Categoría") }, modifier = Modifier.fillMaxWidth())
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          OutlinedTextField(
+            value = cantidad, 
+            onValueChange = { cantidad = it }, 
+            label = { Text("Cant.") }, 
+            modifier = Modifier.weight(1f),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+          )
+          OutlinedTextField(
+            value = minima, 
+            onValueChange = { minima = it }, 
+            label = { Text("Mín.") }, 
+            modifier = Modifier.weight(1f),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+          )
         }
-    )
+        OutlinedTextField(value = unidad, onValueChange = { unidad = it }, label = { Text("Unidad (kg, sacos...)") }, modifier = Modifier.fillMaxWidth())
+      }
+    },
+    confirmButton = {
+      Button(onClick = { 
+        if (nombre.isNotBlank()) {
+          onConfirm(nombre, categoria, cantidad.toDoubleOrNull() ?: 0.0, minima.toDoubleOrNull() ?: 0.0, unidad)
+        }
+      }) {
+        Text("Añadir")
+      }
+    },
+    dismissButton = {
+      TextButton(onClick = onDismiss) { Text("Cancelar") }
+    }
+  )
 }
 
 @Composable
@@ -156,17 +156,17 @@ fun StockItemCard(
     modifier = Modifier.fillMaxWidth().alpha(if (isLowStock) 0.6f else 1f)
   ) {
     Row(
-      modifier = Modifier.padding(if (isCompact) 8.dp else 16.dp),
+      modifier = Modifier.padding(if (isCompact) 4.dp else 16.dp),
       verticalAlignment = Alignment.CenterVertically
     ) {
       Column(modifier = Modifier.weight(1f)) {
         Text(
-            text = item.nombre, 
-            style = if (isCompact) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleMedium, 
-            fontWeight = FontWeight.Bold
+          text = item.nombre, 
+          style = if (isCompact) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleMedium, 
+          fontWeight = FontWeight.Bold
         )
         if (!isCompact) {
-            Text(text = item.categoria, style = MaterialTheme.typography.bodySmall)
+          Text(text = item.categoria, style = MaterialTheme.typography.bodySmall)
         }
         if (isLowStock) {
           Text(
@@ -180,21 +180,21 @@ fun StockItemCard(
 
       Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (isCompact) 0.dp else 4.dp)) {
         if (isLowStock) {
-            IconButton(onClick = onAddToList) {
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart, 
-                    contentDescription = "Añadir a la compra", 
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
-                )
-            }
+          IconButton(onClick = onAddToList) {
+            Icon(
+              imageVector = Icons.Default.ShoppingCart, 
+              contentDescription = "Añadir a la compra", 
+              tint = MaterialTheme.colorScheme.primary,
+              modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
+            )
+          }
         }
         
         IconButton(onClick = onRemove) {
           Icon(
-              imageVector = Icons.Default.Remove, 
-              contentDescription = "Quitar",
-              modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
+            imageVector = Icons.Default.Remove, 
+            contentDescription = "Quitar",
+            modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
           )
         }
         Text(
@@ -205,18 +205,18 @@ fun StockItemCard(
         )
         IconButton(onClick = onAdd) {
           Icon(
-              imageVector = Icons.Default.Add, 
-              contentDescription = "Añadir",
-              modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
+            imageVector = Icons.Default.Add, 
+            contentDescription = "Añadir",
+            modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
           )
         }
         IconButton(onClick = onDelete) {
-            Icon(
-                Icons.Default.Delete, 
-                contentDescription = "Borrar", 
-                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-                modifier = Modifier.size(if (isCompact) 18.dp else 24.dp)
-            )
+          Icon(
+            Icons.Default.Delete, 
+            contentDescription = "Borrar", 
+            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+            modifier = Modifier.size(if (isCompact) 18.dp else 24.dp)
+          )
         }
       }
     }

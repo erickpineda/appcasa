@@ -19,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +32,7 @@ import com.appcasa.core.domain.model.TipoEvento
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.features.calendar.presentation.viewmodel.CalendarViewModel
+import com.appcasa.features.calendar.presentation.viewmodel.CalendarItem
 import com.appcasa.features.reminders.presentation.viewmodel.RemindersViewModel
 import java.text.SimpleDateFormat
 import java.time.Instant
@@ -47,10 +49,12 @@ fun CalendarScreen(
   remindersViewModel: RemindersViewModel = hiltViewModel()
 ) {
   val state by viewModel.calendarItems.collectAsState()
+  val historyPage by viewModel.historyPage.collectAsState()
   val context = LocalContext.current
   var showAddReminderDialog by remember { mutableStateOf(false) }
   var currentMonth by remember { mutableStateOf(YearMonth.now()) }
   var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+  var selectedTab by remember { mutableStateOf(0) }
 
   if (showAddReminderDialog) {
     AddReminderDialog(
@@ -78,21 +82,12 @@ fun CalendarScreen(
     }
   }
 
-  val allItems = (state.eventos.map { "EVENTO" to it } + 
-    state.recordatorios.map { "RECORDATORIO" to it } + 
-    state.tareasConFecha.map { "TAREA" to it })
-    .sortedBy { 
-      when(val item = it.second) {
-        is com.appcasa.features.calendar.data.local.EventoEntity -> item.fecha
-        is com.appcasa.features.reminders.data.local.RecordatorioEntity -> item.fechaHora
-        is com.appcasa.features.tasks.data.local.TareaEntity -> item.fechaLimite ?: Long.MAX_VALUE
-        else -> Long.MAX_VALUE
-      }
-    }
-
   PullToRefreshWrapper {
     CalendarContent(
-      allItems = allItems,
+      state = state,
+      historyPage = historyPage,
+      selectedTab = selectedTab,
+      onTabChange = { selectedTab = it },
       currentMonth = currentMonth,
       selectedDate = selectedDate,
       onMonthChange = { currentMonth = it },
@@ -103,7 +98,8 @@ fun CalendarScreen(
       },
       onImportClick = { filePickerLauncher.launch("text/*") },
       onAddReminderClick = { showAddReminderDialog = true },
-      onDeleteReminder = { remindersViewModel.deleteReminder(it) }
+      onDeleteReminder = { remindersViewModel.deleteReminder(it) },
+      onLoadMoreHistory = { viewModel.loadMoreHistory() }
     )
   }
 }
@@ -111,17 +107,21 @@ fun CalendarScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarContent(
-  allItems: List<Pair<String, Any>>,
+  state: com.appcasa.features.calendar.presentation.viewmodel.CalendarState,
+  historyPage: Int,
+  selectedTab: Int,
+  onTabChange: (Int) -> Unit,
   currentMonth: YearMonth,
   selectedDate: LocalDate?,
   onMonthChange: (YearMonth) -> Unit,
   onEventClick: (Long) -> Unit,
   onImportClick: () -> Unit,
   onAddReminderClick: () -> Unit = {},
-  onDeleteReminder: (com.appcasa.features.reminders.data.local.RecordatorioEntity) -> Unit = {}
+  onDeleteReminder: (com.appcasa.features.reminders.data.local.RecordatorioEntity) -> Unit = {},
+  onLoadMoreHistory: () -> Unit
 ) {
   val daysInMonth = currentMonth.lengthOfMonth()
-  val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value % 7 // Ajuste Domingo=0
+  val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value % 7
 
   Scaffold(
     topBar = {
@@ -133,14 +133,14 @@ fun CalendarContent(
         ),
         actions = {
           IconButton(onClick = onImportClick) {
-            Icon(Icons.Default.UploadFile, contentDescription = "Importar Turnos", tint = MaterialTheme.colorScheme.onPrimary)
+            Icon(Icons.Default.UploadFile, contentDescription = "Importar", tint = MaterialTheme.colorScheme.onPrimary)
           }
         }
       )
     },
     floatingActionButton = {
       FloatingActionButton(onClick = onAddReminderClick) {
-        Icon(Icons.Default.Add, contentDescription = "Nuevo Recordatorio")
+        Icon(Icons.Default.Add, contentDescription = "Nuevo")
       }
     }
   ) { scaffoldPadding ->
@@ -149,7 +149,7 @@ fun CalendarContent(
         .fillMaxSize()
         .padding(scaffoldPadding)
     ) {
-      // Calendario Visual (Grid)
+      // Calendario Visual
       com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true,
         modifier = Modifier.padding(16.dp)
       ) {
@@ -159,16 +159,16 @@ fun CalendarContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
           ) {
-            IconButton(onClick = { onMonthChange(currentMonth.minusMonths(1)) }) {
-              Icon(Icons.AutoMirrored.Filled.ArrowBackIos, contentDescription = "Mes Anterior", modifier = Modifier.size(16.dp))
+            IconButton(onClick = { onMonthChange(currentMonth.minusMonths(1)) }, modifier = Modifier.size(32.dp)) {
+              Icon(Icons.AutoMirrored.Filled.ArrowBackIos, contentDescription = null, modifier = Modifier.size(14.dp))
             }
             Text(
               text = "${currentMonth.month.getDisplayName(TextStyle.FULL, Locale("es", "ES")).uppercase()} ${currentMonth.year}",
               style = MaterialTheme.typography.titleMedium,
               fontWeight = FontWeight.Bold
             )
-            IconButton(onClick = { onMonthChange(currentMonth.plusMonths(1)) }) {
-              Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = "Mes Siguiente", modifier = Modifier.size(16.dp))
+            IconButton(onClick = { onMonthChange(currentMonth.plusMonths(1)) }, modifier = Modifier.size(32.dp)) {
+              Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(14.dp))
             }
           }
           
@@ -179,19 +179,17 @@ fun CalendarContent(
                 modifier = Modifier.weight(1f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
               )
             }
           }
           
           LazyVerticalGrid(
             columns = GridCells.Fixed(7),
-            modifier = Modifier.height(200.dp)
+            modifier = Modifier.height(180.dp)
           ) {
-            // Huecos vacíos antes del día 1
             items(firstDayOfWeek) { Box(modifier = Modifier.aspectRatio(1f)) }
-            
-            // Días del mes
             items(daysInMonth) { day ->
               val dayNum = day + 1
               val dateAtDay = currentMonth.atDay(dayNum)
@@ -211,13 +209,13 @@ fun CalendarContent(
                     }
                   )
                   .then(
-                    if (isSelected) Modifier.border(2.dp, MaterialTheme.colorScheme.onSecondary, CircleShape) else Modifier
+                    if (isSelected) Modifier.border(1.dp, MaterialTheme.colorScheme.onSecondary, CircleShape) else Modifier
                   ),
                 contentAlignment = Alignment.Center
               ) {
                 Text(
                   text = dayNum.toString(),
-                  style = MaterialTheme.typography.bodySmall,
+                  style = MaterialTheme.typography.labelMedium,
                   color = when {
                     isSelected -> MaterialTheme.colorScheme.onSecondary
                     isToday -> MaterialTheme.colorScheme.onPrimary
@@ -230,42 +228,79 @@ fun CalendarContent(
         }
       }
 
-      Text(
-        text = "Próximos eventos",
-        style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        fontWeight = FontWeight.Bold
-      )
+      // Selector de Pestañas
+      TabRow(
+        selectedTabIndex = selectedTab,
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.primary,
+        divider = {}
+      ) {
+        Tab(
+          selected = selectedTab == 0,
+          onClick = { onTabChange(0) },
+          text = { Text("PRÓXIMOS", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold) }
+        )
+        Tab(
+          selected = selectedTab == 1,
+          onClick = { onTabChange(1) },
+          text = { Text("HISTORIAL", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold) }
+        )
+      }
 
       LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
       ) {
-        if (allItems.isEmpty()) {
-          item {
-            Text("No hay eventos próximos", modifier = Modifier.padding(16.dp))
+        if (selectedTab == 0) {
+          // Sección PRÓXIMOS
+          if (state.upcoming.isEmpty()) {
+            item {
+              Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                Text("No hay eventos próximos", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+              }
+            }
+          } else {
+            items(state.upcoming) { item ->
+              AgendaItemCompact(
+                item = item,
+                isHistory = false,
+                onClick = { onEventClick(item.timestamp) },
+                onDelete = {
+                  if (item is CalendarItem.Recordatorio) onDeleteReminder(item.entity)
+                }
+              )
+            }
           }
         } else {
-          items(allItems) { (type, item) ->
-            AgendaItem(
-              type = type, 
-              item = item,
-              onClick = {
-                val dateMillis = when(item) {
-                    is com.appcasa.features.calendar.data.local.EventoEntity -> item.fecha
-                    is com.appcasa.features.reminders.data.local.RecordatorioEntity -> item.fechaHora
-                    is com.appcasa.features.tasks.data.local.TareaEntity -> item.fechaLimite ?: 0L
-                    else -> 0L
-                }
-                onEventClick(dateMillis)
-              },
-              onDelete = {
-                if (item is com.appcasa.features.reminders.data.local.RecordatorioEntity) {
-                  onDeleteReminder(item)
+          // Sección HISTORIAL
+          val visibleHistory = state.history.take((historyPage + 1) * 10)
+          
+          if (state.history.isEmpty()) {
+            item {
+              Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Historial vacío", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+              }
+            }
+          } else {
+            items(visibleHistory) { item ->
+              AgendaItemCompact(
+                item = item,
+                isHistory = true,
+                onClick = { onEventClick(item.timestamp) }
+              )
+            }
+            
+            if (visibleHistory.size < state.history.size) {
+              item {
+                TextButton(
+                  onClick = onLoadMoreHistory,
+                  modifier = Modifier.fillMaxWidth()
+                ) {
+                  Text("Ver más eventos pasados...", style = MaterialTheme.typography.labelMedium)
                 }
               }
-            )
+            }
           }
         }
       }
@@ -274,62 +309,78 @@ fun CalendarContent(
 }
 
 @Composable
-fun AgendaItem(type: String, item: Any, onClick: () -> Unit, onDelete: () -> Unit = {}) {
-  val title: String
-  val date: Long
+fun AgendaItemCompact(
+  item: CalendarItem, 
+  isHistory: Boolean,
+  onClick: () -> Unit, 
+  onDelete: () -> Unit = {}
+) {
   val icon: androidx.compose.ui.graphics.vector.ImageVector
   val color: Color
+  val typeLabel: String
 
   when (item) {
-    is com.appcasa.features.calendar.data.local.EventoEntity -> {
-      title = item.titulo
-      date = item.fecha
-      val isBirthday = item.tipo == TipoEvento.CUMPLEANOS.name
+    is CalendarItem.Evento -> {
+      val isBirthday = item.entity.tipo == TipoEvento.CUMPLEANOS.name
       icon = if (isBirthday) Icons.Default.Cake else Icons.Default.Event
       color = if (isBirthday) Color(0xFFFF4081) else MaterialTheme.colorScheme.primary
+      typeLabel = if (isBirthday) "Cumpleaños" else "Evento"
     }
-    is com.appcasa.features.tasks.data.local.TareaEntity -> {
-      title = item.titulo
-      date = item.fechaLimite ?: 0L
+    is CalendarItem.Tarea -> {
       icon = Icons.Default.Task
       color = MaterialTheme.colorScheme.secondary
+      typeLabel = "Tarea"
     }
-    is com.appcasa.features.reminders.data.local.RecordatorioEntity -> {
-      title = item.titulo
-      date = item.fechaHora
+    is CalendarItem.Recordatorio -> {
       icon = Icons.Default.Notifications
       color = MaterialTheme.colorScheme.tertiary
-    }
-    else -> {
-      title = "Desconocido"
-      date = 0L
-      icon = Icons.Default.Event
-      color = Color.Gray
+      typeLabel = "Recordatorio"
     }
   }
 
-  com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true,
-    modifier = Modifier.fillMaxWidth(),
+  com.appcasa.core.ui.components.AppCasaCard(
+    useGlassmorphism = true,
+    modifier = Modifier.fillMaxWidth().alpha(if (isHistory) 0.6f else 1f),
     onClick = onClick
   ) {
     Row(
-      modifier = Modifier.padding(12.dp),
+      modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
       verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(16.dp)
+      horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-      Icon(icon, contentDescription = null, tint = color)
-      Column(modifier = Modifier.weight(1f)) {
-        Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text(text = formatDate(date), style = MaterialTheme.typography.bodySmall)
-        Text(text = type, style = MaterialTheme.typography.labelSmall, color = color)
+      Box(
+        modifier = Modifier.size(36.dp).clip(CircleShape).background(color.copy(alpha = 0.15f)),
+        contentAlignment = Alignment.Center
+      ) {
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
       }
-      if (item is com.appcasa.features.reminders.data.local.RecordatorioEntity) {
-        IconButton(onClick = onDelete) {
-          Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+      
+      Column(modifier = Modifier.weight(1f)) {
+        Text(
+          text = item.title, 
+          style = MaterialTheme.typography.bodyLarge, 
+          fontWeight = FontWeight.Bold,
+          color = if (isHistory) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Text(text = formatDateCompact(item.timestamp), style = MaterialTheme.typography.labelSmall)
+          Text(text = " • ", style = MaterialTheme.typography.labelSmall)
+          Text(text = typeLabel.uppercase(), style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.Bold)
+        }
+      }
+
+      if (item is CalendarItem.Recordatorio && !isHistory) {
+        IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+          Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
         }
       }
     }
   }
+}
+
+private fun formatDateCompact(timestamp: Long): String {
+  val sdf = SimpleDateFormat("d MMM yyyy", Locale("es", "ES"))
+  return sdf.format(Date(timestamp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -372,7 +423,8 @@ fun AddReminderDialog(
           onClick = { showDatePicker = true },
           modifier = Modifier.fillMaxWidth()
         ) {
-          Text("Fecha: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(selectedDateMillis))}")
+          val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+          Text("Fecha: ${sdf.format(Date(selectedDateMillis))}")
         }
       }
     },
@@ -387,26 +439,21 @@ fun AddReminderDialog(
   )
 }
 
-private fun formatDate(timestamp: Long): String {
-  val sdf = SimpleDateFormat("EEEE, d 'de' MMMM", Locale("es", "ES"))
-  return sdf.format(Date(timestamp))
-}
-
 @Preview(showBackground = true)
 @Composable
 fun CalendarPreview() {
   AppCasaTheme {
     CalendarContent(
-      allItems = listOf(
-        "EVENTO" to com.appcasa.features.calendar.data.local.EventoEntity(hogarId = 1, titulo = "Cumpleaños Hijo 🎂", fecha = System.currentTimeMillis() + 86400000, tipo = TipoEvento.CUMPLEANOS.name),
-        "RECORDATORIO" to com.appcasa.features.reminders.data.local.RecordatorioEntity(hogarId = 1, titulo = "Vacuna Rabia 💉", fechaHora = System.currentTimeMillis() + 172800000),
-        "TAREA" to com.appcasa.features.tasks.data.local.TareaEntity(hogarId = 1, titulo = "Pasar ITV 🚗", fechaLimite = System.currentTimeMillis() + 259200000)
-      ),
+      state = com.appcasa.features.calendar.presentation.viewmodel.CalendarState(),
+      historyPage = 0,
+      selectedTab = 0,
+      onTabChange = {},
       currentMonth = YearMonth.now(),
       selectedDate = null,
       onMonthChange = {},
       onEventClick = {},
-      onImportClick = {}
+      onImportClick = {},
+      onLoadMoreHistory = {}
     )
   }
 }

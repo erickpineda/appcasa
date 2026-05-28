@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.features.lists.data.local.ListaDao
 import com.appcasa.features.lists.data.local.ListaItemEntity
+import com.appcasa.features.settings.data.local.ConfiguracionDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -15,7 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ListDetailViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val listaDao: ListaDao
+    private val listaDao: ListaDao,
+    private val configuracionDao: ConfiguracionDao
 ) : ViewModel() {
 
     private val listId: Long = checkNotNull(savedStateHandle["listId"])
@@ -26,6 +29,10 @@ class ListDetailViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    val isCompactView: StateFlow<Boolean> = configuracionDao.getConfiguracion(1L)
+        .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     fun addItem(nombre: String) {
         viewModelScope.launch {

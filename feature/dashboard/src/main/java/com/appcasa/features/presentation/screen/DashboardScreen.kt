@@ -195,27 +195,27 @@ fun DashboardContent(
                 supportingContent = { Text(item.type.name) },
                 leadingContent = { Icon(item.icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                 modifier = Modifier.clickable { 
-                    searchActive = false
-                    onResultClick(item) 
+                  searchActive = false
+                  onResultClick(item) 
                 }
               )
             }
             if (searchResults.isEmpty() && searchQuery.isNotEmpty()) {
-                item {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.SearchOff, 
-                            contentDescription = null, 
-                            modifier = Modifier.size(64.dp), 
-                            tint = MaterialTheme.colorScheme.outline
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("No hay resultados para \"$searchQuery\"", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.outline)
-                    }
+              item {
+                Column(
+                  modifier = Modifier.fillMaxWidth().padding(32.dp),
+                  horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                  Icon(
+                    imageVector = Icons.Default.SearchOff, 
+                    contentDescription = null, 
+                    modifier = Modifier.size(64.dp), 
+                    tint = MaterialTheme.colorScheme.outline
+                  )
+                  Spacer(modifier = Modifier.height(16.dp))
+                  Text("No hay resultados para \"$searchQuery\"", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.outline)
                 }
+              }
             }
           }
         }
@@ -321,7 +321,7 @@ fun DashboardContent(
           }
           
           item {
-              Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
           }
         }
       }
@@ -395,9 +395,9 @@ private fun QuickActionCard(
         color = MaterialTheme.colorScheme.secondaryContainer,
         modifier = Modifier.size(48.dp)
       ) {
-         Box(contentAlignment = Alignment.Center) {
-           Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(24.dp))
-         }
+        Box(contentAlignment = Alignment.Center) {
+          Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(24.dp))
+        }
       }
       Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
     }
