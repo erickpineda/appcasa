@@ -1,0 +1,47 @@
+package com.appcasa.features.finance.presentation.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.appcasa.features.finance.data.local.ExpenseDao
+import com.appcasa.features.finance.data.local.ExpenseEntity
+import com.appcasa.features.settings.data.local.ConfiguracionDao
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class FinanceViewModel @Inject constructor(
+  private val expenseDao: ExpenseDao,
+  private val configuracionDao: ConfiguracionDao
+) : ViewModel() {
+
+  val expenses: StateFlow<List<ExpenseEntity>> = expenseDao.getAllExpenses()
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+  val currencySymbol: StateFlow<String> = configuracionDao.getConfiguracion(1L)
+    .map { list -> list.find { it.clave == "moneda" }?.valor ?: "€" }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "€")
+
+  fun addExpense(concepto: String, importe: Double, categoria: String) {
+    viewModelScope.launch {
+      expenseDao.insertExpense(
+        ExpenseEntity(
+          hogarId = 1L,
+          concepto = concepto,
+          importe = importe,
+          categoria = categoria
+        )
+      )
+    }
+  }
+
+  fun deleteExpense(expense: ExpenseEntity) {
+    viewModelScope.launch {
+      expenseDao.deleteExpense(expense)
+    }
+  }
+}

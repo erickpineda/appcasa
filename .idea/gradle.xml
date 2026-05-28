@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="testRunner" value="CHOOSE_PER_TEST" />
+        <option name="distributionType" value="LOCAL" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleHome" value="C:\dev\soft\gradle\gradle-9.5.1" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/core" />
+            <option value="$PROJECT_DIR$/core/data" />
+            <option value="$PROJECT_DIR$/core/domain" />
+            <option value="$PROJECT_DIR$/core/ui" />
+            <option value="$PROJECT_DIR$/feature" />
+            <option value="$PROJECT_DIR$/feature/calendar" />
+            <option value="$PROJECT_DIR$/feature/dashboard" />
+            <option value="$PROJECT_DIR$/feature/finance" />
+            <option value="$PROJECT_DIR$/feature/inventory" />
+            <option value="$PROJECT_DIR$/feature/settings" />
+            <option value="$PROJECT_DIR$/feature/tasks" />
+          </set>
+        </option>
+        <option name="resolveExternalAnnotations" value="true" />
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

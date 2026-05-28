@@ -1,0 +1,58 @@
+package com.appcasa.di
+
+import android.content.Context
+import androidx.room.Room
+import com.appcasa.core.data.local.AppCasaDatabase
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+
+  @Provides
+  @Singleton
+  fun provideAppCasaDatabase(
+    @ApplicationContext context: Context
+  ): AppCasaDatabase = Room.databaseBuilder(
+    context,
+    AppCasaDatabase::class.java,
+    "appcasa.db"
+  )
+    .fallbackToDestructiveMigration() // ← Cambiar a .addMigrations(...) en producción
+    .build()
+
+  @Provides
+  fun provideConfiguracionDao(db: AppCasaDatabase) = db.hogarDao()
+
+  @Provides
+  fun provideMiembroDao(db: AppCasaDatabase) = db.miembroDao()
+
+  @Provides
+  fun provideTareaDao(db: AppCasaDatabase) = db.tareaDao()
+
+  @Provides
+  fun provideRecordatorioDao(db: AppCasaDatabase) = db.recordatorioDao()
+
+  @Provides
+  fun provideEventoDao(db: AppCasaDatabase) = db.eventoDao()
+
+  @Provides
+  fun provideListaDao(db: AppCasaDatabase) = db.listaDao()
+
+  @Provides
+  fun provideMascotaDao(db: AppCasaDatabase) = db.mascotaDao()
+
+  @Provides
+  fun provideUtilidadDao(db: AppCasaDatabase) = db.utilidadDao()
+
+  @Provides
+  fun provideStockDao(db: AppCasaDatabase) = db.stockDao()
+
+  @Provides
+  fun provideExpenseDao(db: AppCasaDatabase) = db.expenseDao()
+}

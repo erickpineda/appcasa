@@ -1,0 +1,8 @@
+<resources>
+  <!--
+    Tema base de Android necesario para el arranque.
+    Compose toma el control en MainActivity, pero Android necesita
+    este tema para la ventana antes de que Compose se inicialice.
+  -->
+  <style name="Theme.AppCasa" parent="Theme.Material3.DayNight.NoActionBar" />
+</resources>

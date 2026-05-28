@@ -1,0 +1,1665 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "c875565c89e40931ab9df583ea8635b4",
+    "entities": [
+      {
+        "tableName": "hogares",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nombre` TEXT NOT NULL, `descripcion` TEXT, `estado` TEXT NOT NULL, `sync_id` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcion",
+            "columnName": "descripcion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "estado",
+            "columnName": "estado",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "syncId",
+            "columnName": "sync_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_hogares_sync_id",
+            "unique": false,
+            "columnNames": [
+              "sync_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_hogares_sync_id` ON `${TABLE_NAME}` (`sync_id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "usuarios",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hogar_id` INTEGER NOT NULL, `nombre` TEXT NOT NULL, `email` TEXT NOT NULL, `avatar_url` TEXT, `rol` TEXT NOT NULL, `estado` TEXT NOT NULL, `sync_id` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, FOREIGN KEY(`hogar_id`) REFERENCES `hogares`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hogarId",
+            "columnName": "hogar_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "avatarUrl",
+            "columnName": "avatar_url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "rol",
+            "columnName": "rol",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estado",
+            "columnName": "estado",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "syncId",
+            "columnName": "sync_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_usuarios_hogar_id",
+            "unique": false,
+            "columnNames": [
+              "hogar_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_usuarios_hogar_id` ON `${TABLE_NAME}` (`hogar_id`)"
+          },
+          {
+            "name": "index_usuarios_email",
+            "unique": true,
+            "columnNames": [
+              "email"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_usuarios_email` ON `${TABLE_NAME}` (`email`)"
+          },
+          {
+            "name": "index_usuarios_sync_id",
+            "unique": false,
+            "columnNames": [
+              "sync_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_usuarios_sync_id` ON `${TABLE_NAME}` (`sync_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hogares",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hogar_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "configuracion",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hogar_id` INTEGER NOT NULL, `clave` TEXT NOT NULL, `valor` TEXT NOT NULL, `tipo` TEXT NOT NULL, FOREIGN KEY(`hogar_id`) REFERENCES `hogares`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hogarId",
+            "columnName": "hogar_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clave",
+            "columnName": "clave",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "valor",
+            "columnName": "valor",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_configuracion_hogar_id_clave",
+            "unique": true,
+            "columnNames": [
+              "hogar_id",
+              "clave"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_configuracion_hogar_id_clave` ON `${TABLE_NAME}` (`hogar_id`, `clave`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hogares",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hogar_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "miembros",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hogar_id` INTEGER NOT NULL, `nombre` TEXT NOT NULL, `tipo` TEXT NOT NULL, `fecha_nacimiento` INTEGER, `foto_uri` TEXT, `raza` TEXT, `color_pelaje` TEXT, `numero_chip` TEXT, `veterinario_nombre` TEXT, `veterinario_telefono` TEXT, `notas` TEXT, `estado` TEXT NOT NULL, `sync_id` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, FOREIGN KEY(`hogar_id`) REFERENCES `hogares`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hogarId",
+            "columnName": "hogar_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaNacimiento",
+            "columnName": "fecha_nacimiento",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fotoUri",
+            "columnName": "foto_uri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "raza",
+            "columnName": "raza",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "colorPelaje",
+            "columnName": "color_pelaje",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "numeroChip",
+            "columnName": "numero_chip",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "veterinarioNombre",
+            "columnName": "veterinario_nombre",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "veterinarioTelefono",
+            "columnName": "veterinario_telefono",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notas",
+            "columnName": "notas",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "estado",
+            "columnName": "estado",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "syncId",
+            "columnName": "sync_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_miembros_hogar_id",
+            "unique": false,
+            "columnNames": [
+              "hogar_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_miembros_hogar_id` ON `${TABLE_NAME}` (`hogar_id`)"
+          },
+          {
+            "name": "index_miembros_tipo",
+            "unique": false,
+            "columnNames": [
+              "tipo"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_miembros_tipo` ON `${TABLE_NAME}` (`tipo`)"
+          },
+          {
+            "name": "index_miembros_sync_id",
+            "unique": false,
+            "columnNames": [
+              "sync_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_miembros_sync_id` ON `${TABLE_NAME}` (`sync_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hogares",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hogar_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "categorias_tarea",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hogar_id` INTEGER NOT NULL, `nombre` TEXT NOT NULL, `color_hex` TEXT NOT NULL, `icono` TEXT, `orden` INTEGER NOT NULL, FOREIGN KEY(`hogar_id`) REFERENCES `hogares`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hogarId",
+            "columnName": "hogar_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "colorHex",
+            "columnName": "color_hex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "icono",
+            "columnName": "icono",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "orden",
+            "columnName": "orden",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_categorias_tarea_hogar_id",
+            "unique": false,
+            "columnNames": [
+              "hogar_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_categorias_tarea_hogar_id` ON `${TABLE_NAME}` (`hogar_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hogares",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hogar_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "tareas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hogar_id` INTEGER NOT NULL, `titulo` TEXT NOT NULL, `descripcion` TEXT, `prioridad` TEXT NOT NULL, `estado` TEXT NOT NULL, `categoria_id` INTEGER, `fecha_limite` INTEGER, `periodicidad` TEXT NOT NULL, `es_personal` INTEGER NOT NULL, `completado_en` INTEGER, `foto_uri` TEXT, `sync_id` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, FOREIGN KEY(`hogar_id`) REFERENCES `hogares`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`categoria_id`) REFERENCES `categorias_tarea`(`id`) ON UPDATE NO ACTION ON DELETE SET DEFAULT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hogarId",
+            "columnName": "hogar_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titulo",
+            "columnName": "titulo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcion",
+            "columnName": "descripcion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "prioridad",
+            "columnName": "prioridad",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estado",
+            "columnName": "estado",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoriaId",
+            "columnName": "categoria_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fechaLimite",
+            "columnName": "fecha_limite",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "periodicidad",
+            "columnName": "periodicidad",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "esPersonal",
+            "columnName": "es_personal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completadoEn",
+            "columnName": "completado_en",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fotoUri",
+            "columnName": "foto_uri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "syncId",
+            "columnName": "sync_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_tareas_hogar_id",
+            "unique": false,
+            "columnNames": [
+              "hogar_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tareas_hogar_id` ON `${TABLE_NAME}` (`hogar_id`)"
+          },
+          {
+            "name": "index_tareas_categoria_id",
+            "unique": false,
+            "columnNames": [
+              "categoria_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tareas_categoria_id` ON `${TABLE_NAME}` (`categoria_id`)"
+          },
+          {
+            "name": "index_tareas_estado",
+            "unique": false,
+            "columnNames": [
+              "estado"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tareas_estado` ON `${TABLE_NAME}` (`estado`)"
+          },
+          {
+            "name": "index_tareas_fecha_limite",
+            "unique": false,
+            "columnNames": [
+              "fecha_limite"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tareas_fecha_limite` ON `${TABLE_NAME}` (`fecha_limite`)"
+          },
+          {
+            "name": "index_tareas_sync_id",
+            "unique": false,
+            "columnNames": [
+              "sync_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tareas_sync_id` ON `${TABLE_NAME}` (`sync_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hogares",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hogar_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "categorias_tarea",
+            "onDelete": "SET DEFAULT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "categoria_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "tarea_asignaciones",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tarea_id` INTEGER NOT NULL, `miembro_id` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, PRIMARY KEY(`tarea_id`, `miembro_id`), FOREIGN KEY(`tarea_id`) REFERENCES `tareas`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`miembro_id`) REFERENCES `miembros`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "tareaId",
+            "columnName": "tarea_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "miembroId",
+            "columnName": "miembro_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "tarea_id",
+            "miembro_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_tarea_asignaciones_tarea_id",
+            "unique": false,
+            "columnNames": [
+              "tarea_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tarea_asignaciones_tarea_id` ON `${TABLE_NAME}` (`tarea_id`)"
+          },
+          {
+            "name": "index_tarea_asignaciones_miembro_id",
+            "unique": false,
+            "columnNames": [
+              "miembro_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tarea_asignaciones_miembro_id` ON `${TABLE_NAME}` (`miembro_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "tareas",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "tarea_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "miembros",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "miembro_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "tarea_check_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tarea_id` INTEGER NOT NULL, `texto` TEXT NOT NULL, `completado` INTEGER NOT NULL, `orden` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, FOREIGN KEY(`tarea_id`) REFERENCES `tareas`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tareaId",
+            "columnName": "tarea_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "texto",
+            "columnName": "texto",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completado",
+            "columnName": "completado",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orden",
+            "columnName": "orden",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_tarea_check_items_tarea_id",
+            "unique": false,
+            "columnNames": [
+              "tarea_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tarea_check_items_tarea_id` ON `${TABLE_NAME}` (`tarea_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "tareas",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "tarea_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "recordatorios",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hogar_id` INTEGER NOT NULL, `titulo` TEXT NOT NULL, `descripcion` TEXT, `fecha_hora` INTEGER NOT NULL, `tipo_repeticion` TEXT NOT NULL, `tarea_id` INTEGER, `miembro_id` INTEGER, `worker_id` TEXT, `notificado` INTEGER NOT NULL, `activo` INTEGER NOT NULL, `sync_id` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, FOREIGN KEY(`hogar_id`) REFERENCES `hogares`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hogarId",
+            "columnName": "hogar_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titulo",
+            "columnName": "titulo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcion",
+            "columnName": "descripcion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fechaHora",
+            "columnName": "fecha_hora",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipoRepeticion",
+            "columnName": "tipo_repeticion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tareaId",
+            "columnName": "tarea_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "miembroId",
+            "columnName": "miembro_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "workerId",
+            "columnName": "worker_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notificado",
+            "columnName": "notificado",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activo",
+            "columnName": "activo",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "syncId",
+            "columnName": "sync_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_recordatorios_hogar_id",
+            "unique": false,
+            "columnNames": [
+              "hogar_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recordatorios_hogar_id` ON `${TABLE_NAME}` (`hogar_id`)"
+          },
+          {
+            "name": "index_recordatorios_fecha_hora",
+            "unique": false,
+            "columnNames": [
+              "fecha_hora"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recordatorios_fecha_hora` ON `${TABLE_NAME}` (`fecha_hora`)"
+          },
+          {
+            "name": "index_recordatorios_activo",
+            "unique": false,
+            "columnNames": [
+              "activo"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recordatorios_activo` ON `${TABLE_NAME}` (`activo`)"
+          },
+          {
+            "name": "index_recordatorios_sync_id",
+            "unique": false,
+            "columnNames": [
+              "sync_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recordatorios_sync_id` ON `${TABLE_NAME}` (`sync_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hogares",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hogar_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "eventos",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hogar_id` INTEGER NOT NULL, `titulo` TEXT NOT NULL, `descripcion` TEXT, `tipo` TEXT NOT NULL, `fecha` INTEGER NOT NULL, `fecha_fin` INTEGER, `miembro_id` INTEGER, `todo_el_dia` INTEGER NOT NULL, `repeticion_anual` INTEGER NOT NULL, `sync_id` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, FOREIGN KEY(`hogar_id`) REFERENCES `hogares`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hogarId",
+            "columnName": "hogar_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titulo",
+            "columnName": "titulo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcion",
+            "columnName": "descripcion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fecha",
+            "columnName": "fecha",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaFin",
+            "columnName": "fecha_fin",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "miembroId",
+            "columnName": "miembro_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "todoElDia",
+            "columnName": "todo_el_dia",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "repeticionAnual",
+            "columnName": "repeticion_anual",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "syncId",
+            "columnName": "sync_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_eventos_hogar_id",
+            "unique": false,
+            "columnNames": [
+              "hogar_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_eventos_hogar_id` ON `${TABLE_NAME}` (`hogar_id`)"
+          },
+          {
+            "name": "index_eventos_fecha",
+            "unique": false,
+            "columnNames": [
+              "fecha"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_eventos_fecha` ON `${TABLE_NAME}` (`fecha`)"
+          },
+          {
+            "name": "index_eventos_tipo",
+            "unique": false,
+            "columnNames": [
+              "tipo"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_eventos_tipo` ON `${TABLE_NAME}` (`tipo`)"
+          },
+          {
+            "name": "index_eventos_sync_id",
+            "unique": false,
+            "columnNames": [
+              "sync_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_eventos_sync_id` ON `${TABLE_NAME}` (`sync_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hogares",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hogar_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "listas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hogar_id` INTEGER NOT NULL, `nombre` TEXT NOT NULL, `tipo` TEXT NOT NULL, `completada` INTEGER NOT NULL, `sync_id` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, FOREIGN KEY(`hogar_id`) REFERENCES `hogares`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hogarId",
+            "columnName": "hogar_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completada",
+            "columnName": "completada",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "syncId",
+            "columnName": "sync_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_listas_hogar_id",
+            "unique": false,
+            "columnNames": [
+              "hogar_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_listas_hogar_id` ON `${TABLE_NAME}` (`hogar_id`)"
+          },
+          {
+            "name": "index_listas_tipo",
+            "unique": false,
+            "columnNames": [
+              "tipo"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_listas_tipo` ON `${TABLE_NAME}` (`tipo`)"
+          },
+          {
+            "name": "index_listas_sync_id",
+            "unique": false,
+            "columnNames": [
+              "sync_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_listas_sync_id` ON `${TABLE_NAME}` (`sync_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hogares",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hogar_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "lista_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `lista_id` INTEGER NOT NULL, `texto` TEXT NOT NULL, `cantidad` TEXT, `completado` INTEGER NOT NULL, `orden` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, FOREIGN KEY(`lista_id`) REFERENCES `listas`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "listaId",
+            "columnName": "lista_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "texto",
+            "columnName": "texto",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cantidad",
+            "columnName": "cantidad",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "completado",
+            "columnName": "completado",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orden",
+            "columnName": "orden",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_lista_items_lista_id",
+            "unique": false,
+            "columnNames": [
+              "lista_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_lista_items_lista_id` ON `${TABLE_NAME}` (`lista_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "listas",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "lista_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "mascota_vacunas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mascota_id` INTEGER NOT NULL, `nombre` TEXT NOT NULL, `fecha_aplicacion` INTEGER NOT NULL, `fecha_proxima` INTEGER, `veterinario` TEXT, `notas` TEXT, `created_at` INTEGER NOT NULL, FOREIGN KEY(`mascota_id`) REFERENCES `miembros`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mascotaId",
+            "columnName": "mascota_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaAplicacion",
+            "columnName": "fecha_aplicacion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaProxima",
+            "columnName": "fecha_proxima",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "veterinario",
+            "columnName": "veterinario",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notas",
+            "columnName": "notas",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_mascota_vacunas_mascota_id",
+            "unique": false,
+            "columnNames": [
+              "mascota_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_mascota_vacunas_mascota_id` ON `${TABLE_NAME}` (`mascota_id`)"
+          },
+          {
+            "name": "index_mascota_vacunas_fecha_proxima",
+            "unique": false,
+            "columnNames": [
+              "fecha_proxima"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_mascota_vacunas_fecha_proxima` ON `${TABLE_NAME}` (`fecha_proxima`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "miembros",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "mascota_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "mascota_desparasitaciones",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mascota_id` INTEGER NOT NULL, `tipo` TEXT NOT NULL, `producto` TEXT, `fecha_aplicacion` INTEGER NOT NULL, `fecha_proxima` INTEGER, `notas` TEXT, `created_at` INTEGER NOT NULL, FOREIGN KEY(`mascota_id`) REFERENCES `miembros`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mascotaId",
+            "columnName": "mascota_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "producto",
+            "columnName": "producto",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fechaAplicacion",
+            "columnName": "fecha_aplicacion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaProxima",
+            "columnName": "fecha_proxima",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "notas",
+            "columnName": "notas",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_mascota_desparasitaciones_mascota_id",
+            "unique": false,
+            "columnNames": [
+              "mascota_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_mascota_desparasitaciones_mascota_id` ON `${TABLE_NAME}` (`mascota_id`)"
+          },
+          {
+            "name": "index_mascota_desparasitaciones_fecha_proxima",
+            "unique": false,
+            "columnNames": [
+              "fecha_proxima"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_mascota_desparasitaciones_fecha_proxima` ON `${TABLE_NAME}` (`fecha_proxima`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "miembros",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "mascota_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "mascota_pesos",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mascota_id` INTEGER NOT NULL, `peso_kg` REAL NOT NULL, `fecha` INTEGER NOT NULL, `notas` TEXT, `created_at` INTEGER NOT NULL, FOREIGN KEY(`mascota_id`) REFERENCES `miembros`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mascotaId",
+            "columnName": "mascota_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pesoKg",
+            "columnName": "peso_kg",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fecha",
+            "columnName": "fecha",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notas",
+            "columnName": "notas",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_mascota_pesos_mascota_id",
+            "unique": false,
+            "columnNames": [
+              "mascota_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_mascota_pesos_mascota_id` ON `${TABLE_NAME}` (`mascota_id`)"
+          },
+          {
+            "name": "index_mascota_pesos_fecha",
+            "unique": false,
+            "columnNames": [
+              "fecha"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_mascota_pesos_fecha` ON `${TABLE_NAME}` (`fecha`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "miembros",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "mascota_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "mascota_medicaciones",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mascota_id` INTEGER NOT NULL, `nombre` TEXT NOT NULL, `dosis` TEXT NOT NULL, `frecuencia` TEXT NOT NULL, `fecha_inicio` INTEGER NOT NULL, `fecha_fin` INTEGER, `activa` INTEGER NOT NULL, `notas` TEXT, `created_at` INTEGER NOT NULL, FOREIGN KEY(`mascota_id`) REFERENCES `miembros`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mascotaId",
+            "columnName": "mascota_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dosis",
+            "columnName": "dosis",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "frecuencia",
+            "columnName": "frecuencia",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaInicio",
+            "columnName": "fecha_inicio",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaFin",
+            "columnName": "fecha_fin",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "activa",
+            "columnName": "activa",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notas",
+            "columnName": "notas",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_mascota_medicaciones_mascota_id",
+            "unique": false,
+            "columnNames": [
+              "mascota_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_mascota_medicaciones_mascota_id` ON `${TABLE_NAME}` (`mascota_id`)"
+          },
+          {
+            "name": "index_mascota_medicaciones_activa",
+            "unique": false,
+            "columnNames": [
+              "activa"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_mascota_medicaciones_activa` ON `${TABLE_NAME}` (`activa`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "miembros",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "mascota_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "utilidades",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `codigo` TEXT NOT NULL, `nombre` TEXT NOT NULL, `descripcion` TEXT, `icono` TEXT NOT NULL, `activa` INTEGER NOT NULL, `orden` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "codigo",
+            "columnName": "codigo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcion",
+            "columnName": "descripcion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "icono",
+            "columnName": "icono",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activa",
+            "columnName": "activa",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orden",
+            "columnName": "orden",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_utilidades_codigo",
+            "unique": true,
+            "columnNames": [
+              "codigo"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_utilidades_codigo` ON `${TABLE_NAME}` (`codigo`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c875565c89e40931ab9df583ea8635b4')"
+    ]
+  }
+}
