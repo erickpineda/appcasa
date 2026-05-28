@@ -62,6 +62,12 @@ class StockViewModel @Inject constructor(
         }
     }
 
+    fun updateItem(item: StockEntity) {
+        viewModelScope.launch {
+            stockDao.updateItem(item.copy(updatedAt = System.currentTimeMillis()))
+        }
+    }
+
     fun addToShoppingList(nombre: String) {
         viewModelScope.launch {
             try {

@@ -13,7 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.alpha
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -30,13 +32,31 @@ fun StockScreen(
   val stockItems by viewModel.stockItems.collectAsState()
   val isCompact by viewModel.isCompactView.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
+  var editingItem by remember { mutableStateOf<StockEntity?>(null) }
 
   if (showAddDialog) {
-    AddStockDialog(
+    StockActionDialog(
       onDismiss = { showAddDialog = false },
       onConfirm = { nombre, categoria, cantidad, minima, unidad ->
         viewModel.addItem(nombre, categoria, cantidad, minima, unidad)
         showAddDialog = false
+      }
+    )
+  }
+
+  editingItem?.let { item ->
+    StockActionDialog(
+      item = item,
+      onDismiss = { editingItem = null },
+      onConfirm = { nombre, categoria, cantidad, minima, unidad ->
+        viewModel.updateItem(item.copy(
+          nombre = nombre,
+          categoria = categoria,
+          cantidadActual = cantidad,
+          cantidadMinima = minima,
+          unidad = unidad
+        ))
+        editingItem = null
       }
     )
   }
@@ -64,7 +84,7 @@ fun StockScreen(
           .fillMaxSize()
           .padding(padding),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(if (isCompact) 2.dp else 12.dp)
+        verticalArrangement = Arrangement.spacedBy(if (isCompact) 4.dp else 12.dp)
       ) {
         if (stockItems.isEmpty()) {
           item {
@@ -79,6 +99,7 @@ fun StockScreen(
               isCompact = isCompact,
               onAdd = { viewModel.updateQuantity(item, 1.0) },
               onRemove = { viewModel.updateQuantity(item, -1.0) },
+              onEdit = { editingItem = item },
               onDelete = { viewModel.deleteItem(item) },
               onAddToList = { viewModel.addToShoppingList(item.nombre) }
             )
@@ -90,19 +111,20 @@ fun StockScreen(
 }
 
 @Composable
-fun AddStockDialog(
+fun StockActionDialog(
+  item: StockEntity? = null,
   onDismiss: () -> Unit,
   onConfirm: (String, String, Double, Double, String) -> Unit
 ) {
-  var nombre by remember { mutableStateOf("") }
-  var categoria by remember { mutableStateOf("Despensa") }
-  var cantidad by remember { mutableStateOf("") }
-  var minima by remember { mutableStateOf("") }
-  var unidad by remember { mutableStateOf("uds") }
+  var nombre by remember { mutableStateOf(item?.nombre ?: "") }
+  var categoria by remember { mutableStateOf(item?.categoria ?: "Despensa") }
+  var cantidad by remember { mutableStateOf(item?.cantidadActual?.toString() ?: "") }
+  var minima by remember { mutableStateOf(item?.cantidadMinima?.toString() ?: "") }
+  var unidad by remember { mutableStateOf(item?.unidad ?: "uds") }
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Nuevo Artículo") },
+    title = { Text(if (item == null) "Nuevo Artículo" else "Editar Artículo") },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
@@ -132,7 +154,7 @@ fun AddStockDialog(
           onConfirm(nombre, categoria, cantidad.toDoubleOrNull() ?: 0.0, minima.toDoubleOrNull() ?: 0.0, unidad)
         }
       }) {
-        Text("Añadir")
+        Text(if (item == null) "Añadir" else "Guardar")
       }
     },
     dismissButton = {
@@ -147,76 +169,93 @@ fun StockItemCard(
   isCompact: Boolean,
   onAdd: () -> Unit,
   onRemove: () -> Unit,
+  onEdit: () -> Unit,
   onDelete: () -> Unit,
   onAddToList: () -> Unit
 ) {
   val isLowStock = item.cantidadActual <= item.cantidadMinima
   
-  com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true,
-    modifier = Modifier.fillMaxWidth().alpha(if (isLowStock) 0.6f else 1f)
+  com.appcasa.core.ui.components.AppCasaCard(
+    useGlassmorphism = true,
+    modifier = Modifier.fillMaxWidth(),
+    containerColor = if (isLowStock) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f) else null
   ) {
-    Row(
-      modifier = Modifier.padding(if (isCompact) 4.dp else 16.dp),
-      verticalAlignment = Alignment.CenterVertically
+    Column(
+      modifier = Modifier.padding(horizontal = if (isCompact) 12.dp else 16.dp, vertical = if (isCompact) 8.dp else 12.dp)
     ) {
-      Column(modifier = Modifier.weight(1f)) {
-        Text(
-          text = item.nombre, 
-          style = if (isCompact) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleMedium, 
-          fontWeight = FontWeight.Bold
-        )
-        if (!isCompact) {
-          Text(text = item.categoria, style = MaterialTheme.typography.bodySmall)
-        }
-        if (isLowStock) {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        // Título y Categoría
+        Column(modifier = Modifier.weight(1f)) {
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+              text = item.nombre, 
+              style = if (isCompact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium, 
+              fontWeight = FontWeight.Bold,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+              modifier = Modifier.weight(1f, fill = false)
+            )
+            if (isLowStock) {
+              Icon(
+                Icons.Default.Warning, 
+                contentDescription = null, 
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = 4.dp).size(14.dp)
+              )
+            }
+          }
           Text(
-            text = "¡Stock Bajo!",
+            text = if (isLowStock) "STOCK BAJO • ${item.categoria}" else item.categoria, 
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.error,
-            fontWeight = FontWeight.Bold
+            color = if (isLowStock) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            fontWeight = if (isLowStock) FontWeight.ExtraBold else FontWeight.Normal
           )
+        }
+
+        // Botones de acción alineados a la derecha
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          IconButton(onClick = onRemove, modifier = Modifier.size(if (isCompact) 28.dp else 36.dp)) {
+            Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(16.dp))
+          }
+          Text(
+            text = "${if (item.cantidadActual % 1 == 0.0) item.cantidadActual.toInt() else item.cantidadActual} ${item.unidad}",
+            style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Black,
+            modifier = Modifier.padding(horizontal = 4.dp)
+          )
+          IconButton(onClick = onAdd, modifier = Modifier.size(if (isCompact) 28.dp else 36.dp)) {
+            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+          }
+          
+          Spacer(modifier = Modifier.width(4.dp))
+          
+          IconButton(onClick = onEdit, modifier = Modifier.size(if (isCompact) 28.dp else 32.dp)) {
+            Icon(Icons.Default.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f), modifier = Modifier.size(14.dp))
+          }
+          IconButton(onClick = onDelete, modifier = Modifier.size(if (isCompact) 28.dp else 32.dp)) {
+            Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
+          }
         }
       }
 
-      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (isCompact) 0.dp else 4.dp)) {
-        if (isLowStock) {
-          IconButton(onClick = onAddToList) {
-            Icon(
-              imageVector = Icons.Default.ShoppingCart, 
-              contentDescription = "Añadir a la compra", 
-              tint = MaterialTheme.colorScheme.primary,
-              modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
-            )
-          }
-        }
-        
-        IconButton(onClick = onRemove) {
-          Icon(
-            imageVector = Icons.Default.Remove, 
-            contentDescription = "Quitar",
-            modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
-          )
-        }
-        Text(
-          text = "${item.cantidadActual} ${item.unidad}",
-          style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
-          fontWeight = FontWeight.Bold,
-          modifier = Modifier.padding(horizontal = 4.dp)
-        )
-        IconButton(onClick = onAdd) {
-          Icon(
-            imageVector = Icons.Default.Add, 
-            contentDescription = "Añadir",
-            modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
-          )
-        }
-        IconButton(onClick = onDelete) {
-          Icon(
-            Icons.Default.Delete, 
-            contentDescription = "Borrar", 
-            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-            modifier = Modifier.size(if (isCompact) 18.dp else 24.dp)
-          )
+      // Botón "Comprar" solo si hay stock bajo, en una línea limpia
+      if (isLowStock) {
+        Button(
+          onClick = onAddToList,
+          modifier = Modifier.padding(top = 8.dp).height(28.dp).fillMaxWidth(),
+          contentPadding = PaddingValues(0.dp),
+          colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+            contentColor = MaterialTheme.colorScheme.primary
+          ),
+          elevation = ButtonDefaults.buttonElevation(0.dp)
+        ) {
+          Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(12.dp))
+          Spacer(Modifier.width(4.dp))
+          Text("AÑADIR A LA COMPRA", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
         }
       }
     }

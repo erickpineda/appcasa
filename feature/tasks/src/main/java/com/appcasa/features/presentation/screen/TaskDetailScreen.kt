@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.tasks.presentation.viewmodel.TaskDetailViewModel
@@ -39,6 +40,22 @@ fun TaskDetailScreen(
   
   var selectedItems by remember { mutableStateOf(setOf<Long>()) }
   val isSelectionMode = selectedItems.isNotEmpty()
+  var showEditDialog by remember { mutableStateOf(false) }
+
+  if (showEditDialog && task != null) {
+    EditTaskMainDialog(
+      titulo = task!!.titulo,
+      descripcion = task!!.descripcion ?: "",
+      prioridad = Prioridad.valueOf(task!!.prioridad),
+      esPersonal = task!!.esPersonal,
+      fotoUri = task!!.fotoUri,
+      onDismiss = { showEditDialog = false },
+      onConfirm = { t, d, p, esp, f ->
+        viewModel.updateTask(t, d.takeIf { it.isNotBlank() }, p.name, esp, f)
+        showEditDialog = false
+      }
+    )
+  }
 
   PullToRefreshWrapper {
     Scaffold(
@@ -97,6 +114,10 @@ fun TaskDetailScreen(
                 selectedItems = emptySet()
               }) {
                 Icon(Icons.Default.Delete, contentDescription = "Borrar seleccionados", tint = MaterialTheme.colorScheme.error)
+              }
+            } else {
+              IconButton(onClick = { showEditDialog = true }) {
+                Icon(Icons.Default.Edit, contentDescription = "Editar Tarea")
               }
             }
           }
@@ -325,4 +346,56 @@ fun CompactSubTaskItemEditable(
       }
     }
   }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditTaskMainDialog(
+  titulo: String,
+  descripcion: String,
+  prioridad: Prioridad,
+  esPersonal: Boolean,
+  fotoUri: String?,
+  onDismiss: () -> Unit,
+  onConfirm: (String, String, Prioridad, Boolean, String?) -> Unit
+) {
+  var t by remember { mutableStateOf(titulo) }
+  var d by remember { mutableStateOf(descripcion) }
+  var p by remember { mutableStateOf(prioridad) }
+  var esp by remember { mutableStateOf(esPersonal) }
+
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text("Editar Tarea") },
+    text = {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(value = t, onValueChange = { t = it }, label = { Text("Título") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = d, onValueChange = { d = it }, label = { Text("Descripción") }, modifier = Modifier.fillMaxWidth())
+        
+        Text("Prioridad", style = MaterialTheme.typography.labelSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+          Prioridad.entries.forEach { prio ->
+            FilterChip(
+              selected = p == prio,
+              onClick = { p = prio },
+              label = { Text(prio.name, style = MaterialTheme.typography.labelSmall) }
+            )
+          }
+        }
+        
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Checkbox(checked = esp, onCheckedChange = { esp = it })
+          Text("Tarea personal", style = MaterialTheme.typography.bodySmall)
+        }
+      }
+    },
+    confirmButton = {
+      Button(onClick = { if (t.isNotBlank()) onConfirm(t, d, p, esp, fotoUri) }) {
+        Text("Guardar")
+      }
+    },
+    dismissButton = {
+      TextButton(onClick = onDismiss) { Text("Cancelar") }
+    }
+  )
 }

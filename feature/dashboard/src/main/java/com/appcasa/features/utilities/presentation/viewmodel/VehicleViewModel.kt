@@ -14,23 +14,25 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VehicleViewModel @Inject constructor(
-    private val configuracionDao: ConfiguracionDao
+  private val configuracionDao: ConfiguracionDao
 ) : ViewModel() {
 
-    // Usamos la tabla de configuración para guardar datos del vehículo de forma persistente
-    val vehicleData: StateFlow<Map<String, String>> = configuracionDao.getConfiguracion(1L)
-        .map { list -> list.associate { it.clave to it.valor } }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyMap()
-        )
+  // Usamos la tabla de configuración para guardar datos del vehículo de forma persistente
+  val vehicleData: StateFlow<Map<String, String>> = configuracionDao.getConfiguracion(1L)
+    .map { list -> list.associate { it.clave to it.valor } }
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = emptyMap()
+    )
 
-    fun saveVehicleData(plate: String, insurance: String, insurancePhone: String) {
-        viewModelScope.launch {
-            configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = 1L, clave = "VEH_PLATE", valor = plate))
-            configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = 1L, clave = "VEH_INSURANCE", valor = insurance))
-            configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = 1L, clave = "VEH_INSURANCE_PHONE", valor = insurancePhone))
-        }
+  fun saveVehicleData(plate: String, insurance: String, insurancePhone: String, model: String, year: String) {
+    viewModelScope.launch {
+      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = 1L, clave = "VEH_PLATE", valor = plate))
+      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = 1L, clave = "VEH_INSURANCE", valor = insurance))
+      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = 1L, clave = "VEH_INSURANCE_PHONE", valor = insurancePhone))
+      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = 1L, clave = "VEH_MODEL", valor = model))
+      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = 1L, clave = "VEH_YEAR", valor = year))
     }
+  }
 }

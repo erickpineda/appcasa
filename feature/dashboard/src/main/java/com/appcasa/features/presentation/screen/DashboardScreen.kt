@@ -58,37 +58,37 @@ fun DashboardScreen(
       },
       onNavigateToTasks = { 
         navController.navigate(Screen.Tasks.route) {
-          popUpTo(navController.graph.findStartDestination().id) { this.saveState = true }
+          popUpTo(navController.graph.findStartDestination().id) { saveState = false }
           launchSingleTop = true
-          restoreState = true
+          restoreState = false
         }
       },
       onNavigateToFamily = { 
         navController.navigate(Screen.Family.route) {
-          popUpTo(navController.graph.findStartDestination().id) { this.saveState = true }
+          popUpTo(navController.graph.findStartDestination().id) { saveState = false }
           launchSingleTop = true
-          restoreState = true
+          restoreState = false
         }
       },
       onNavigateToCalendar = { 
         navController.navigate(Screen.Calendar.route) {
-          popUpTo(navController.graph.findStartDestination().id) { this.saveState = true }
+          popUpTo(navController.graph.findStartDestination().id) { saveState = false }
           launchSingleTop = true
-          restoreState = true
+          restoreState = false
         }
       },
       onNavigateToUtilities = { 
         navController.navigate(Screen.Utilities.route) {
-          popUpTo(navController.graph.findStartDestination().id) { this.saveState = true }
+          popUpTo(navController.graph.findStartDestination().id) { saveState = false }
           launchSingleTop = true
-          restoreState = true
+          restoreState = false
         }
       },
       onNavigateToLists = { 
         navController.navigate(Screen.Management.route) { 
-          popUpTo(navController.graph.findStartDestination().id) { this.saveState = true }
+          popUpTo(navController.graph.findStartDestination().id) { saveState = false }
           launchSingleTop = true
-          restoreState = true
+          restoreState = false
         }
       },
       onNavigateToSettings = {
@@ -165,12 +165,11 @@ fun DashboardContent(
   ) { scaffoldPadding ->
     Box(modifier = Modifier.fillMaxSize().padding(scaffoldPadding)) {
       
-      // Búsqueda persistente o Modal
       if (searchActive) {
         SearchBar(
           query = searchQuery,
           onQueryChange = onSearchQueryChange,
-          onSearch = { /* Ya se actualiza en tiempo real */ },
+          onSearch = { },
           active = searchActive,
           onActiveChange = { searchActive = it },
           placeholder = { Text("Busca tareas, listas, familia...") },
@@ -221,7 +220,6 @@ fun DashboardContent(
         }
       }
 
-      // Contenido Principal
       AnimatedVisibility(
         visible = !searchActive,
         enter = fadeIn() + expandVertically(),

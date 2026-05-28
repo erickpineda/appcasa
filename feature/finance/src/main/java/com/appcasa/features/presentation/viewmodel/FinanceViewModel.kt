@@ -44,4 +44,10 @@ class FinanceViewModel @Inject constructor(
       expenseDao.deleteExpense(expense)
     }
   }
+
+  fun updateExpense(expense: ExpenseEntity) {
+    viewModelScope.launch {
+      expenseDao.insertExpense(expense)
+    }
+  }
 }

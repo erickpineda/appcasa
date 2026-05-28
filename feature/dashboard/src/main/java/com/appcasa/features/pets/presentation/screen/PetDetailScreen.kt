@@ -47,6 +47,8 @@ fun PetDetailScreen(
   var showMedicationDialog by remember { mutableStateOf(false) }
   var showVaccineDialog by remember { mutableStateOf(false) }
   var showDewormingDialog by remember { mutableStateOf(false) }
+  
+  var editingMedication by remember { mutableStateOf<MascotaMedicacionEntity?>(null) }
 
   if (showWeightDialog) {
     WeightDialog(
@@ -59,11 +61,22 @@ fun PetDetailScreen(
   }
 
   if (showMedicationDialog) {
-    MedicationDialog(
+    MedicationActionDialog(
       onDismiss = { showMedicationDialog = false },
       onConfirm = { nombre, dosis, frecuencia ->
         viewModel.addMedicacion(nombre, dosis, frecuencia)
         showMedicationDialog = false
+      }
+    )
+  }
+
+  editingMedication?.let { med ->
+    MedicationActionDialog(
+      item = med,
+      onDismiss = { editingMedication = null },
+      onConfirm = { nombre, dosis, frecuencia ->
+        viewModel.updateMedicacion(med.copy(nombre = nombre, dosis = dosis, frecuencia = frecuencia))
+        editingMedication = null
       }
     )
   }
@@ -98,9 +111,14 @@ fun PetDetailScreen(
       onBack = { navController.popBackStack() },
       onEdit = { pet?.let { navController.navigate(com.appcasa.navigation.Screen.EditMember.createRoute(it.id)) } },
       onAddWeight = { showWeightDialog = true },
+      onDeleteWeight = { viewModel.deletePeso(it) },
       onAddMedication = { showMedicationDialog = true },
+      onEditMedication = { editingMedication = it },
+      onDeleteMedication = { viewModel.deleteMedicacion(it) },
       onAddVaccine = { showVaccineDialog = true },
-      onAddDeworming = { showDewormingDialog = true }
+      onDeleteVaccine = { viewModel.deleteVacuna(it) },
+      onAddDeworming = { showDewormingDialog = true },
+      onDeleteDeworming = { viewModel.deleteDesparasitacion(it) }
     )
   }
 }
@@ -116,9 +134,14 @@ fun PetDetailContent(
   onBack: () -> Unit,
   onEdit: () -> Unit = {},
   onAddWeight: () -> Unit = {},
+  onDeleteWeight: (MascotaPesoEntity) -> Unit = {},
   onAddMedication: () -> Unit = {},
+  onEditMedication: (MascotaMedicacionEntity) -> Unit = {},
+  onDeleteMedication: (MascotaMedicacionEntity) -> Unit = {},
   onAddVaccine: () -> Unit = {},
-  onAddDeworming: () -> Unit = {}
+  onDeleteVaccine: (MascotaVacunaEntity) -> Unit = {},
+  onAddDeworming: () -> Unit = {},
+  onDeleteDeworming: (MascotaDesparasitacionEntity) -> Unit = {}
 ) {
   Scaffold(
     topBar = {
@@ -159,7 +182,7 @@ fun PetDetailContent(
               contentDescription = null,
               modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(180.dp)
                 .clip(RoundedCornerShape(16.dp)),
               contentScale = ContentScale.Crop
             )
@@ -168,7 +191,7 @@ fun PetDetailContent(
 
         // Información básica
         item {
-          Card(modifier = Modifier.fillMaxWidth()) {
+          com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
               Text("Información General", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
               Spacer(modifier = Modifier.height(8.dp))
@@ -196,20 +219,23 @@ fun PetDetailContent(
             verticalAlignment = Alignment.CenterVertically
           ) {
             Text("Desparasitación", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            TextButton(onClick = onAddDeworming) {
-              Text("Añadir")
-            }
+            TextButton(onClick = onAddDeworming) { Text("Añadir") }
           }
         }
 
         if (desparasitaciones.isEmpty()) {
-          item { Text("Sin registros de desparasitación", style = MaterialTheme.typography.bodyMedium) }
+          item { Text("Sin registros de desparasitación", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 8.dp)) }
         } else {
           items(desparasitaciones) { item ->
             ListItem(
               headlineContent = { Text(item.producto ?: "Sin producto") },
               supportingContent = { Text("${item.tipo} · ${formatDate(item.fechaAplicacion)}") },
-              leadingContent = { Icon(Icons.Default.BugReport, contentDescription = null) }
+              leadingContent = { Icon(Icons.Default.BugReport, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+              trailingContent = {
+                IconButton(onClick = { onDeleteDeworming(item) }) {
+                  Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+                }
+              }
             )
           }
         }
@@ -222,25 +248,33 @@ fun PetDetailContent(
             verticalAlignment = Alignment.CenterVertically
           ) {
             Text("Medicaciones Activas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            TextButton(onClick = onAddMedication) {
-              Text("Añadir")
-            }
+            TextButton(onClick = onAddMedication) { Text("Añadir") }
           }
         }
 
         if (medicaciones.isEmpty()) {
-          item { Text("No hay medicaciones activas", style = MaterialTheme.typography.bodyMedium) }
+          item { Text("No hay medicaciones activas", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 8.dp)) }
         } else {
           items(medicaciones) { med ->
             ListItem(
               headlineContent = { Text(med.nombre) },
               supportingContent = { Text("${med.dosis} · ${med.frecuencia}") },
-              leadingContent = { Icon(Icons.Default.Medication, contentDescription = null) }
+              leadingContent = { Icon(Icons.Default.Medication, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+              trailingContent = {
+                Row {
+                  IconButton(onClick = { onEditMedication(med) }) {
+                    Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
+                  }
+                  IconButton(onClick = { onDeleteMedication(med) }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+                  }
+                }
+              }
             )
           }
         }
 
-        // Últimos pesos
+        // Historial de Peso
         item {
           Row(
             modifier = Modifier.fillMaxWidth(),
@@ -248,20 +282,23 @@ fun PetDetailContent(
             verticalAlignment = Alignment.CenterVertically
           ) {
             Text("Historial de Peso", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            TextButton(onClick = onAddWeight) {
-              Text("Añadir")
-            }
+            TextButton(onClick = onAddWeight) { Text("Añadir") }
           }
         }
         
         if (pesos.isEmpty()) {
-          item { Text("No hay registros de peso", style = MaterialTheme.typography.bodyMedium) }
+          item { Text("No hay registros de peso", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 8.dp)) }
         } else {
           items(pesos.take(5)) { peso ->
             ListItem(
               headlineContent = { Text("${String.format("%.2f", peso.pesoKg)} kg") },
               supportingContent = { Text(formatDate(peso.fecha)) },
-              leadingContent = { Icon(Icons.Default.MonitorWeight, contentDescription = null) }
+              leadingContent = { Icon(Icons.Default.MonitorWeight, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+              trailingContent = {
+                IconButton(onClick = { onDeleteWeight(peso) }) {
+                  Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+                }
+              }
             )
           }
         }
@@ -274,23 +311,28 @@ fun PetDetailContent(
             verticalAlignment = Alignment.CenterVertically
           ) {
             Text("Vacunas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            TextButton(onClick = onAddVaccine) {
-              Text("Añadir")
-            }
+            TextButton(onClick = onAddVaccine) { Text("Añadir") }
           }
         }
 
         if (vacunas.isEmpty()) {
-          item { Text("No hay vacunas registradas", style = MaterialTheme.typography.bodyMedium) }
+          item { Text("No hay vacunas registradas", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 8.dp)) }
         } else {
           items(vacunas) { vacuna ->
             ListItem(
               headlineContent = { Text(vacuna.nombre) },
               supportingContent = { Text("Fecha: ${formatDate(vacuna.fechaAplicacion)}") },
-              leadingContent = { Icon(Icons.Default.Vaccines, contentDescription = null) }
+              leadingContent = { Icon(Icons.Default.Vaccines, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+              trailingContent = {
+                IconButton(onClick = { onDeleteVaccine(vacuna) }) {
+                  Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+                }
+              }
             )
           }
         }
+        
+        item { Spacer(modifier = Modifier.height(24.dp)) }
       }
     } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
       CircularProgressIndicator()
@@ -343,17 +385,18 @@ fun WeightTrendGraph(pesos: List<MascotaPesoEntity>) {
 }
 
 @Composable
-fun MedicationDialog(
+fun MedicationActionDialog(
+  item: MascotaMedicacionEntity? = null,
   onDismiss: () -> Unit,
   onConfirm: (String, String, String) -> Unit
 ) {
-  var nombre by remember { mutableStateOf("") }
-  var dosis by remember { mutableStateOf("") }
-  var frecuencia by remember { mutableStateOf("") }
+  var nombre by remember { mutableStateOf(item?.nombre ?: "") }
+  var dosis by remember { mutableStateOf(item?.dosis ?: "") }
+  var frecuencia by remember { mutableStateOf(item?.frecuencia ?: "") }
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Nueva Medicación") },
+    title = { Text(if (item == null) "Nueva Medicación" else "Editar Medicación") },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre (ej: Apoquel)") }, modifier = Modifier.fillMaxWidth())
@@ -367,9 +410,7 @@ fun MedicationDialog(
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) {
-        Text("Cancelar")
-      }
+      TextButton(onClick = onDismiss) { Text("Cancelar") }
     }
   )
 }
@@ -398,9 +439,7 @@ fun VaccineDialog(
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) {
-        Text("Cancelar")
-      }
+      TextButton(onClick = onDismiss) { Text("Cancelar") }
     }
   )
 }
@@ -474,9 +513,7 @@ fun WeightDialog(
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) {
-        Text("Cancelar")
-      }
+      TextButton(onClick = onDismiss) { Text("Cancelar") }
     }
   )
 }

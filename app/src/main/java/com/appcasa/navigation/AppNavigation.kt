@@ -51,41 +51,58 @@ fun AppNavigation() {
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentDestination = navBackStackEntry?.destination
 
-  // Siempre mostramos la barra inferior para que funcione como una caja de herramientas accesible
-  val showBottomBar = true 
-
   Scaffold(
     bottomBar = {
-      if (showBottomBar) {
-        NavigationBar {
-          bottomNavItems.forEach { item ->
-            val isManagementTab = item.screen == Screen.Management && currentDestination?.route in listOf(Screen.Management.route, Screen.Tasks.route, Screen.Lists.route, Screen.ListDetail.route, Screen.Inventory.route, Screen.AddTask.route, Screen.TaskDetail.route)
-            val isFamilyTab = item.screen == Screen.FamilyHub && currentDestination?.route in listOf(Screen.FamilyHub.route, Screen.Family.route, Screen.Calendar.route, Screen.PetDetail.route, Screen.MemberDetail.route, Screen.EditMember.route, Screen.AddMember.route)
-            val isUtilitiesTab = item.screen == Screen.Utilities && currentDestination?.route in listOf(Screen.Utilities.route, Screen.DosageCalculator.route, Screen.BMICalculator.route, Screen.MortgageCalculator.route, Screen.AgeCalculator.route, Screen.ConsumptionCalculator.route, Screen.SavingsCalculator.route, Screen.Expenses.route, Screen.VehicleManager.route)
-            val isDashboardTab = item.screen == Screen.Dashboard && currentDestination?.route == Screen.Dashboard.route
+      NavigationBar {
+        bottomNavItems.forEach { item ->
+          val isManagementTab = item.screen == Screen.Management && currentDestination?.route in listOf(
+            Screen.Management.route, Screen.Tasks.route, Screen.Lists.route, 
+            Screen.ListDetail.route, Screen.Inventory.route, Screen.AddTask.route, Screen.TaskDetail.route
+          )
+          val isFamilyTab = item.screen == Screen.FamilyHub && currentDestination?.route in listOf(
+            Screen.FamilyHub.route, Screen.Family.route, Screen.Calendar.route, 
+            Screen.PetDetail.route, Screen.MemberDetail.route, Screen.EditMember.route, Screen.AddMember.route
+          )
+          val isUtilitiesTab = item.screen == Screen.Utilities && currentDestination?.route in listOf(
+            Screen.Utilities.route, Screen.DosageCalculator.route, Screen.BMICalculator.route, 
+            Screen.MortgageCalculator.route, Screen.AgeCalculator.route, Screen.ConsumptionCalculator.route, 
+            Screen.SavingsCalculator.route, Screen.Expenses.route, Screen.VehicleManager.route
+          )
+          val isDashboardTab = item.screen == Screen.Dashboard && currentDestination?.route == Screen.Dashboard.route
 
-            val selected = isDashboardTab || isManagementTab || isFamilyTab || isUtilitiesTab
+          val selected = isDashboardTab || isManagementTab || isFamilyTab || isUtilitiesTab
 
-            NavigationBarItem(
-              selected = selected,
-              onClick = {
-                if (selected) {
-                  // Si ya estamos en la sección, volvemos al Hub raíz
-                  navController.popBackStack(item.screen.route, inclusive = false)
-                } else {
+          NavigationBarItem(
+            selected = selected,
+            onClick = {
+              val isAtHub = currentDestination?.route == item.screen.route
+              if (isAtHub) {
+                // Ya estamos en la raíz de la pestaña, no hacemos nada
+              } else if (selected) {
+                // Estamos en una sub-pantalla de esta sección, intentamos volver a su Hub
+                val popped = navController.popBackStack(item.screen.route, inclusive = false)
+                if (!popped) {
+                  // Si no estaba en el stack (ej: navegación directa), forzamos ir al Hub
                   navController.navigate(item.screen.route) {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                      this.saveState = false
-                    }
+                    popUpTo(navController.graph.findStartDestination().id) { saveState = false }
                     launchSingleTop = true
                     restoreState = false
                   }
                 }
-              },
-              icon = { Icon(item.icon, contentDescription = item.label) },
-              label = { if (selected) Text(item.label) }
-            )
-          }
+              } else {
+                // Vamos a una pestaña diferente: siempre a su pantalla principal (Hub)
+                navController.navigate(item.screen.route) {
+                  popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = false
+                  }
+                  launchSingleTop = true
+                  restoreState = false // Esto evita que se restaure la sub-pantalla anterior
+                }
+              }
+            },
+            icon = { Icon(item.icon, contentDescription = item.label) },
+            label = { if (selected) Text(item.label) }
+          )
         }
       }
     }
@@ -115,37 +132,21 @@ fun AppNavigation() {
         SettingsScreen(navController = navController, innerPadding = innerPadding)
       }
       
-      // Destinos secundarios
-      composable(Screen.Tasks.route) {
-        TasksScreen(navController = navController)
-      }
-      composable(Screen.Calendar.route) {
-        CalendarScreen(navController = navController)
-      }
-      composable(Screen.Family.route) {
-        FamilyScreen(navController = navController)
-      }
-      composable(Screen.Lists.route) {
-        ListsScreen(navController = navController)
-      }
+      composable(Screen.Tasks.route) { TasksScreen(navController = navController) }
+      composable(Screen.Calendar.route) { CalendarScreen(navController = navController) }
+      composable(Screen.Family.route) { FamilyScreen(navController = navController) }
+      composable(Screen.Lists.route) { ListsScreen(navController = navController) }
       
-      // Detalle de mascota
       composable(
         route = Screen.PetDetail.route,
         arguments = listOf(androidx.navigation.navArgument("petId") { type = androidx.navigation.NavType.LongType })
-      ) {
-        PetDetailScreen(navController = navController)
-      }
+      ) { PetDetailScreen(navController = navController) }
 
-      // Detalle de tarea
       composable(
         route = Screen.TaskDetail.route,
         arguments = listOf(androidx.navigation.navArgument("taskId") { type = androidx.navigation.NavType.LongType })
-      ) {
-        TaskDetailScreen(navController = navController)
-      }
+      ) { TaskDetailScreen(navController = navController) }
 
-      // Detalle de miembro (Persona)
       composable(
         route = Screen.MemberDetail.route,
         arguments = listOf(androidx.navigation.navArgument("memberId") { type = androidx.navigation.NavType.LongType })
@@ -154,60 +155,29 @@ fun AppNavigation() {
         MemberDetailScreen(navController = navController, memberId = memberId)
       }
 
-      // Añadir miembro
-      composable(Screen.AddMember.route) {
-        AddMemberScreen(navController = navController)
-      }
-
-      // Editar miembro
+      composable(Screen.AddMember.route) { AddMemberScreen(navController = navController) }
+      
       composable(
         route = Screen.EditMember.route,
         arguments = listOf(androidx.navigation.navArgument("memberId") { type = androidx.navigation.NavType.LongType })
-      ) {
-        EditMemberScreen(navController = navController)
-      }
+      ) { EditMemberScreen(navController = navController) }
 
-      // Añadir tarea
-      composable(Screen.AddTask.route) {
-        AddTaskScreen(navController = navController)
-      }
+      composable(Screen.AddTask.route) { AddTaskScreen(navController = navController) }
 
-      // Detalle de lista
       composable(
         route = Screen.ListDetail.route,
         arguments = listOf(androidx.navigation.navArgument("listId") { type = androidx.navigation.NavType.LongType })
-      ) {
-        ListDetailScreen(navController = navController)
-      }
+      ) { ListDetailScreen(navController = navController) }
 
-      // Calculadoras
-      composable(Screen.DosageCalculator.route) {
-        DosageCalculatorScreen(navController = navController)
-      }
-      composable(Screen.BMICalculator.route) {
-        BMICalculatorScreen(navController = navController)
-      }
-      composable(Screen.MortgageCalculator.route) {
-        MortgageCalculatorScreen(navController = navController)
-      }
-      composable(Screen.AgeCalculator.route) {
-        AgeCalculatorScreen(navController = navController)
-      }
-      composable(Screen.ConsumptionCalculator.route) {
-        ConsumptionCalculatorScreen(navController = navController)
-      }
-      composable(Screen.SavingsCalculator.route) {
-        SavingsCalculatorScreen(navController = navController)
-      }
-      composable(Screen.VehicleManager.route) {
-        VehicleManagementScreen(navController = navController)
-      }
-      composable(Screen.Inventory.route) {
-        StockScreen(navController = navController)
-      }
-      composable(Screen.Expenses.route) {
-        ExpenseScreen(navController = navController)
-      }
+      composable(Screen.DosageCalculator.route) { DosageCalculatorScreen(navController = navController) }
+      composable(Screen.BMICalculator.route) { BMICalculatorScreen(navController = navController) }
+      composable(Screen.MortgageCalculator.route) { MortgageCalculatorScreen(navController = navController) }
+      composable(Screen.AgeCalculator.route) { AgeCalculatorScreen(navController = navController) }
+      composable(Screen.ConsumptionCalculator.route) { ConsumptionCalculatorScreen(navController = navController) }
+      composable(Screen.SavingsCalculator.route) { SavingsCalculatorScreen(navController = navController) }
+      composable(Screen.VehicleManager.route) { VehicleManagementScreen(navController = navController) }
+      composable(Screen.Inventory.route) { StockScreen(navController = navController) }
+      composable(Screen.Expenses.route) { ExpenseScreen(navController = navController) }
     }
   }
 }

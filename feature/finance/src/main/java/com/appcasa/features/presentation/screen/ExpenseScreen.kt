@@ -6,11 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,15 +32,32 @@ fun ExpenseScreen(
   val expenses by viewModel.expenses.collectAsState()
   val currency by viewModel.currencySymbol.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
+  var editingExpense by remember { mutableStateOf<ExpenseEntity?>(null) }
   val context = LocalContext.current
 
   if (showAddDialog) {
-    AddExpenseDialog(
+    ExpenseActionDialog(
       currency = currency,
       onDismiss = { showAddDialog = false },
       onConfirm = { concepto, importe, categoria ->
         viewModel.addExpense(concepto, importe, categoria)
         showAddDialog = false
+      }
+    )
+  }
+
+  editingExpense?.let { expense ->
+    ExpenseActionDialog(
+      item = expense,
+      currency = currency,
+      onDismiss = { editingExpense = null },
+      onConfirm = { concepto, importe, categoria ->
+        viewModel.updateExpense(expense.copy(
+            concepto = concepto,
+            importe = importe,
+            categoria = categoria
+        ))
+        editingExpense = null
       }
     )
   }
@@ -104,6 +117,7 @@ fun ExpenseScreen(
             ExpenseCard(
               expense = expense,
               currency = currency,
+              onEdit = { editingExpense = expense },
               onDelete = { viewModel.deleteExpense(expense) }
             )
           }
@@ -114,7 +128,7 @@ fun ExpenseScreen(
 }
 
 @Composable
-fun ExpenseCard(expense: ExpenseEntity, currency: String, onDelete: () -> Unit) {
+fun ExpenseCard(expense: ExpenseEntity, currency: String, onEdit: () -> Unit, onDelete: () -> Unit) {
   com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true,
     modifier = Modifier.fillMaxWidth()
   ) {
@@ -132,6 +146,9 @@ fun ExpenseCard(expense: ExpenseEntity, currency: String, onDelete: () -> Unit) 
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.error
           )
+          IconButton(onClick = onEdit) {
+            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
+          }
           IconButton(onClick = onDelete) {
             Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
           }
@@ -142,18 +159,19 @@ fun ExpenseCard(expense: ExpenseEntity, currency: String, onDelete: () -> Unit) 
 }
 
 @Composable
-fun AddExpenseDialog(
+fun ExpenseActionDialog(
+  item: ExpenseEntity? = null,
   currency: String,
   onDismiss: () -> Unit,
   onConfirm: (String, Double, String) -> Unit
 ) {
-  var concepto by remember { mutableStateOf("") }
-  var importe by remember { mutableStateOf("") }
-  var categoria by remember { mutableStateOf("Otros") }
+  var concepto by remember { mutableStateOf(item?.concepto ?: "") }
+  var importe by remember { mutableStateOf(item?.importe?.toString() ?: "") }
+  var categoria by remember { mutableStateOf(item?.categoria ?: "Otros") }
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Registrar Gasto") },
+    title = { Text(if (item == null) "Registrar Gasto" else "Editar Gasto") },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(value = concepto, onValueChange = { concepto = it }, label = { Text("Concepto") }, modifier = Modifier.fillMaxWidth())
@@ -174,7 +192,7 @@ fun AddExpenseDialog(
           onConfirm(concepto, valImporte, categoria)
         }
       }) {
-        Text("Guardar")
+        Text(if (item == null) "Guardar" else "Actualizar")
       }
     },
     dismissButton = {

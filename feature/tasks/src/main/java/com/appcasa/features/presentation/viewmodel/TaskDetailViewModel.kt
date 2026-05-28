@@ -86,4 +86,20 @@ class TaskDetailViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateTask(titulo: String, descripcion: String?, prioridad: String, esPersonal: Boolean, fotoUri: String?) {
+        viewModelScope.launch {
+            val current = _task.value ?: return@launch
+            val updated = current.copy(
+                titulo = titulo,
+                descripcion = descripcion,
+                prioridad = prioridad,
+                esPersonal = esPersonal,
+                fotoUri = fotoUri,
+                updatedAt = System.currentTimeMillis()
+            )
+            tareaDao.updateTarea(updated)
+            _task.value = updated
+        }
+    }
 }
