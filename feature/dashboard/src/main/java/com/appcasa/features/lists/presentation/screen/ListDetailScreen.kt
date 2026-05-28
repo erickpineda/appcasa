@@ -98,7 +98,7 @@ fun ListDetailScreen(
           } else {
             IconButton(onClick = {
               val shareText = "🛒 *Lista de AppCasa*:\n" + items.joinToString("\n") { 
-                (if (it.completado) "✅ " else "⬜ ") + it.texto 
+                (if (it.completado) "✅ " else "⬜ ") + it.texto + (if (!it.cantidad.isNullOrBlank()) " (${it.cantidad})" else "")
               }
               val sendIntent: Intent = Intent().apply {
                 action = Intent.ACTION_SEND
@@ -268,16 +268,27 @@ fun CompactListItemEditable(
         }
       )
     } else {
-      Text(
-        text = item.texto,
-        style = if (isCompact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
-        textDecoration = if (item.completado) TextDecoration.LineThrough else null,
-        color = if (item.completado) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
+      Column(
         modifier = Modifier
           .weight(1f)
           .clickable(enabled = !isSelectionMode) { isEditing = true }
           .padding(vertical = if (isCompact) 4.dp else 8.dp)
-      )
+      ) {
+        Text(
+          text = item.texto,
+          style = if (isCompact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
+          textDecoration = if (item.completado) TextDecoration.LineThrough else null,
+          color = if (item.completado) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
+        )
+        if (!item.cantidad.isNullOrBlank()) {
+          Text(
+            text = item.cantidad!!,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
+          )
+        }
+      }
 
       if (!isSelectionMode) {
         IconButton(onClick = onDelete, modifier = Modifier.size(if (isCompact) 32.dp else 40.dp)) {

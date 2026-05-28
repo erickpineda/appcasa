@@ -30,9 +30,12 @@ fun StockScreen(
   viewModel: StockViewModel = hiltViewModel()
 ) {
   val stockItems by viewModel.stockItems.collectAsState()
+  val availableLists by viewModel.availableLists.collectAsState()
   val isCompact by viewModel.isCompactView.collectAsState()
+  
   var showAddDialog by remember { mutableStateOf(false) }
   var editingItem by remember { mutableStateOf<StockEntity?>(null) }
+  var itemToAddToList by remember { mutableStateOf<StockEntity?>(null) }
 
   if (showAddDialog) {
     StockActionDialog(
@@ -57,6 +60,18 @@ fun StockScreen(
           unidad = unidad
         ))
         editingItem = null
+      }
+    )
+  }
+
+  itemToAddToList?.let { item ->
+    AddToListDialog(
+      item = item,
+      lists = availableLists,
+      onDismiss = { itemToAddToList = null },
+      onConfirm = { listId, quantity ->
+        viewModel.addToShoppingList(item, listId, quantity)
+        itemToAddToList = null
       }
     )
   }
@@ -101,13 +116,86 @@ fun StockScreen(
               onRemove = { viewModel.updateQuantity(item, -1.0) },
               onEdit = { editingItem = item },
               onDelete = { viewModel.deleteItem(item) },
-              onAddToList = { viewModel.addToShoppingList(item.nombre) }
+              onAddToList = { itemToAddToList = item }
             )
           }
         }
       }
     }
   }
+}
+
+@Composable
+fun AddToListDialog(
+  item: StockEntity,
+  lists: List<com.appcasa.features.lists.data.local.ListaEntity>,
+  onDismiss: () -> Unit,
+  onConfirm: (Long, Double) -> Unit
+) {
+  val initialMissing = (item.cantidadMinima - item.cantidadActual).coerceAtLeast(1.0)
+  var quantity by remember { mutableStateOf(initialMissing.toString()) }
+  var selectedListId by remember { mutableStateOf<Long?>(lists.find { it.tipo == com.appcasa.core.domain.model.TipoLista.COMPRA.name }?.id ?: lists.firstOrNull()?.id) }
+  var expanded by remember { mutableStateOf(false) }
+
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text("Añadir a la Compra") },
+    text = {
+      Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("¿Cuántas unidades de '${item.nombre}' quieres añadir?", style = MaterialTheme.typography.bodyMedium)
+        
+        OutlinedTextField(
+          value = quantity,
+          onValueChange = { quantity = it },
+          label = { Text("Cantidad (${item.unidad})") },
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+          modifier = Modifier.fillMaxWidth()
+        )
+
+        if (lists.isEmpty()) {
+          Text("No tienes listas creadas. Crea una primero.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+        } else {
+          Text("Seleccionar lista:", style = MaterialTheme.typography.labelSmall)
+          Box {
+            OutlinedButton(
+              onClick = { expanded = true },
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              val selectedName = lists.find { it.id == selectedListId }?.nombre ?: "Seleccionar lista"
+              Text(selectedName)
+              Spacer(Modifier.weight(1f))
+              Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+            }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+              lists.forEach { list ->
+                DropdownMenuItem(
+                  text = { Text(list.nombre) },
+                  onClick = {
+                    selectedListId = list.id
+                    expanded = false
+                  }
+                )
+              }
+            }
+          }
+        }
+      }
+    },
+    confirmButton = {
+      Button(
+        onClick = { 
+          val q = quantity.toDoubleOrNull() ?: 1.0
+          selectedListId?.let { onConfirm(it, q) }
+        },
+        enabled = selectedListId != null && quantity.toDoubleOrNull() != null
+      ) {
+        Text("Añadir")
+      }
+    },
+    dismissButton = {
+      TextButton(onClick = onDismiss) { Text("Cancelar") }
+    }
+  )
 }
 
 @Composable
