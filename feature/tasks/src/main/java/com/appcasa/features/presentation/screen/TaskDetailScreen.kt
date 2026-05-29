@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -26,6 +27,7 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.Periodicidad
+import com.appcasa.core.domain.model.TipoContenidoTarea
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.tasks.presentation.viewmodel.TaskDetailViewModel
@@ -53,12 +55,13 @@ fun TaskDetailScreen(
       descripcion = task!!.descripcion ?: "",
       prioridad = Prioridad.valueOf(task!!.prioridad),
       periodicidad = Periodicidad.valueOf(task!!.periodicidad),
+      tipoContenido = TipoContenidoTarea.valueOf(task!!.tipoContenido),
       esPersonal = task!!.esPersonal,
       fechaLimite = task!!.fechaLimite,
       fotoUri = task!!.fotoUri,
       onDismiss = { showEditDialog = false },
-      onConfirm = { t, d, p, per, esp, fecha, f, anticipacion ->
-        viewModel.updateTask(t, d.takeIf { it.isNotBlank() }, p.name, esp, f, fecha, anticipacion, per)
+      onConfirm = { t, d, p, per, perCont, esp, fecha, f, anticipacion ->
+        viewModel.updateTask(t, d.takeIf { it.isNotBlank() }, p.name, esp, f, fecha, anticipacion, per, perCont)
         showEditDialog = false
       }
     )
@@ -160,146 +163,123 @@ fun TaskDetailScreen(
             }
 
             item {
-              if ((!currentTask.descripcion.isNullOrBlank() || currentTask.fechaLimite != null) && !isSelectionMode) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                  if (currentTask.fechaLimite != null) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                      Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-                      Spacer(Modifier.width(8.dp))
-                      
-                      val date = Date(currentTask.fechaLimite!!)
-                      val cal = Calendar.getInstance().apply { time = date }
-                      val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-                        "d 'de' MMMM '(Todo el día)'"
-                      } else {
-                        "d 'de' MMMM HH:mm"
-                      }
-                      
-                      Text(
-                        text = "Vence: ${SimpleDateFormat(format, Locale("es", "ES")).format(date)}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                      )
-
-                      if (currentTask.periodicidad != Periodicidad.NINGUNA.name) {
-                        Spacer(Modifier.width(8.dp))
-                        Icon(Icons.Default.Repeat, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.secondary)
-                        Text(
-                          text = currentTask.periodicidad,
-                          style = MaterialTheme.typography.labelSmall,
-                          color = MaterialTheme.colorScheme.secondary
-                        )
-                      }
-                    }
-                    Spacer(Modifier.height(8.dp))
-                  }
-                  
-                  if (!currentTask.descripcion.isNullOrBlank()) {
+              if (currentTask.tipoContenido == TipoContenidoTarea.TEXTO.name) {
+                // MODO TEXTO: Mostrar descripción prominentemente
+                if (!currentTask.descripcion.isNullOrBlank()) {
+                  Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                       text = currentTask.descripcion ?: "",
-                      style = MaterialTheme.typography.bodyMedium,
-                      color = MaterialTheme.colorScheme.onSurfaceVariant
+                      style = MaterialTheme.typography.bodyLarge,
+                      color = MaterialTheme.colorScheme.onSurface
                     )
                   }
-                }
-                HorizontalDivider(
-                  modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                  thickness = 0.5.dp,
-                  color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                )
-              }
-            }
-
-            item {
-              Row(
-                modifier = Modifier
-                  .padding(horizontal = 16.dp, vertical = 4.dp)
-                  .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-              ) {
-                Text(
-                  text = "Pasos de la tarea",
-                  style = MaterialTheme.typography.titleSmall,
-                  fontWeight = FontWeight.Bold,
-                  color = MaterialTheme.colorScheme.primary
-                )
-                
-                if (!isSelectionMode && subTasks.isNotEmpty()) {
-                  TextButton(
-                    onClick = { selectedItems = subTasks.map { it.id }.toSet() },
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                    modifier = Modifier.height(28.dp)
-                  ) {
-                    Icon(Icons.Default.LibraryAddCheck, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Seleccionar", style = MaterialTheme.typography.labelSmall)
+                } else {
+                  Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Text("Sin nota. Pulsa editar para añadir una.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                   }
                 }
-              }
-            }
+              } else {
+                // MODO LISTA: Mostrar descripción pequeña (si existe) y luego la checklist
+                if (!currentTask.descripcion.isNullOrBlank()) {
+                  Text(
+                    text = currentTask.descripcion ?: "",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                  )
+                }
 
-            item {
-              AnimatedVisibility(visible = !isSelectionMode) {
                 Row(
                   modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 4.dp)
                     .fillMaxWidth(),
                   verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.spacedBy(8.dp)
+                  horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                  OutlinedTextField(
-                    value = newSubTaskText,
-                    onValueChange = { newSubTaskText = it },
-                    placeholder = { Text("Añadir paso...") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium,
-                    colors = OutlinedTextFieldDefaults.colors(
-                      unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    )
+                  Text(
+                    text = "Pasos de la tarea",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                   )
-                  FloatingActionButton(
-                    onClick = {
-                      if (newSubTaskText.isNotBlank()) {
-                        viewModel.addSubTask(newSubTaskText)
-                        newSubTaskText = ""
-                      }
-                    },
-                    modifier = Modifier.size(40.dp),
-                    elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp)
-                  ) {
-                    Icon(Icons.Default.Add, contentDescription = "Añadir")
+                  
+                  if (!isSelectionMode && subTasks.isNotEmpty()) {
+                    TextButton(
+                      onClick = { selectedItems = subTasks.map { it.id }.toSet() },
+                      contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                      modifier = Modifier.height(28.dp)
+                    ) {
+                      Icon(Icons.Default.LibraryAddCheck, contentDescription = null, modifier = Modifier.size(14.dp))
+                      Spacer(modifier = Modifier.width(4.dp))
+                      Text("Seleccionar", style = MaterialTheme.typography.labelSmall)
+                    }
                   }
                 }
               }
             }
 
-            items(subTasks, key = { it.id }) { item ->
-              val isSelected = selectedItems.contains(item.id)
-              CompactSubTaskItemEditable(
-                item = item,
-                isSelected = isSelected,
-                isSelectionMode = isSelectionMode,
-                onToggleSelection = {
-                  selectedItems = if (isSelected) selectedItems - item.id else selectedItems + item.id
-                },
-                onToggle = { 
-                  haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                  viewModel.toggleSubTask(item) 
-                },
-                onDelete = { 
-                  haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                  viewModel.deleteSubTask(item) 
-                },
-                onEdit = { nuevoTexto -> viewModel.updateSubTask(item, nuevoTexto) }
-              )
-              HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f)
-              )
+            if (currentTask.tipoContenido == TipoContenidoTarea.LISTA.name) {
+              item {
+                AnimatedVisibility(visible = !isSelectionMode) {
+                  Row(
+                    modifier = Modifier
+                      .padding(horizontal = 16.dp, vertical = 4.dp)
+                      .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                  ) {
+                    OutlinedTextField(
+                      value = newSubTaskText,
+                      onValueChange = { newSubTaskText = it },
+                      placeholder = { Text("Añadir paso...") },
+                      modifier = Modifier.weight(1f),
+                      singleLine = true,
+                      textStyle = MaterialTheme.typography.bodyMedium,
+                      colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                      )
+                    )
+                    FloatingActionButton(
+                      onClick = {
+                        if (newSubTaskText.isNotBlank()) {
+                          viewModel.addSubTask(newSubTaskText)
+                          newSubTaskText = ""
+                        }
+                      },
+                      modifier = Modifier.size(40.dp),
+                      elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp)
+                    ) {
+                      Icon(Icons.Default.Add, contentDescription = "Añadir")
+                    }
+                  }
+                }
+              }
+
+              items(subTasks, key = { it.id }) { item ->
+                val isSelected = selectedItems.contains(item.id)
+                CompactSubTaskItemEditable(
+                  item = item,
+                  isSelected = isSelected,
+                  isSelectionMode = isSelectionMode,
+                  onToggleSelection = {
+                    selectedItems = if (isSelected) selectedItems - item.id else selectedItems + item.id
+                  },
+                  onToggle = { 
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    viewModel.toggleSubTask(item) 
+                  },
+                  onDelete = { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    viewModel.deleteSubTask(item) 
+                  },
+                  onEdit = { nuevoTexto -> viewModel.updateSubTask(item, nuevoTexto) }
+                )
+                HorizontalDivider(
+                  modifier = Modifier.padding(horizontal = 16.dp),
+                  thickness = 0.5.dp,
+                  color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f)
+                )
+              }
             }
             
             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -400,16 +380,18 @@ fun EditTaskMainDialog(
   descripcion: String,
   prioridad: Prioridad,
   periodicidad: Periodicidad,
+  tipoContenido: TipoContenidoTarea,
   esPersonal: Boolean,
   fechaLimite: Long?,
   fotoUri: String?,
   onDismiss: () -> Unit,
-  onConfirm: (String, String, Prioridad, Periodicidad, Boolean, Long?, String?, Int) -> Unit
+  onConfirm: (String, String, Prioridad, Periodicidad, TipoContenidoTarea, Boolean, Long?, String?, Int) -> Unit
 ) {
   var t by remember { mutableStateOf(titulo) }
   var d by remember { mutableStateOf(descripcion) }
   var p by remember { mutableStateOf(prioridad) }
   var per by remember { mutableStateOf(periodicidad) }
+  var perCont by remember { mutableStateOf<TipoContenidoTarea>(tipoContenido) }
   var esp by remember { mutableStateOf(esPersonal) }
   var f by remember { mutableStateOf(fotoUri) }
   
@@ -496,7 +478,20 @@ fun EditTaskMainDialog(
           OutlinedTextField(value = t, onValueChange = { t = it }, label = { Text("Título") }, modifier = Modifier.fillMaxWidth())
         }
         item {
-          OutlinedTextField(value = d, onValueChange = { d = it }, label = { Text("Descripción") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+          OutlinedTextField(value = d, onValueChange = { d = it }, label = { Text("Descripción / Nota") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+        }
+
+        item {
+          Text("Tipo de Contenido", style = MaterialTheme.typography.labelSmall)
+          Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            TipoContenidoTarea.entries.forEach { tc: TipoContenidoTarea ->
+              FilterChip(
+                selected = perCont == tc,
+                onClick = { perCont = tc },
+                label = { Text(if (tc == TipoContenidoTarea.LISTA) "Lista" else "Nota", style = MaterialTheme.typography.labelSmall) }
+              )
+            }
+          }
         }
         
         item {
@@ -598,7 +593,7 @@ fun EditTaskMainDialog(
       }
     },
     confirmButton = {
-      Button(onClick = { if (t.isNotBlank()) onConfirm(t, d, p, per, esp, selectedFecha, f, selectedAnticipacion) }) {
+      Button(onClick = { if (t.isNotBlank()) onConfirm(t, d, p, per, perCont, esp, selectedFecha, f, selectedAnticipacion) }) {
         Text("Guardar")
       }
     },

@@ -12,12 +12,8 @@ import com.appcasa.features.reminders.data.local.RecordatorioDao
 import com.appcasa.features.reminders.data.local.RecordatorioEntity
 import com.appcasa.features.family.data.local.MiembroDao
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -34,51 +30,54 @@ class CalendarViewModel @Inject constructor(
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
-
   private val _historyPage = MutableStateFlow(0)
   val historyPage = _historyPage.asStateFlow()
 
-  val calendarItems: StateFlow<CalendarState> = combine(
-    eventoDao.getEventosByHogar(householdId),
-    tareaDao.getTareasByHogar(householdId),
-    recordatorioDao.getRecordatoriosByHogar(householdId),
-    miembroDao.getMiembrosByHogar(householdId)
-  ) { eventos, tareas, recordatorios, miembros ->
-    val startOfToday = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-    
-    // Generar cumpleaños dinámicos basado solo en el año actual
-    val birthdayItems = miembros.filter { it.fechaNacimiento != null }.map { miembro ->
-      val bdayMillis = calculateBirthdayOccurrence(miembro.fechaNacimiento!!)
-      CalendarItem.Evento(
-        EventoEntity(
-          id = -miembro.id, // Virtual ID
-          hogarId = miembro.hogarId,
-          titulo = "Cumpleaños: ${miembro.nombre} 🎂",
-          fecha = bdayMillis,
-          tipo = com.appcasa.core.domain.model.TipoEvento.CUMPLEANOS.name
+  @OptIn(ExperimentalCoroutinesApi::class)
+  val calendarItems: StateFlow<CalendarState> = currentHouseholdProvider.householdId
+    .flatMapLatest { householdId ->
+      combine(
+        eventoDao.getEventosByHogar(householdId),
+        tareaDao.getTareasByHogar(householdId),
+        recordatorioDao.getRecordatoriosByHogar(householdId),
+        miembroDao.getMiembrosByHogar(householdId)
+      ) { eventos, tareas, recordatorios, miembros ->
+        val startOfToday = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        
+        // Generar cumpleaños dinámicos basado solo en el año actual
+        val birthdayItems = miembros.filter { it.fechaNacimiento != null }.map { miembro ->
+          val bdayMillis = calculateBirthdayOccurrence(miembro.fechaNacimiento!!)
+          CalendarItem.Evento(
+            EventoEntity(
+              id = -miembro.id, // Virtual ID
+              hogarId = miembro.hogarId,
+              titulo = "Cumpleaños: ${miembro.nombre} 🎂",
+              fecha = bdayMillis,
+              tipo = com.appcasa.core.domain.model.TipoEvento.CUMPLEANOS.name
+            )
+          )
+        }
+
+        val allItems = (eventos.map { CalendarItem.Evento(it) } +
+               tareas.filter { it.fechaLimite != null }.map { CalendarItem.Tarea(it) } +
+               recordatorios.map { CalendarItem.Recordatorio(it) } +
+               birthdayItems)
+               .sortedBy { it.timestamp }
+
+        CalendarState(
+          upcoming = allItems.filter { it.timestamp >= startOfToday },
+          history = allItems.filter { it.timestamp < startOfToday }.reversed(),
+          rawEventos = eventos,
+          rawTareas = tareas.filter { it.fechaLimite != null },
+          rawRecordatorios = recordatorios
         )
-      )
+      }
     }
-
-    val allItems = (eventos.map { CalendarItem.Evento(it) } +
-           tareas.filter { it.fechaLimite != null }.map { CalendarItem.Tarea(it) } +
-           recordatorios.map { CalendarItem.Recordatorio(it) } +
-           birthdayItems)
-           .sortedBy { it.timestamp }
-
-    CalendarState(
-      upcoming = allItems.filter { it.timestamp >= startOfToday },
-      history = allItems.filter { it.timestamp < startOfToday }.reversed(),
-      rawEventos = eventos,
-      rawTareas = tareas.filter { it.fechaLimite != null },
-      rawRecordatorios = recordatorios
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = CalendarState()
     )
-  }.stateIn(
-    scope = viewModelScope,
-    started = SharingStarted.WhileSubscribed(5000),
-    initialValue = CalendarState()
-  )
 
   private fun calculateBirthdayOccurrence(birthDateMillis: Long): Long {
     val birthDate = Calendar.getInstance().apply { timeInMillis = birthDateMillis }
@@ -126,6 +125,7 @@ class CalendarViewModel @Inject constructor(
       try {
         val lines = content.lines()
         val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+        val householdId = currentHouseholdProvider.getCurrentHouseholdId()
         lines.forEach { line ->
           val parts = line.split(",")
           if (parts.size >= 2) {

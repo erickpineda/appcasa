@@ -12,6 +12,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.Periodicidad
+import com.appcasa.core.domain.model.TipoContenidoTarea
 import com.appcasa.features.tasks.presentation.viewmodel.AddTaskViewModel
 
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -36,8 +37,10 @@ fun AddTaskScreen(
   val familyMembers by viewModel.familyMembers.collectAsState()
 
   var titulo by remember { mutableStateOf("") }
+  var descripcion by remember { mutableStateOf("") }
   var prioridad by remember { mutableStateOf(Prioridad.MEDIA) }
   var periodicidad by remember { mutableStateOf(Periodicidad.NINGUNA) }
+  var tipoContenido by remember { mutableStateOf(TipoContenidoTarea.LISTA) }
   var esPersonal by remember { mutableStateOf(false) }
   var selectedMemberId by remember { mutableStateOf<Long?>(null) }
   var fotoUri by remember { mutableStateOf<String?>(null) }
@@ -143,6 +146,39 @@ fun AddTaskScreen(
         label = { Text("¿Qué hay que hacer?") },
         modifier = Modifier.fillMaxWidth()
       )
+
+      // Selector de Tipo
+      Text("Tipo de tarea", style = MaterialTheme.typography.labelSmall)
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+      ) {
+        TipoContenidoTarea.entries.forEach { tipo ->
+          FilterChip(
+            selected = tipoContenido == tipo,
+            onClick = { tipoContenido = tipo },
+            label = { Text(if (tipo == TipoContenidoTarea.LISTA) "Lista / Pasos" else "Nota de texto") },
+            leadingIcon = {
+                Icon(
+                    imageVector = if (tipo == TipoContenidoTarea.LISTA) Icons.Default.List else Icons.Default.Notes,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+            },
+            modifier = Modifier.weight(1f)
+          )
+        }
+      }
+
+      if (tipoContenido == TipoContenidoTarea.TEXTO) {
+        OutlinedTextField(
+          value = descripcion,
+          onValueChange = { descripcion = it },
+          label = { Text("Detalles de la tarea...") },
+          modifier = Modifier.fillMaxWidth(),
+          minLines = 3
+        )
+      }
 
       // Fecha Límite
       OutlinedButton(
@@ -303,7 +339,7 @@ fun AddTaskScreen(
 
       Button(
         onClick = {
-          viewModel.addTask(titulo, prioridad, selectedMemberId, esPersonal, fotoUri, selectedDateMillis, selectedAnticipacion, periodicidad)
+          viewModel.addTask(titulo, prioridad, selectedMemberId, esPersonal, fotoUri, selectedDateMillis, selectedAnticipacion, periodicidad, tipoContenido)
           navController.popBackStack()
         },
         modifier = Modifier.fillMaxWidth(),

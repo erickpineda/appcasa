@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.Periodicidad
+import com.appcasa.core.domain.model.TipoContenidoTarea
 import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.features.tasks.data.local.TareaDao
@@ -45,7 +46,8 @@ class AddTaskViewModel @Inject constructor(
     fotoUri: String? = null,
     fechaLimite: Long? = null,
     anticipacionMins: Int = 0,
-    periodicidad: Periodicidad = Periodicidad.NINGUNA
+    periodicidad: Periodicidad = Periodicidad.NINGUNA,
+    tipoContenido: TipoContenidoTarea = TipoContenidoTarea.LISTA
   ) {
     viewModelScope.launch {
       val tareaId = tareaDao.insertTarea(
@@ -53,6 +55,7 @@ class AddTaskViewModel @Inject constructor(
           hogarId = householdId,
           titulo = titulo,
           prioridad = prioridad.name,
+          tipoContenido = tipoContenido.name,
           esPersonal = esPersonal,
           fotoUri = fotoUri,
           fechaLimite = fechaLimite,

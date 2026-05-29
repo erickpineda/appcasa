@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.core.domain.model.Prioridad
+import com.appcasa.core.domain.model.TipoContenidoTarea
 import com.appcasa.features.settings.data.local.HogarEntity
 
 @Entity(
@@ -50,6 +51,10 @@ data class TareaEntity(
   // Prioridad: ALTA, MEDIA, BAJA
   @ColumnInfo(name = "prioridad")
   val prioridad: String = Prioridad.MEDIA.name,
+
+  // Tipo Contenido: TEXTO, LISTA
+  @ColumnInfo(name = "tipo_contenido")
+  val tipoContenido: String = TipoContenidoTarea.LISTA.name,
 
   // EstadoTarea: PENDIENTE, EN_PROGRESO, COMPLETADA, CANCELADA
   @ColumnInfo(name = "estado")

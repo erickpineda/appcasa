@@ -61,7 +61,7 @@ import com.appcasa.features.finance.data.local.ExpenseDao
     StockEntity::class,
     ExpenseEntity::class,
   ],
-  version      = 6,
+  version      = 7,
   exportSchema = true
 )
 abstract class AppCasaDatabase : RoomDatabase() {

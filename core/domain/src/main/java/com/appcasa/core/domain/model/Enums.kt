@@ -22,6 +22,10 @@ enum class EstadoTarea {
   PENDIENTE, EN_PROGRESO, COMPLETADA, CANCELADA
 }
 
+enum class TipoContenidoTarea {
+  TEXTO, LISTA
+}
+
 enum class Periodicidad {
   NINGUNA, DIARIA, SEMANAL, QUINCENAL,
   MENSUAL, TRIMESTRAL, ANUAL, PERSONALIZADA

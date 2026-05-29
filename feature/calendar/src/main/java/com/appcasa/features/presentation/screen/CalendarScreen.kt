@@ -181,10 +181,10 @@ fun CalendarContent(
 ) {
   val daysInMonth = currentMonth.lengthOfMonth()
   val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value % 7
-  val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+  val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
   val listState = androidx.compose.foundation.lazy.rememberLazyListState()
 
-  // Estado para el selector rápido de fecha
+  // Selector rápido de fecha
   var showJumpDatePicker by remember { mutableStateOf(false) }
   val jumpDatePickerState = rememberDatePickerState()
 
@@ -232,10 +232,10 @@ fun CalendarContent(
   Scaffold(
     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     topBar = {
-      TopAppBar(
-        title = { Text("Agenda Familiar", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) },
+      MediumTopAppBar(
+        title = { Text("Agenda Familiar", fontWeight = FontWeight.Bold) },
         scrollBehavior = scrollBehavior,
-        colors = TopAppBarDefaults.topAppBarColors(
+        colors = TopAppBarDefaults.mediumTopAppBarColors(
           containerColor = MaterialTheme.colorScheme.primary,
           scrolledContainerColor = MaterialTheme.colorScheme.primary,
           titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -301,8 +301,8 @@ fun CalendarContent(
                 Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(14.dp))
               }
             }
-            
-            // Selector de Hoy sutil
+
+            // Botón "Ir a hoy" sutil
             Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.Center) {
               TextButton(
                 onClick = { 
@@ -334,7 +334,7 @@ fun CalendarContent(
             
             LazyVerticalGrid(
               columns = GridCells.Fixed(7),
-              modifier = Modifier.height(260.dp), // Altura ideal para ver todas las semanas
+              modifier = Modifier.height(260.dp),
               userScrollEnabled = false
             ) {
               items(firstDayOfWeek) { Box(modifier = Modifier.aspectRatio(1f)) }
@@ -352,13 +352,13 @@ fun CalendarContent(
                     .clip(CircleShape)
                     .background(
                       when {
-                        isSelected -> MaterialTheme.colorScheme.surfaceVariant // Gris sutil para selección
+                        isSelected -> MaterialTheme.colorScheme.secondary
                         isToday -> MaterialTheme.colorScheme.primary
                         else -> Color.Transparent
                       }
                     )
                     .then(
-                      if (isSelected) Modifier.border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape) else Modifier
+                      if (isSelected) Modifier.border(1.dp, MaterialTheme.colorScheme.onSecondary, CircleShape) else Modifier
                     )
                     .clickable { onDateSelected(dateAtDay) },
                   contentAlignment = Alignment.Center
@@ -368,7 +368,7 @@ fun CalendarContent(
                       text = dayNum.toString(),
                       style = MaterialTheme.typography.labelMedium,
                       color = when {
-                        isSelected -> MaterialTheme.colorScheme.onSurfaceVariant
+                        isSelected -> MaterialTheme.colorScheme.onSecondary
                         isToday -> MaterialTheme.colorScheme.onPrimary
                         else -> MaterialTheme.colorScheme.onSurface
                       }
@@ -416,59 +416,59 @@ fun CalendarContent(
         val now = LocalDate.now()
         val allUpcoming = state.upcoming
         
-        // Si hay una fecha seleccionada, mostramos primero los eventos de ese día filtrados
+        // Vista por día seleccionado
         if (selectedDate != null && selectedItemKey == null) {
-            val eventsForDay = allUpcoming.filter { 
-                Instant.ofEpochMilli(it.timestamp).atZone(ZoneId.systemDefault()).toLocalDate() == selectedDate 
+          val eventsForDay = (state.upcoming + state.history).filter { 
+            Instant.ofEpochMilli(it.timestamp).atZone(ZoneId.systemDefault()).toLocalDate() == selectedDate
+          }
+          item {
+            Row(
+              modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              Text(
+                text = "Eventos del " + SimpleDateFormat("d 'de' MMMM", Locale("es", "ES")).format(Date.from(selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant())),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary
+              )
+              Spacer(Modifier.weight(1f))
+              TextButton(onClick = { onDateSelected(selectedDate) }) {
+                Text("Cerrar", style = MaterialTheme.typography.labelSmall)
+              }
             }
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Eventos del " + SimpleDateFormat("d 'de' MMMM", Locale("es", "ES")).format(Date.from(selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant())),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Spacer(Modifier.weight(1f))
-                    TextButton(onClick = { onDateSelected(selectedDate) }) {
-                        Text("Ver todos", style = MaterialTheme.typography.labelSmall)
+          }
+          if (eventsForDay.isEmpty()) {
+            item { Text("Sin planes para este día", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 16.dp), color = Color.Gray) }
+          } else {
+            items(eventsForDay) { item ->
+              Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                AgendaItemCompact(
+                  item = item,
+                  isHistory = false,
+                  isHighlighted = true,
+                  onClick = { onItemToggle(item) },
+                  onDoubleClick = { onItemDoubleClick(item) },
+                  onEdit = { onEditItem(item) },
+                  onDelete = { 
+                    when (item) {
+                      is CalendarItem.Recordatorio -> onDeleteReminder(item.entity)
+                      is CalendarItem.Evento -> onDeleteEvento(item.entity)
+                      is CalendarItem.Tarea -> { }
                     }
-                }
+                  }
+                )
+              }
             }
-            if (eventsForDay.isEmpty()) {
-                item { Text("Sin planes para este día", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 16.dp), color = Color.Gray) }
-            } else {
-                items(eventsForDay) { item ->
-                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        AgendaItemCompact(
-                            item = item,
-                            isHistory = false,
-                            isHighlighted = true,
-                            onClick = { onItemToggle(item) },
-                            onDoubleClick = { onItemDoubleClick(item) },
-                            onEdit = { onEditItem(item) },
-                            onDelete = { 
-                                when (item) {
-                                    is CalendarItem.Recordatorio -> onDeleteReminder(item.entity)
-                                    is CalendarItem.Evento -> onDeleteEvento(item.entity)
-                                    is CalendarItem.Tarea -> { }
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-            item { HorizontalDivider(modifier = Modifier.padding(16.dp), thickness = 0.5.dp) }
+          }
+          item { HorizontalDivider(modifier = Modifier.padding(16.dp), thickness = 0.5.dp) }
         }
 
         val mesActualItems = allUpcoming.filter { 
           val date = Instant.ofEpochMilli(it.timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
           date.month == now.month && date.year == now.year
         }
-        val otrosMesesItems = allUpcoming.filter {
+        val otrosMesesItems = allUpcoming.filter { 
           val date = Instant.ofEpochMilli(it.timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
           date.isAfter(now.withDayOfMonth(now.lengthOfMonth()))
         }
@@ -667,6 +667,11 @@ fun AgendaItemCompact(
           Text(text = formatDateCompact(item.timestamp), style = MaterialTheme.typography.labelSmall)
           Text(text = " • ", style = MaterialTheme.typography.labelSmall)
           Text(text = typeLabel.uppercase(), style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.Bold)
+          
+          if (item is CalendarItem.Tarea && item.entity.periodicidad != com.appcasa.core.domain.model.Periodicidad.NINGUNA.name) {
+            Spacer(Modifier.width(8.dp))
+            Icon(Icons.Default.Repeat, contentDescription = null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.secondary)
+          }
         }
       }
 
