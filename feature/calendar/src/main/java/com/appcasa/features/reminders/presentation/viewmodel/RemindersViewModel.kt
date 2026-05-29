@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 import com.appcasa.features.settings.data.local.ConfiguracionDao
-import kotlinx.coroutines.flow.first
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.scheduler.ReminderScheduler
 import kotlinx.coroutines.CoroutineDispatcher
 import com.appcasa.core.domain.di.IoDispatcher
@@ -22,17 +22,19 @@ class RemindersViewModel @Inject constructor(
   private val recordatorioDao: RecordatorioDao,
   private val configuracionDao: ConfiguracionDao,
   private val reminderScheduler: ReminderScheduler,
-  @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+  @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+  private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-  val reminders: StateFlow<List<RecordatorioEntity>> = recordatorioDao.getRecordatoriosByHogar(1L)
+  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+
+  val reminders: StateFlow<List<RecordatorioEntity>> = recordatorioDao.getRecordatoriosByHogar(householdId)
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   fun addReminder(title: String, message: String, dateTime: Long, anticipacionMins: Int = 0) {
     viewModelScope.launch(ioDispatcher) {
-      val hogarId = configuracionDao.getHogarActual().first()?.id ?: 1L
       val reminder = RecordatorioEntity(
-        hogarId = hogarId,
+        hogarId = householdId,
         titulo = title,
         descripcion = message,
         fechaHora = dateTime,

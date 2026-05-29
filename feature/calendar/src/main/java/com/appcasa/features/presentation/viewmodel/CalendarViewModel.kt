@@ -3,6 +3,7 @@ package com.appcasa.features.calendar.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.scheduler.ReminderScheduler
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.features.calendar.data.local.EventoDao
 import com.appcasa.features.calendar.data.local.EventoEntity
 import com.appcasa.features.tasks.data.local.TareaDao
@@ -29,17 +30,20 @@ class CalendarViewModel @Inject constructor(
   private val tareaDao: TareaDao,
   private val recordatorioDao: RecordatorioDao,
   private val miembroDao: MiembroDao,
-  private val reminderScheduler: ReminderScheduler
+  private val reminderScheduler: ReminderScheduler,
+  private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
+
+  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   private val _historyPage = MutableStateFlow(0)
   val historyPage = _historyPage.asStateFlow()
 
   val calendarItems: StateFlow<CalendarState> = combine(
-    eventoDao.getEventosByHogar(1L),
-    tareaDao.getTareasByHogar(1L),
-    recordatorioDao.getRecordatoriosByHogar(1L),
-    miembroDao.getMiembrosByHogar(1L)
+    eventoDao.getEventosByHogar(householdId),
+    tareaDao.getTareasByHogar(householdId),
+    recordatorioDao.getRecordatoriosByHogar(householdId),
+    miembroDao.getMiembrosByHogar(householdId)
   ) { eventos, tareas, recordatorios, miembros ->
     val startOfToday = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     
@@ -131,7 +135,7 @@ class CalendarViewModel @Inject constructor(
             if (date != null) {
               val id = eventoDao.insertEvento(
                 EventoEntity(
-                  hogarId = 1L,
+                  hogarId = householdId,
                   titulo = "Turno: $title",
                   fecha = date,
                   tipo = com.appcasa.core.domain.model.TipoEvento.REUNION.name

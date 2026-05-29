@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.scheduler.ReminderScheduler
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.features.tasks.data.local.TareaEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
@@ -19,17 +20,20 @@ import javax.inject.Inject
 class TasksViewModel @Inject constructor(
   private val tareaDao: TareaDao,
   private val configuracionDao: ConfiguracionDao,
-  private val reminderScheduler: ReminderScheduler
+  private val reminderScheduler: ReminderScheduler,
+  private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-  val tasks: StateFlow<List<TareaEntity>> = tareaDao.getTareasByHogar(1L)
+  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+
+  val tasks: StateFlow<List<TareaEntity>> = tareaDao.getTareasByHogar(householdId)
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
       initialValue = emptyList()
     )
 
-  val isCompactView: StateFlow<Boolean> = configuracionDao.getConfiguracion(1L)
+  val isCompactView: StateFlow<Boolean> = configuracionDao.getConfiguracion(householdId)
     .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -69,7 +73,7 @@ class TasksViewModel @Inject constructor(
     viewModelScope.launch {
       tareaDao.insertTarea(
         TareaEntity(
-          hogarId = 1L,
+          hogarId = householdId,
           titulo = titulo,
           prioridad = prioridad
         )

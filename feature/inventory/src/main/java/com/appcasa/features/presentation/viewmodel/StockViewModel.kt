@@ -8,6 +8,7 @@ import com.appcasa.features.lists.data.local.ListaDao
 import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.lists.data.local.ListaItemEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,8 +22,11 @@ import javax.inject.Inject
 class StockViewModel @Inject constructor(
   private val stockDao: StockDao,
   private val listaDao: ListaDao,
-  private val configuracionDao: ConfiguracionDao
+  private val configuracionDao: ConfiguracionDao,
+  private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
+
+  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   val stockItems: StateFlow<List<StockEntity>> = stockDao.getAllStock()
     .stateIn(
@@ -31,10 +35,10 @@ class StockViewModel @Inject constructor(
       initialValue = emptyList()
     )
 
-  val availableLists: StateFlow<List<ListaEntity>> = listaDao.getListasByHogar(1L)
+  val availableLists: StateFlow<List<ListaEntity>> = listaDao.getListasByHogar(householdId)
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-  val isCompactView: StateFlow<Boolean> = configuracionDao.getConfiguracion(1L)
+  val isCompactView: StateFlow<Boolean> = configuracionDao.getConfiguracion(householdId)
     .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -42,7 +46,7 @@ class StockViewModel @Inject constructor(
     viewModelScope.launch {
       stockDao.insertItem(
         StockEntity(
-          hogarId = 1L,
+          hogarId = householdId,
           nombre = nombre,
           categoria = categoria,
           cantidadActual = actual,
@@ -68,10 +72,10 @@ class StockViewModel @Inject constructor(
   }
 
   private suspend fun autoAddToPreferredList(item: StockEntity, delta: Double) {
-    val configs = configuracionDao.getConfiguracion(1L).first()
+    val configs = configuracionDao.getConfiguracion(householdId).first()
     val preferredListId = configs.find { it.clave == "lista_compra_id" }?.valor?.toLongOrNull()
     val listId = preferredListId ?: run {
-      val listList = listaDao.getListasByHogar(1L).first()
+      val listList = listaDao.getListasByHogar(householdId).first()
       listList.find { it.tipo == com.appcasa.core.domain.model.TipoLista.COMPRA.name }?.id
     }
     if (listId != null) {

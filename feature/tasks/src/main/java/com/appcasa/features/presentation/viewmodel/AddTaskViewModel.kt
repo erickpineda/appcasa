@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.scheduler.ReminderScheduler
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.features.tasks.data.local.TareaEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,10 +24,13 @@ class AddTaskViewModel @Inject constructor(
   private val tareaDao: TareaDao,
   private val miembroDao: MiembroDao,
   private val configuracionDao: ConfiguracionDao,
-  private val reminderScheduler: ReminderScheduler
+  private val reminderScheduler: ReminderScheduler,
+  private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-  val familyMembers: StateFlow<List<MiembroEntity>> = miembroDao.getMiembrosByHogar(1L)
+  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+
+  val familyMembers: StateFlow<List<MiembroEntity>> = miembroDao.getMiembrosByHogar(householdId)
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
@@ -43,10 +47,9 @@ class AddTaskViewModel @Inject constructor(
     anticipacionMins: Int = 0
   ) {
     viewModelScope.launch {
-      val hogarId = configuracionDao.getHogarActual().first()?.id ?: 1L
       val tareaId = tareaDao.insertTarea(
         TareaEntity(
-          hogarId = hogarId,
+          hogarId = householdId,
           titulo = titulo,
           prioridad = prioridad.name,
           esPersonal = esPersonal,

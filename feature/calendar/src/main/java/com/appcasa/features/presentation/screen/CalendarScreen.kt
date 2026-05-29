@@ -184,6 +184,31 @@ fun CalendarContent(
   val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
   val listState = androidx.compose.foundation.lazy.rememberLazyListState()
 
+  // Estado para el selector rápido de fecha
+  var showJumpDatePicker by remember { mutableStateOf(false) }
+  val jumpDatePickerState = rememberDatePickerState()
+
+  if (showJumpDatePicker) {
+    DatePickerDialog(
+      onDismissRequest = { showJumpDatePicker = false },
+      confirmButton = {
+        TextButton(onClick = {
+          jumpDatePickerState.selectedDateMillis?.let {
+            val date = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+            onDateSelected(date)
+            onMonthChange(YearMonth.from(date))
+          }
+          showJumpDatePicker = false
+        }) { Text("Ir a la fecha") }
+      },
+      dismissButton = {
+        TextButton(onClick = { showJumpDatePicker = false }) { Text("Cancelar") }
+      }
+    ) {
+      DatePicker(state = jumpDatePickerState)
+    }
+  }
+
   // Efecto profesional: Scroll automático al calendario cuando se selecciona un item
   LaunchedEffect(selectedItemKey) {
     if (selectedItemKey != null) {
@@ -250,13 +275,47 @@ fun CalendarContent(
               IconButton(onClick = { onMonthChange(currentMonth.minusMonths(1)) }, modifier = Modifier.size(32.dp)) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBackIos, contentDescription = null, modifier = Modifier.size(14.dp))
               }
-              Text(
-                text = "${currentMonth.month.getDisplayName(TextStyle.FULL, Locale("es", "ES")).uppercase()} ${currentMonth.year}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-              )
+              
+              // Título clicable para salto rápido
+              Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                  .clip(MaterialTheme.shapes.small)
+                  .clickable { showJumpDatePicker = true }
+                  .padding(horizontal = 8.dp, vertical = 4.dp)
+              ) {
+                Text(
+                  text = "${currentMonth.month.getDisplayName(TextStyle.FULL, Locale("es", "ES")).uppercase()} ${currentMonth.year}",
+                  style = MaterialTheme.typography.titleMedium,
+                  fontWeight = FontWeight.Bold
+                )
+                Icon(
+                  Icons.Default.ArrowDropDown,
+                  contentDescription = "Seleccionar fecha",
+                  modifier = Modifier.size(20.dp),
+                  tint = MaterialTheme.colorScheme.primary
+                )
+              }
+
               IconButton(onClick = { onMonthChange(currentMonth.plusMonths(1)) }, modifier = Modifier.size(32.dp)) {
                 Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(14.dp))
+              }
+            }
+            
+            // Selector de Hoy sutil
+            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.Center) {
+              TextButton(
+                onClick = { 
+                  val today = LocalDate.now()
+                  onDateSelected(today)
+                  onMonthChange(YearMonth.from(today))
+                },
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
+                modifier = Modifier.height(28.dp)
+              ) {
+                Icon(Icons.Default.Today, contentDescription = null, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Ir a hoy", style = MaterialTheme.typography.labelSmall)
               }
             }
             

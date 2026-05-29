@@ -6,6 +6,7 @@ import com.appcasa.features.utilities.data.local.UtilidadDao
 import com.appcasa.features.utilities.data.local.UtilidadEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
 import com.appcasa.features.settings.data.local.ConfiguracionEntity
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,8 +18,11 @@ import javax.inject.Inject
 @HiltViewModel
 class UtilitiesViewModel @Inject constructor(
   private val utilidadDao: UtilidadDao,
-  private val configuracionDao: ConfiguracionDao
+  private val configuracionDao: ConfiguracionDao,
+  private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
+
+  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   val utilities: StateFlow<List<UtilidadEntity>> = utilidadDao.getUtilidades()
     .stateIn(
@@ -27,7 +31,7 @@ class UtilitiesViewModel @Inject constructor(
       initialValue = emptyList()
     )
 
-  val savedValues: StateFlow<Map<String, String>> = configuracionDao.getConfiguracion(1L)
+  val savedValues: StateFlow<Map<String, String>> = configuracionDao.getConfiguracion(householdId)
     .map { list -> list.associate { it.clave to it.valor } }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
@@ -43,7 +47,7 @@ class UtilitiesViewModel @Inject constructor(
 
   fun saveValue(clave: String, valor: String) {
     viewModelScope.launch {
-      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = 1L, clave = clave, valor = valor))
+      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = householdId, clave = clave, valor = valor))
     }
   }
 

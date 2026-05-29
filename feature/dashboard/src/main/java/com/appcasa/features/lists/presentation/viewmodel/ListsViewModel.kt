@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.appcasa.features.lists.data.local.ListaDao
 import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,17 +17,20 @@ import javax.inject.Inject
 @HiltViewModel
 class ListsViewModel @Inject constructor(
     private val listaDao: ListaDao,
-    private val configuracionDao: ConfiguracionDao
+    private val configuracionDao: ConfiguracionDao,
+    private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-    val lists: StateFlow<List<ListaEntity>> = listaDao.getListasByHogar(1L)
+    private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+
+    val lists: StateFlow<List<ListaEntity>> = listaDao.getListasByHogar(householdId)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
 
-    val isCompactView: StateFlow<Boolean> = configuracionDao.getConfiguracion(1L)
+    val isCompactView: StateFlow<Boolean> = configuracionDao.getConfiguracion(householdId)
         .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -34,7 +38,7 @@ class ListsViewModel @Inject constructor(
         viewModelScope.launch {
             listaDao.insertLista(
                 ListaEntity(
-                    hogarId = 1L,
+                    hogarId = householdId,
                     nombre = nombre,
                     tipo = tipo
                 )

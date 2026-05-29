@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.domain.model.TipoEvento
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.features.family.data.local.MiembroDao
 import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.calendar.data.local.EventoDao
@@ -19,10 +20,13 @@ import javax.inject.Inject
 @HiltViewModel
 class FamilyViewModel @Inject constructor(
   private val miembroDao: MiembroDao,
-  private val eventoDao: EventoDao
+  private val eventoDao: EventoDao,
+  private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-  val familyMembers: StateFlow<List<MiembroEntity>> = miembroDao.getMiembrosByHogar(1L)
+  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+
+  val familyMembers: StateFlow<List<MiembroEntity>> = miembroDao.getMiembrosByHogar(householdId)
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
@@ -40,22 +44,17 @@ class FamilyViewModel @Inject constructor(
   fun deleteMember(member: MiembroEntity) {
     viewModelScope.launch {
       miembroDao.deleteMiembro(member)
-      // Opcional: Podríamos borrar el evento de cumple automático aquí
     }
   }
 
   fun syncBirthdayEvent(member: MiembroEntity) {
     viewModelScope.launch {
       if (member.fechaNacimiento != null) {
-        // Buscamos si ya hay un evento de cumple para este miembro y lo actualizamos o insertamos
-        val hogarId = 1L
         val titulo = "Cumpleaños: ${member.nombre} 🎂"
         
-        // Lógica simplificada: Insertar como nuevo evento tipo CUMPLEANOS
-        // En una versión más avanzada buscaríamos por un ID vinculado
         eventoDao.insertEvento(
           EventoEntity(
-            hogarId = hogarId,
+            hogarId = householdId,
             titulo = titulo,
             fecha = member.fechaNacimiento!!,
             tipo = TipoEvento.CUMPLEANOS.name

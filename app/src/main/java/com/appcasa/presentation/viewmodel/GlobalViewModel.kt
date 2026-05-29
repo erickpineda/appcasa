@@ -3,6 +3,7 @@ package com.appcasa.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -12,10 +13,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GlobalViewModel @Inject constructor(
-  private val configuracionDao: ConfiguracionDao
+  private val configuracionDao: ConfiguracionDao,
+  private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-  private val configs = configuracionDao.getConfiguracion(1L)
+  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+
+  private val configs = configuracionDao.getConfiguracion(householdId)
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   val isDarkMode: StateFlow<Boolean> = configs.map { list ->

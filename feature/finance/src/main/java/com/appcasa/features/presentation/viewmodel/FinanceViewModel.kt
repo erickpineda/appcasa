@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.appcasa.features.finance.data.local.ExpenseDao
 import com.appcasa.features.finance.data.local.ExpenseEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,13 +17,16 @@ import javax.inject.Inject
 @HiltViewModel
 class FinanceViewModel @Inject constructor(
   private val expenseDao: ExpenseDao,
-  private val configuracionDao: ConfiguracionDao
+  private val configuracionDao: ConfiguracionDao,
+  private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
+
+  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   val expenses: StateFlow<List<ExpenseEntity>> = expenseDao.getAllExpenses()
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-  val currencySymbol: StateFlow<String> = configuracionDao.getConfiguracion(1L)
+  val currencySymbol: StateFlow<String> = configuracionDao.getConfiguracion(householdId)
     .map { list -> list.find { it.clave == "moneda" }?.valor ?: "€" }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "€")
 
@@ -30,7 +34,7 @@ class FinanceViewModel @Inject constructor(
     viewModelScope.launch {
       expenseDao.insertExpense(
         ExpenseEntity(
-          hogarId = 1L,
+          hogarId = householdId,
           concepto = concepto,
           importe = importe,
           categoria = categoria
