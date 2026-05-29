@@ -11,12 +11,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.Prioridad
+import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.features.tasks.presentation.viewmodel.AddTaskViewModel
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -34,10 +37,13 @@ fun AddTaskScreen(
 
   var titulo by remember { mutableStateOf("") }
   var prioridad by remember { mutableStateOf(Prioridad.MEDIA) }
+  var periodicidad by remember { mutableStateOf(Periodicidad.NINGUNA) }
   var esPersonal by remember { mutableStateOf(false) }
   var selectedMemberId by remember { mutableStateOf<Long?>(null) }
   var fotoUri by remember { mutableStateOf<String?>(null) }
-  var expanded by remember { mutableStateOf(false) }
+  
+  var memberExpanded by remember { mutableStateOf(false) }
+  var repeatExpanded by remember { mutableStateOf(false) }
   
   // Estado para la fecha y hora
   var selectedDateMillis by remember { mutableStateOf<Long?>(null) }
@@ -127,7 +133,8 @@ fun AddTaskScreen(
       modifier = Modifier
         .padding(padding)
         .padding(16.dp)
-        .fillMaxSize(),
+        .fillMaxSize()
+        .verticalScroll(rememberScrollState()),
       verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
       OutlinedTextField(
@@ -158,6 +165,36 @@ fun AddTaskScreen(
           "Vence: ${SimpleDateFormat(format, Locale.getDefault()).format(date)}"
         }
         Text(dateLabel)
+      }
+
+      // Selector de Recurrencia
+      ExposedDropdownMenuBox(
+        expanded = repeatExpanded,
+        onExpandedChange = { repeatExpanded = !repeatExpanded }
+      ) {
+        OutlinedTextField(
+          value = periodicidad.name,
+          onValueChange = {},
+          readOnly = true,
+          label = { Text("Repetir") },
+          leadingIcon = { Icon(Icons.Default.Repeat, contentDescription = null) },
+          trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = repeatExpanded) },
+          modifier = Modifier.menuAnchor().fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+          expanded = repeatExpanded,
+          onDismissRequest = { repeatExpanded = false }
+        ) {
+          Periodicidad.entries.forEach { p ->
+            DropdownMenuItem(
+              text = { Text(p.name) },
+              onClick = {
+                periodicidad = p
+                repeatExpanded = false
+              }
+            )
+          }
+        }
       }
 
       if (selectedDateMillis != null) {
@@ -208,28 +245,28 @@ fun AddTaskScreen(
 
       Text("Asignar a", style = MaterialTheme.typography.titleMedium)
       ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
+        expanded = memberExpanded,
+        onExpandedChange = { memberExpanded = !memberExpanded }
       ) {
         val selectedName = familyMembers.find { it.id == selectedMemberId }?.nombre ?: "Sin asignar"
         OutlinedTextField(
           value = selectedName,
           onValueChange = {},
           readOnly = true,
-          trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+          trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = memberExpanded) },
           modifier = Modifier.menuAnchor().fillMaxWidth()
         )
         ExposedDropdownMenu(
-          expanded = expanded,
-          onDismissRequest = { expanded = false }
+          expanded = memberExpanded,
+          onDismissRequest = { memberExpanded = false }
         ) {
-          DropdownMenuItem(text = { Text("Sin asignar") }, onClick = { selectedMemberId = null; expanded = false })
+          DropdownMenuItem(text = { Text("Sin asignar") }, onClick = { selectedMemberId = null; memberExpanded = false })
           familyMembers.forEach { member ->
             DropdownMenuItem(
               text = { Text(member.nombre) },
               onClick = {
                 selectedMemberId = member.id
-                expanded = false
+                memberExpanded = false
               }
             )
           }
@@ -262,11 +299,11 @@ fun AddTaskScreen(
         Text("Es una tarea personal")
       }
 
-      Spacer(modifier = Modifier.weight(1f))
+      Spacer(modifier = Modifier.height(24.dp))
 
       Button(
         onClick = {
-          viewModel.addTask(titulo, prioridad, selectedMemberId, esPersonal, fotoUri, selectedDateMillis, selectedAnticipacion)
+          viewModel.addTask(titulo, prioridad, selectedMemberId, esPersonal, fotoUri, selectedDateMillis, selectedAnticipacion, periodicidad)
           navController.popBackStack()
         },
         modifier = Modifier.fillMaxWidth(),

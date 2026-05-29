@@ -3,6 +3,7 @@ package com.appcasa.features.tasks.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.Prioridad
+import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.features.tasks.data.local.TareaDao
@@ -16,7 +17,6 @@ import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
@@ -44,7 +44,8 @@ class AddTaskViewModel @Inject constructor(
     esPersonal: Boolean = false, 
     fotoUri: String? = null,
     fechaLimite: Long? = null,
-    anticipacionMins: Int = 0
+    anticipacionMins: Int = 0,
+    periodicidad: Periodicidad = Periodicidad.NINGUNA
   ) {
     viewModelScope.launch {
       val tareaId = tareaDao.insertTarea(
@@ -54,7 +55,8 @@ class AddTaskViewModel @Inject constructor(
           prioridad = prioridad.name,
           esPersonal = esPersonal,
           fotoUri = fotoUri,
-          fechaLimite = fechaLimite
+          fechaLimite = fechaLimite,
+          periodicidad = periodicidad.name
         )
       )
       

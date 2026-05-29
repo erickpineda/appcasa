@@ -25,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.Prioridad
+import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.tasks.presentation.viewmodel.TaskDetailViewModel
@@ -51,12 +52,13 @@ fun TaskDetailScreen(
       titulo = task!!.titulo,
       descripcion = task!!.descripcion ?: "",
       prioridad = Prioridad.valueOf(task!!.prioridad),
+      periodicidad = Periodicidad.valueOf(task!!.periodicidad),
       esPersonal = task!!.esPersonal,
       fechaLimite = task!!.fechaLimite,
       fotoUri = task!!.fotoUri,
       onDismiss = { showEditDialog = false },
-      onConfirm = { t, d, p, esp, fecha, f, anticipacion ->
-        viewModel.updateTask(t, d.takeIf { it.isNotBlank() }, p.name, esp, f, fecha, anticipacion)
+      onConfirm = { t, d, p, per, esp, fecha, f, anticipacion ->
+        viewModel.updateTask(t, d.takeIf { it.isNotBlank() }, p.name, esp, f, fecha, anticipacion, per)
         showEditDialog = false
       }
     )
@@ -179,6 +181,16 @@ fun TaskDetailScreen(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                       )
+
+                      if (currentTask.periodicidad != Periodicidad.NINGUNA.name) {
+                        Spacer(Modifier.width(8.dp))
+                        Icon(Icons.Default.Repeat, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.secondary)
+                        Text(
+                          text = currentTask.periodicidad,
+                          style = MaterialTheme.typography.labelSmall,
+                          color = MaterialTheme.colorScheme.secondary
+                        )
+                      }
                     }
                     Spacer(Modifier.height(8.dp))
                   }
@@ -387,15 +399,17 @@ fun EditTaskMainDialog(
   titulo: String,
   descripcion: String,
   prioridad: Prioridad,
+  periodicidad: Periodicidad,
   esPersonal: Boolean,
   fechaLimite: Long?,
   fotoUri: String?,
   onDismiss: () -> Unit,
-  onConfirm: (String, String, Prioridad, Boolean, Long?, String?, Int) -> Unit
+  onConfirm: (String, String, Prioridad, Periodicidad, Boolean, Long?, String?, Int) -> Unit
 ) {
   var t by remember { mutableStateOf(titulo) }
   var d by remember { mutableStateOf(descripcion) }
   var p by remember { mutableStateOf(prioridad) }
+  var per by remember { mutableStateOf(periodicidad) }
   var esp by remember { mutableStateOf(esPersonal) }
   var f by remember { mutableStateOf(fotoUri) }
   
@@ -403,6 +417,8 @@ fun EditTaskMainDialog(
   var selectedAnticipacion by remember { mutableStateOf(0) }
   var showDatePicker by remember { mutableStateOf(false) }
   var showTimePicker by remember { mutableStateOf(false) }
+  
+  var repeatExpanded by remember { mutableStateOf(false) }
   
   val initialDate = fechaLimite ?: System.currentTimeMillis()
   val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDate)
@@ -501,6 +517,37 @@ fun EditTaskMainDialog(
           }
         }
 
+        item {
+          ExposedDropdownMenuBox(
+            expanded = repeatExpanded,
+            onExpandedChange = { repeatExpanded = !repeatExpanded }
+          ) {
+            OutlinedTextField(
+              value = per.name,
+              onValueChange = {},
+              readOnly = true,
+              label = { Text("Repetir") },
+              leadingIcon = { Icon(Icons.Default.Repeat, contentDescription = null, modifier = Modifier.size(18.dp)) },
+              trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = repeatExpanded) },
+              modifier = Modifier.menuAnchor().fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+              expanded = repeatExpanded,
+              onDismissRequest = { repeatExpanded = false }
+            ) {
+              Periodicidad.entries.forEach { pEntry ->
+                DropdownMenuItem(
+                  text = { Text(pEntry.name) },
+                  onClick = {
+                    per = pEntry
+                    repeatExpanded = false
+                  }
+                )
+              }
+            }
+          }
+        }
+
         if (selectedFecha != null) {
           item {
             Text("Avisar antes:", style = MaterialTheme.typography.labelSmall)
@@ -551,7 +598,7 @@ fun EditTaskMainDialog(
       }
     },
     confirmButton = {
-      Button(onClick = { if (t.isNotBlank()) onConfirm(t, d, p, esp, selectedFecha, f, selectedAnticipacion) }) {
+      Button(onClick = { if (t.isNotBlank()) onConfirm(t, d, p, per, esp, selectedFecha, f, selectedAnticipacion) }) {
         Text("Guardar")
       }
     },

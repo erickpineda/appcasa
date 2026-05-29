@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.scheduler.ReminderScheduler
+import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.features.tasks.data.local.TareaEntity
@@ -96,7 +97,8 @@ class TaskDetailViewModel @Inject constructor(
     esPersonal: Boolean, 
     fotoUri: String?,
     fechaLimite: Long?,
-    anticipacionMins: Int = 0
+    anticipacionMins: Int = 0,
+    periodicidad: Periodicidad = Periodicidad.NINGUNA
   ) {
     viewModelScope.launch {
       val current = _task.value ?: return@launch
@@ -107,6 +109,7 @@ class TaskDetailViewModel @Inject constructor(
         esPersonal = esPersonal,
         fotoUri = fotoUri,
         fechaLimite = fechaLimite,
+        periodicidad = periodicidad.name,
         updatedAt = System.currentTimeMillis()
       )
       tareaDao.updateTarea(updated)
