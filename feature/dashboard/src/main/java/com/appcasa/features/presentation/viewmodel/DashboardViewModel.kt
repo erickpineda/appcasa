@@ -4,19 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.EstadoGeneral
 import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.domain.model.TipoEvento
 import com.appcasa.features.family.data.local.MiembroDao
 import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
 import com.appcasa.features.settings.data.local.HogarEntity
 import com.appcasa.features.settings.data.local.UsuarioEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -43,6 +38,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.List
 import com.appcasa.navigation.Screen
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
@@ -79,7 +76,6 @@ class DashboardViewModel @Inject constructor(
   private val _lowStockCount = MutableStateFlow(0)
   val lowStockCount: StateFlow<Int> = _lowStockCount.asStateFlow()
 
-  // Búsqueda Global
   private val _searchQuery = MutableStateFlow("")
   val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
@@ -94,10 +90,9 @@ class DashboardViewModel @Inject constructor(
 
   private fun ensureDefaultHogar() {
     viewModelScope.launch {
-      val currentHogar = configuracionDao.getHogarActual().first()
-      if (currentHogar == null) {
-        configuracionDao.insertHogar(HogarEntity(id = 1L, nombre = "Hogar de Erick", descripcion = "Bienvenido a AppCasa"))
-        configuracionDao.insertUsuario(UsuarioEntity(hogarId = 1L, nombre = "Erick", email = "erick@appcasa.com"))
+      val members = miembroDao.getMiembrosByHogar(1L).first()
+      if (members.isEmpty()) {
+        seedRealData()
       }
     }
   }
@@ -192,11 +187,17 @@ class DashboardViewModel @Inject constructor(
       combine(
         eventoDao.getEventosByHogar(1L), 
         recordatorioDao.getRecordatoriosByHogar(1L),
-        tareaDao.getTareasByHogar(1L)
-      ) { eventos, recordatorios, tareas ->
+        tareaDao.getTareasByHogar(1L),
+        miembroDao.getMiembrosByHogar(1L)
+      ) { eventos, recordatorios, tareas, miembros ->
+        val birthdays = miembros.filter { it.fechaNacimiento != null }.map { 
+          "Cumpleaños: ${it.nombre} 🎂" to calculateBirthdayOccurrence(it.fechaNacimiento!!)
+        }
+        
         (eventos.map { it.titulo to it.fecha } + 
          recordatorios.map { it.titulo to it.fechaHora } +
-         tareas.filter { it.fechaLimite != null && it.estado != EstadoTarea.COMPLETADA.name }.map { it.titulo to it.fechaLimite!! })
+         tareas.filter { it.fechaLimite != null && it.estado != EstadoTarea.COMPLETADA.name }.map { it.titulo to it.fechaLimite!! } +
+         birthdays)
           .filter { it.second >= System.currentTimeMillis() }
           .sortedBy { it.second }
           .firstOrNull()
@@ -212,6 +213,22 @@ class DashboardViewModel @Inject constructor(
     }
   }
 
+  private fun calculateBirthdayOccurrence(birthDateMillis: Long): Long {
+    val birthDate = Calendar.getInstance().apply { timeInMillis = birthDateMillis }
+    val today = Calendar.getInstance()
+    
+    val occurrence = Calendar.getInstance().apply {
+      set(Calendar.YEAR, today.get(Calendar.YEAR))
+      set(Calendar.MONTH, birthDate.get(Calendar.MONTH))
+      set(Calendar.DAY_OF_MONTH, birthDate.get(Calendar.DAY_OF_MONTH))
+      set(Calendar.HOUR_OF_DAY, 0)
+      set(Calendar.MINUTE, 0)
+      set(Calendar.SECOND, 0)
+      set(Calendar.MILLISECOND, 0)
+    }
+    return occurrence.timeInMillis
+  }
+
   private fun formatDate(timestamp: Long): String {
     val date = java.util.Date(timestamp)
     val cal = Calendar.getInstance().apply { time = date }
@@ -220,7 +237,7 @@ class DashboardViewModel @Inject constructor(
     } else {
       "d 'de' MMMM HH:mm"
     }
-    val sdf = java.text.SimpleDateFormat(format, java.util.Locale("es", "ES"))
+    val sdf = SimpleDateFormat(format, Locale("es", "ES"))
     return sdf.format(date)
   }
 
@@ -234,58 +251,70 @@ class DashboardViewModel @Inject constructor(
     return cal.timeInMillis
   }
   
+  private fun parseDate(dateStr: String): Long {
+    return try {
+      SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(dateStr)?.time ?: System.currentTimeMillis()
+    } catch (e: Exception) {
+      System.currentTimeMillis()
+    }
+  }
+
   fun seedRealData() {
     viewModelScope.launch {
-      utilidadDao.deleteAll(); miembroDao.deleteAll(); tareaDao.deleteAll(); tareaDao.deleteAllCategorias()
-      eventoDao.deleteAll(); recordatorioDao.deleteAll(); listaDao.deleteAll(); stockDao.deleteAll(); expenseDao.deleteAll()
-      val hogarId = 1L
-      
-      configuracionDao.insertHogar(HogarEntity(id = hogarId, nombre = "Hogar de Erick", descripcion = "Gestión familiar oficial"))
-      configuracionDao.insertUsuario(UsuarioEntity(hogarId = hogarId, nombre = "Erick", email = "erick@appcasa.com"))
-      
-      // Miembros - Humanos
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Erick", tipo = TipoMiembro.PERSONA.name))
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Alicia", tipo = TipoMiembro.PERSONA.name))
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Brian", tipo = TipoMiembro.PERSONA.name))
-      
-      // Miembros - Perros
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Goofy", tipo = TipoMiembro.PERRO.name, raza = "Beagador"))
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Daisy", tipo = TipoMiembro.PERRO.name, raza = "Beagle"))
-      
-      // Miembros - Gatos
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Salem", tipo = TipoMiembro.GATO.name, colorPelaje = "Negro de mucho pelo"))
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Toby", tipo = TipoMiembro.GATO.name, colorPelaje = "Negro con una pequeña manchita blanca en el pecho"))
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Sabrina", tipo = TipoMiembro.GATO.name, colorPelaje = "Blanco con algunas partes negras"))
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Tom", tipo = TipoMiembro.GATO.name, colorPelaje = "Blanco con algunas partes negras y gordo"))
-      
-      // Miembros - Otros
-      miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Super", tipo = TipoMiembro.TORTUGA.name, raza = "Testudo marginata"))
+      try {
+        utilidadDao.deleteAll()
+        miembroDao.deleteAll()
+        tareaDao.deleteAll()
+        tareaDao.deleteAllCategorias()
+        eventoDao.deleteAll()
+        recordatorioDao.deleteAll()
+        listaDao.deleteAll()
+        stockDao.deleteAll()
+        expenseDao.deleteAll()
+        
+        val hogarId = 1L
+        configuracionDao.insertHogar(HogarEntity(id = hogarId, nombre = "Hogar de Erick", descripcion = "Gestión familiar oficial"))
+        configuracionDao.insertUsuario(UsuarioEntity(hogarId = hogarId, nombre = "Erick", email = "erick@appcasa.com"))
+        
+        // Miembros con Cumpleaños Oficiales (Sin crear eventos manuales redundantes)
+        val erickBirth = parseDate("25/04/1991")
+        val aliciaBirth = parseDate("21/09/1988")
+        val brianBirth = parseDate("27/06/2023")
 
-      // Tareas iniciales
-      tareaDao.insertTarea(TareaEntity(hogarId = hogarId, titulo = "Sacar la basura", prioridad = com.appcasa.core.domain.model.Prioridad.ALTA.name))
-      tareaDao.insertTarea(TareaEntity(hogarId = hogarId, titulo = "Revisar stock despensa", prioridad = com.appcasa.core.domain.model.Prioridad.MEDIA.name))
-      
-      // Listas por defecto
-      listaDao.insertLista(ListaEntity(hogarId = hogarId, nombre = "Lista de la Compra", tipo = com.appcasa.core.domain.model.TipoLista.COMPRA.name))
-      
-      // Utilidades por defecto
-      val initial = listOf(
-        UtilidadEntity(codigo = "CALC_DOSIS", nombre = "Dosis Mascotas", descripcion = "Cálculo según peso", icono = "medication", orden = 1, categoria = "Salud"),
-        UtilidadEntity(codigo = "CALC_IMC", nombre = "IMC Familiar", descripcion = "Índice de Masa Corporal", icono = "monitor_weight", orden = 2, categoria = "Salud"),
-        UtilidadEntity(codigo = "CALC_HIPOTECA", nombre = "Hipoteca", descripcion = "Cuota mensual", icono = "home", orden = 3, categoria = "Finanzas"),
-        UtilidadEntity(codigo = "FIN_GASTOS", nombre = "Diario de Gastos", descripcion = "Control de presupuesto", icono = "payments", orden = 4, categoria = "Finanzas"),
-        UtilidadEntity(codigo = "VEH_MGR", nombre = "Mi Vehículo", descripcion = "Seguro y Matrícula", icono = "directions_car", orden = 5, categoria = "Varios"),
-        UtilidadEntity(codigo = "CALC_EDAD", nombre = "Edad Exacta", descripcion = "Años, meses y días", icono = "cake", orden = 6, categoria = "Varios")
-      )
-      initial.forEach { utilidadDao.insertUtilidad(it) }
-      
-      // Programar una notificación de prueba para Erick
-      reminderScheduler.scheduleReminder(
-        id = 999,
-        title = "¡Bienvenido Erick!",
-        message = "AppCasa está lista para gestionar tu hogar.",
-        timeInMillis = System.currentTimeMillis() + 60000 // En 1 minuto
-      )
+        miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Erick", tipo = TipoMiembro.PERSONA.name, fechaNacimiento = erickBirth))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Alicia", tipo = TipoMiembro.PERSONA.name, fechaNacimiento = aliciaBirth))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Brian", tipo = TipoMiembro.PERSONA.name, fechaNacimiento = brianBirth))
+        
+        // Mascotas
+        miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Goofy", tipo = TipoMiembro.PERRO.name, raza = "Beagador"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Daisy", tipo = TipoMiembro.PERRO.name, raza = "Beagle"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Salem", tipo = TipoMiembro.GATO.name, colorPelaje = "Negro de mucho pelo"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Toby", tipo = TipoMiembro.GATO.name, colorPelaje = "Negro con manchita blanca"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Sabrina", tipo = TipoMiembro.GATO.name, colorPelaje = "Blanco con partes negras"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Tom", tipo = TipoMiembro.GATO.name, colorPelaje = "Blanco y negro (gordo)"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = hogarId, nombre = "Super", tipo = TipoMiembro.TORTUGA.name, raza = "Testudo marginata"))
+
+        // Novedades de Utilidades
+        val initialUtils = listOf(
+          UtilidadEntity(codigo = "CALC_DOSIS", nombre = "Dosis Mascotas", descripcion = "Cálculo según peso", icono = "medication", orden = 1, categoria = "Salud"),
+          UtilidadEntity(codigo = "CALC_IMC", nombre = "IMC Familiar", descripcion = "Índice de Masa Corporal", icono = "monitor_weight", orden = 2, categoria = "Salud"),
+          UtilidadEntity(codigo = "CALC_HIPOTECA", nombre = "Hipoteca", descripcion = "Cuota mensual", icono = "home", orden = 3, categoria = "Finanzas"),
+          UtilidadEntity(codigo = "FIN_GASTOS", nombre = "Gastos", descripcion = "Control presupuesto", icono = "payments", orden = 4, categoria = "Finanzas"),
+          UtilidadEntity(codigo = "VEH_MGR", nombre = "Mi Vehículo", descripcion = "Mantenimiento y seguro", icono = "directions_car", orden = 5, categoria = "Varios"),
+          UtilidadEntity(codigo = "CALC_EDAD", nombre = "Edad Exacta", icono = "cake", orden = 6, categoria = "Varios"),
+          UtilidadEntity(codigo = "UTIL_PDF", nombre = "Fotos a PDF", descripcion = "Convertir imágenes a PDF", icono = "picture_as_pdf", orden = 7, categoria = "Productividad"),
+          UtilidadEntity(codigo = "UTIL_WIFI", nombre = "QR WiFi", descripcion = "Compartir clave WiFi", icono = "qr_code", orden = 8, categoria = "Productividad"),
+          UtilidadEntity(codigo = "UTIL_COCINA", nombre = "Cocina", descripcion = "Conversor de medidas", icono = "restaurant", orden = 9, categoria = "Varios")
+        )
+        initialUtils.forEach { utilidadDao.insertUtilidad(it) }
+
+        listaDao.insertLista(ListaEntity(hogarId = hogarId, nombre = "Lista de la Compra", tipo = com.appcasa.core.domain.model.TipoLista.COMPRA.name))
+        
+        reminderScheduler.scheduleReminder(888, "¡Datos Oficiales Cargados!", "Cumpleaños y equipo familiar sincronizados.", System.currentTimeMillis() + 2000)
+
+      } catch (e: Exception) {
+        // Log error if needed
+      }
     }
   }
 }

@@ -19,6 +19,8 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.features.family.presentation.viewmodel.EditMemberViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +40,24 @@ fun EditMemberScreen(
     var vetTlf by remember { mutableStateOf(currentMember.veterinarioTelefono ?: "") }
     var fotoUri by remember { mutableStateOf<String?>(currentMember.fotoUri) }
     var expanded by remember { mutableStateOf(false) }
+    
+    var selectedBirthDate by remember { mutableStateOf(currentMember.fechaNacimiento) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedBirthDate)
+
+    if (showDatePicker) {
+      DatePickerDialog(
+        onDismissRequest = { showDatePicker = false },
+        confirmButton = {
+          TextButton(onClick = {
+            selectedBirthDate = datePickerState.selectedDateMillis
+            showDatePicker = false
+          }) { Text("OK") }
+        }
+      ) {
+        DatePicker(state = datePickerState)
+      }
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
       contract = ActivityResultContracts.GetContent()
@@ -123,6 +143,18 @@ fun EditMemberScreen(
           }
         }
 
+        // Campo de Cumpleaños
+        OutlinedButton(
+          onClick = { showDatePicker = true },
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Icon(Icons.Default.Cake, contentDescription = null)
+          Spacer(Modifier.width(8.dp))
+          val label = if (selectedBirthDate == null) "Añadir Cumpleaños" 
+                      else "Cumpleaños: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(selectedBirthDate!!))}"
+          Text(label)
+        }
+
         if (tipo != TipoMiembro.PERSONA) {
           OutlinedTextField(
             value = raza,
@@ -170,7 +202,8 @@ fun EditMemberScreen(
               chip = chip.takeIf { it.isNotBlank() },
               vetNombre = vetNombre.takeIf { it.isNotBlank() },
               vetTlf = vetTlf.takeIf { it.isNotBlank() },
-              fotoUri = fotoUri
+              fotoUri = fotoUri,
+              fechaNacimiento = selectedBirthDate
             )
             navController.popBackStack()
           },

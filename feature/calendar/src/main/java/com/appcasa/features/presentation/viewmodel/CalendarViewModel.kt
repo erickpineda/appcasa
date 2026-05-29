@@ -9,6 +9,7 @@ import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.features.tasks.data.local.TareaEntity
 import com.appcasa.features.reminders.data.local.RecordatorioDao
 import com.appcasa.features.reminders.data.local.RecordatorioEntity
+import com.appcasa.features.family.data.local.MiembroDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,6 +28,7 @@ class CalendarViewModel @Inject constructor(
   private val eventoDao: EventoDao,
   private val tareaDao: TareaDao,
   private val recordatorioDao: RecordatorioDao,
+  private val miembroDao: MiembroDao,
   private val reminderScheduler: ReminderScheduler
 ) : ViewModel() {
 
@@ -35,13 +38,29 @@ class CalendarViewModel @Inject constructor(
   val calendarItems: StateFlow<CalendarState> = combine(
     eventoDao.getEventosByHogar(1L),
     tareaDao.getTareasByHogar(1L),
-    recordatorioDao.getRecordatoriosByHogar(1L)
-  ) { eventos, tareas, recordatorios ->
+    recordatorioDao.getRecordatoriosByHogar(1L),
+    miembroDao.getMiembrosByHogar(1L)
+  ) { eventos, tareas, recordatorios, miembros ->
     val startOfToday = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     
+    // Generar cumpleaños dinámicos basado solo en el año actual
+    val birthdayItems = miembros.filter { it.fechaNacimiento != null }.map { miembro ->
+      val bdayMillis = calculateBirthdayOccurrence(miembro.fechaNacimiento!!)
+      CalendarItem.Evento(
+        EventoEntity(
+          id = -miembro.id, // Virtual ID
+          hogarId = miembro.hogarId,
+          titulo = "Cumpleaños: ${miembro.nombre} 🎂",
+          fecha = bdayMillis,
+          tipo = com.appcasa.core.domain.model.TipoEvento.CUMPLEANOS.name
+        )
+      )
+    }
+
     val allItems = (eventos.map { CalendarItem.Evento(it) } +
            tareas.filter { it.fechaLimite != null }.map { CalendarItem.Tarea(it) } +
-           recordatorios.map { CalendarItem.Recordatorio(it) })
+           recordatorios.map { CalendarItem.Recordatorio(it) } +
+           birthdayItems)
            .sortedBy { it.timestamp }
 
     CalendarState(
@@ -57,6 +76,22 @@ class CalendarViewModel @Inject constructor(
     initialValue = CalendarState()
   )
 
+  private fun calculateBirthdayOccurrence(birthDateMillis: Long): Long {
+    val birthDate = Calendar.getInstance().apply { timeInMillis = birthDateMillis }
+    val today = Calendar.getInstance()
+    
+    val occurrence = Calendar.getInstance().apply {
+      set(Calendar.YEAR, today.get(Calendar.YEAR))
+      set(Calendar.MONTH, birthDate.get(Calendar.MONTH))
+      set(Calendar.DAY_OF_MONTH, birthDate.get(Calendar.DAY_OF_MONTH))
+      set(Calendar.HOUR_OF_DAY, 0)
+      set(Calendar.MINUTE, 0)
+      set(Calendar.SECOND, 0)
+      set(Calendar.MILLISECOND, 0)
+    }
+    return occurrence.timeInMillis
+  }
+
   fun loadMoreHistory() {
     _historyPage.value += 1
   }
@@ -64,7 +99,6 @@ class CalendarViewModel @Inject constructor(
   fun updateEvento(evento: EventoEntity) {
     viewModelScope.launch {
       eventoDao.updateEvento(evento)
-      // Notificación por defecto a las 9 AM si es futuro
       if (evento.fecha > System.currentTimeMillis()) {
         reminderScheduler.scheduleReminder(
           id = (evento.id + 10000).toInt(),
@@ -116,7 +150,7 @@ class CalendarViewModel @Inject constructor(
           }
         }
       } catch (e: Exception) {
-        e.printStackTrace()
+        // Error log
       }
     }
   }

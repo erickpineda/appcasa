@@ -21,6 +21,8 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,7 +80,7 @@ fun MemberDetailScreen(
                 )
               } else {
                 Icon(
-                  imageVector = Icons.Default.Person,
+                  imageVector = if (currentMember.tipo == "PERSONA") Icons.Default.Person else Icons.Default.Pets,
                   contentDescription = null,
                   modifier = Modifier.size(80.dp),
                   tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -95,7 +97,7 @@ fun MemberDetailScreen(
             fontWeight = FontWeight.Bold
           )
           Text(
-            text = "Perfil Familiar",
+            text = if (currentMember.tipo == "PERSONA") "Miembro de la Familia" else "Perfil de Mascota",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.primary
           )
@@ -109,21 +111,42 @@ fun MemberDetailScreen(
           ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
               DetailRow(icon = Icons.Default.Category, label = "Tipo", value = currentMember.tipo)
-              currentMember.raza?.let { DetailRow(icon = Icons.Default.Pets, label = "Raza", value = it) }
-              currentMember.numeroChip?.let { DetailRow(icon = Icons.Default.Tag, label = "Nº Chip", value = it) }
+              
+              if (currentMember.fechaNacimiento != null) {
+                val dateStr = SimpleDateFormat("dd 'de' MMMM", Locale("es", "ES")).format(Date(currentMember.fechaNacimiento!!))
+                DetailRow(icon = Icons.Default.Cake, label = "Cumpleaños", value = dateStr)
+              }
+
+              if (!currentMember.raza.isNullOrBlank()) {
+                DetailRow(icon = Icons.Default.Pets, label = "Raza / Especie", value = currentMember.raza!!)
+              }
+              
+              if (!currentMember.colorPelaje.isNullOrBlank()) {
+                DetailRow(icon = Icons.Default.Palette, label = "Color / Descripción", value = currentMember.colorPelaje!!)
+              }
+              
+              if (!currentMember.numeroChip.isNullOrBlank()) {
+                DetailRow(icon = Icons.Default.Tag, label = "Nº Chip", value = currentMember.numeroChip!!)
+              }
             }
           }
 
-          if (!currentMember.veterinarioNombre.isNullOrBlank()) {
+          if (!currentMember.veterinarioNombre.isNullOrBlank() || !currentMember.veterinarioTelefono.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(16.dp))
             com.appcasa.core.ui.components.AppCasaCard(
               useGlassmorphism = true,
               modifier = Modifier.fillMaxWidth()
             ) {
               Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Información de Contacto", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                DetailRow(icon = Icons.Default.LocalHospital, label = "Clínica/Vet", value = currentMember.veterinarioNombre ?: "")
-                currentMember.veterinarioTelefono?.let { DetailRow(icon = Icons.Default.Phone, label = "Teléfono", value = it) }
+                Text("Información de Contacto", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                
+                if (!currentMember.veterinarioNombre.isNullOrBlank()) {
+                  DetailRow(icon = Icons.Default.LocalHospital, label = "Clínica/Vet", value = currentMember.veterinarioNombre!!)
+                }
+                
+                if (!currentMember.veterinarioTelefono.isNullOrBlank()) {
+                  DetailRow(icon = Icons.Default.Phone, label = "Teléfono", value = currentMember.veterinarioTelefono!!)
+                }
               }
             }
           }

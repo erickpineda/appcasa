@@ -68,8 +68,8 @@ fun CalendarScreen(
   if (showAddReminderDialog) {
     AddReminderDialog(
       onDismiss = { showAddReminderDialog = false },
-      onConfirm = { titulo, timeMillis, anticipacion ->
-        remindersViewModel.addReminder(titulo, titulo, timeMillis, anticipacion)
+      onConfirm = { titulo, timeMillis ->
+        remindersViewModel.addReminder(titulo, titulo, timeMillis)
         showAddReminderDialog = false
       }
     )
@@ -79,10 +79,10 @@ fun CalendarScreen(
     EditCalendarItemDialog(
       item = item,
       onDismiss = { editingItem = null },
-      onConfirm = { nuevoTitulo, nuevaFecha, anticipacion ->
+      onConfirm = { nuevoTitulo, nuevaFecha ->
         when (item) {
           is CalendarItem.Evento -> viewModel.updateEvento(item.entity.copy(titulo = nuevoTitulo, fecha = nuevaFecha))
-          is CalendarItem.Recordatorio -> remindersViewModel.updateReminder(item.entity.copy(titulo = nuevoTitulo, fechaHora = nuevaFecha), anticipacion)
+          is CalendarItem.Recordatorio -> remindersViewModel.updateReminder(item.entity.copy(titulo = nuevoTitulo, fechaHora = nuevaFecha))
           is CalendarItem.Tarea -> { }
         }
         editingItem = null
@@ -257,8 +257,7 @@ fun CalendarContent(
           
           LazyVerticalGrid(
             columns = GridCells.Fixed(7),
-            modifier = Modifier.height(260.dp), // Aumentado para evitar scroll y ver todas las semanas (max 6 filas)
-            userScrollEnabled = false // Deshabilitamos scroll interno para que sea fluido
+            modifier = Modifier.height(180.dp)
           ) {
             items(firstDayOfWeek) { Box(modifier = Modifier.aspectRatio(1f)) }
             items(daysInMonth) { day ->
@@ -286,7 +285,7 @@ fun CalendarContent(
                   .clickable { onDateSelected(dateAtDay) },
                 contentAlignment = Alignment.Center
               ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                   Text(
                     text = dayNum.toString(),
                     style = MaterialTheme.typography.labelMedium,
@@ -299,7 +298,6 @@ fun CalendarContent(
                   if (hasEvent) {
                     Box(
                       modifier = Modifier
-                        .padding(top = 2.dp)
                         .size(4.dp)
                         .clip(CircleShape)
                         .background(
@@ -489,7 +487,7 @@ fun AgendaItemCompact(
       val isBirthday = item.entity.tipo == TipoEvento.CUMPLEANOS.name
       icon = if (isBirthday) Icons.Default.Cake else Icons.Default.Event
       color = if (isBirthday) Color(0xFFFF4081) else MaterialTheme.colorScheme.primary
-      typeLabel = if (isBirthday) "Cumpleaños" else "Evento"
+      typeLabel = if (isBirthday) "¡CUMPLE!" else "Evento"
     }
     is CalendarItem.Tarea -> {
       icon = Icons.Default.Task
@@ -610,7 +608,7 @@ val CalendarItem.uniqueKey: String
 @Composable
 fun AddReminderDialog(
   onDismiss: () -> Unit,
-  onConfirm: (String, Long, Int) -> Unit
+  onConfirm: (String, Long) -> Unit
 ) {
   var titulo by remember { mutableStateOf("") }
   val datePickerState = rememberDatePickerState()
@@ -618,7 +616,6 @@ fun AddReminderDialog(
   var showDatePicker by remember { mutableStateOf(false) }
   var showTimePicker by remember { mutableStateOf(false) }
   var selectedDateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
-  var selectedAnticipacion by remember { mutableStateOf(0) }
 
   if (showDatePicker) {
     DatePickerDialog(
@@ -689,7 +686,6 @@ fun AddReminderDialog(
           label = { Text("¿Qué recordar?") },
           modifier = Modifier.fillMaxWidth()
         )
-        
         Button(
           onClick = { showDatePicker = true },
           modifier = Modifier.fillMaxWidth()
@@ -704,26 +700,10 @@ fun AddReminderDialog(
           val sdf = SimpleDateFormat(format, Locale.getDefault())
           Text("Fecha: ${sdf.format(date)}")
         }
-
-        Text("Avisar antes:", style = MaterialTheme.typography.labelSmall)
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-          val options = listOf(0 to "En punto", 5 to "5 min", 15 to "15 min", 30 to "30 min")
-          options.forEach { (mins, label) ->
-            FilterChip(
-              selected = selectedAnticipacion == mins,
-              onClick = { selectedAnticipacion = mins },
-              label = { Text(label, style = MaterialTheme.typography.labelSmall) },
-              modifier = Modifier.weight(1f)
-            )
-          }
-        }
       }
     },
     confirmButton = {
-      Button(onClick = { if (titulo.isNotBlank()) onConfirm(titulo, selectedDateMillis, selectedAnticipacion) }) {
+      Button(onClick = { if (titulo.isNotBlank()) onConfirm(titulo, selectedDateMillis) }) {
         Text("Guardar")
       }
     },
@@ -738,7 +718,7 @@ fun AddReminderDialog(
 fun EditCalendarItemDialog(
   item: CalendarItem,
   onDismiss: () -> Unit,
-  onConfirm: (String, Long, Int) -> Unit
+  onConfirm: (String, Long) -> Unit
 ) {
   var titulo by remember { mutableStateOf(item.title) }
   val datePickerState = rememberDatePickerState(initialSelectedDateMillis = item.timestamp)
@@ -748,8 +728,6 @@ fun EditCalendarItemDialog(
   var showDatePicker by remember { mutableStateOf(false) }
   var showTimePicker by remember { mutableStateOf(false) }
   var selectedDateMillis by remember { mutableStateOf(item.timestamp) }
-  
-  var selectedAnticipacion by remember { mutableStateOf(0) }
 
   if (showDatePicker) {
     DatePickerDialog(
@@ -832,28 +810,12 @@ fun EditCalendarItemDialog(
             "dd/MM/yyyy HH:mm"
           }
           val sdf = SimpleDateFormat(format, Locale.getDefault())
-          Text("Fecha: ${sdf.format(date)}")
-        }
-
-        Text("Avisar antes:", style = MaterialTheme.typography.labelSmall)
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-          val options = listOf(0 to "En punto", 5 to "5 min", 15 to "15 min", 30 to "30 min")
-          options.forEach { (mins, label) ->
-            FilterChip(
-              selected = selectedAnticipacion == mins,
-              onClick = { selectedAnticipacion = mins },
-              label = { Text(label, style = MaterialTheme.typography.labelSmall) },
-              modifier = Modifier.weight(1f)
-            )
-          }
+          Text("Fecha y Hora: ${sdf.format(date)}")
         }
       }
     },
     confirmButton = {
-      Button(onClick = { if (titulo.isNotBlank()) onConfirm(titulo, selectedDateMillis, selectedAnticipacion) }) {
+      Button(onClick = { if (titulo.isNotBlank()) onConfirm(titulo, selectedDateMillis) }) {
         Text("Guardar")
       }
     },

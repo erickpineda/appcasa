@@ -38,6 +38,7 @@ import com.appcasa.features.utilities.presentation.screen.AgeCalculatorScreen
 import com.appcasa.features.utilities.presentation.screen.BMICalculatorScreen
 import com.appcasa.features.utilities.presentation.screen.ConsumptionCalculatorScreen
 import com.appcasa.features.utilities.presentation.screen.DosageCalculatorScreen
+import com.appcasa.features.utilities.presentation.screen.*
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import com.appcasa.features.utilities.presentation.screen.MortgageCalculatorScreen
@@ -178,6 +179,9 @@ fun AppNavigation() {
       composable(Screen.VehicleManager.route) { VehicleManagementScreen(navController = navController) }
       composable(Screen.Inventory.route) { StockScreen(navController = navController) }
       composable(Screen.Expenses.route) { ExpenseScreen(navController = navController) }
+      composable(Screen.PhotoToPdf.route) { PhotoToPdfScreen(navController = navController) }
+      composable(Screen.WifiQR.route) { WifiQRScreen(navController = navController) }
+      composable(Screen.CocinaConverter.route) { CocinaConverterScreen(navController = navController) }
     }
   }
 }

@@ -1,6 +1,8 @@
 package com.appcasa.features.dashboard.presentation.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Inventory
@@ -37,7 +39,8 @@ fun ManagementHubScreen(
         modifier = Modifier
           .padding(padding)
           .padding(16.dp)
-          .fillMaxSize(),
+          .fillMaxSize()
+          .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
       ) {

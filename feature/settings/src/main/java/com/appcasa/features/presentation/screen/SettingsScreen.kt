@@ -31,6 +31,8 @@ fun SettingsScreen(
   val hogar by settingsViewModel.hogarActual.collectAsState()
   val configs by settingsViewModel.configuraciones.collectAsState()
   val listas by settingsViewModel.todasLasListas.collectAsState()
+  
+  var seedStatus by remember { mutableStateOf<String?>(null) }
 
   Column(modifier = Modifier.fillMaxSize()) {
     TopAppBar(
@@ -40,6 +42,24 @@ fun SettingsScreen(
         titleContentColor = MaterialTheme.colorScheme.onPrimary
       )
     )
+    
+    if (seedStatus != null) {
+      Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        modifier = Modifier.fillMaxWidth()
+      ) {
+        Row(
+          modifier = Modifier.padding(8.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.Center
+        ) {
+          Text(seedStatus!!, style = MaterialTheme.typography.bodySmall)
+          Spacer(Modifier.width(8.dp))
+          TextButton(onClick = { seedStatus = null }) { Text("OK") }
+        }
+      }
+    }
+
     SettingsContent(
       modifier = Modifier.weight(1f),
       userName = usuario?.nombre ?: "Usuario",
@@ -49,7 +69,10 @@ fun SettingsScreen(
       onUpdateName = { settingsViewModel.updateUsuario(it) },
       onUpdateHouseholdName = { settingsViewModel.updateHogar(it) },
       onUpdateConfig = { clave, valor -> settingsViewModel.updateConfig(clave, valor) },
-      onSeedData = { dashboardViewModel.seedRealData() }
+      onSeedData = { 
+        dashboardViewModel.seedRealData() 
+        seedStatus = "¡Datos de Erick y familia cargados con éxito!"
+      }
     )
   }
 }
@@ -203,8 +226,8 @@ fun SettingsContent(
     item {
       SettingsItem(
         icon = Icons.Default.CloudUpload,
-        title = "Datos de ejemplo",
-        subtitle = "Cargar datos de prueba (MVP)",
+        title = "Actualizar Datos Oficiales",
+        subtitle = "Cargar Erick, Alicia, Brian y mascotas",
         onClick = onSeedData
       )
     }

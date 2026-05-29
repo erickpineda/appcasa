@@ -5,11 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -30,6 +26,7 @@ import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
 import com.appcasa.navigation.Screen
 
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
 
@@ -117,7 +114,8 @@ fun FamilyContent(
           Text(
             text = "Miembros de la Familia",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
           )
         }
         items(people) { person ->
@@ -132,10 +130,12 @@ fun FamilyContent(
 
       if (pets.isNotEmpty()) {
         item {
+          Spacer(modifier = Modifier.height(16.dp))
           Text(
-            text = "Nuestras Mascotas",
+            text = "Nuestras Mascotas (${pets.size})",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.secondary
+            color = MaterialTheme.colorScheme.secondary,
+            fontWeight = FontWeight.Bold
           )
         }
         items(pets) { pet ->
@@ -159,33 +159,35 @@ fun MemberCard(
   onClick: () -> Unit
 ) {
   com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true,
-    modifier = Modifier.fillMaxWidth().alpha(0.8f),
+    modifier = Modifier.fillMaxWidth().alpha(0.9f),
     onClick = onClick
   ) {
     Row(
       modifier = Modifier
-        .padding(4.dp)
+        .padding(8.dp)
         .fillMaxWidth(),
       verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(12.dp)
+      horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
       Surface(
-        modifier = Modifier.size(48.dp),
+        modifier = Modifier.size(60.dp), // Aumentado para que la foto luzca más
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shadowElevation = 2.dp
       ) {
         Box(contentAlignment = Alignment.Center) {
           if (member.fotoUri != null) {
             AsyncImage(
               model = member.fotoUri,
               contentDescription = null,
-              modifier = Modifier.fillMaxSize(),
+              modifier = Modifier.fillMaxSize().clip(CircleShape),
               contentScale = ContentScale.Crop
             )
           } else {
             Icon(
               imageVector = icon,
               contentDescription = null,
+              modifier = Modifier.size(32.dp),
               tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
           }
@@ -197,9 +199,16 @@ fun MemberCard(
           style = MaterialTheme.typography.titleMedium,
           fontWeight = FontWeight.Bold
         )
+        val description = when {
+          member.tipo == TipoMiembro.PERSONA.name -> "Miembro familiar"
+          !member.raza.isNullOrBlank() -> member.raza
+          !member.colorPelaje.isNullOrBlank() -> member.colorPelaje
+          else -> member.tipo
+        }
         Text(
-          text = if (member.tipo == TipoMiembro.PERSONA.name) "Humano" else member.tipo,
-          style = MaterialTheme.typography.bodySmall
+          text = description ?: member.tipo,
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant
         )
       }
 

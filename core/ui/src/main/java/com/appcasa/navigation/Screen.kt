@@ -52,6 +52,9 @@ sealed class Screen(val route: String) {
   data object Inventory      : Screen("inventory")
   data object VehicleManager : Screen("vehicle_management")
   data object Expenses       : Screen("expenses")
+  data object PhotoToPdf     : Screen("photo_to_pdf")
+  data object WifiQR         : Screen("wifi_qr")
+  data object CocinaConverter : Screen("cocina_converter")
 }
 
 data class BottomNavItem(

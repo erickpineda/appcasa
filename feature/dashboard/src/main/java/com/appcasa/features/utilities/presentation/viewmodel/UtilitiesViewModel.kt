@@ -4,16 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.features.utilities.data.local.UtilidadDao
 import com.appcasa.features.utilities.data.local.UtilidadEntity
+import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.features.settings.data.local.ConfiguracionEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class UtilitiesViewModel @Inject constructor(
-  private val utilidadDao: UtilidadDao
+  private val utilidadDao: UtilidadDao,
+  private val configuracionDao: ConfiguracionDao
 ) : ViewModel() {
 
   val utilities: StateFlow<List<UtilidadEntity>> = utilidadDao.getUtilidades()
@@ -23,10 +27,28 @@ class UtilitiesViewModel @Inject constructor(
       initialValue = emptyList()
     )
 
+  val savedValues: StateFlow<Map<String, String>> = configuracionDao.getConfiguracion(1L)
+    .map { list -> list.associate { it.clave to it.valor } }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+  init {
+    // Si al arrancar este VM la lista está vacía, intentamos inicializar
+    // Esto ayuda en reinstalaciones donde Dashboard no haya terminado su seed.
+    viewModelScope.launch {
+        if (utilidadDao.getUtilidades().stateIn(viewModelScope).value.isEmpty()) {
+            initializeUtilities()
+        }
+    }
+  }
+
+  fun saveValue(clave: String, valor: String) {
+    viewModelScope.launch {
+      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = 1L, clave = clave, valor = valor))
+    }
+  }
+
   fun initializeUtilities() {
     viewModelScope.launch {
-      val current = utilities.value
-      if (current.isEmpty()) {
         val initial = listOf(
           UtilidadEntity(codigo = "CALC_DOSIS", nombre = "Dosis Mascotas", descripcion = "Cálculo según peso", icono = "medication", orden = 1, categoria = "Salud"),
           UtilidadEntity(codigo = "CALC_IMC", nombre = "IMC Familiar", descripcion = "Índice de Masa Corporal", icono = "monitor_weight", orden = 2, categoria = "Salud"),
@@ -35,10 +57,12 @@ class UtilitiesViewModel @Inject constructor(
           UtilidadEntity(codigo = "CALC_AHORRO", nombre = "Ahorro Mensual", descripcion = "Objetivo de ahorro", icono = "savings", orden = 5, categoria = "Finanzas"),
           UtilidadEntity(codigo = "CALC_EDAD", nombre = "Edad Exacta", descripcion = "Años, meses y días", icono = "cake", orden = 6, categoria = "Varios"),
           UtilidadEntity(codigo = "CALC_CONSUMO", nombre = "Consumo Eléctrico", descripcion = "Estimación mensual", icono = "bolt", orden = 7, categoria = "Varios"),
-          UtilidadEntity(codigo = "VEH_MGR", nombre = "Mi Vehículo", descripcion = "Seguro y mantenimiento", icono = "directions_car", orden = 8, categoria = "Varios")
+          UtilidadEntity(codigo = "VEH_MGR", nombre = "Mi Vehículo", descripcion = "Seguro y mantenimiento", icono = "directions_car", orden = 8, categoria = "Varios"),
+          UtilidadEntity(codigo = "UTIL_PDF", nombre = "Fotos a PDF", descripcion = "Convertir imágenes a PDF", icono = "picture_as_pdf", orden = 9, categoria = "Productividad"),
+          UtilidadEntity(codigo = "UTIL_WIFI", nombre = "QR WiFi", descripcion = "Compartir clave WiFi", icono = "qr_code", orden = 10, categoria = "Productividad"),
+          UtilidadEntity(codigo = "UTIL_COCINA", nombre = "Cocina", descripcion = "Conversor de medidas", icono = "restaurant", orden = 11, categoria = "Varios")
         )
         initial.forEach { utilidadDao.insertUtilidad(it) }
-      }
     }
   }
 }

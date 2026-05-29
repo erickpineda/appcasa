@@ -19,11 +19,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +41,24 @@ fun AddMemberScreen(
   var chip by remember { mutableStateOf("") }
   var fotoUri by remember { mutableStateOf<String?>(null) }
   var expanded by remember { mutableStateOf(false) }
+  
+  var selectedBirthDate by remember { mutableStateOf<Long?>(null) }
+  var showDatePicker by remember { mutableStateOf(false) }
+  val datePickerState = rememberDatePickerState()
+
+  if (showDatePicker) {
+    DatePickerDialog(
+      onDismissRequest = { showDatePicker = false },
+      confirmButton = {
+        TextButton(onClick = {
+          selectedBirthDate = datePickerState.selectedDateMillis
+          showDatePicker = false
+        }) { Text("OK") }
+      }
+    ) {
+      DatePicker(state = datePickerState)
+    }
+  }
 
   val imagePickerLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.GetContent()
@@ -123,6 +144,18 @@ fun AddMemberScreen(
         }
       }
 
+      // Campo de Cumpleaños
+      OutlinedButton(
+        onClick = { showDatePicker = true },
+        modifier = Modifier.fillMaxWidth()
+      ) {
+        Icon(Icons.Default.Cake, contentDescription = null)
+        Spacer(Modifier.width(8.dp))
+        val label = if (selectedBirthDate == null) "Añadir Cumpleaños" 
+                    else "Cumpleaños: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(selectedBirthDate!!))}"
+        Text(label)
+      }
+
       if (tipo != TipoMiembro.PERSONA) {
         OutlinedTextField(
           value = raza,
@@ -154,7 +187,8 @@ fun AddMemberScreen(
             raza = raza.takeIf { it.isNotBlank() }, 
             color = color.takeIf { it.isNotBlank() },
             chip = chip.takeIf { it.isNotBlank() }, 
-            fotoUri = fotoUri
+            fotoUri = fotoUri,
+            fechaNacimiento = selectedBirthDate
           )
           navController.popBackStack()
         },

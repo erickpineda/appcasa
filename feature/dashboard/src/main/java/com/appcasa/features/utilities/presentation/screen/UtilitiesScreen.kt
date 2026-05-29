@@ -45,6 +45,9 @@ fun UtilitiesScreen(
           "CALC_AHORRO" -> navController.navigate(Screen.SavingsCalculator.route)
           "FIN_GASTOS" -> navController.navigate(Screen.Expenses.route)
           "VEH_MGR" -> navController.navigate(Screen.VehicleManager.route)
+          "UTIL_PDF" -> navController.navigate(Screen.PhotoToPdf.route)
+          "UTIL_WIFI" -> navController.navigate(Screen.WifiQR.route)
+          "UTIL_COCINA" -> navController.navigate(Screen.CocinaConverter.route)
         }
       }
     )
@@ -186,6 +189,9 @@ fun UtilityCard(utility: UtilidadEntity, onClick: () -> Unit, modifier: Modifier
     "straighten" -> Icons.Default.Straighten
     "payments" -> Icons.Default.Payments
     "directions_car" -> Icons.Default.DirectionsCar
+    "picture_as_pdf" -> Icons.Default.PictureAsPdf
+    "qr_code" -> Icons.Default.QrCode
+    "restaurant" -> Icons.Default.Restaurant
     else -> Icons.Default.Apps
   }
 

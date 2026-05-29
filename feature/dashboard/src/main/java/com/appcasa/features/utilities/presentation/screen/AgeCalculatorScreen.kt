@@ -1,90 +1,114 @@
 package com.appcasa.features.utilities.presentation.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.features.utilities.presentation.viewmodel.UtilitiesViewModel
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgeCalculatorScreen(
-    navController: NavController
+  navController: NavController,
+  viewModel: UtilitiesViewModel = hiltViewModel()
 ) {
-    var dateString by remember { mutableStateOf("") }
-    var ageResult by remember { mutableStateOf("Selecciona una fecha") }
+  val savedValues by viewModel.savedValues.collectAsState()
+  
+  var selectedMillis by remember(savedValues) { 
+    mutableStateOf(savedValues["AGE_CALC_MILLIS"]?.toLongOrNull()) 
+  }
+  
+  var ageResult by remember { mutableStateOf("Selecciona una fecha") }
 
-    val datePickerState = rememberDatePickerState()
-    var showDatePicker by remember { mutableStateOf(false) }
+  val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedMillis)
+  var showDatePicker by remember { mutableStateOf(false) }
 
-    if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        val selectedDate = LocalDate.ofEpochDay(it / (24 * 60 * 60 * 1000))
-                        val now = LocalDate.now()
-                        val period = java.time.Period.between(selectedDate, now)
-                        ageResult = "${period.years} años, ${period.months} meses y ${period.days} días"
-                        dateString = selectedDate.toString()
-                    }
-                    showDatePicker = false
-                }) {
-                    Text("OK")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
+  // Calcular edad si hay fecha guardada
+  LaunchedEffect(selectedMillis) {
+    selectedMillis?.let {
+      val selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+      val now = LocalDate.now()
+      val period = java.time.Period.between(selectedDate, now)
+      ageResult = "${period.years} años, ${period.months} meses y ${period.days} días"
     }
+  }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Calculadora de Edad") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+  if (showDatePicker) {
+    DatePickerDialog(
+      onDismissRequest = { showDatePicker = false },
+      confirmButton = {
+        TextButton(onClick = {
+          datePickerState.selectedDateMillis?.let {
+            selectedMillis = it
+            viewModel.saveValue("AGE_CALC_MILLIS", it.toString())
+          }
+          showDatePicker = false
+        }) { Text("OK") }
+      }
+    ) {
+      DatePicker(state = datePickerState)
+    }
+  }
+
+  Scaffold(
+    topBar = {
+      TopAppBar(
+        title = { Text("Calculadora de Edad") },
+        navigationIcon = {
+          IconButton(onClick = { navController.popBackStack() }) {
+            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+          }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+          containerColor = MaterialTheme.colorScheme.primary,
+          titleContentColor = MaterialTheme.colorScheme.onPrimary
+        )
+      )
+    }
+  ) { padding ->
+    Column(
+      modifier = Modifier
+        .padding(padding)
+        .padding(16.dp)
+        .fillMaxSize()
+        .verticalScroll(rememberScrollState()),
+      verticalArrangement = Arrangement.spacedBy(16.dp),
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+      Button(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
+        Icon(Icons.Default.Event, contentDescription = null)
+        Spacer(Modifier.width(8.dp))
+        Text(if (selectedMillis == null) "Seleccionar Fecha de Nacimiento" else "Cambiar Fecha")
+      }
+
+      AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+          modifier = Modifier.padding(24.dp),
+          horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(onClick = { showDatePicker = true }) {
-                Text(if (dateString.isEmpty()) "Seleccionar Fecha de Nacimiento" else "Fecha: $dateString")
-            }
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("Edad Exacta", style = MaterialTheme.typography.labelLarge)
-                    Text(
-                        text = ageResult,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
-                }
-            }
+          Text("Edad Exacta", style = MaterialTheme.typography.labelLarge)
+          Spacer(Modifier.height(12.dp))
+          Text(
+            text = ageResult,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+          )
         }
+      }
     }
+  }
 }
