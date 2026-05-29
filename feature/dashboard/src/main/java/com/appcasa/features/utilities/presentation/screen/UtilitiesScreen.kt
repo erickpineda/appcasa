@@ -48,6 +48,7 @@ fun UtilitiesScreen(
           "UTIL_PDF" -> navController.navigate(Screen.PhotoToPdf.route)
           "UTIL_WIFI" -> navController.navigate(Screen.WifiQR.route)
           "UTIL_COCINA" -> navController.navigate(Screen.CocinaConverter.route)
+          "UTIL_PIENSO" -> navController.navigate(Screen.FeedingCalculator.route)
         }
       }
     )

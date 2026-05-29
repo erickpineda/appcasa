@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,12 +37,9 @@ class UtilitiesViewModel @Inject constructor(
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
   init {
-    // Si al arrancar este VM la lista está vacía, intentamos inicializar
-    // Esto ayuda en reinstalaciones donde Dashboard no haya terminado su seed.
     viewModelScope.launch {
-        if (utilidadDao.getUtilidades().stateIn(viewModelScope).value.isEmpty()) {
-            initializeUtilities()
-        }
+        // Aseguramos que todas las utilidades estén registradas, incluso si faltan algunas nuevas
+        initializeUtilities()
     }
   }
 
@@ -53,7 +51,8 @@ class UtilitiesViewModel @Inject constructor(
 
   fun initializeUtilities() {
     viewModelScope.launch {
-        val initial = listOf(
+        val currentCodes = utilities.value.map { it.codigo }.toSet()
+        val allPossible = listOf(
           UtilidadEntity(codigo = "CALC_DOSIS", nombre = "Dosis Mascotas", descripcion = "Cálculo según peso", icono = "medication", orden = 1, categoria = "Salud"),
           UtilidadEntity(codigo = "CALC_IMC", nombre = "IMC Familiar", descripcion = "Índice de Masa Corporal", icono = "monitor_weight", orden = 2, categoria = "Salud"),
           UtilidadEntity(codigo = "CALC_HIPOTECA", nombre = "Hipoteca", descripcion = "Cuota mensual e intereses", icono = "home", orden = 3, categoria = "Finanzas"),
@@ -64,9 +63,15 @@ class UtilitiesViewModel @Inject constructor(
           UtilidadEntity(codigo = "VEH_MGR", nombre = "Mi Vehículo", descripcion = "Seguro y mantenimiento", icono = "directions_car", orden = 8, categoria = "Varios"),
           UtilidadEntity(codigo = "UTIL_PDF", nombre = "Fotos a PDF", descripcion = "Convertir imágenes a PDF", icono = "picture_as_pdf", orden = 9, categoria = "Productividad"),
           UtilidadEntity(codigo = "UTIL_WIFI", nombre = "QR WiFi", descripcion = "Compartir clave WiFi", icono = "qr_code", orden = 10, categoria = "Productividad"),
-          UtilidadEntity(codigo = "UTIL_COCINA", nombre = "Cocina", descripcion = "Conversor de medidas", icono = "restaurant", orden = 11, categoria = "Varios")
+          UtilidadEntity(codigo = "UTIL_COCINA", nombre = "Cocina", descripcion = "Conversor de medidas", icono = "restaurant", orden = 11, categoria = "Varios"),
+          UtilidadEntity(codigo = "UTIL_PIENSO", nombre = "Ración Pienso", descripcion = "Guía de alimentación", icono = "pets", orden = 12, categoria = "Salud")
         )
-        initial.forEach { utilidadDao.insertUtilidad(it) }
+        
+        allPossible.forEach { utility ->
+          if (!currentCodes.contains(utility.codigo)) {
+            utilidadDao.insertUtilidad(utility)
+          }
+        }
     }
   }
 }

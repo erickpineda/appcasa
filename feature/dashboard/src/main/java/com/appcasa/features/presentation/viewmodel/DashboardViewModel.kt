@@ -297,7 +297,7 @@ class DashboardViewModel @Inject constructor(
         miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Tom", tipo = TipoMiembro.GATO.name, colorPelaje = "Blanco y negro (gordo)"))
         miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Super", tipo = TipoMiembro.TORTUGA.name, raza = "Testudo marginata"))
 
-        // Novedades de Utilidades
+        // Novedades de Utilidades (AÑADIDO UTIL_PIENSO)
         val initialUtils = listOf(
           UtilidadEntity(codigo = "CALC_DOSIS", nombre = "Dosis Mascotas", descripcion = "Cálculo según peso", icono = "medication", orden = 1, categoria = "Salud"),
           UtilidadEntity(codigo = "CALC_IMC", nombre = "IMC Familiar", descripcion = "Índice de Masa Corporal", icono = "monitor_weight", orden = 2, categoria = "Salud"),
@@ -307,7 +307,8 @@ class DashboardViewModel @Inject constructor(
           UtilidadEntity(codigo = "CALC_EDAD", nombre = "Edad Exacta", icono = "cake", orden = 6, categoria = "Varios"),
           UtilidadEntity(codigo = "UTIL_PDF", nombre = "Fotos a PDF", descripcion = "Convertir imágenes a PDF", icono = "picture_as_pdf", orden = 7, categoria = "Productividad"),
           UtilidadEntity(codigo = "UTIL_WIFI", nombre = "QR WiFi", descripcion = "Compartir clave WiFi", icono = "qr_code", orden = 8, categoria = "Productividad"),
-          UtilidadEntity(codigo = "UTIL_COCINA", nombre = "Cocina", descripcion = "Conversor de medidas", icono = "restaurant", orden = 9, categoria = "Varios")
+          UtilidadEntity(codigo = "UTIL_COCINA", nombre = "Cocina", descripcion = "Conversor de medidas", icono = "restaurant", orden = 9, categoria = "Varios"),
+          UtilidadEntity(codigo = "UTIL_PIENSO", nombre = "Ración Pienso", descripcion = "Guía de alimentación", icono = "pets", orden = 10, categoria = "Salud")
         )
         initialUtils.forEach { utilidadDao.insertUtilidad(it) }
 

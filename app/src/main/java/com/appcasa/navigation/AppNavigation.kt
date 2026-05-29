@@ -182,6 +182,7 @@ fun AppNavigation() {
       composable(Screen.PhotoToPdf.route) { PhotoToPdfScreen(navController = navController) }
       composable(Screen.WifiQR.route) { WifiQRScreen(navController = navController) }
       composable(Screen.CocinaConverter.route) { CocinaConverterScreen(navController = navController) }
+      composable(Screen.FeedingCalculator.route) { FeedingCalculatorScreen(navController = navController) }
     }
   }
 }
