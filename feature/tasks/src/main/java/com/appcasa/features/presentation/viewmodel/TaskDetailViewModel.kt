@@ -9,12 +9,10 @@ import com.appcasa.core.domain.model.TipoContenidoTarea
 import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.features.tasks.data.local.TareaEntity
+import com.appcasa.features.family.data.local.MiembroDao
+import com.appcasa.features.family.data.local.MiembroEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,6 +20,7 @@ import javax.inject.Inject
 class TaskDetailViewModel @Inject constructor(
   private val savedStateHandle: SavedStateHandle,
   private val tareaDao: TareaDao,
+  private val miembroDao: MiembroDao,
   private val reminderScheduler: ReminderScheduler
 ) : ViewModel() {
 
@@ -29,6 +28,22 @@ class TaskDetailViewModel @Inject constructor(
 
   private val _task = MutableStateFlow<TareaEntity?>(null)
   val task: StateFlow<TareaEntity?> = _task.asStateFlow()
+
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val assignedMember: StateFlow<MiembroEntity?> = _task.flatMapLatest { t ->
+    if (t == null) flowOf(null)
+    else {
+        flow<MiembroEntity?> {
+            val asignacion = tareaDao.getAsignacionByTarea(t.id)
+            if (asignacion == null) emit(null)
+            else {
+                miembroDao.getMiembrosByHogar(t.hogarId).collect { list ->
+                    emit(list.find { it.id == asignacion.miembroId })
+                }
+            }
+        }
+    }
+  }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
   val subTasks: StateFlow<List<TareaCheckItemEntity>> = tareaDao.getCheckItems(taskId)
     .stateIn(
@@ -113,6 +128,7 @@ class TaskDetailViewModel @Inject constructor(
         fechaLimite = fechaLimite,
         periodicidad = periodicidad.name,
         tipoContenido = tipoContenido.name,
+        anticipacionMins = anticipacionMins,
         updatedAt = System.currentTimeMillis()
       )
       tareaDao.updateTarea(updated)

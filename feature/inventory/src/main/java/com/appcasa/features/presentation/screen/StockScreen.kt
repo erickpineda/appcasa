@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.alpha
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.inventory.data.local.StockEntity
 import com.appcasa.features.inventory.presentation.viewmodel.StockViewModel
@@ -83,9 +84,13 @@ fun StockScreen(
           title = { Text("Inventario y Stock") },
           navigationIcon = {
             IconButton(onClick = { navController.popBackStack() }) {
-              Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+              Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onPrimary)
             }
-          }
+          },
+          colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary
+          )
         )
       },
       floatingActionButton = {
@@ -103,9 +108,14 @@ fun StockScreen(
       ) {
         if (stockItems.isEmpty()) {
           item {
-            Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-              Text("No hay artículos en el inventario")
-            }
+            AppCasaEmptyState(
+              title = "Inventario vacío",
+              description = "Añade los productos que sueles tener en casa para controlar su stock.",
+              icon = Icons.Default.Inventory,
+              actionText = "Añadir artículo",
+              onActionClick = { showAddDialog = true },
+              modifier = Modifier.fillParentMaxSize()
+            )
           }
         } else {
           items(stockItems) { item ->
@@ -205,17 +215,35 @@ fun StockActionDialog(
   onConfirm: (String, String, Double, Double, String) -> Unit
 ) {
   var nombre by remember { mutableStateOf(item?.nombre ?: "") }
+  var nombreTouched by remember { mutableStateOf(false) }
   var categoria by remember { mutableStateOf(item?.categoria ?: "Despensa") }
   var cantidad by remember { mutableStateOf(item?.cantidadActual?.toString() ?: "") }
   var minima by remember { mutableStateOf(item?.cantidadMinima?.toString() ?: "") }
   var unidad by remember { mutableStateOf(item?.unidad ?: "uds") }
+
+  val isNombreValid = nombre.isNotBlank()
+  val canConfirm = isNombreValid
 
   AlertDialog(
     onDismissRequest = onDismiss,
     title = { Text(if (item == null) "Nuevo Artículo" else "Editar Artículo") },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = nombre, 
+            onValueChange = { 
+                nombre = it
+                nombreTouched = true
+            }, 
+            label = { Text("Nombre") }, 
+            modifier = Modifier.fillMaxWidth(),
+            isError = nombreTouched && !isNombreValid,
+            supportingText = {
+                if (nombreTouched && !isNombreValid) {
+                    Text("El nombre es obligatorio", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        )
         OutlinedTextField(value = categoria, onValueChange = { categoria = it }, label = { Text("Categoría") }, modifier = Modifier.fillMaxWidth())
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           OutlinedTextField(
@@ -237,11 +265,12 @@ fun StockActionDialog(
       }
     },
     confirmButton = {
-      Button(onClick = { 
-        if (nombre.isNotBlank()) {
+      Button(
+        onClick = { 
           onConfirm(nombre, categoria, cantidad.toDoubleOrNull() ?: 0.0, minima.toDoubleOrNull() ?: 0.0, unidad)
-        }
-      }) {
+        },
+        enabled = canConfirm
+      ) {
         Text(if (item == null) "Añadir" else "Guardar")
       }
     },

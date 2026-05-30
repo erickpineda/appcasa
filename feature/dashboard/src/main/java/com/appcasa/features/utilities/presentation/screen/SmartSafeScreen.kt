@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.features.documents.data.local.DocumentoEntity
 import com.appcasa.features.utilities.presentation.viewmodel.SmartSafeViewModel
 import java.text.SimpleDateFormat
@@ -101,12 +102,14 @@ fun SmartSafeScreen(
 
       if (documentos.isEmpty()) {
         item {
-          Box(modifier = Modifier.fillParentMaxHeight(0.7f), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-              Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline)
-              Text("El baúl está vacío", color = MaterialTheme.colorScheme.outline)
-            }
-          }
+          AppCasaEmptyState(
+            title = "El baúl está vacío",
+            description = "Añade documentos importantes como garantías, seguros o certificados.",
+            icon = Icons.Default.FolderOpen,
+            actionText = "Añadir Documento",
+            onActionClick = { showAddDialog = true },
+            modifier = Modifier.fillParentMaxHeight(0.7f)
+          )
         }
       } else {
         items(documentos) { doc ->

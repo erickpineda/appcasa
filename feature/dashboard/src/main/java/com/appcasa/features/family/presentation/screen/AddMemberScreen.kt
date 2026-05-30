@@ -35,6 +35,7 @@ fun AddMemberScreen(
   viewModel: AddMemberViewModel = hiltViewModel()
 ) {
   var nombre by remember { mutableStateOf("") }
+  var nombreTouched by remember { mutableStateOf(false) }
   var tipo by remember { mutableStateOf(TipoMiembro.PERSONA) }
   var raza by remember { mutableStateOf("") }
   var color by remember { mutableStateOf("") }
@@ -70,9 +71,13 @@ fun AddMemberScreen(
         title = { Text("Añadir Miembro") },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onPrimary)
           }
-        }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary
+        )
       )
     }
   ) { padding ->
@@ -111,9 +116,18 @@ fun AddMemberScreen(
 
       OutlinedTextField(
         value = nombre,
-        onValueChange = { nombre = it },
+        onValueChange = { 
+            nombre = it
+            nombreTouched = true
+        },
         label = { Text("Nombre") },
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        isError = nombreTouched && nombre.isBlank(),
+        supportingText = {
+            if (nombreTouched && nombre.isBlank()) {
+                Text("El nombre es obligatorio", color = MaterialTheme.colorScheme.error)
+            }
+        }
       )
 
       ExposedDropdownMenuBox(

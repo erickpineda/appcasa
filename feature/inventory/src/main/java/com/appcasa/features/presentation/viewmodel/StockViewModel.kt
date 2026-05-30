@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -28,18 +29,26 @@ class StockViewModel @Inject constructor(
 
   private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
-  val stockItems: StateFlow<List<StockEntity>> = stockDao.getAllStock()
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val stockItems: StateFlow<List<StockEntity>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> stockDao.getStockByHogar(id) }
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
       initialValue = emptyList()
     )
 
-  val availableLists: StateFlow<List<ListaEntity>> = listaDao.getListasByHogar(householdId)
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val availableLists: StateFlow<List<ListaEntity>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> listaDao.getListasByHogar(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-  val isCompactView: StateFlow<Boolean> = configuracionDao.getConfiguracion(householdId)
-    .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val isCompactView: StateFlow<Boolean> = currentHouseholdProvider.householdId
+    .flatMapLatest { id ->
+      configuracionDao.getConfiguracion(id)
+        .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
+    }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
   fun addItem(nombre: String, categoria: String, actual: Double, minima: Double, unidad: String) {

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -16,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -41,6 +41,7 @@ fun TaskDetailScreen(
   viewModel: TaskDetailViewModel = hiltViewModel()
 ) {
   val task by viewModel.task.collectAsState()
+  val assignedMember by viewModel.assignedMember.collectAsState()
   val subTasks by viewModel.subTasks.collectAsState()
   var newSubTaskText by remember { mutableStateOf("") }
   val haptic = LocalHapticFeedback.current
@@ -58,6 +59,7 @@ fun TaskDetailScreen(
       tipoContenido = TipoContenidoTarea.valueOf(task!!.tipoContenido),
       esPersonal = task!!.esPersonal,
       fechaLimite = task!!.fechaLimite,
+      anticipacionActual = task!!.anticipacionMins,
       fotoUri = task!!.fotoUri,
       onDismiss = { showEditDialog = false },
       onConfirm = { t, d, p, per, perCont, esp, fecha, f, anticipacion ->
@@ -163,20 +165,82 @@ fun TaskDetailScreen(
             }
 
             item {
+              Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Badges de Estado/Asignación
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    SuggestionChip(
+                        onClick = {},
+                        label = { Text(currentTask.prioridad) },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            labelColor = when(currentTask.prioridad) {
+                                "ALTA" -> MaterialTheme.colorScheme.error
+                                else -> MaterialTheme.colorScheme.primary
+                            }
+                        )
+                    )
+                    assignedMember?.let { member ->
+                        SuggestionChip(
+                            onClick = {},
+                            label = { Text(member.nombre) },
+                            icon = { Icon(Icons.Default.Person, null, modifier = Modifier.size(16.dp)) }
+                        )
+                    }
+                    if (currentTask.periodicidad != Periodicidad.NINGUNA.name) {
+                        SuggestionChip(
+                            onClick = {},
+                            label = { Text(currentTask.periodicidad) },
+                            icon = { Icon(Icons.Default.Repeat, null, modifier = Modifier.size(16.dp)) }
+                        )
+                    }
+                }
+
+                if (currentTask.fechaLimite != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                      Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                      Spacer(Modifier.width(8.dp))
+                      
+                      val date = Date(currentTask.fechaLimite!!)
+                      val cal = Calendar.getInstance().apply { time = date }
+                      val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
+                        "d 'de' MMMM '(Todo el día)'"
+                      } else {
+                        "d 'de' MMMM HH:mm"
+                      }
+                      
+                      Text(
+                        text = "Vence: ${SimpleDateFormat(format, Locale("es", "ES")).format(date)}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                      )
+                    }
+                    
+                    if (currentTask.anticipacionMins > 0) {
+                        Text(
+                            "Aviso: ${currentTask.anticipacionMins} min antes",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+              }
+            }
+
+            item {
               if (currentTask.tipoContenido == TipoContenidoTarea.TEXTO.name) {
                 // MODO TEXTO: Mostrar descripción prominentemente
-                if (!currentTask.descripcion.isNullOrBlank()) {
-                  Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                      text = currentTask.descripcion ?: "",
-                      style = MaterialTheme.typography.bodyLarge,
-                      color = MaterialTheme.colorScheme.onSurface
-                    )
-                  }
-                } else {
-                  Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    Text("Sin nota. Pulsa editar para añadir una.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                  }
+                Column(modifier = Modifier.padding(16.dp)) {
+                    if (!currentTask.descripcion.isNullOrBlank()) {
+                        Text(
+                            text = currentTask.descripcion ?: "",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    } else {
+                        Box(modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
+                            Text("Sin nota. Pulsa editar para añadir una.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        }
+                    }
                 }
               } else {
                 // MODO LISTA: Mostrar descripción pequeña (si existe) y luego la checklist
@@ -383,6 +447,7 @@ fun EditTaskMainDialog(
   tipoContenido: TipoContenidoTarea,
   esPersonal: Boolean,
   fechaLimite: Long?,
+  anticipacionActual: Int,
   fotoUri: String?,
   onDismiss: () -> Unit,
   onConfirm: (String, String, Prioridad, Periodicidad, TipoContenidoTarea, Boolean, Long?, String?, Int) -> Unit
@@ -396,7 +461,7 @@ fun EditTaskMainDialog(
   var f by remember { mutableStateOf(fotoUri) }
   
   var selectedFecha by remember { mutableStateOf(fechaLimite) }
-  var selectedAnticipacion by remember { mutableStateOf(0) }
+  var selectedAnticipacion by remember { mutableStateOf(anticipacionActual) }
   var showDatePicker by remember { mutableStateOf(false) }
   var showTimePicker by remember { mutableStateOf(false) }
   

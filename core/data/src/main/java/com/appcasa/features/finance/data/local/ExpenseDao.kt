@@ -5,11 +5,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExpenseDao {
-    @Query("SELECT * FROM gastos ORDER BY fecha DESC")
-    fun getAllExpenses(): Flow<List<ExpenseEntity>>
+    @Query("SELECT * FROM gastos WHERE hogar_id = :hogarId ORDER BY fecha DESC")
+    fun getExpensesByHogar(hogarId: Long): Flow<List<ExpenseEntity>>
 
-    @Query("SELECT SUM(importe) FROM gastos WHERE fecha >= :startOfMonth")
-    fun getTotalMonthlyExpense(startOfMonth: Long): Flow<Double?>
+    @Query("SELECT SUM(importe) FROM gastos WHERE hogar_id = :hogarId AND fecha >= :startOfMonth")
+    fun getTotalMonthlyExpense(hogarId: Long, startOfMonth: Long): Flow<Double?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExpense(expense: ExpenseEntity): Long

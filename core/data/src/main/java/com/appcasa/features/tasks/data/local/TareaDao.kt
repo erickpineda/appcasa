@@ -36,6 +36,9 @@ interface TareaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAsignacion(asignacion: TareaAsignacionEntity)
 
+    @Query("SELECT * FROM tarea_asignaciones WHERE tarea_id = :tareaId LIMIT 1")
+    suspend fun getAsignacionByTarea(tareaId: Long): TareaAsignacionEntity?
+
     @Query("SELECT * FROM tarea_check_items WHERE tarea_id = :tareaId ORDER BY orden ASC")
     fun getCheckItems(tareaId: Long): Flow<List<TareaCheckItemEntity>>
 

@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.alpha
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.components.AppCasaEmptyState
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -91,24 +92,14 @@ fun TasksContent(
 
       if (pendingTasks.isEmpty() && completedTasks.isEmpty()) {
         item {
-          Column(
-            modifier = Modifier.fillParentMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-          ) {
-            Icon(
-              imageVector = Icons.Default.Info,
-              contentDescription = null,
-              modifier = Modifier.size(64.dp),
-              tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-              "No hay tareas pendientes. ¡Disfruta del día! ☕",
-              style = MaterialTheme.typography.bodyLarge,
-              textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-          }
+          AppCasaEmptyState(
+            title = "¡Todo al día!",
+            description = "No hay tareas pendientes en tu hogar. Disfruta de tu tiempo libre.",
+            icon = Icons.Default.CheckCircle,
+            actionText = "Crear primera tarea",
+            onActionClick = onAddTask,
+            modifier = Modifier.fillParentMaxSize()
+          )
         }
       }
 

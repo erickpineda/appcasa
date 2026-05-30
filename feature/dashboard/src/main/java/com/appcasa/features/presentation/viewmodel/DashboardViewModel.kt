@@ -1,8 +1,7 @@
-package com.appcasa.features.dashboard.presentation.viewmodel
+package com.appcasa.features.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.core.domain.model.EstadoGeneral
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.domain.model.TipoEvento
 import com.appcasa.features.family.data.local.MiembroDao
@@ -54,10 +53,8 @@ class DashboardViewModel @Inject constructor(
   private val stockDao: StockDao,
   private val expenseDao: ExpenseDao,
   private val reminderScheduler: ReminderScheduler,
-  private val currentHouseholdProvider: CurrentHouseholdProvider
+  private val currentHouseholdProvider: CurrentHouseholdProvider,
 ) : ViewModel() {
-
-  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   private val _petCount = MutableStateFlow("0")
   val petCount: StateFlow<String> = _petCount.asStateFlow()
@@ -87,16 +84,20 @@ class DashboardViewModel @Inject constructor(
   val searchResults: StateFlow<List<SearchItem>> = _searchResults.asStateFlow()
 
   init {
-    ensureDefaultHogar()
-    observeData()
+    viewModelScope.launch {
+      currentHouseholdProvider.householdId.collect { id ->
+        ensureDefaultHogar(id)
+        observeData(id)
+      }
+    }
     setupSearch()
   }
 
-  private fun ensureDefaultHogar() {
+  private fun ensureDefaultHogar(id: Long) {
     viewModelScope.launch {
-      val members = miembroDao.getMiembrosByHogar(householdId).first()
+      val members = miembroDao.getMiembrosByHogar(id).first()
       if (members.isEmpty()) {
-        seedRealData()
+        seedRealData(id)
       }
     }
   }
@@ -104,24 +105,26 @@ class DashboardViewModel @Inject constructor(
   @OptIn(kotlinx.coroutines.FlowPreview::class)
   private fun setupSearch() {
     viewModelScope.launch {
-      _searchQuery
+      combine(_searchQuery, currentHouseholdProvider.householdId) { query, id ->
+        query to id
+      }
         .debounce(300)
         .distinctUntilChanged()
-        .collect { query ->
+        .collect { (query, id) ->
           if (query.isBlank()) {
             _searchResults.value = emptyList()
           } else {
-            performSearch(query)
+            performSearch(query, id)
           }
         }
     }
   }
 
-  private suspend fun performSearch(query: String) {
-    val tasks = tareaDao.getTareasByHogar(householdId).first()
-    val lists = listaDao.getListasByHogar(householdId).first()
-    val members = miembroDao.getMiembrosByHogar(householdId).first()
-    val stock = stockDao.getAllStock().first()
+  private suspend fun performSearch(query: String, id: Long) {
+    val tasks = tareaDao.getTareasByHogar(id).first()
+    val lists = listaDao.getListasByHogar(id).first()
+    val members = miembroDao.getMiembrosByHogar(id).first()
+    val stock = stockDao.getStockByHogar(id).first()
 
     val results = mutableListOf<SearchItem>()
 
@@ -152,9 +155,9 @@ class DashboardViewModel @Inject constructor(
     _searchQuery.value = query
   }
 
-  private fun observeData() {
+  private fun observeData(id: Long) {
     viewModelScope.launch {
-      miembroDao.getMiembrosByHogar(householdId).collect { miembros ->
+      miembroDao.getMiembrosByHogar(id).collect { miembros ->
         val mascotas = miembros.filter { it.tipo != TipoMiembro.PERSONA.name }
         _petCount.value = mascotas.size.toString()
         val summary = mutableListOf<String>()
@@ -169,30 +172,30 @@ class DashboardViewModel @Inject constructor(
     }
 
     viewModelScope.launch {
-      tareaDao.getTareasByHogar(householdId).collect { tareas ->
+      tareaDao.getTareasByHogar(id).collect { tareas ->
         val pendientes = tareas.count { it.estado != EstadoTarea.COMPLETADA.name }
         _pendingTasksCount.value = pendientes.toString()
       }
     }
 
     viewModelScope.launch {
-      expenseDao.getTotalMonthlyExpense(getStartOfMonth()).collect { total ->
-        _monthlyExpense.value = "${String.format("%.2f", total ?: 0.0)} €"
+      expenseDao.getTotalMonthlyExpense(id, getStartOfMonth()).collect { total ->
+        _monthlyExpense.value = String.format(Locale.getDefault(), "%.2f €", total ?: 0.0)
       }
     }
 
     viewModelScope.launch {
-      stockDao.getLowStockItems().collect { lowItems ->
+      stockDao.getLowStockItems(id).collect { lowItems ->
         _lowStockCount.value = lowItems.size
       }
     }
 
     viewModelScope.launch {
       combine(
-        eventoDao.getEventosByHogar(householdId), 
-        recordatorioDao.getRecordatoriosByHogar(householdId),
-        tareaDao.getTareasByHogar(householdId),
-        miembroDao.getMiembrosByHogar(householdId)
+        eventoDao.getEventosByHogar(id), 
+        recordatorioDao.getRecordatoriosByHogar(id),
+        tareaDao.getTareasByHogar(id),
+        miembroDao.getMiembrosByHogar(id)
       ) { eventos, recordatorios, tareas, miembros ->
         val birthdays = miembros.filter { it.fechaNacimiento != null }.map { 
           "Cumpleaños: ${it.nombre} 🎂" to calculateBirthdayOccurrence(it.fechaNacimiento!!)
@@ -263,7 +266,7 @@ class DashboardViewModel @Inject constructor(
     }
   }
 
-  fun seedRealData() {
+  fun seedRealData(id: Long) {
     viewModelScope.launch {
       try {
         utilidadDao.deleteAll()
@@ -276,26 +279,26 @@ class DashboardViewModel @Inject constructor(
         stockDao.deleteAll()
         expenseDao.deleteAll()
         
-        configuracionDao.insertHogar(HogarEntity(id = householdId, nombre = "Hogar de Erick", descripcion = "Gestión familiar oficial"))
-        configuracionDao.insertUsuario(UsuarioEntity(hogarId = householdId, nombre = "Erick", email = "erick@appcasa.com"))
+        configuracionDao.insertHogar(HogarEntity(id = id, nombre = "Hogar de Erick", descripcion = "Gestión familiar oficial"))
+        configuracionDao.insertUsuario(UsuarioEntity(hogarId = id, nombre = "Erick", email = "erick@appcasa.com"))
         
         // Miembros con Cumpleaños Oficiales (Sin crear eventos manuales redundantes)
         val erickBirth = parseDate("25/04/1991")
         val aliciaBirth = parseDate("21/09/1988")
         val brianBirth = parseDate("27/06/2023")
 
-        miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Erick", tipo = TipoMiembro.PERSONA.name, fechaNacimiento = erickBirth))
-        miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Alicia", tipo = TipoMiembro.PERSONA.name, fechaNacimiento = aliciaBirth))
-        miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Brian", tipo = TipoMiembro.PERSONA.name, fechaNacimiento = brianBirth))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = id, nombre = "Erick", tipo = TipoMiembro.PERSONA.name, fechaNacimiento = erickBirth))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = id, nombre = "Alicia", tipo = TipoMiembro.PERSONA.name, fechaNacimiento = aliciaBirth))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = id, nombre = "Brian", tipo = TipoMiembro.PERSONA.name, fechaNacimiento = brianBirth))
         
         // Mascotas
-        miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Goofy", tipo = TipoMiembro.PERRO.name, raza = "Beagador"))
-        miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Daisy", tipo = TipoMiembro.PERRO.name, raza = "Beagle"))
-        miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Salem", tipo = TipoMiembro.GATO.name, colorPelaje = "Negro de mucho pelo"))
-        miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Toby", tipo = TipoMiembro.GATO.name, colorPelaje = "Negro con manchita blanca"))
-        miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Sabrina", tipo = TipoMiembro.GATO.name, colorPelaje = "Blanco con partes negras"))
-        miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Tom", tipo = TipoMiembro.GATO.name, colorPelaje = "Blanco y negro (gordo)"))
-        miembroDao.insertMiembro(MiembroEntity(hogarId = householdId, nombre = "Super", tipo = TipoMiembro.TORTUGA.name, raza = "Testudo marginata"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = id, nombre = "Goofy", tipo = TipoMiembro.PERRO.name, raza = "Beagador"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = id, nombre = "Daisy", tipo = TipoMiembro.PERRO.name, raza = "Beagle"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = id, nombre = "Salem", tipo = TipoMiembro.GATO.name, colorPelaje = "Negro de mucho pelo"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = id, nombre = "Toby", tipo = TipoMiembro.GATO.name, colorPelaje = "Negro con manchita blanca"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = id, nombre = "Sabrina", tipo = TipoMiembro.GATO.name, colorPelaje = "Blanco with partes negras"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = id, nombre = "Tom", tipo = TipoMiembro.GATO.name, colorPelaje = "Blanco y negro (gordo)"))
+        miembroDao.insertMiembro(MiembroEntity(hogarId = id, nombre = "Super", tipo = TipoMiembro.TORTUGA.name, raza = "Testudo marginata"))
 
         // Novedades de Utilidades (AÑADIDO UTIL_PIENSO)
         val initialUtils = listOf(
@@ -312,12 +315,12 @@ class DashboardViewModel @Inject constructor(
         )
         initialUtils.forEach { utilidadDao.insertUtilidad(it) }
 
-        listaDao.insertLista(ListaEntity(hogarId = householdId, nombre = "Lista de la Compra", tipo = com.appcasa.core.domain.model.TipoLista.COMPRA.name))
+        listaDao.insertLista(ListaEntity(hogarId = id, nombre = "Lista de la Compra", tipo = com.appcasa.core.domain.model.TipoLista.COMPRA.name))
         
         reminderScheduler.scheduleReminder(888, "¡Datos Oficiales Cargados!", "Cumpleaños y equipo familiar sincronizados.", System.currentTimeMillis() + 2000)
 
       } catch (e: Exception) {
-        // Log error if needed
+        e.printStackTrace()
       }
     }
   }

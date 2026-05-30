@@ -18,9 +18,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.appcasa.features.calendar.presentation.screen.CalendarScreen
-import com.appcasa.features.dashboard.presentation.screen.DashboardScreen
-import com.appcasa.features.dashboard.presentation.screen.FamilyHubScreen
-import com.appcasa.features.dashboard.presentation.screen.ManagementHubScreen
+import com.appcasa.features.presentation.screen.DashboardScreen
+import com.appcasa.features.presentation.screen.FamilyHubScreen
+import com.appcasa.features.presentation.screen.ManagementHubScreen
 import com.appcasa.features.family.presentation.screen.AddMemberScreen
 import com.appcasa.features.family.presentation.screen.EditMemberScreen
 import com.appcasa.features.family.presentation.screen.FamilyScreen

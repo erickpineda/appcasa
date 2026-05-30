@@ -37,6 +37,7 @@ fun AddTaskScreen(
   val familyMembers by viewModel.familyMembers.collectAsState()
 
   var titulo by remember { mutableStateOf("") }
+  var tituloTouched by remember { mutableStateOf(false) }
   var descripcion by remember { mutableStateOf("") }
   var prioridad by remember { mutableStateOf(Prioridad.MEDIA) }
   var periodicidad by remember { mutableStateOf(Periodicidad.NINGUNA) }
@@ -55,6 +56,10 @@ fun AddTaskScreen(
   var showTimePicker by remember { mutableStateOf(false) }
   val datePickerState = rememberDatePickerState()
   val timePickerState = rememberTimePickerState()
+
+  val canSave = titulo.isNotBlank()
+
+  // ... (rest of the dialogs unchanged)
 
   if (showDatePicker) {
     DatePickerDialog(
@@ -126,9 +131,13 @@ fun AddTaskScreen(
         title = { Text("Nueva Tarea") },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onPrimary)
           }
-        }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+          containerColor = MaterialTheme.colorScheme.primary,
+          titleContentColor = MaterialTheme.colorScheme.onPrimary
+        )
       )
     }
   ) { padding ->
@@ -142,9 +151,18 @@ fun AddTaskScreen(
     ) {
       OutlinedTextField(
         value = titulo,
-        onValueChange = { titulo = it },
+        onValueChange = { 
+            titulo = it
+            tituloTouched = true
+        },
         label = { Text("¿Qué hay que hacer?") },
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        isError = tituloTouched && titulo.isBlank(),
+        supportingText = {
+            if (tituloTouched && titulo.isBlank()) {
+                Text("El título es obligatorio", color = MaterialTheme.colorScheme.error)
+            }
+        }
       )
 
       // Selector de Tipo
@@ -343,7 +361,7 @@ fun AddTaskScreen(
           navController.popBackStack()
         },
         modifier = Modifier.fillMaxWidth(),
-        enabled = titulo.isNotBlank()
+        enabled = canSave
       ) {
         Text("Crear Tarea")
       }

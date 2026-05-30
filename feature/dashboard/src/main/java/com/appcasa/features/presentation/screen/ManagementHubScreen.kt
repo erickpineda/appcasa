@@ -1,4 +1,4 @@
-package com.appcasa.features.dashboard.presentation.screen
+package com.appcasa.features.presentation.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

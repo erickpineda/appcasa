@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.TipoLista
+import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.features.lists.data.local.ListaEntity
@@ -71,9 +72,15 @@ fun ListsContent(
     topBar = {
       TopAppBar(
         title = { Text("Mis Listas") },
+        navigationIcon = {
+          IconButton(onClick = { /* Ir atrás si fuera necesario, pero este suele ser un Hub */ }) {
+            // Si quieres navegación atrás, añádela aquí. Generalmente en Hubs no hay flecha si es pestaña principal.
+          }
+        },
         colors = TopAppBarDefaults.topAppBarColors(
           containerColor = MaterialTheme.colorScheme.primary,
-          titleContentColor = MaterialTheme.colorScheme.onPrimary
+          titleContentColor = MaterialTheme.colorScheme.onPrimary,
+          navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
         )
       )
     },
@@ -92,9 +99,14 @@ fun ListsContent(
     ) {
       if (lists.isEmpty()) {
         item {
-          Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No tienes listas creadas", style = MaterialTheme.typography.bodyLarge)
-          }
+          AppCasaEmptyState(
+            title = "Sin listas",
+            description = "Crea listas de la compra, tareas pendientes o lo que necesites organizar.",
+            icon = Icons.AutoMirrored.Filled.List,
+            actionText = "Crear lista",
+            onActionClick = onAddClick,
+            modifier = Modifier.fillParentMaxSize()
+          )
         }
       } else {
         items(lists) { lista ->
@@ -217,17 +229,37 @@ fun CompactListCard(
 @Composable
 fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
   var name by remember { mutableStateOf("") }
-  
+  var nameTouched by remember { mutableStateOf(false) }
+
+  val canConfirm = name.isNotBlank()
+
   AlertDialog(
     onDismissRequest = onDismiss,
     title = { Text("Nueva Lista") },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre de la lista") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = name, 
+            onValueChange = { 
+                name = it
+                nameTouched = true
+            }, 
+            label = { Text("Nombre de la lista") }, 
+            modifier = Modifier.fillMaxWidth(),
+            isError = nameTouched && name.isBlank(),
+            supportingText = {
+                if (nameTouched && name.isBlank()) {
+                    Text("El nombre es obligatorio", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        )
       }
     },
     confirmButton = {
-      Button(onClick = { if (name.isNotBlank()) onConfirm(name, "PERSONALIZADA") }) { Text("Crear") }
+      Button(
+        onClick = { onConfirm(name, "PERSONALIZADA") },
+        enabled = canConfirm
+      ) { Text("Crear") }
     },
     dismissButton = {
       TextButton(onClick = onDismiss) { Text("Cancelar") }

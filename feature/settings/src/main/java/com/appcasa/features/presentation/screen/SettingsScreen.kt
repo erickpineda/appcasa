@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.theme.AppCasaTheme
-import com.appcasa.features.dashboard.presentation.viewmodel.DashboardViewModel
+import com.appcasa.features.presentation.viewmodel.DashboardViewModel
 import com.appcasa.features.settings.presentation.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,7 +70,7 @@ fun SettingsScreen(
       onUpdateHouseholdName = { settingsViewModel.updateHogar(it) },
       onUpdateConfig = { clave, valor -> settingsViewModel.updateConfig(clave, valor) },
       onSeedData = { 
-        dashboardViewModel.seedRealData() 
+        dashboardViewModel.seedRealData(hogar?.id ?: 1L)
         seedStatus = "¡Datos de Erick y familia cargados con éxito!"
       }
     )

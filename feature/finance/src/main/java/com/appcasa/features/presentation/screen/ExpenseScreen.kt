@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.finance.data.local.ExpenseEntity
 import com.appcasa.features.finance.presentation.viewmodel.FinanceViewModel
@@ -69,9 +70,14 @@ fun ExpenseScreen(
           title = { Text("Gastos del Hogar") },
           navigationIcon = {
             IconButton(onClick = { navController.popBackStack() }) {
-              Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+              Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onPrimary)
             }
           },
+          colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+            actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+          ),
           actions = {
             if (expenses.isNotEmpty()) {
               IconButton(onClick = {
@@ -108,9 +114,14 @@ fun ExpenseScreen(
       ) {
         if (expenses.isEmpty()) {
           item {
-            Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-              Text("No hay gastos registrados")
-            }
+            AppCasaEmptyState(
+              title = "Sin gastos aún",
+              description = "Anota tu primer gasto para empezar a llevar el control del hogar.",
+              icon = Icons.Default.ReceiptLong,
+              actionText = "Añadir gasto",
+              onActionClick = { showAddDialog = true },
+              modifier = Modifier.fillParentMaxSize()
+            )
           }
         } else {
           items(expenses) { expense ->
@@ -168,30 +179,47 @@ fun ExpenseActionDialog(
   var concepto by remember { mutableStateOf(item?.concepto ?: "") }
   var importe by remember { mutableStateOf(item?.importe?.toString() ?: "") }
   var categoria by remember { mutableStateOf(item?.categoria ?: "Otros") }
+  
+  val isImporteValid = remember(importe) { 
+    importe.toDoubleOrNull()?.let { it > 0 } ?: false 
+  }
+  val canConfirm = concepto.isNotBlank() && isImporteValid
 
   AlertDialog(
     onDismissRequest = onDismiss,
     title = { Text(if (item == null) "Registrar Gasto" else "Editar Gasto") },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedTextField(value = concepto, onValueChange = { concepto = it }, label = { Text("Concepto") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+          value = concepto, 
+          onValueChange = { concepto = it }, 
+          label = { Text("Concepto") }, 
+          modifier = Modifier.fillMaxWidth(),
+          isError = concepto.isEmpty()
+        )
         OutlinedTextField(
           value = importe, 
           onValueChange = { importe = it }, 
           label = { Text("Importe ($currency)") },
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-          modifier = Modifier.fillMaxWidth()
+          modifier = Modifier.fillMaxWidth(),
+          isError = importe.isNotEmpty() && !isImporteValid,
+          supportingText = {
+            if (importe.isNotEmpty() && !isImporteValid) {
+              Text("El importe debe ser un número mayor a 0", color = MaterialTheme.colorScheme.error)
+            }
+          }
         )
         OutlinedTextField(value = categoria, onValueChange = { categoria = it }, label = { Text("Categoría") }, modifier = Modifier.fillMaxWidth())
       }
     },
     confirmButton = {
-      Button(onClick = { 
-        val valImporte = importe.toDoubleOrNull() ?: 0.0
-        if (concepto.isNotBlank() && valImporte > 0) {
-          onConfirm(concepto, valImporte, categoria)
-        }
-      }) {
+      Button(
+        onClick = { 
+          onConfirm(concepto, importe.toDouble(), categoria)
+        },
+        enabled = canConfirm
+      ) {
         Text(if (item == null) "Guardar" else "Actualizar")
       }
     },

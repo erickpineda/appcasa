@@ -3,6 +3,7 @@ package com.appcasa.di
 import android.content.Context
 import androidx.room.Room
 import com.appcasa.core.data.local.AppCasaDatabase
+import com.appcasa.core.data.local.Migrations
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,7 +24,7 @@ object DatabaseModule {
     AppCasaDatabase::class.java,
     "appcasa.db"
   )
-    .fallbackToDestructiveMigration() // ← Cambiar a .addMigrations(...) en producción
+    .addMigrations(*Migrations.getAll())
     .build()
 
   @Provides

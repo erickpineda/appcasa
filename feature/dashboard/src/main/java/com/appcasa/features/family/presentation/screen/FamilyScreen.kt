@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.features.family.data.local.MiembroEntity
@@ -40,6 +41,7 @@ fun FamilyScreen(
 
   PullToRefreshWrapper {
     FamilyContent(
+      navController = navController,
       people = people,
       pets = pets,
       onAddClick = { navController.navigate(Screen.AddMember.route) },
@@ -58,6 +60,7 @@ fun FamilyScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FamilyContent(
+  navController: NavController,
   people: List<MiembroEntity>,
   pets: List<MiembroEntity>,
   onAddClick: () -> Unit,
@@ -68,6 +71,11 @@ fun FamilyContent(
     topBar = {
       TopAppBar(
         title = { Text("Familia y Mascotas") },
+        navigationIcon = {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onPrimary)
+            }
+        },
         colors = TopAppBarDefaults.topAppBarColors(
           containerColor = MaterialTheme.colorScheme.primary,
           titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -89,23 +97,14 @@ fun FamilyContent(
     ) {
       if (people.isEmpty() && pets.isEmpty()) {
         item {
-          Column(
-            modifier = Modifier.fillParentMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-          ) {
-            Icon(
-              imageVector = Icons.Default.Groups,
-              contentDescription = null,
-              modifier = Modifier.size(64.dp),
-              tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-              "Aún no has añadido a tu familia o mascotas",
-              style = MaterialTheme.typography.bodyLarge
-            )
-          }
+          AppCasaEmptyState(
+            title = "Tu hogar está vacío",
+            description = "Añade a los miembros de tu familia y a tus mascotas para organizar mejor el día a día.",
+            icon = Icons.Default.Groups,
+            actionText = "Añadir primer miembro",
+            onActionClick = onAddClick,
+            modifier = Modifier.fillParentMaxSize()
+          )
         }
       }
 
@@ -224,6 +223,7 @@ fun MemberCard(
 fun FamilyPreview() {
   AppCasaTheme {
     FamilyContent(
+      navController = NavController(androidx.compose.ui.platform.LocalContext.current),
       people = listOf(
         MiembroEntity(id = 1, hogarId = 1, nombre = "Yo", tipo = TipoMiembro.PERSONA.name),
         MiembroEntity(id = 2, hogarId = 1, nombre = "Mi mujer", tipo = TipoMiembro.PERSONA.name)

@@ -83,6 +83,7 @@ class TasksViewModel @Inject constructor(
         estado = EstadoTarea.PENDIENTE.name,
         fechaLimite = nextDate,
         completadoEn = null,
+        anticipacionMins = tarea.anticipacionMins,
         createdAt = System.currentTimeMillis(),
         updatedAt = System.currentTimeMillis()
       )

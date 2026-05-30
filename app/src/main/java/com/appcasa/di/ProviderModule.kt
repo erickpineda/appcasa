@@ -1,20 +1,20 @@
 package com.appcasa.di
 
+import com.appcasa.core.data.session.DatabaseSessionProvider
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.core.domain.providers.DefaultCurrentHouseholdProvider
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object ProviderModule {
+abstract class ProviderModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideCurrentHouseholdProvider(): CurrentHouseholdProvider {
-        return DefaultCurrentHouseholdProvider()
-    }
+    abstract fun bindCurrentHouseholdProvider(
+        impl: DatabaseSessionProvider
+    ): CurrentHouseholdProvider
 }

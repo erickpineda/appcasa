@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.TipoEvento
+import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.features.calendar.presentation.viewmodel.CalendarViewModel
@@ -109,6 +110,7 @@ fun CalendarScreen(
 
   PullToRefreshWrapper {
     CalendarContent(
+      navController = navController,
       state = state,
       historyPage = historyPage,
       selectedTab = selectedTab,
@@ -161,6 +163,7 @@ fun CalendarScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarContent(
+  navController: NavController,
   state: com.appcasa.features.calendar.presentation.viewmodel.CalendarState,
   historyPage: Int,
   selectedTab: Int,
@@ -239,8 +242,14 @@ fun CalendarContent(
           containerColor = MaterialTheme.colorScheme.primary,
           scrolledContainerColor = MaterialTheme.colorScheme.primary,
           titleContentColor = MaterialTheme.colorScheme.onPrimary,
-          actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+          actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
+          navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
         ),
+        navigationIcon = {
+          IconButton(onClick = { navController.popBackStack() }) {
+            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+          }
+        },
         actions = {
           IconButton(onClick = onImportClick) {
             Icon(Icons.Default.UploadFile, contentDescription = "Importar")
@@ -334,7 +343,7 @@ fun CalendarContent(
             
             LazyVerticalGrid(
               columns = GridCells.Fixed(7),
-              modifier = Modifier.height(260.dp),
+              modifier = Modifier.height(280.dp), // Aumentado para visibilidad total de 6 semanas
               userScrollEnabled = false
             ) {
               items(firstDayOfWeek) { Box(modifier = Modifier.aspectRatio(1f)) }
@@ -555,9 +564,12 @@ fun CalendarContent(
         
         if (state.history.isEmpty()) {
           item {
-            Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-              Text("Historial vacío", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
-            }
+            AppCasaEmptyState(
+              title = "Sin historial",
+              description = "Aquí aparecerán los eventos y recordatorios que ya han pasado.",
+              icon = Icons.Default.History,
+              modifier = Modifier.fillParentMaxSize()
+            )
           }
         } else {
           items(visibleHistory) { item ->
@@ -967,6 +979,7 @@ fun EditCalendarItemDialog(
 fun CalendarPreview() {
   AppCasaTheme {
     CalendarContent(
+      navController = NavController(LocalContext.current),
       state = com.appcasa.features.calendar.presentation.viewmodel.CalendarState(),
       historyPage = 0,
       selectedTab = 0,

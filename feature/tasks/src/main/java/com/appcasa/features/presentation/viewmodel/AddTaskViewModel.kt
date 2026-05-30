@@ -59,7 +59,8 @@ class AddTaskViewModel @Inject constructor(
           esPersonal = esPersonal,
           fotoUri = fotoUri,
           fechaLimite = fechaLimite,
-          periodicidad = periodicidad.name
+          periodicidad = periodicidad.name,
+          anticipacionMins = anticipacionMins
         )
       )
       

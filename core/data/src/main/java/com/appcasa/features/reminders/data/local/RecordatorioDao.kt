@@ -19,4 +19,7 @@ interface RecordatorioDao {
 
     @Query("DELETE FROM recordatorios")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM recordatorios WHERE activo = 1 AND notificado = 0 AND fecha_hora > :now")
+    suspend fun getAllFutureReminders(now: Long): List<RecordatorioEntity>
 }

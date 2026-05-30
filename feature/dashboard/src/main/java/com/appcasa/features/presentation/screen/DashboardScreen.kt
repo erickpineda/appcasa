@@ -1,4 +1,4 @@
-package com.appcasa.features.dashboard.presentation.screen
+package com.appcasa.features.presentation.screen
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
@@ -21,7 +21,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.core.ui.components.PullToRefreshWrapper
-import com.appcasa.features.dashboard.presentation.viewmodel.DashboardViewModel
+import com.appcasa.features.presentation.viewmodel.DashboardViewModel
 import com.appcasa.features.dashboard.presentation.model.SearchItem
 import com.appcasa.navigation.Screen
 

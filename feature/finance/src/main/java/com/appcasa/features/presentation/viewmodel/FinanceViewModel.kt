@@ -9,6 +9,7 @@ import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -23,11 +24,17 @@ class FinanceViewModel @Inject constructor(
 
   private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
-  val expenses: StateFlow<List<ExpenseEntity>> = expenseDao.getAllExpenses()
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val expenses: StateFlow<List<ExpenseEntity>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> expenseDao.getExpensesByHogar(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-  val currencySymbol: StateFlow<String> = configuracionDao.getConfiguracion(householdId)
-    .map { list -> list.find { it.clave == "moneda" }?.valor ?: "€" }
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val currencySymbol: StateFlow<String> = currentHouseholdProvider.householdId
+    .flatMapLatest { id ->
+      configuracionDao.getConfiguracion(id)
+        .map { list -> list.find { it.clave == "moneda" }?.valor ?: "€" }
+    }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "€")
 
   fun addExpense(concepto: String, importe: Double, categoria: String) {

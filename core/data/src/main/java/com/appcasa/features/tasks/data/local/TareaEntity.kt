@@ -82,6 +82,9 @@ data class TareaEntity(
   @ColumnInfo(name = "foto_uri")
   val fotoUri: String? = null,
 
+  @ColumnInfo(name = "anticipacion_mins")
+  val anticipacionMins: Int = 0,
+
   @ColumnInfo(name = "sync_id", index = true)
   val syncId: String? = null,
 
