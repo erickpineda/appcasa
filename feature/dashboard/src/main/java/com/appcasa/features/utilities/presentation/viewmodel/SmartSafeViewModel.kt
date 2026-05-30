@@ -1,5 +1,10 @@
 package com.appcasa.features.utilities.presentation.viewmodel
 
+import android.content.Context
+import androidx.core.content.ContextCompat
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
@@ -7,8 +12,11 @@ import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.features.documents.data.local.DocumentoDao
 import com.appcasa.features.documents.data.local.DocumentoEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -18,8 +26,12 @@ import javax.inject.Inject
 class SmartSafeViewModel @Inject constructor(
   private val documentoDao: DocumentoDao,
   private val currentHouseholdProvider: CurrentHouseholdProvider,
-  private val reminderScheduler: ReminderScheduler
+  private val reminderScheduler: ReminderScheduler,
+  @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+  private val _isUnlocked = MutableStateFlow(false)
+  val isUnlocked: StateFlow<Boolean> = _isUnlocked.asStateFlow()
 
   private val householdId = currentHouseholdProvider.getCurrentHouseholdId()
 
@@ -28,6 +40,29 @@ class SmartSafeViewModel @Inject constructor(
       documentoDao.getDocumentosByHogar(id)
     }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+  fun authenticate(activity: FragmentActivity) {
+    val biometricManager = BiometricManager.from(context)
+    if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS) {
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Acceso al Baúl")
+            .setSubtitle("Usa tu huella o cara para entrar")
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+            .build()
+
+        val executor = ContextCompat.getMainExecutor(context)
+        val biometricPrompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+                _isUnlocked.value = true
+            }
+        })
+        biometricPrompt.authenticate(promptInfo)
+    } else {
+        // Si no hay biométricos, desbloqueamos (para el emulador o dispositivos antiguos)
+        _isUnlocked.value = true
+    }
+  }
 
   fun addDocumento(
     nombre: String,

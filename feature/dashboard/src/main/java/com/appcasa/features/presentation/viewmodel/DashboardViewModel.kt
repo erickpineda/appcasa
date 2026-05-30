@@ -15,6 +15,9 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
 
+import com.appcasa.features.dashboard.data.local.DashboardDao
+import com.appcasa.features.dashboard.data.local.DashboardConfigEntity
+import com.appcasa.features.dashboard.data.local.PostItEntity
 import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.features.calendar.data.local.EventoDao
 import com.appcasa.features.calendar.data.local.EventoEntity
@@ -52,9 +55,21 @@ class DashboardViewModel @Inject constructor(
   private val listaDao: ListaDao,
   private val stockDao: StockDao,
   private val expenseDao: ExpenseDao,
+  private val dashboardDao: DashboardDao,
   private val reminderScheduler: ReminderScheduler,
   private val currentHouseholdProvider: CurrentHouseholdProvider,
 ) : ViewModel() {
+
+  private val _postIts = MutableStateFlow<List<PostItEntity>>(emptyList())
+  val postIts = _postIts.asStateFlow()
+
+  private val _dashboardOrder = MutableStateFlow(listOf("TASKS", "PETS", "CALENDAR", "EXPENSES", "POSTITS"))
+  val dashboardOrder = _dashboardOrder.asStateFlow()
+
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val familyMembers: StateFlow<List<MiembroEntity>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> miembroDao.getMiembrosByHogar(id) }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   private val _petCount = MutableStateFlow("0")
   val petCount: StateFlow<String> = _petCount.asStateFlow()
@@ -88,9 +103,56 @@ class DashboardViewModel @Inject constructor(
       currentHouseholdProvider.householdId.collect { id ->
         ensureDefaultHogar(id)
         observeData(id)
+        observeDashboardExtras(id)
       }
     }
     setupSearch()
+  }
+
+  private fun observeDashboardExtras(id: Long) {
+    viewModelScope.launch {
+      dashboardDao.getPostIts(id).collect { _postIts.value = it }
+    }
+    viewModelScope.launch {
+      dashboardDao.getConfig(id).collect { config ->
+        config?.ordenModulos?.let {
+          _dashboardOrder.value = it.split(",")
+        }
+      }
+    }
+  }
+
+  fun updateDashboardOrder(newOrder: List<String>) {
+    val id = currentHouseholdProvider.getCurrentHouseholdId()
+    _dashboardOrder.value = newOrder
+    viewModelScope.launch {
+      dashboardDao.saveConfig(DashboardConfigEntity(id, newOrder.joinToString(",")))
+    }
+  }
+
+  fun addPostIt(contenido: String, color: String = "#FFF9C4") {
+    val id = currentHouseholdProvider.getCurrentHouseholdId()
+    viewModelScope.launch {
+      dashboardDao.insertPostIt(PostItEntity(hogarId = id, contenido = contenido, colorHex = color))
+    }
+  }
+
+  fun deletePostIt(postIt: PostItEntity) {
+    viewModelScope.launch {
+      dashboardDao.deletePostIt(postIt)
+    }
+  }
+
+  fun updateMemberMood(miembroId: Long, emoji: String) {
+    viewModelScope.launch {
+        val miembro = miembroDao.getMiembroById(miembroId)
+        miembro?.let {
+            miembroDao.updateMiembro(it.copy(
+                estadoAnimo = emoji,
+                estadoAnimoUpdatedAt = System.currentTimeMillis()
+            ))
+        }
+    }
   }
 
   private fun ensureDefaultHogar(id: Long) {

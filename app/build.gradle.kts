@@ -54,6 +54,7 @@ dependencies {
   implementation(libs.lifecycle.runtime.ktx)
   implementation(libs.activity.compose)
   implementation(libs.google.material)
+  implementation(libs.androidx.biometric)
 
   // ─── Compose BOM ──────────────────────────────────────
   implementation(platform(libs.compose.bom))

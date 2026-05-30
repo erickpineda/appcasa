@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.fragment.app.FragmentActivity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -33,10 +34,32 @@ fun SmartSafeScreen(
   navController: NavController,
   viewModel: SmartSafeViewModel = hiltViewModel()
 ) {
+  val isUnlocked by viewModel.isUnlocked.collectAsState()
+  val context = LocalContext.current
+  
+  LaunchedEffect(Unit) {
+    if (!isUnlocked) {
+        viewModel.authenticate(context as FragmentActivity)
+    }
+  }
+
+  if (!isUnlocked) {
+      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          Column(horizontalAlignment = Alignment.CenterHorizontally) {
+              Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+              Spacer(Modifier.height(16.dp))
+              Text("Baúl bloqueado", style = MaterialTheme.typography.titleLarge)
+              TextButton(onClick = { viewModel.authenticate(context as FragmentActivity) }) {
+                  Text("Desbloquear con biometría")
+              }
+          }
+      }
+      return
+  }
+
   val documentos by viewModel.documentos.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
   var editingDocument by remember { mutableStateOf<DocumentoEntity?>(null) }
-  val context = LocalContext.current
 
   if (showAddDialog) {
     AddDocumentDialog(

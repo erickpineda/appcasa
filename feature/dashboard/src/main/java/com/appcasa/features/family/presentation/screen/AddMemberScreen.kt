@@ -14,6 +14,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.features.family.presentation.viewmodel.AddMemberViewModel
+import com.appcasa.core.data.utils.FileUtils
+import androidx.compose.ui.platform.LocalContext
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
 import java.text.SimpleDateFormat
@@ -61,9 +64,15 @@ fun AddMemberScreen(
     }
   }
 
+  val context = LocalContext.current
+
   val imagePickerLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.GetContent()
-  ) { uri -> fotoUri = uri?.toString() }
+  ) { uri -> 
+    uri?.let {
+        fotoUri = FileUtils.saveImageLocally(context, it.toString())
+    }
+  }
 
   Scaffold(
     topBar = {
@@ -106,6 +115,20 @@ fun AddMemberScreen(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
           )
+          // Overlay sutil para indicar que se puede cambiar
+          Surface(
+              color = Color.Black.copy(alpha = 0.3f),
+              modifier = Modifier.fillMaxSize()
+          ) {
+              Box(contentAlignment = Alignment.Center) {
+                  Icon(
+                      Icons.Default.PhotoCamera, 
+                      contentDescription = null, 
+                      tint = Color.White.copy(alpha = 0.8f),
+                      modifier = Modifier.size(32.dp)
+                  )
+              }
+          }
         } else {
           Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = MaterialTheme.colorScheme.primary)

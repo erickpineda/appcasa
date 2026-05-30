@@ -39,9 +39,13 @@ fun TasksScreen(
   val tasks by viewModel.tasks.collectAsState()
   val isCompact by viewModel.isCompactView.collectAsState()
   val showCelebration by viewModel.showCelebration.collectAsState()
+  val gainedXP by viewModel.gainedXP.collectAsState()
 
   if (showCelebration) {
-    CelebrationOverlay(onDismiss = { viewModel.dismissCelebration() })
+    CelebrationOverlay(
+        xp = gainedXP,
+        onDismiss = { viewModel.dismissCelebration() }
+    )
   }
 
   PullToRefreshWrapper {
@@ -216,7 +220,7 @@ fun TaskItem(
               style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
               fontWeight = FontWeight.Medium,
               textDecoration = if (isCompleted) TextDecoration.LineThrough else null,
-              modifier = Modifier.clickable { isEditing = true }
+              modifier = Modifier.clickable(enabled = !isCompleted) { isEditing = true }
             )
             
             Row(verticalAlignment = Alignment.CenterVertically) {

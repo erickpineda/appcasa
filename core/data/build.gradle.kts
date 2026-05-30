@@ -40,6 +40,10 @@ dependencies {
     // WorkManager
     implementation(libs.workmanager.ktx)
 
+    // ML Kit
+    implementation(libs.mlkit.barcode.scanning)
+    implementation(libs.mlkit.text.recognition)
+
     // Domain
     implementation(project(":core:domain"))
 }

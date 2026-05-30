@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -21,9 +22,18 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.core.ui.components.PullToRefreshWrapper
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import com.appcasa.core.ui.components.bounceClick
 import com.appcasa.features.presentation.viewmodel.DashboardViewModel
 import com.appcasa.features.dashboard.presentation.model.SearchItem
+import com.appcasa.features.dashboard.data.local.PostItEntity
+import com.appcasa.features.family.data.local.MiembroEntity
+import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.navigation.Screen
+import coil3.compose.AsyncImage
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun DashboardScreen(
@@ -40,6 +50,10 @@ fun DashboardScreen(
   
   val searchQuery by viewModel.searchQuery.collectAsState()
   val searchResults by viewModel.searchResults.collectAsState()
+  
+  val postIts by viewModel.postIts.collectAsState()
+  val dashboardOrder by viewModel.dashboardOrder.collectAsState()
+  val familyMembers by viewModel.familyMembers.collectAsState()
 
   PullToRefreshWrapper {
     DashboardContent(
@@ -52,7 +66,14 @@ fun DashboardScreen(
       lowStockCount = lowStockCount,
       searchQuery = searchQuery,
       searchResults = searchResults,
+      postIts = postIts,
+      dashboardOrder = dashboardOrder,
+      familyMembers = familyMembers,
       onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+      onAddPostIt = { viewModel.addPostIt(it) },
+      onDeletePostIt = { viewModel.deletePostIt(it) },
+      onUpdateMood = { id, emoji -> viewModel.updateMemberMood(id, emoji) },
+      onReorder = { viewModel.updateDashboardOrder(it) },
       onResultClick = { item ->
         navController.navigate(item.route)
       },
@@ -116,7 +137,14 @@ fun DashboardContent(
   lowStockCount: Int,
   searchQuery: String,
   searchResults: List<SearchItem>,
+  postIts: List<PostItEntity>,
+  dashboardOrder: List<String>,
+  familyMembers: List<MiembroEntity>,
   onSearchQueryChange: (String) -> Unit,
+  onAddPostIt: (String) -> Unit,
+  onDeletePostIt: (PostItEntity) -> Unit,
+  onUpdateMood: (Long, String) -> Unit,
+  onReorder: (List<String>) -> Unit,
   onResultClick: (SearchItem) -> Unit,
   onNavigateToTasks: () -> Unit,
   onNavigateToFamily: () -> Unit,
@@ -128,6 +156,74 @@ fun DashboardContent(
   onNavigateToInventory: () -> Unit = {}
 ) {
   var searchActive by remember { mutableStateOf(false) }
+  var showPostItDialog by remember { mutableStateOf(false) }
+  var showReorderDialog by remember { mutableStateOf(false) }
+  var postItText by remember { mutableStateOf("") }
+
+  if (showPostItDialog) {
+    AlertDialog(
+        onDismissRequest = { showPostItDialog = false },
+        title = { Text("Nuevo Post-it") },
+        text = {
+            OutlinedTextField(
+                value = postItText,
+                onValueChange = { postItText = it },
+                placeholder = { Text("Escribe algo para la familia...") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            Button(onClick = {
+                if (postItText.isNotBlank()) {
+                    onAddPostIt(postItText)
+                    postItText = ""
+                    showPostItDialog = false
+                }
+            }) { Text("Pegar") }
+        }
+    )
+  }
+
+  if (showReorderDialog) {
+    val modules = listOf(
+        "TASKS" to "Tareas",
+        "PETS" to "Mascotas",
+        "CALENDAR" to "Agenda",
+        "EXPENSES" to "Gastos",
+        "POSTITS" to "Post-its"
+    )
+    AlertDialog(
+        onDismissRequest = { showReorderDialog = false },
+        title = { Text("Personalizar Dashboard") },
+        text = {
+            Column {
+                Text("Selecciona el orden de aparición:", style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.height(8.dp))
+                dashboardOrder.forEachIndexed { index, code ->
+                    val name = modules.find { it.first == code }?.second ?: code
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(name, modifier = Modifier.weight(1f))
+                        IconButton(onClick = {
+                            if (index > 0) {
+                                val newList = dashboardOrder.toMutableList()
+                                java.util.Collections.swap(newList, index, index - 1)
+                                onReorder(newList)
+                            }
+                        }) { Icon(Icons.Default.ArrowUpward, contentDescription = null) }
+                        IconButton(onClick = {
+                            if (index < dashboardOrder.size - 1) {
+                                val newList = dashboardOrder.toMutableList()
+                                java.util.Collections.swap(newList, index, index + 1)
+                                onReorder(newList)
+                            }
+                        }) { Icon(Icons.Default.ArrowDownward, contentDescription = null) }
+                    }
+                }
+            }
+        },
+        confirmButton = { Button(onClick = { showReorderDialog = false }) { Text("Hecho") } }
+    )
+  }
 
   Scaffold(
     topBar = {
@@ -149,6 +245,12 @@ fun DashboardContent(
             }
           },
           actions = {
+            IconButton(onClick = { showPostItDialog = true }) {
+                Icon(Icons.Default.StickyNote2, contentDescription = "Post-it", tint = MaterialTheme.colorScheme.onPrimary)
+            }
+            IconButton(onClick = { showReorderDialog = true }) {
+                Icon(Icons.Default.SettingsSuggest, contentDescription = "Personalizar", tint = MaterialTheme.colorScheme.onPrimary)
+            }
             IconButton(onClick = { searchActive = true }) {
               Icon(Icons.Default.Search, contentDescription = "Buscar", tint = MaterialTheme.colorScheme.onPrimary)
             }
@@ -162,7 +264,7 @@ fun DashboardContent(
         )
       }
     },
-    containerColor = MaterialTheme.colorScheme.background // Aseguramos el color de fondo para Material You / Dark Mode
+    containerColor = MaterialTheme.colorScheme.background
   ) { scaffoldPadding ->
     Box(modifier = Modifier.fillMaxSize().padding(scaffoldPadding)) {
       
@@ -233,11 +335,73 @@ fun DashboardContent(
         ) {
           item {
             Text(
-              text = "Resumen de hoy",
+              text = "Estado de la familia",
               style = MaterialTheme.typography.titleMedium,
               color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                familyMembers.filter { it.tipo == TipoMiembro.PERSONA.name }.forEach { member ->
+                    MoodAvatar(member = member, onMoodClick = { onUpdateMood(member.id, it) })
+                }
+            }
+          }
+
+          dashboardOrder.forEach { module ->
+              when(module) {
+                  "TASKS" -> item { 
+                    DashboardCard(
+                      icon = Icons.Default.CheckCircle,  
+                      title = "Tareas pendientes", 
+                      value = pendingTasks, 
+                      subtitle = if (pendingTasks == "0") "Todo al día" else "Tareas por hacer",
+                      onClick = onNavigateToTasks
+                    ) 
+                  }
+                  "PETS" -> item { 
+                    DashboardCard(
+                      icon = Icons.Default.Pets,          
+                      title = "Mascotas", 
+                      value = petCount,  
+                      subtitle = petSummary,
+                      onClick = onNavigateToFamily
+                    ) 
+                  }
+                  "CALENDAR" -> item { 
+                    DashboardCard(
+                      icon = Icons.Default.CalendarMonth, 
+                      title = "Próximo evento", 
+                      value = nextEvent, 
+                      subtitle = nextEventDate,
+                      onClick = onNavigateToCalendar
+                    ) 
+                  }
+                  "EXPENSES" -> item { 
+                    DashboardCard(
+                      icon = Icons.Default.Payments, 
+                      title = "Gastos del mes", 
+                      value = monthlyExpense, 
+                      subtitle = "Presupuesto familiar",
+                      onClick = onNavigateToExpenses
+                    ) 
+                  }
+                  "POSTITS" -> if (postIts.isNotEmpty()) {
+                      item {
+                          Text("Notas de la familia", style = MaterialTheme.typography.titleSmall)
+                          Row(
+                              modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                              horizontalArrangement = Arrangement.spacedBy(8.dp)
+                          ) {
+                              postIts.forEach { postIt ->
+                                  PostItCard(postIt = postIt, onDelete = { onDeletePostIt(postIt) })
+                              }
+                          }
+                      }
+                  }
+              }
           }
 
           if (lowStockCount > 0) {
@@ -251,43 +415,6 @@ fun DashboardContent(
                 containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
               )
             }
-          }
-
-          item { 
-            DashboardCard(
-              icon = Icons.Default.CheckCircle,  
-              title = "Tareas pendientes", 
-              value = pendingTasks, 
-              subtitle = if (pendingTasks == "0") "Todo al día" else "Tareas por hacer",
-              onClick = onNavigateToTasks
-            ) 
-          }
-          item { 
-            DashboardCard(
-              icon = Icons.Default.Pets,          
-              title = "Mascotas", 
-              value = petCount,  
-              subtitle = petSummary,
-              onClick = onNavigateToFamily
-            ) 
-          }
-          item { 
-            DashboardCard(
-              icon = Icons.Default.CalendarMonth, 
-              title = "Próximo evento", 
-              value = nextEvent, 
-              subtitle = nextEventDate,
-              onClick = onNavigateToCalendar
-            ) 
-          }
-          item { 
-            DashboardCard(
-              icon = Icons.Default.Payments, 
-              title = "Gastos del mes", 
-              value = monthlyExpense, 
-              subtitle = "Presupuesto familiar",
-              onClick = onNavigateToExpenses
-            ) 
           }
           
           item {
@@ -326,6 +453,81 @@ fun DashboardContent(
       }
     }
   }
+}
+
+@Composable
+fun MoodAvatar(member: MiembroEntity, onMoodClick: (String) -> Unit) {
+    var showMoodPicker by remember { mutableStateOf(false) }
+    val emojis = listOf("😊", "😎", "😴", "🤔", "🤒", "😤", "😇")
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(contentAlignment = Alignment.BottomEnd) {
+            Surface(
+                modifier = Modifier.size(60.dp).clip(CircleShape).clickable { showMoodPicker = true },
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                if (member.fotoUri != null) {
+                    AsyncImage(
+                        model = member.fotoUri,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.padding(12.dp))
+                }
+            }
+            Surface(
+                modifier = Modifier.size(24.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 2.dp
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(member.estadoAnimo ?: "💬", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+        Text(member.nombre, style = MaterialTheme.typography.labelSmall)
+    }
+
+    if (showMoodPicker) {
+        AlertDialog(
+            onDismissRequest = { showMoodPicker = false },
+            title = { Text("¿Cómo estás, ${member.nombre}?") },
+            text = {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    emojis.forEach { emoji ->
+                        Text(
+                            emoji, 
+                            modifier = Modifier.clickable { 
+                                onMoodClick(emoji)
+                                showMoodPicker = false 
+                            }.padding(4.dp),
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {}
+        )
+    }
+}
+
+@Composable
+fun PostItCard(postIt: PostItEntity, onDelete: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(postIt.colorHex))),
+        modifier = Modifier.size(140.dp).bounceClick { },
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Box(modifier = Modifier.padding(12.dp).fillMaxSize()) {
+            Text(postIt.contenido, style = MaterialTheme.typography.bodyMedium, color = androidx.compose.ui.graphics.Color.Black)
+            IconButton(onClick = onDelete, modifier = Modifier.align(Alignment.TopEnd).size(24.dp)) {
+                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp), tint = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
+            }
+        }
+    }
 }
 
 @Composable
@@ -417,7 +619,14 @@ fun DashboardPreview() {
       lowStockCount = 2,
       searchQuery = "",
       searchResults = emptyList(),
+      postIts = emptyList(),
+      dashboardOrder = listOf("TASKS", "PETS", "CALENDAR", "EXPENSES", "POSTITS"),
+      familyMembers = emptyList(),
       onSearchQueryChange = {},
+      onAddPostIt = {},
+      onDeletePostIt = {},
+      onUpdateMood = { _, _ -> },
+      onReorder = {},
       onResultClick = {},
       onNavigateToTasks = {},
       onNavigateToFamily = {},

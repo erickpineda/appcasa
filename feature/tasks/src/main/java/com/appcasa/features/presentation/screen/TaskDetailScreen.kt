@@ -46,6 +46,7 @@ fun TaskDetailScreen(
   var newSubTaskText by remember { mutableStateOf("") }
   val haptic = LocalHapticFeedback.current
   
+  val isTaskCompleted = task?.estado == com.appcasa.core.domain.model.EstadoTarea.COMPLETADA.name
   var selectedItems by remember { mutableStateOf(setOf<Long>()) }
   val isSelectionMode = selectedItems.isNotEmpty()
   var showEditDialog by remember { mutableStateOf(false) }
@@ -128,8 +129,10 @@ fun TaskDetailScreen(
                 Icon(Icons.Default.Delete, contentDescription = "Borrar seleccionados", tint = MaterialTheme.colorScheme.error)
               }
             } else {
-              IconButton(onClick = { showEditDialog = true }) {
-                Icon(Icons.Default.Edit, contentDescription = "Editar Tarea")
+              if (!isTaskCompleted) {
+                IconButton(onClick = { showEditDialog = true }) {
+                  Icon(Icons.Default.Edit, contentDescription = "Editar Tarea")
+                }
               }
             }
           }
@@ -168,6 +171,17 @@ fun TaskDetailScreen(
               Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 // Badges de Estado/Asignación
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (isTaskCompleted) {
+                        SuggestionChip(
+                            onClick = {},
+                            label = { Text("COMPLETADA") },
+                            icon = { Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) },
+                            colors = SuggestionChipDefaults.suggestionChipColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                labelColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                    }
                     SuggestionChip(
                         onClick = {},
                         label = { Text(currentTask.prioridad) },
@@ -210,7 +224,7 @@ fun TaskDetailScreen(
                       Text(
                         text = "Vence: ${SimpleDateFormat(format, Locale("es", "ES")).format(date)}",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = if (isTaskCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                       )
                     }
@@ -234,11 +248,12 @@ fun TaskDetailScreen(
                         Text(
                             text = currentTask.descripcion ?: "",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = if (isTaskCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                            textDecoration = if (isTaskCompleted) TextDecoration.LineThrough else null
                         )
                     } else {
                         Box(modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
-                            Text("Sin nota. Pulsa editar para añadir una.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            Text("Sin nota.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                         }
                     }
                 }
@@ -267,7 +282,7 @@ fun TaskDetailScreen(
                     color = MaterialTheme.colorScheme.primary
                   )
                   
-                  if (!isSelectionMode && subTasks.isNotEmpty()) {
+                  if (!isSelectionMode && subTasks.isNotEmpty() && !isTaskCompleted) {
                     TextButton(
                       onClick = { selectedItems = subTasks.map { it.id }.toSet() },
                       contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
@@ -284,7 +299,7 @@ fun TaskDetailScreen(
 
             if (currentTask.tipoContenido == TipoContenidoTarea.LISTA.name) {
               item {
-                AnimatedVisibility(visible = !isSelectionMode) {
+                AnimatedVisibility(visible = !isSelectionMode && !isTaskCompleted) {
                   Row(
                     modifier = Modifier
                       .padding(horizontal = 16.dp, vertical = 4.dp)
@@ -325,6 +340,7 @@ fun TaskDetailScreen(
                   item = item,
                   isSelected = isSelected,
                   isSelectionMode = isSelectionMode,
+                  isParentTaskCompleted = isTaskCompleted,
                   onToggleSelection = {
                     selectedItems = if (isSelected) selectedItems - item.id else selectedItems + item.id
                   },
@@ -361,6 +377,7 @@ fun CompactSubTaskItemEditable(
   item: TareaCheckItemEntity,
   isSelected: Boolean,
   isSelectionMode: Boolean,
+  isParentTaskCompleted: Boolean,
   onToggleSelection: () -> Unit,
   onToggle: () -> Unit,
   onDelete: () -> Unit,
@@ -372,7 +389,7 @@ fun CompactSubTaskItemEditable(
   Row(
     modifier = Modifier
       .fillMaxWidth()
-      .clickable { if (isSelectionMode) onToggleSelection() else onToggle() }
+      .clickable(enabled = !isParentTaskCompleted) { if (isSelectionMode) onToggleSelection() else onToggle() }
       .padding(horizontal = 4.dp, vertical = 0.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
@@ -383,7 +400,7 @@ fun CompactSubTaskItemEditable(
         modifier = Modifier.padding(horizontal = 4.dp)
       )
     } else {
-      IconButton(onClick = onToggle, modifier = Modifier.size(32.dp)) {
+      IconButton(onClick = onToggle, enabled = !isParentTaskCompleted, modifier = Modifier.size(32.dp)) {
         Icon(
           imageVector = if (item.completado) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
           contentDescription = null,
@@ -393,7 +410,7 @@ fun CompactSubTaskItemEditable(
       }
     }
     
-    if (isEditing && !isSelectionMode) {
+    if (isEditing && !isSelectionMode && !isParentTaskCompleted) {
       OutlinedTextField(
         value = editedText,
         onValueChange = { editedText = it },
@@ -415,15 +432,15 @@ fun CompactSubTaskItemEditable(
       Text(
         text = item.texto,
         style = MaterialTheme.typography.bodyMedium,
-        textDecoration = if (item.completado) TextDecoration.LineThrough else null,
-        color = if (item.completado) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
+        textDecoration = if (item.completado || isParentTaskCompleted) TextDecoration.LineThrough else null,
+        color = if (item.completado || isParentTaskCompleted) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
         modifier = Modifier
           .weight(1f)
-          .clickable(enabled = !isSelectionMode) { isEditing = true }
+          .clickable(enabled = !isSelectionMode && !isParentTaskCompleted) { isEditing = true }
           .padding(vertical = 4.dp)
       )
 
-      if (!isSelectionMode) {
+      if (!isSelectionMode && !isParentTaskCompleted) {
         IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
           Icon(
             Icons.Default.Delete, 

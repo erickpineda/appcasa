@@ -14,10 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.data.utils.FileUtils
 import com.appcasa.features.family.presentation.viewmodel.EditMemberViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -59,9 +62,15 @@ fun EditMemberScreen(
       }
     }
 
+    val context = LocalContext.current
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
       contract = ActivityResultContracts.GetContent()
-    ) { uri -> fotoUri = uri?.toString() }
+    ) { uri -> 
+      uri?.let {
+          fotoUri = FileUtils.saveImageLocally(context, it.toString())
+      }
+    }
 
     Scaffold(
       topBar = {
@@ -100,6 +109,20 @@ fun EditMemberScreen(
               modifier = Modifier.fillMaxSize(),
               contentScale = ContentScale.Crop
             )
+            // Overlay sutil para indicar que se puede cambiar
+            Surface(
+                color = Color.Black.copy(alpha = 0.3f),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.PhotoCamera, 
+                        contentDescription = null, 
+                        tint = Color.White.copy(alpha = 0.8f),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
           } else {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
               Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = MaterialTheme.colorScheme.primary)

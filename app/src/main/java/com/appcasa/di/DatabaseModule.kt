@@ -60,4 +60,7 @@ object DatabaseModule {
 
   @Provides
   fun provideDocumentoDao(db: AppCasaDatabase) = db.documentoDao()
+
+  @Provides
+  fun provideDashboardDao(db: AppCasaDatabase) = db.dashboardDao()
 }

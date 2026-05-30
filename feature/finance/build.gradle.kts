@@ -50,8 +50,11 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+    
+    // ML Kit
+    implementation(libs.mlkit.text.recognition)
 
-    // Módulos Core
+    // MÃ³dulos Core
     implementation(project(":core:ui"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))

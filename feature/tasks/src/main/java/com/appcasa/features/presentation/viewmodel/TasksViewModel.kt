@@ -36,6 +36,9 @@ class TasksViewModel @Inject constructor(
   private val _showCelebration = MutableStateFlow(false)
   val showCelebration: StateFlow<Boolean> = _showCelebration.asStateFlow()
 
+  private val _gainedXP = MutableStateFlow(0)
+  val gainedXP: StateFlow<Int> = _gainedXP.asStateFlow()
+
   private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   val tasks: StateFlow<List<TareaEntity>> = tareaDao.getTareasByHogar(householdId)
@@ -68,16 +71,28 @@ class TasksViewModel @Inject constructor(
         completadoEn = if (isMarkingAsCompleted) System.currentTimeMillis() else null,
         updatedAt = System.currentTimeMillis()
       )
-      tareaDao.updateTarea(updated)
       
-      if (isMarkingAsCompleted) {
-        _showCelebration.value = true
+      if (isMarkingAsCompleted && !tarea.puntosOtorgados) {
         reminderScheduler.cancelReminder((tarea.id + 20000).toInt())
         
-        // Gamificación: Otorgar puntos
-        awardPointsForTask(tarea)
-
-        // Lógica de Recurrencia
+        // Gamificación: Calcular y otorgar puntos solo si no se dieron antes
+        val points = when(tarea.prioridad) {
+          Prioridad.ALTA.name -> 20
+          Prioridad.BAJA.name -> 5
+          else -> 10
+        }
+        _gainedXP.value = points
+        _showCelebration.value = true
+        awardPointsForTask(tarea, points)
+        
+        // Marcamos la tarea para que no vuelva a dar puntos
+        tareaDao.updateTarea(updated.copy(puntosOtorgados = true))
+      } else {
+        tareaDao.updateTarea(updated)
+      }
+      
+      if (isMarkingAsCompleted) {
+        // Lógica de Recurrencia (siempre se dispara al completar)
         if (tarea.periodicidad != Periodicidad.NINGUNA.name) {
           spawnNextInstance(tarea)
         }
@@ -85,19 +100,26 @@ class TasksViewModel @Inject constructor(
     }
   }
 
-  private suspend fun awardPointsForTask(tarea: TareaEntity) {
+  private suspend fun awardPointsForTask(tarea: TareaEntity, points: Int) {
     val asignacion = tareaDao.getAsignacionByTarea(tarea.id)
-    asignacion?.let { 
-      val miembro = miembroDao.getMiembroById(it.miembroId)
+    val memberId = if (asignacion != null) {
+      asignacion.miembroId
+    } else {
+      // Si no hay asignación, buscamos al usuario principal del hogar
+      val user = configuracionDao.getUsuarioActual().first()
+      // Buscamos un miembro con ese nombre o el primer miembro PERSONA
+      miembroDao.getMiembrosByHogar(householdId).first().find { 
+        it.nombre == user?.nombre && it.tipo == com.appcasa.core.domain.model.TipoMiembro.PERSONA.name 
+      }?.id ?: miembroDao.getMiembrosByHogar(householdId).first().find { 
+        it.tipo == com.appcasa.core.domain.model.TipoMiembro.PERSONA.name 
+      }?.id
+    }
+
+    memberId?.let { id ->
+      val miembro = miembroDao.getMiembroById(id)
       miembro?.let { m ->
-        val puntosGanados = when(tarea.prioridad) {
-          Prioridad.ALTA.name -> 20
-          Prioridad.BAJA.name -> 5
-          else -> 10
-        }
-        
-        val nuevosPuntos = m.puntos + puntosGanados
-        val nuevoNivel = (nuevosPuntos / 100) + 1 // Subida de nivel cada 100 puntos
+        val nuevosPuntos = m.puntos + points
+        val nuevoNivel = (nuevosPuntos / 100) + 1
         
         miembroDao.updateMiembro(m.copy(
           puntos = nuevosPuntos,

@@ -51,8 +51,11 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+    
+    // Biometric
+    implementation(libs.androidx.biometric)
 
-    // Módulos Core
+    // MÃ³dulos Core
     implementation(project(":core:ui"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))

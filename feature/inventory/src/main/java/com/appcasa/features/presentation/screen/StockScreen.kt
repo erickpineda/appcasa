@@ -1,8 +1,15 @@
 package com.appcasa.features.inventory.presentation.screen
 
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -23,6 +31,7 @@ import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.inventory.data.local.StockEntity
 import com.appcasa.features.inventory.presentation.viewmodel.StockViewModel
+import com.google.mlkit.vision.common.InputImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,17 +42,34 @@ fun StockScreen(
   val stockItems by viewModel.stockItems.collectAsState()
   val availableLists by viewModel.availableLists.collectAsState()
   val isCompact by viewModel.isCompactView.collectAsState()
+  val barcodeResult by viewModel.barcodeResult.collectAsState()
   
   var showAddDialog by remember { mutableStateOf(false) }
   var editingItem by remember { mutableStateOf<StockEntity?>(null) }
   var itemToAddToList by remember { mutableStateOf<StockEntity?>(null) }
+  val context = LocalContext.current
+
+  val barcodeLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.GetContent()
+  ) { uri: Uri? ->
+    uri?.let {
+      val image = InputImage.fromFilePath(context, it)
+      viewModel.scanBarcode(image)
+      showAddDialog = true
+    }
+  }
 
   if (showAddDialog) {
     StockActionDialog(
-      onDismiss = { showAddDialog = false },
+      initialBarcode = barcodeResult ?: "",
+      onDismiss = { 
+          showAddDialog = false
+          viewModel.clearBarcode()
+      },
       onConfirm = { nombre, categoria, cantidad, minima, unidad ->
         viewModel.addItem(nombre, categoria, cantidad, minima, unidad)
         showAddDialog = false
+        viewModel.clearBarcode()
       }
     )
   }
@@ -90,7 +116,12 @@ fun StockScreen(
           colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primary,
             titleContentColor = MaterialTheme.colorScheme.onPrimary
-          )
+          ),
+          actions = {
+              IconButton(onClick = { barcodeLauncher.launch("image/*") }) {
+                  Icon(Icons.Default.QrCodeScanner, contentDescription = "Escanear barras")
+              }
+          }
         )
       },
       floatingActionButton = {
@@ -110,7 +141,7 @@ fun StockScreen(
           item {
             AppCasaEmptyState(
               title = "Inventario vacío",
-              description = "Añade los productos que sueles tener en casa para controlar su stock.",
+              description = "Añade los productos que sueles tener en casa para controlar su stock. ¡Prueba a escanear un código!",
               icon = Icons.Default.Inventory,
               actionText = "Añadir artículo",
               onActionClick = { showAddDialog = true },
@@ -211,10 +242,11 @@ fun AddToListDialog(
 @Composable
 fun StockActionDialog(
   item: StockEntity? = null,
+  initialBarcode: String = "",
   onDismiss: () -> Unit,
   onConfirm: (String, String, Double, Double, String) -> Unit
 ) {
-  var nombre by remember { mutableStateOf(item?.nombre ?: "") }
+  var nombre by remember { mutableStateOf(if (initialBarcode.isNotEmpty()) "Producto $initialBarcode" else item?.nombre ?: "") }
   var nombreTouched by remember { mutableStateOf(false) }
   var categoria by remember { mutableStateOf(item?.categoria ?: "Despensa") }
   var cantidad by remember { mutableStateOf(item?.cantidadActual?.toString() ?: "") }
@@ -229,6 +261,19 @@ fun StockActionDialog(
     title = { Text(if (item == null) "Nuevo Artículo" else "Editar Artículo") },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (initialBarcode.isNotEmpty()) {
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            ) {
+                Text(
+                    "Código detectado: $initialBarcode",
+                    modifier = Modifier.padding(8.dp),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
         OutlinedTextField(
             value = nombre, 
             onValueChange = { 

@@ -9,9 +9,14 @@ import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.lists.data.local.ListaItemEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.common.InputImage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -27,7 +32,23 @@ class StockViewModel @Inject constructor(
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
+  private val _barcodeResult = MutableStateFlow<String?>(null)
+  val barcodeResult = _barcodeResult.asStateFlow()
+
   private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+
+  fun scanBarcode(image: InputImage) {
+    val scanner = BarcodeScanning.getClient()
+    scanner.process(image)
+        .addOnSuccessListener { barcodes: List<com.google.mlkit.vision.barcode.common.Barcode> ->
+            for (barcode in barcodes) {
+                _barcodeResult.value = barcode.rawValue
+                break
+            }
+        }
+  }
+
+  fun clearBarcode() { _barcodeResult.value = null }
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val stockItems: StateFlow<List<StockEntity>> = currentHouseholdProvider.householdId

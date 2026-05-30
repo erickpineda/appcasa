@@ -23,6 +23,8 @@ import com.appcasa.features.utilities.data.local.UtilidadEntity
 import com.appcasa.features.inventory.data.local.StockEntity
 import com.appcasa.features.finance.data.local.ExpenseEntity
 
+import com.appcasa.features.dashboard.data.local.DashboardConfigEntity
+import com.appcasa.features.dashboard.data.local.PostItEntity
 import com.appcasa.features.calendar.data.local.EventoDao
 import com.appcasa.features.family.data.local.MiembroDao
 import com.appcasa.features.documents.data.local.DocumentoDao
@@ -63,8 +65,10 @@ import com.appcasa.features.finance.data.local.ExpenseDao
     StockEntity::class,
     ExpenseEntity::class,
     DocumentoEntity::class,
+    PostItEntity::class,
+    DashboardConfigEntity::class,
   ],
-  version      = 10,
+  version      = 12,
   exportSchema = true
 )
 abstract class AppCasaDatabase : RoomDatabase() {
@@ -80,4 +84,5 @@ abstract class AppCasaDatabase : RoomDatabase() {
   abstract fun stockDao(): StockDao
   abstract fun expenseDao(): ExpenseDao
   abstract fun documentoDao(): DocumentoDao
+  abstract fun dashboardDao(): com.appcasa.features.dashboard.data.local.DashboardDao
 }

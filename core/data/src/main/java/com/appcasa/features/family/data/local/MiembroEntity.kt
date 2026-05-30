@@ -83,5 +83,11 @@ data class MiembroEntity(
   val puntos: Int = 0,
 
   @ColumnInfo(name = "nivel")
-  val nivel: Int = 1
+  val nivel: Int = 1,
+
+  @ColumnInfo(name = "estado_animo")
+  val estadoAnimo: String? = null,
+
+  @ColumnInfo(name = "estado_animo_updated")
+  val estadoAnimoUpdatedAt: Long? = null
 )

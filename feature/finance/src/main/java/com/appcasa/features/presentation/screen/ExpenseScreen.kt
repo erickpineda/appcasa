@@ -1,9 +1,17 @@
 package com.appcasa.features.finance.presentation.screen
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -32,17 +40,38 @@ fun ExpenseScreen(
 ) {
   val expenses by viewModel.expenses.collectAsState()
   val currency by viewModel.currencySymbol.collectAsState()
+  val ocrResult by viewModel.ocrResult.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
   var editingExpense by remember { mutableStateOf<ExpenseEntity?>(null) }
   val context = LocalContext.current
 
+  val galleryLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.GetContent()
+  ) { uri: Uri? ->
+    uri?.let {
+      val bitmap = if (Build.VERSION.SDK_INT < 28) {
+          MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+      } else {
+          val source = ImageDecoder.createSource(context.contentResolver, it)
+          ImageDecoder.decodeBitmap(source)
+      }
+      viewModel.processTicket(bitmap)
+      showAddDialog = true
+    }
+  }
+
   if (showAddDialog) {
     ExpenseActionDialog(
       currency = currency,
-      onDismiss = { showAddDialog = false },
+      initialImporte = ocrResult?.toString() ?: "",
+      onDismiss = { 
+          showAddDialog = false
+          viewModel.clearOcr()
+      },
       onConfirm = { concepto, importe, categoria ->
         viewModel.addExpense(concepto, importe, categoria)
         showAddDialog = false
+        viewModel.clearOcr()
       }
     )
   }
@@ -79,6 +108,9 @@ fun ExpenseScreen(
             actionIconContentColor = MaterialTheme.colorScheme.onPrimary
           ),
           actions = {
+            IconButton(onClick = { galleryLauncher.launch("image/*") }) {
+                Icon(Icons.Default.DocumentScanner, contentDescription = "Escanear ticket")
+            }
             if (expenses.isNotEmpty()) {
               IconButton(onClick = {
                 val total = expenses.sumOf { it.importe }
@@ -116,7 +148,7 @@ fun ExpenseScreen(
           item {
             AppCasaEmptyState(
               title = "Sin gastos aún",
-              description = "Anota tu primer gasto para empezar a llevar el control del hogar.",
+              description = "Anota tu primer gasto para empezar a llevar el control del hogar. ¡Puedes escanear tickets!",
               icon = Icons.Default.ReceiptLong,
               actionText = "Añadir gasto",
               onActionClick = { showAddDialog = true },
@@ -173,11 +205,12 @@ fun ExpenseCard(expense: ExpenseEntity, currency: String, onEdit: () -> Unit, on
 fun ExpenseActionDialog(
   item: ExpenseEntity? = null,
   currency: String,
+  initialImporte: String = "",
   onDismiss: () -> Unit,
   onConfirm: (String, Double, String) -> Unit
 ) {
   var concepto by remember { mutableStateOf(item?.concepto ?: "") }
-  var importe by remember { mutableStateOf(item?.importe?.toString() ?: "") }
+  var importe by remember { mutableStateOf(if (initialImporte.isNotEmpty()) initialImporte else item?.importe?.toString() ?: "") }
   var categoria by remember { mutableStateOf(item?.categoria ?: "Otros") }
   
   val isImporteValid = remember(importe) { 
@@ -190,6 +223,19 @@ fun ExpenseActionDialog(
     title = { Text(if (item == null) "Registrar Gasto" else "Editar Gasto") },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (initialImporte.isNotEmpty()) {
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            ) {
+                Text(
+                    "Ticket escaneado: $initialImporte $currency",
+                    modifier = Modifier.padding(8.dp),
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        }
         OutlinedTextField(
           value = concepto, 
           onValueChange = { concepto = it }, 
