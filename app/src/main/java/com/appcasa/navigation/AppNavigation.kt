@@ -21,6 +21,7 @@ import com.appcasa.features.calendar.presentation.screen.CalendarScreen
 import com.appcasa.features.presentation.screen.DashboardScreen
 import com.appcasa.features.presentation.screen.FamilyHubScreen
 import com.appcasa.features.presentation.screen.ManagementHubScreen
+import com.appcasa.features.presentation.screen.HomeMaintenanceScreen
 import com.appcasa.features.family.presentation.screen.AddMemberScreen
 import com.appcasa.features.family.presentation.screen.EditMemberScreen
 import com.appcasa.features.family.presentation.screen.FamilyScreen
@@ -58,7 +59,8 @@ fun AppNavigation() {
         bottomNavItems.forEach { item ->
           val isManagementTab = item.screen == Screen.Management && currentDestination?.route in listOf(
             Screen.Management.route, Screen.Tasks.route, Screen.Lists.route, 
-            Screen.ListDetail.route, Screen.Inventory.route, Screen.AddTask.route, Screen.TaskDetail.route
+            Screen.ListDetail.route, Screen.Inventory.route, Screen.AddTask.route, Screen.TaskDetail.route,
+            Screen.HomeMaintenance.route
           )
           val isFamilyTab = item.screen == Screen.FamilyHub && currentDestination?.route in listOf(
             Screen.FamilyHub.route, Screen.Family.route, Screen.Calendar.route, 
@@ -184,6 +186,7 @@ fun AppNavigation() {
       composable(Screen.CocinaConverter.route) { CocinaConverterScreen(navController = navController) }
       composable(Screen.FeedingCalculator.route) { FeedingCalculatorScreen(navController = navController) }
       composable(Screen.SmartSafe.route) { SmartSafeScreen(navController = navController) }
+      composable(Screen.HomeMaintenance.route) { HomeMaintenanceScreen(navController = navController) }
     }
   }
 }

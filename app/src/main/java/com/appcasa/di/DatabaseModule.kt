@@ -63,4 +63,7 @@ object DatabaseModule {
 
   @Provides
   fun provideDashboardDao(db: AppCasaDatabase) = db.dashboardDao()
+
+  @Provides
+  fun provideMaintenanceDao(db: AppCasaDatabase) = db.maintenanceDao()
 }

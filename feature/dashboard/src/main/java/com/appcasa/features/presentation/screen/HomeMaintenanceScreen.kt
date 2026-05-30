@@ -1,0 +1,238 @@
+package com.appcasa.features.presentation.screen
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.components.AppCasaEmptyState
+import com.appcasa.core.ui.components.PullToRefreshWrapper
+import com.appcasa.features.maintenance.data.local.MaintenanceEntity
+import com.appcasa.features.presentation.viewmodel.HomeMaintenanceViewModel
+import java.text.SimpleDateFormat
+import java.util.*
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeMaintenanceScreen(
+    navController: NavController,
+    viewModel: HomeMaintenanceViewModel = hiltViewModel()
+) {
+    val events by viewModel.events.collectAsState()
+    var showAddDialog by remember { mutableStateOf(false) }
+
+    if (showAddDialog) {
+        MaintenanceActionDialog(
+            onDismiss = { showAddDialog = false },
+            onConfirm = { title, cat, desc, date, nextDate, cost ->
+                viewModel.addEvent(title, cat, desc, date, nextDate, cost)
+                showAddDialog = false
+            }
+        )
+    }
+
+    PullToRefreshWrapper {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Mantenimiento del Hogar") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(onClick = { showAddDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "Registrar mantenimiento")
+                }
+            }
+        ) { padding ->
+            LazyColumn(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (events.isEmpty()) {
+                    item {
+                        AppCasaEmptyState(
+                            title = "Historial vacío",
+                            description = "Registra revisiones de caldera, cambios de filtros, pintura, etc.",
+                            icon = Icons.Default.Build,
+                            actionText = "Registrar primero",
+                            onActionClick = { showAddDialog = true },
+                            modifier = Modifier.fillParentMaxSize()
+                        )
+                    }
+                } else {
+                    items(events) { event ->
+                        MaintenanceCard(
+                            event = event,
+                            onDelete = { viewModel.deleteEvent(event) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MaintenanceCard(
+    event: MaintenanceEntity,
+    onDelete: () -> Unit
+) {
+    AppCasaCard(useGlassmorphism = true) {
+        ListItem(
+            headlineContent = { Text(event.titulo, fontWeight = FontWeight.Bold) },
+            supportingContent = {
+                Column {
+                    Text(event.categoria, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    Text("Realizado: ${formatDate(event.fechaRealizacion)}", style = MaterialTheme.typography.bodySmall)
+                    event.proximaRevision?.let {
+                        Text("Próxima: ${formatDate(it)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                    }
+                    if (event.coste != null) {
+                        Text("Coste: ${event.coste} €", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    }
+                }
+            },
+            leadingContent = {
+                val icon = when (event.categoria) {
+                    "Electrodomésticos" -> Icons.Default.Kitchen
+                    "Fontanería" -> Icons.Default.WaterDrop
+                    "Electricidad" -> Icons.Default.ElectricBolt
+                    "Pintura" -> Icons.Default.FormatPaint
+                    "Climatización" -> Icons.Default.Air
+                    else -> Icons.Default.Build
+                }
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            },
+            trailingContent = {
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+                }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MaintenanceActionDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String, String, String?, Long, Long?, Double?) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var cat by remember { mutableStateOf("Electrodomésticos") }
+    var desc by remember { mutableStateOf("") }
+    var cost by remember { mutableStateOf("") }
+    
+    var dateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
+    var nextDateMillis by remember { mutableStateOf<Long?>(null) }
+    
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showNextDatePicker by remember { mutableStateOf(false) }
+    
+    val categories = listOf("Electrodomésticos", "Fontanería", "Electricidad", "Pintura", "Climatización", "Estructura", "Otros")
+    var expanded by remember { mutableStateOf(false) }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = dateMillis)
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    dateMillis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
+                    showDatePicker = false
+                }) { Text("OK") }
+            }
+        ) { DatePicker(state = datePickerState) }
+    }
+
+    if (showNextDatePicker) {
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = nextDateMillis ?: (System.currentTimeMillis() + 31536000000L))
+        DatePickerDialog(
+            onDismissRequest = { showNextDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    nextDateMillis = datePickerState.selectedDateMillis
+                    showNextDatePicker = false
+                }) { Text("OK") }
+            }
+        ) { DatePicker(state = datePickerState) }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Registrar Mantenimiento") },
+        text = {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                item {
+                    OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("¿Qué has hecho?") }, modifier = Modifier.fillMaxWidth())
+                }
+                item {
+                    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                        OutlinedTextField(
+                            value = cat, onValueChange = {}, readOnly = true, label = { Text("Categoría") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            categories.forEach { c ->
+                                DropdownMenuItem(text = { Text(c) }, onClick = { cat = c; expanded = false })
+                            }
+                        }
+                    }
+                }
+                item {
+                    OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text("Detalles (Opcional)") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+                }
+                item {
+                    OutlinedTextField(value = cost, onValueChange = { cost = it }, label = { Text("Coste € (Opcional)") }, modifier = Modifier.fillMaxWidth())
+                }
+                item {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { showDatePicker = true }, modifier = Modifier.weight(1f)) {
+                            Text("Realizado: " + formatDate(dateMillis))
+                        }
+                        Button(onClick = { showNextDatePicker = true }, modifier = Modifier.weight(1f)) {
+                            Text(if (nextDateMillis == null) "Añadir Revisión" else "Siguiente: " + formatDate(nextDateMillis!!))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                if (title.isNotBlank()) {
+                    onConfirm(title, cat, desc.takeIf { it.isNotBlank() }, dateMillis, nextDateMillis, cost.toDoubleOrNull())
+                }
+            }) { Text("Guardar") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
+}
+
+private fun formatDate(timestamp: Long): String {
+    return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(timestamp))
+}

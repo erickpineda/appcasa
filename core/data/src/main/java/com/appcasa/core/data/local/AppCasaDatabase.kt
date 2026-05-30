@@ -25,6 +25,7 @@ import com.appcasa.features.finance.data.local.ExpenseEntity
 
 import com.appcasa.features.dashboard.data.local.DashboardConfigEntity
 import com.appcasa.features.dashboard.data.local.PostItEntity
+import com.appcasa.features.maintenance.data.local.MaintenanceEntity
 import com.appcasa.features.calendar.data.local.EventoDao
 import com.appcasa.features.family.data.local.MiembroDao
 import com.appcasa.features.documents.data.local.DocumentoDao
@@ -67,8 +68,9 @@ import com.appcasa.features.finance.data.local.ExpenseDao
     DocumentoEntity::class,
     PostItEntity::class,
     DashboardConfigEntity::class,
+    MaintenanceEntity::class,
   ],
-  version      = 12,
+  version      = 13,
   exportSchema = true
 )
 abstract class AppCasaDatabase : RoomDatabase() {
@@ -85,4 +87,5 @@ abstract class AppCasaDatabase : RoomDatabase() {
   abstract fun expenseDao(): ExpenseDao
   abstract fun documentoDao(): DocumentoDao
   abstract fun dashboardDao(): com.appcasa.features.dashboard.data.local.DashboardDao
+  abstract fun maintenanceDao(): com.appcasa.features.maintenance.data.local.MaintenanceDao
 }

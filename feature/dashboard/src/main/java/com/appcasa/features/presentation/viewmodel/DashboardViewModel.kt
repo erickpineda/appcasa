@@ -18,6 +18,8 @@ import javax.inject.Inject
 import com.appcasa.features.dashboard.data.local.DashboardDao
 import com.appcasa.features.dashboard.data.local.DashboardConfigEntity
 import com.appcasa.features.dashboard.data.local.PostItEntity
+import com.appcasa.features.maintenance.data.local.MaintenanceDao
+import com.appcasa.features.maintenance.data.local.MaintenanceEntity
 import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.features.calendar.data.local.EventoDao
 import com.appcasa.features.calendar.data.local.EventoEntity
@@ -56,6 +58,7 @@ class DashboardViewModel @Inject constructor(
   private val stockDao: StockDao,
   private val expenseDao: ExpenseDao,
   private val dashboardDao: DashboardDao,
+  private val maintenanceDao: MaintenanceDao,
   private val reminderScheduler: ReminderScheduler,
   private val currentHouseholdProvider: CurrentHouseholdProvider,
 ) : ViewModel() {
@@ -340,6 +343,7 @@ class DashboardViewModel @Inject constructor(
         listaDao.deleteAll()
         stockDao.deleteAll()
         expenseDao.deleteAll()
+        maintenanceDao.getEventsByHogar(id).first().forEach { maintenanceDao.deleteEvent(it) }
         
         configuracionDao.insertHogar(HogarEntity(id = id, nombre = "Hogar de Erick", descripcion = "Gestión familiar oficial"))
         configuracionDao.insertUsuario(UsuarioEntity(hogarId = id, nombre = "Erick", email = "erick@appcasa.com"))
@@ -378,8 +382,12 @@ class DashboardViewModel @Inject constructor(
         initialUtils.forEach { utilidadDao.insertUtilidad(it) }
 
         listaDao.insertLista(ListaEntity(hogarId = id, nombre = "Lista de la Compra", tipo = com.appcasa.core.domain.model.TipoLista.COMPRA.name))
+
+        // Datos de Mantenimiento
+        maintenanceDao.insertEvent(MaintenanceEntity(hogarId = id, titulo = "Revisión Caldera", categoria = "Climatización", fechaRealizacion = System.currentTimeMillis() - 15552000000L, proximaRevision = System.currentTimeMillis() + 15552000000L, coste = 90.0))
+        maintenanceDao.insertEvent(MaintenanceEntity(hogarId = id, titulo = "Cambio Filtros Osmosis", categoria = "Fontanería", fechaRealizacion = System.currentTimeMillis() - 5184000000L, proximaRevision = System.currentTimeMillis() + 10368000000L))
         
-        reminderScheduler.scheduleReminder(888, "¡Datos Oficiales Cargados!", "Cumpleaños y equipo familiar sincronizados.", System.currentTimeMillis() + 2000)
+        reminderScheduler.scheduleReminder(888, "¡Datos Oficiales Cargados!", "Cumpleaños, equipo familiar y plan de mantenimiento sincronizados.", System.currentTimeMillis() + 2000)
 
       } catch (e: Exception) {
         e.printStackTrace()

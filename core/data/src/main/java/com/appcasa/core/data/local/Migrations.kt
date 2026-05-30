@@ -72,6 +72,29 @@ object Migrations {
   }
 
   /**
+   * Migración para añadir el módulo de Mantenimiento del Hogar.
+   */
+  val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("""
+        CREATE TABLE IF NOT EXISTS mantenimiento_hogar (
+          id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+          hogar_id INTEGER NOT NULL,
+          titulo TEXT NOT NULL,
+          descripcion TEXT,
+          categoria TEXT NOT NULL,
+          fecha_realizacion INTEGER NOT NULL,
+          proxima_revision INTEGER,
+          coste REAL,
+          fotos_json TEXT,
+          FOREIGN KEY(hogar_id) REFERENCES hogares(id) ON UPDATE NO ACTION ON DELETE CASCADE
+        )
+      """.trimIndent())
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_mantenimiento_hogar_hogar_id ON mantenimiento_hogar (hogar_id)")
+    }
+  }
+
+  /**
    * Lista de todas las migraciones registradas.
    */
   fun getAll(): Array<Migration> {
@@ -79,7 +102,8 @@ object Migrations {
       MIGRATION_8_9,
       MIGRATION_9_10,
       MIGRATION_10_11,
-      MIGRATION_11_12
+      MIGRATION_11_12,
+      MIGRATION_12_13
     )
   }
 }

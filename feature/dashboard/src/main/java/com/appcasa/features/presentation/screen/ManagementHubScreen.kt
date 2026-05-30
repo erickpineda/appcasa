@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.HomeRepairService
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -66,6 +67,14 @@ fun ManagementHubScreen(
           icon = Icons.Default.Inventory,
           color = MaterialTheme.colorScheme.tertiary,
           onClick = { navController.navigate(Screen.Inventory.route) }
+        )
+
+        HubCard(
+          title = "Mantenimiento",
+          subtitle = "Log de reparaciones y filtros",
+          icon = Icons.Default.HomeRepairService,
+          color = MaterialTheme.colorScheme.error,
+          onClick = { navController.navigate(Screen.HomeMaintenance.route) }
         )
       }
     }
