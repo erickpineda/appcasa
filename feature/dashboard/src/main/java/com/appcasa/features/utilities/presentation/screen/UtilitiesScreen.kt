@@ -49,6 +49,7 @@ fun UtilitiesScreen(
           "UTIL_WIFI" -> navController.navigate(Screen.WifiQR.route)
           "UTIL_COCINA" -> navController.navigate(Screen.CocinaConverter.route)
           "UTIL_PIENSO" -> navController.navigate(Screen.FeedingCalculator.route)
+          "UTIL_SAFE" -> navController.navigate(Screen.SmartSafe.route)
         }
       }
     )
@@ -193,6 +194,8 @@ fun UtilityCard(utility: UtilidadEntity, onClick: () -> Unit, modifier: Modifier
     "picture_as_pdf" -> Icons.Default.PictureAsPdf
     "qr_code" -> Icons.Default.QrCode
     "restaurant" -> Icons.Default.Restaurant
+    "lock" -> Icons.Default.Lock
+    "pets" -> Icons.Default.Pets
     else -> Icons.Default.Apps
   }
 

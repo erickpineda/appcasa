@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.appcasa.features.calendar.data.local.EventoEntity
 import com.appcasa.features.family.data.local.MiembroEntity
+import com.appcasa.features.documents.data.local.DocumentoEntity
 import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.lists.data.local.ListaItemEntity
 import com.appcasa.features.pets.data.local.MascotaDesparasitacionEntity
@@ -24,6 +25,7 @@ import com.appcasa.features.finance.data.local.ExpenseEntity
 
 import com.appcasa.features.calendar.data.local.EventoDao
 import com.appcasa.features.family.data.local.MiembroDao
+import com.appcasa.features.documents.data.local.DocumentoDao
 import com.appcasa.features.lists.data.local.ListaDao
 import com.appcasa.features.pets.data.local.MascotaDao
 import com.appcasa.features.reminders.data.local.RecordatorioDao
@@ -60,8 +62,9 @@ import com.appcasa.features.finance.data.local.ExpenseDao
     UtilidadEntity::class,
     StockEntity::class,
     ExpenseEntity::class,
+    DocumentoEntity::class,
   ],
-  version      = 7,
+  version      = 8,
   exportSchema = true
 )
 abstract class AppCasaDatabase : RoomDatabase() {
@@ -76,4 +79,5 @@ abstract class AppCasaDatabase : RoomDatabase() {
   abstract fun utilidadDao(): UtilidadDao
   abstract fun stockDao(): StockDao
   abstract fun expenseDao(): ExpenseDao
+  abstract fun documentoDao(): DocumentoDao
 }

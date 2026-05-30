@@ -64,7 +64,8 @@ class UtilitiesViewModel @Inject constructor(
           UtilidadEntity(codigo = "UTIL_PDF", nombre = "Fotos a PDF", descripcion = "Convertir imágenes a PDF", icono = "picture_as_pdf", orden = 9, categoria = "Productividad"),
           UtilidadEntity(codigo = "UTIL_WIFI", nombre = "QR WiFi", descripcion = "Compartir clave WiFi", icono = "qr_code", orden = 10, categoria = "Productividad"),
           UtilidadEntity(codigo = "UTIL_COCINA", nombre = "Cocina", descripcion = "Conversor de medidas", icono = "restaurant", orden = 11, categoria = "Varios"),
-          UtilidadEntity(codigo = "UTIL_PIENSO", nombre = "Ración Pienso", descripcion = "Guía de alimentación", icono = "pets", orden = 12, categoria = "Salud")
+          UtilidadEntity(codigo = "UTIL_PIENSO", nombre = "Ración Pienso", descripcion = "Guía de alimentación", icono = "pets", orden = 12, categoria = "Salud"),
+          UtilidadEntity(codigo = "UTIL_SAFE", nombre = "Smart Safe", descripcion = "Documentos y garantías", icono = "lock", orden = 13, categoria = "Productividad")
         )
         
         allPossible.forEach { utility ->

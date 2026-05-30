@@ -183,6 +183,7 @@ fun AppNavigation() {
       composable(Screen.WifiQR.route) { WifiQRScreen(navController = navController) }
       composable(Screen.CocinaConverter.route) { CocinaConverterScreen(navController = navController) }
       composable(Screen.FeedingCalculator.route) { FeedingCalculatorScreen(navController = navController) }
+      composable(Screen.SmartSafe.route) { SmartSafeScreen(navController = navController) }
     }
   }
 }

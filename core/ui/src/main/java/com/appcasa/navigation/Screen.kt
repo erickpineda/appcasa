@@ -56,6 +56,7 @@ sealed class Screen(val route: String) {
   data object WifiQR         : Screen("wifi_qr")
   data object CocinaConverter : Screen("cocina_converter")
   data object FeedingCalculator : Screen("feeding_calculator")
+  data object SmartSafe      : Screen("smart_safe")
 }
 
 data class BottomNavItem(

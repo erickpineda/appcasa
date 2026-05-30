@@ -3,11 +3,13 @@ package com.appcasa.features.utilities.presentation.screen
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -23,6 +25,7 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.features.utilities.presentation.viewmodel.PdfViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +39,8 @@ fun PhotoToPdfScreen(
   val pdfUri by viewModel.pdfUri.collectAsState()
   
   var fileName by remember { mutableStateOf("Mi_Documento") }
+  val snackbarHostState = remember { SnackbarHostState() }
+  val scope = rememberCoroutineScope()
 
   val launcher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.GetMultipleContents()
@@ -44,6 +49,7 @@ fun PhotoToPdfScreen(
   }
 
   Scaffold(
+    snackbarHost = { SnackbarHost(snackbarHostState) },
     topBar = {
       TopAppBar(
         title = { Text("Fotos a PDF") },
@@ -92,7 +98,6 @@ fun PhotoToPdfScreen(
           }
         }
       } else {
-        // En landscape, una Grid con altura fija permite ver las fotos y seguir bajando por el resto del formulario
         Box(modifier = Modifier.height(300.dp)) {
           LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -140,20 +145,38 @@ fun PhotoToPdfScreen(
       }
 
       if (pdfUri != null) {
-        Button(
-          onClick = {
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-              type = "application/pdf"
-              putExtra(Intent.EXTRA_STREAM, pdfUri)
-              addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            context.startActivity(Intent.createChooser(shareIntent, "Compartir PDF"))
-          },
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Icon(Icons.Default.Share, contentDescription = null)
-          Spacer(Modifier.width(8.dp))
-          Text("Compartir PDF Generado")
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          Button(
+            onClick = {
+              val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, pdfUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+              }
+              context.startActivity(Intent.createChooser(shareIntent, "Compartir PDF"))
+            },
+            modifier = Modifier.weight(1f)
+          ) {
+            Icon(Icons.Default.Share, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("Compartir")
+          }
+
+          val safeViewModel: com.appcasa.features.utilities.presentation.viewmodel.SmartSafeViewModel = hiltViewModel()
+          Button(
+            onClick = {
+              safeViewModel.addDocumento(fileName, "Otros", pdfUri.toString())
+              scope.launch {
+                snackbarHostState.showSnackbar("Guardado en Smart Safe")
+              }
+            },
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+          ) {
+            Icon(Icons.Default.Lock, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("Guardar Safe")
+          }
         }
       }
     }

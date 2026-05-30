@@ -55,4 +55,7 @@ object DatabaseModule {
 
   @Provides
   fun provideExpenseDao(db: AppCasaDatabase) = db.expenseDao()
+
+  @Provides
+  fun provideDocumentoDao(db: AppCasaDatabase) = db.documentoDao()
 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
 import com.appcasa.features.utilities.presentation.viewmodel.DosageViewModel
@@ -30,27 +31,40 @@ fun FeedingCalculatorScreen(
   val pets by familyViewModel.pets.collectAsState()
   val petWeight by dosageViewModel.petWeight.collectAsState()
   
-  var selectedPetName by remember { mutableStateOf("Seleccionar Perro") }
+  var selectedPetName by remember { mutableStateOf("Seleccionar Mascota") }
+  var selectedPetType by remember { mutableStateOf(TipoMiembro.PERRO.name) }
   var expanded by remember { mutableStateOf(false) }
 
-  // Estado local para evitar que se borre al escribir rápido o poner decimales
   var weightInput by remember { mutableStateOf("") }
   
-  // Sincronizar el input local cuando el peso cambia desde el VM (al seleccionar mascota)
   LaunchedEffect(petWeight) {
     if (petWeight > 0 && weightInput.toDoubleOrNull() != petWeight) {
         weightInput = if (petWeight % 1 == 0.0) petWeight.toInt().toString() else petWeight.toString()
     }
   }
 
-  val ration = when {
-    petWeight <= 0 -> "Introduce un peso"
-    petWeight <= 5 -> "25 - 90 g"
-    petWeight <= 10 -> "90 - 150 g"
-    petWeight <= 25 -> "150 - 300 g"
-    petWeight <= 45 -> "300 - 465 g"
-    petWeight <= 70 -> "465 - 650 g"
-    else -> "Consultar veterinario (>70kg)"
+  val ration = remember(petWeight, selectedPetType) {
+    if (selectedPetType == TipoMiembro.GATO.name) {
+        when {
+            petWeight <= 0 -> "Introduce un peso"
+            petWeight < 2 -> "Consultar veterinario (<2kg)"
+            petWeight <= 4 -> "30 - 50 g"
+            petWeight <= 6 -> "50 - 65 g"
+            petWeight <= 8 -> "65 - 75 g"
+            else -> "Consultar veterinario (>8kg)"
+        }
+    } else {
+        // Lógica para perros
+        when {
+            petWeight <= 0 -> "Introduce un peso"
+            petWeight <= 5 -> "25 - 90 g"
+            petWeight <= 10 -> "90 - 150 g"
+            petWeight <= 25 -> "150 - 300 g"
+            petWeight <= 45 -> "300 - 465 g"
+            petWeight <= 70 -> "465 - 650 g"
+            else -> "Consultar veterinario (>70kg)"
+        }
+    }
   }
 
   Scaffold(
@@ -80,7 +94,7 @@ fun FeedingCalculatorScreen(
     ) {
       Text("Guía de Alimentación Diaria", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
       
-      Text("1. Elige a tu perro", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+      Text("1. Selecciona la mascota", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
       ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded }
@@ -96,11 +110,12 @@ fun FeedingCalculatorScreen(
           expanded = expanded,
           onDismissRequest = { expanded = false }
         ) {
-          pets.filter { it.tipo == "PERRO" }.forEach { pet ->
+          pets.forEach { pet ->
             DropdownMenuItem(
-              text = { Text(pet.nombre) },
+              text = { Text("${pet.nombre} (${pet.tipo})") },
               onClick = {
                 selectedPetName = pet.nombre
+                selectedPetType = pet.tipo
                 dosageViewModel.updateWeightForPet(pet.id)
                 expanded = false
               }
@@ -114,8 +129,7 @@ fun FeedingCalculatorScreen(
         value = weightInput,
         onValueChange = { 
             weightInput = it
-            val weight = it.toDoubleOrNull() ?: 0.0
-            dosageViewModel.setManualWeight(weight)
+            dosageViewModel.setManualWeight(it.toDoubleOrNull() ?: 0.0)
         },
         label = { Text("Peso") },
         suffix = { Text("kg") },
@@ -139,24 +153,30 @@ fun FeedingCalculatorScreen(
           )
           Spacer(Modifier.height(8.dp))
           Text(
-            "Repartir en 2 o 3 tomas al día",
+            "Datos basados en guía oficial del fabricante",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline
           )
         }
       }
 
-      Text("Tabla de referencia (Bolsa)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+      Text("Tabla de referencia (${if (selectedPetType == TipoMiembro.GATO.name) "Gatos" else "Perros"})", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
       Surface(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         shape = MaterialTheme.shapes.medium
       ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            ReferenceRow("1 - 5 kg", "25 - 90 g")
-            ReferenceRow("5 - 10 kg", "90 - 150 g")
-            ReferenceRow("10 - 25 kg", "150 - 300 g")
-            ReferenceRow("25 - 45 kg", "300 - 465 g")
-            ReferenceRow("45 - 70 kg", "465 - 650 g")
+            if (selectedPetType == TipoMiembro.GATO.name) {
+                ReferenceRow("2 - 4 kg", "30 - 50 g")
+                ReferenceRow("4 - 6 kg", "50 - 65 g")
+                ReferenceRow("6 - 8 kg", "65 - 75 g")
+            } else {
+                ReferenceRow("1 - 5 kg", "25 - 90 g")
+                ReferenceRow("5 - 10 kg", "90 - 150 g")
+                ReferenceRow("10 - 25 kg", "150 - 300 g")
+                ReferenceRow("25 - 45 kg", "300 - 465 g")
+                ReferenceRow("45 - 70 kg", "465 - 650 g")
+            }
         }
       }
     }
