@@ -161,7 +161,8 @@ fun DashboardContent(
           )
         )
       }
-    }
+    },
+    containerColor = MaterialTheme.colorScheme.background // Aseguramos el color de fondo para Material You / Dark Mode
   ) { scaffoldPadding ->
     Box(modifier = Modifier.fillMaxSize().padding(scaffoldPadding)) {
       

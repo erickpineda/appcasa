@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -193,13 +194,30 @@ fun MemberCard(
         }
       }
       Column(modifier = Modifier.weight(1f)) {
-        Text(
-          text = member.nombre,
-          style = MaterialTheme.typography.titleMedium,
-          fontWeight = FontWeight.Bold
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Text(
+            text = member.nombre,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+          )
+          if (member.tipo == TipoMiembro.PERSONA.name) {
+            Spacer(Modifier.width(8.dp))
+            Surface(
+              color = MaterialTheme.colorScheme.tertiaryContainer,
+              shape = RoundedCornerShape(4.dp)
+            ) {
+              Text(
+                text = "Nivel ${member.nivel}",
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+              )
+            }
+          }
+        }
         val description = when {
-          member.tipo == TipoMiembro.PERSONA.name -> "Miembro familiar"
+          member.tipo == TipoMiembro.PERSONA.name -> "XP: ${member.puntos}"
           !member.raza.isNullOrBlank() -> member.raza
           !member.colorPelaje.isNullOrBlank() -> member.colorPelaje
           else -> member.tipo

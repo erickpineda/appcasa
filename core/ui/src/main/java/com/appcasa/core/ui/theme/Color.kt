@@ -32,17 +32,17 @@ val OnSurface         = Color(0xFF0F172A) // Slate 900
 val OnSurfaceVariant  = Color(0xFF475569) // Slate 600
 val Outline           = Color(0xFFCBD5E1) // Slate 300
 
-// ✨ DARK THEME (Midnight Premium) ✨
-val BackgroundDark          = Color(0xFF090A0F) // Deep Midnight
-val SurfaceDark             = Color(0xFF12141D) // Slightly elevated Midnight
-val SurfaceVariantDark      = Color(0xFF1E2235) // Card surface
-val PrimaryContainerDark    = Color(0xFF312E81) // Indigo 900
-val SecondaryContainerDark  = Color(0xFF134E4A) // Teal 900
-val TertiaryContainerDark   = Color(0xFF78350F) // Amber 900
-val OnBackgroundDark        = Color(0xFFF8FAFC)
-val OnSurfaceDark           = Color(0xFFF8FAFC)
+// ✨ DARK THEME (Midnight Premium - True Black optimization) ✨
+val BackgroundDark          = Color(0xFF000000) // Pure Black for OLED
+val SurfaceDark             = Color(0xFF090A0F) // Deep Midnight
+val SurfaceVariantDark      = Color(0xFF12141D) // Slightly elevated for cards
+val PrimaryContainerDark    = Color(0xFF1E1B4B) // Very Dark Indigo
+val SecondaryContainerDark  = Color(0xFF064E3B) // Very Dark Emerald
+val TertiaryContainerDark   = Color(0xFF451A03) // Very Dark Amber
+val OnBackgroundDark        = Color(0xFFF1F5F9) // Slate 100
+val OnSurfaceDark           = Color(0xFFF1F5F9)
 val OnSurfaceVariantDark    = Color(0xFF94A3B8)
-val OutlineDark             = Color(0xFF334155)
+val OutlineDark             = Color(0xFF1E293B)
 
 // ✨ ERROR ✨
 val Error        = Color(0xFFE11D48) // Rose 600

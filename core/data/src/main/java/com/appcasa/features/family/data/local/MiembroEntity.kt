@@ -77,5 +77,11 @@ data class MiembroEntity(
   val createdAt: Long = System.currentTimeMillis(),
 
   @ColumnInfo(name = "updated_at")
-  val updatedAt: Long = System.currentTimeMillis()
+  val updatedAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "puntos")
+  val puntos: Int = 0,
+
+  @ColumnInfo(name = "nivel")
+  val nivel: Int = 1
 )

@@ -6,13 +6,17 @@ import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
+import com.appcasa.features.family.data.local.MiembroDao
 import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.features.tasks.data.local.TareaEntity
 import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.core.domain.model.Prioridad
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.first
@@ -23,10 +27,14 @@ import javax.inject.Inject
 @HiltViewModel
 class TasksViewModel @Inject constructor(
   private val tareaDao: TareaDao,
+  private val miembroDao: MiembroDao,
   private val configuracionDao: ConfiguracionDao,
   private val reminderScheduler: ReminderScheduler,
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
+
+  private val _showCelebration = MutableStateFlow(false)
+  val showCelebration: StateFlow<Boolean> = _showCelebration.asStateFlow()
 
   private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
@@ -63,14 +71,45 @@ class TasksViewModel @Inject constructor(
       tareaDao.updateTarea(updated)
       
       if (isMarkingAsCompleted) {
+        _showCelebration.value = true
         reminderScheduler.cancelReminder((tarea.id + 20000).toInt())
         
+        // Gamificación: Otorgar puntos
+        awardPointsForTask(tarea)
+
         // Lógica de Recurrencia
         if (tarea.periodicidad != Periodicidad.NINGUNA.name) {
           spawnNextInstance(tarea)
         }
       }
     }
+  }
+
+  private suspend fun awardPointsForTask(tarea: TareaEntity) {
+    val asignacion = tareaDao.getAsignacionByTarea(tarea.id)
+    asignacion?.let { 
+      val miembro = miembroDao.getMiembroById(it.miembroId)
+      miembro?.let { m ->
+        val puntosGanados = when(tarea.prioridad) {
+          Prioridad.ALTA.name -> 20
+          Prioridad.BAJA.name -> 5
+          else -> 10
+        }
+        
+        val nuevosPuntos = m.puntos + puntosGanados
+        val nuevoNivel = (nuevosPuntos / 100) + 1 // Subida de nivel cada 100 puntos
+        
+        miembroDao.updateMiembro(m.copy(
+          puntos = nuevosPuntos,
+          nivel = nuevoNivel,
+          updatedAt = System.currentTimeMillis()
+        ))
+      }
+    }
+  }
+
+  fun dismissCelebration() {
+    _showCelebration.value = false
   }
 
   private suspend fun spawnNextInstance(tarea: TareaEntity) {

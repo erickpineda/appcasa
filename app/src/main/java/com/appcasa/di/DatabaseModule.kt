@@ -25,6 +25,7 @@ object DatabaseModule {
     "appcasa.db"
   )
     .addMigrations(*Migrations.getAll())
+    .fallbackToDestructiveMigration() // Mejor usar la opción global en desarrollo para evitar inconsistencias
     .build()
 
   @Provides

@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.alpha
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaEmptyState
+import com.appcasa.core.ui.components.CelebrationOverlay
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -37,6 +38,11 @@ fun TasksScreen(
 ) {
   val tasks by viewModel.tasks.collectAsState()
   val isCompact by viewModel.isCompactView.collectAsState()
+  val showCelebration by viewModel.showCelebration.collectAsState()
+
+  if (showCelebration) {
+    CelebrationOverlay(onDismiss = { viewModel.dismissCelebration() })
+  }
 
   PullToRefreshWrapper {
     TasksContent(
