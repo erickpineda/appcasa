@@ -3,13 +3,12 @@ package com.appcasa.features.utilities.presentation.screen
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -17,6 +16,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -24,7 +26,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.features.utilities.presentation.viewmodel.PdfImageItem
 import com.appcasa.features.utilities.presentation.viewmodel.PdfViewModel
+import com.appcasa.features.utilities.presentation.viewmodel.SmartSafeViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,7 +42,7 @@ fun PhotoToPdfScreen(
   val isGenerating by viewModel.isGenerating.collectAsState()
   val pdfUri by viewModel.pdfUri.collectAsState()
   
-  var fileName by remember { mutableStateOf("Mi_Documento") }
+  var fileName by remember { mutableStateOf("Doc_${System.currentTimeMillis() / 100000}") }
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
 
@@ -60,8 +64,18 @@ fun PhotoToPdfScreen(
         },
         actions = {
           if (selectedImages.isNotEmpty()) {
-            IconButton(onClick = { viewModel.generatePdf(fileName) }) {
-              Icon(Icons.Default.PictureAsPdf, contentDescription = "Generar PDF")
+            Button(
+                onClick = { viewModel.generatePdf(fileName) },
+                enabled = !isGenerating,
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
+              if (isGenerating) {
+                  CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+              } else {
+                  Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
+                  Spacer(Modifier.width(4.dp))
+                  Text("Generar")
+              }
             }
           }
         }
@@ -72,113 +86,182 @@ fun PhotoToPdfScreen(
       modifier = Modifier
         .padding(padding)
         .fillMaxSize()
-        .verticalScroll(rememberScrollState())
-        .padding(16.dp),
-      verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-      OutlinedTextField(
-        value = fileName,
-        onValueChange = { fileName = it },
-        label = { Text("Nombre del archivo") },
-        modifier = Modifier.fillMaxWidth(),
-        trailingIcon = { Text(".pdf", modifier = Modifier.padding(end = 8.dp)) }
-      )
+      // Configuración de archivo
+      AppCasaCard(
+          useGlassmorphism = true,
+          modifier = Modifier.padding(16.dp)
+      ) {
+          Row(
+              modifier = Modifier.padding(12.dp),
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+              OutlinedTextField(
+                  value = fileName,
+                  onValueChange = { fileName = it },
+                  label = { Text("Nombre del archivo") },
+                  modifier = Modifier.weight(1f),
+                  singleLine = true,
+                  trailingIcon = { Text(".pdf", modifier = Modifier.padding(end = 8.dp), style = MaterialTheme.typography.bodySmall) }
+              )
+              
+              IconButton(
+                  onClick = { launcher.launch("image/*") },
+                  colors = IconButtonDefaults.filledIconButtonColors()
+              ) {
+                  Icon(Icons.Default.AddPhotoAlternate, contentDescription = "Añadir fotos")
+              }
+          }
+      }
 
       if (selectedImages.isEmpty()) {
-        Box(
-          modifier = Modifier
-            .height(200.dp)
-            .fillMaxWidth(),
-          contentAlignment = Alignment.Center
-        ) {
-          Button(onClick = { launcher.launch("image/*") }) {
-            Icon(Icons.Default.AddPhotoAlternate, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text("Seleccionar Fotos")
+          Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+              Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                  Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline)
+                  Spacer(Modifier.height(16.dp))
+                  Text("No hay fotos seleccionadas", color = MaterialTheme.colorScheme.outline)
+                  TextButton(onClick = { launcher.launch("image/*") }) {
+                      Text("Toca aquí para añadir fotos")
+                  }
+              }
           }
-        }
       } else {
-        Box(modifier = Modifier.height(300.dp)) {
-          LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+          LazyColumn(
+              modifier = Modifier.weight(1f).fillMaxWidth(),
+              contentPadding = PaddingValues(16.dp),
+              verticalArrangement = Arrangement.spacedBy(12.dp)
           ) {
-            items(selectedImages) { uri ->
-              Box {
-                AppCasaCard(
-                  useGlassmorphism = true,
-                  modifier = Modifier.aspectRatio(1f)
-                ) {
-                  AsyncImage(
-                    model = uri,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+              itemsIndexed(selectedImages) { index, item ->
+                  PdfImageRow(
+                      item = item,
+                      index = index,
+                      isFirst = index == 0,
+                      isLast = index == selectedImages.size - 1,
+                      onRotate = { viewModel.rotateImage(item) },
+                      onToggleBW = { viewModel.toggleGrayscale(item) },
+                      onMoveUp = { viewModel.moveImageUp(index) },
+                      onMoveDown = { viewModel.moveImageDown(index) },
+                      onDelete = { viewModel.removeImage(item) }
                   )
-                }
-                IconButton(
-                  onClick = { viewModel.removeImage(uri) },
-                  modifier = Modifier.align(Alignment.TopEnd)
-                ) {
-                  Icon(Icons.Default.Cancel, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
-                }
               }
-            }
-            item {
-              Box(
-                modifier = Modifier
-                  .aspectRatio(1f)
-                  .clickable { launcher.launch("image/*") },
-                contentAlignment = Alignment.Center
+          }
+      }
+
+      // Acciones post-generación
+      AnimatedVisibility(visible = pdfUri != null) {
+          Row(
+              modifier = Modifier.fillMaxWidth().padding(16.dp),
+              horizontalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+              Button(
+                  onClick = {
+                      val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                          type = "application/pdf"
+                          putExtra(Intent.EXTRA_STREAM, pdfUri)
+                          addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                      }
+                      context.startActivity(Intent.createChooser(shareIntent, "Compartir PDF"))
+                  },
+                  modifier = Modifier.weight(1f)
               ) {
-                Icon(Icons.Default.AddCircle, contentDescription = "Añadir más", modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
+                  Icon(Icons.Default.Share, contentDescription = null)
+                  Spacer(Modifier.width(8.dp))
+                  Text("Compartir")
               }
-            }
-          }
-        }
-      }
 
-      if (isGenerating) {
-        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-      }
-
-      if (pdfUri != null) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          Button(
-            onClick = {
-              val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "application/pdf"
-                putExtra(Intent.EXTRA_STREAM, pdfUri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+              val safeViewModel: SmartSafeViewModel = hiltViewModel()
+              Button(
+                  onClick = {
+                      safeViewModel.addDocumento(fileName, "Otros", pdfUri.toString())
+                      scope.launch {
+                          snackbarHostState.showSnackbar("Guardado en Smart Safe")
+                      }
+                  },
+                  modifier = Modifier.weight(1f),
+                  colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+              ) {
+                  Icon(Icons.Default.Lock, contentDescription = null)
+                  Spacer(Modifier.width(8.dp))
+                  Text("Guardar Safe")
               }
-              context.startActivity(Intent.createChooser(shareIntent, "Compartir PDF"))
-            },
-            modifier = Modifier.weight(1f)
-          ) {
-            Icon(Icons.Default.Share, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text("Compartir")
           }
-
-          val safeViewModel: com.appcasa.features.utilities.presentation.viewmodel.SmartSafeViewModel = hiltViewModel()
-          Button(
-            onClick = {
-              safeViewModel.addDocumento(fileName, "Otros", pdfUri.toString())
-              scope.launch {
-                snackbarHostState.showSnackbar("Guardado en Smart Safe")
-              }
-            },
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-          ) {
-            Icon(Icons.Default.Lock, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text("Guardar Safe")
-          }
-        }
       }
     }
   }
+}
+
+@Composable
+fun PdfImageRow(
+    item: PdfImageItem,
+    index: Int,
+    isFirst: Boolean,
+    isLast: Boolean,
+    onRotate: () -> Unit,
+    onToggleBW: () -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    onDelete: () -> Unit
+) {
+    AppCasaCard(useGlassmorphism = true) {
+        Row(
+            modifier = Modifier.padding(8.dp).fillMaxWidth().height(100.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Miniatura con indicador de página
+            Box(modifier = Modifier.size(80.dp).clip(MaterialTheme.shapes.medium)) {
+                AsyncImage(
+                    model = item.uri,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { 
+                            rotationZ = item.rotation
+                        },
+                    contentScale = ContentScale.Crop,
+                    colorFilter = if (item.isGrayscale) androidx.compose.ui.graphics.ColorFilter.colorMatrix(
+                        androidx.compose.ui.graphics.ColorMatrix().apply { setToSaturation(0f) }
+                    ) else null
+                )
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = CircleShape,
+                    modifier = Modifier.size(24.dp).align(Alignment.BottomStart)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("${index + 1}", style = MaterialTheme.typography.labelSmall, color = Color.White)
+                    }
+                }
+            }
+
+            // Controles
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    IconButton(onClick = onRotate, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.RotateRight, contentDescription = "Rotar", tint = MaterialTheme.colorScheme.primary)
+                    }
+                    IconButton(onClick = onToggleBW, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            if (item.isGrayscale) Icons.Default.FilterBAndW else Icons.Default.ColorLens,
+                            contentDescription = "Filtro B/N",
+                            tint = if (item.isGrayscale) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    IconButton(onClick = onMoveUp, enabled = !isFirst, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.ArrowUpward, contentDescription = "Subir", tint = if (isFirst) Color.Gray else MaterialTheme.colorScheme.secondary)
+                    }
+                    IconButton(onClick = onMoveDown, enabled = !isLast, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.ArrowDownward, contentDescription = "Bajar", tint = if (isLast) Color.Gray else MaterialTheme.colorScheme.secondary)
+                    }
+                }
+            }
+
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+            }
+        }
+    }
 }

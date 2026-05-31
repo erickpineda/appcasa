@@ -106,11 +106,7 @@ fun DashboardScreen(
         }
       },
       onNavigateToLists = { 
-        navController.navigate(Screen.Management.route) { 
-          popUpTo(navController.graph.findStartDestination().id) { saveState = false }
-          launchSingleTop = true
-          restoreState = false
-        }
+        navController.navigate(Screen.Lists.route)
       },
       onNavigateToSettings = {
         navController.navigate(Screen.Settings.route)
@@ -120,6 +116,15 @@ fun DashboardScreen(
       },
       onNavigateToInventory = {
         navController.navigate(Screen.Inventory.route)
+      },
+      onNavigateToDosage = {
+        navController.navigate(Screen.DosageCalculator.route)
+      },
+      onNavigateToPdf = {
+        navController.navigate(Screen.PhotoToPdf.route)
+      },
+      onNavigateToSafe = {
+        navController.navigate(Screen.SmartSafe.route)
       }
     )
   }
@@ -153,7 +158,10 @@ fun DashboardContent(
   onNavigateToLists: () -> Unit,
   onNavigateToSettings: () -> Unit = {},
   onNavigateToExpenses: () -> Unit = {},
-  onNavigateToInventory: () -> Unit = {}
+  onNavigateToInventory: () -> Unit = {},
+  onNavigateToDosage: () -> Unit = {},
+  onNavigateToPdf: () -> Unit = {},
+  onNavigateToSafe: () -> Unit = {}
 ) {
   var searchActive by remember { mutableStateOf(false) }
   var showPostItDialog by remember { mutableStateOf(false) }
@@ -435,7 +443,19 @@ fun DashboardContent(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.Medication,
                 label = "Dosis",
-                onClick = onNavigateToUtilities
+                onClick = onNavigateToDosage
+              )
+              QuickActionCard(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Default.PictureAsPdf,
+                label = "PDF",
+                onClick = onNavigateToPdf
+              )
+              QuickActionCard(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Default.Lock,
+                label = "Safe",
+                onClick = onNavigateToSafe
               )
               QuickActionCard(
                 modifier = Modifier.weight(1f),
@@ -635,7 +655,10 @@ fun DashboardPreview() {
       onNavigateToLists = {},
       onNavigateToSettings = {},
       onNavigateToExpenses = {},
-      onNavigateToInventory = {}
+      onNavigateToInventory = {},
+      onNavigateToDosage = {},
+      onNavigateToPdf = {},
+      onNavigateToSafe = {}
     )
   }
 }

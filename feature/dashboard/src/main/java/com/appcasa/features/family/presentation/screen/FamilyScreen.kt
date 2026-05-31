@@ -8,9 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.ui.components.AppCasaEmptyState
+import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.features.family.data.local.MiembroEntity
@@ -39,6 +38,19 @@ fun FamilyScreen(
 ) {
   val people by viewModel.people.collectAsState()
   val pets by viewModel.pets.collectAsState()
+  
+  var memberToDelete by remember { mutableStateOf<MiembroEntity?>(null) }
+
+  AppCasaConfirmDialog(
+    show = memberToDelete != null,
+    title = "Eliminar Miembro",
+    text = "¿Estás seguro de que quieres eliminar a ${memberToDelete?.nombre}? Se perderá todo su progreso y XP.",
+    onConfirm = {
+        memberToDelete?.let { viewModel.deleteMember(it) }
+        memberToDelete = null
+    },
+    onDismiss = { memberToDelete = null }
+  )
 
   PullToRefreshWrapper {
     FamilyContent(
@@ -46,7 +58,7 @@ fun FamilyScreen(
       people = people,
       pets = pets,
       onAddClick = { navController.navigate(Screen.AddMember.route) },
-      onDeleteMember = { viewModel.deleteMember(it) },
+      onDeleteMember = { memberToDelete = it },
       onMemberClick = { member ->
         if (member.tipo == TipoMiembro.PERSONA.name) {
           navController.navigate(Screen.MemberDetail.createRoute(member.id))

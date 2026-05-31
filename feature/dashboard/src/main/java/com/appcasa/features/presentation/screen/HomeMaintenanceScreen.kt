@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.maintenance.data.local.MaintenanceEntity
@@ -31,6 +32,18 @@ fun HomeMaintenanceScreen(
 ) {
     val events by viewModel.events.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    var eventToDelete by remember { mutableStateOf<MaintenanceEntity?>(null) }
+
+    AppCasaConfirmDialog(
+        show = eventToDelete != null,
+        title = "Eliminar Registro",
+        text = "¿Borrar el registro de '${eventToDelete?.titulo}'? Perderás la información histórica de este mantenimiento.",
+        onConfirm = {
+            eventToDelete?.let { viewModel.deleteEvent(it) }
+            eventToDelete = null
+        },
+        onDismiss = { eventToDelete = null }
+    )
 
     if (showAddDialog) {
         MaintenanceActionDialog(
@@ -87,7 +100,7 @@ fun HomeMaintenanceScreen(
                     items(events) { event ->
                         MaintenanceCard(
                             event = event,
-                            onDelete = { viewModel.deleteEvent(event) }
+                            onDelete = { eventToDelete = event }
                         )
                     }
                 }

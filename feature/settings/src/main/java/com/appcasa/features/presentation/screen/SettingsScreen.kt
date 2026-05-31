@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.theme.AppCasaTheme
+import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.features.presentation.viewmodel.DashboardViewModel
 import com.appcasa.features.settings.presentation.viewmodel.SettingsViewModel
 
@@ -33,6 +34,21 @@ fun SettingsScreen(
   val listas by settingsViewModel.todasLasListas.collectAsState()
   
   var seedStatus by remember { mutableStateOf<String?>(null) }
+  var showSeedConfirm by remember { mutableStateOf(false) }
+
+  AppCasaConfirmDialog(
+    show = showSeedConfirm,
+    title = "¡Atención!",
+    text = "Esta acción borrará todos tus datos actuales (gastos, tareas, familia) para cargar los datos oficiales de Erick. ¿Estás seguro?",
+    confirmText = "Sí, cargar datos",
+    icon = Icons.Default.Warning,
+    onConfirm = {
+        dashboardViewModel.seedRealData(hogar?.id ?: 1L)
+        seedStatus = "¡Datos de Erick y familia cargados con éxito!"
+        showSeedConfirm = false
+    },
+    onDismiss = { showSeedConfirm = false }
+  )
 
   Column(modifier = Modifier.fillMaxSize()) {
     TopAppBar(
@@ -69,10 +85,7 @@ fun SettingsScreen(
       onUpdateName = { settingsViewModel.updateUsuario(it) },
       onUpdateHouseholdName = { settingsViewModel.updateHogar(it) },
       onUpdateConfig = { clave, valor -> settingsViewModel.updateConfig(clave, valor) },
-      onSeedData = { 
-        dashboardViewModel.seedRealData(hogar?.id ?: 1L)
-        seedStatus = "¡Datos de Erick y familia cargados con éxito!"
-      }
+      onSeedData = { showSeedConfirm = true }
     )
   }
 }

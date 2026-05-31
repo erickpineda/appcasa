@@ -42,24 +42,38 @@ class SmartSafeViewModel @Inject constructor(
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   fun authenticate(activity: FragmentActivity) {
-    val biometricManager = BiometricManager.from(context)
-    if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS) {
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Acceso al Baúl")
-            .setSubtitle("Usa tu huella o cara para entrar")
-            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)
-            .build()
+    try {
+        val biometricManager = BiometricManager.from(activity) // Usar activity context
+        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        
+        val canAuth = biometricManager.canAuthenticate(authenticators)
+        
+        if (canAuth == BiometricManager.BIOMETRIC_SUCCESS) {
+            val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Acceso al Baúl")
+                .setSubtitle("Usa tu huella o cara para entrar")
+                .setAllowedAuthenticators(authenticators)
+                .build()
 
-        val executor = ContextCompat.getMainExecutor(context)
-        val biometricPrompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                super.onAuthenticationSucceeded(result)
-                _isUnlocked.value = true
-            }
-        })
-        biometricPrompt.authenticate(promptInfo)
-    } else {
-        // Si no hay biométricos, desbloqueamos (para el emulador o dispositivos antiguos)
+            val executor = ContextCompat.getMainExecutor(activity)
+            val biometricPrompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    _isUnlocked.value = true
+                }
+                
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    // Si el usuario cancela o hay un error, dejamos que lo intente de nuevo con el botón
+                }
+            })
+            biometricPrompt.authenticate(promptInfo)
+        } else {
+            // Si hay error de hardware o no está configurado, desbloqueamos para no bloquear al usuario
+            _isUnlocked.value = true
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
         _isUnlocked.value = true
     }
   }

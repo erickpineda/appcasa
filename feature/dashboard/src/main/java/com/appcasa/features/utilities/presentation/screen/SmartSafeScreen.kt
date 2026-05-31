@@ -17,11 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.fragment.app.FragmentActivity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.features.documents.data.local.DocumentoEntity
 import com.appcasa.features.utilities.presentation.viewmodel.SmartSafeViewModel
@@ -37,9 +40,19 @@ fun SmartSafeScreen(
   val isUnlocked by viewModel.isUnlocked.collectAsState()
   val context = LocalContext.current
   
+  fun Context.findActivity(): FragmentActivity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is FragmentActivity) return context
+        context = context.baseContext
+    }
+    return null
+  }
+
   LaunchedEffect(Unit) {
     if (!isUnlocked) {
-        viewModel.authenticate(context as FragmentActivity)
+        kotlinx.coroutines.delay(300) // Pequeño margen para estabilidad de la UI
+        context.findActivity()?.let { viewModel.authenticate(it) }
     }
   }
 
@@ -49,7 +62,9 @@ fun SmartSafeScreen(
               Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
               Spacer(Modifier.height(16.dp))
               Text("Baúl bloqueado", style = MaterialTheme.typography.titleLarge)
-              TextButton(onClick = { viewModel.authenticate(context as FragmentActivity) }) {
+              TextButton(onClick = { 
+                  context.findActivity()?.let { viewModel.authenticate(it) }
+              }) {
                   Text("Desbloquear con biometría")
               }
           }
@@ -60,6 +75,18 @@ fun SmartSafeScreen(
   val documentos by viewModel.documentos.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
   var editingDocument by remember { mutableStateOf<DocumentoEntity?>(null) }
+  var documentToDelete by remember { mutableStateOf<DocumentoEntity?>(null) }
+
+  AppCasaConfirmDialog(
+    show = documentToDelete != null,
+    title = "Eliminar Documento",
+    text = "¿Estás seguro de borrar '${documentToDelete?.nombre}'? Esta acción es irreversible.",
+    onConfirm = {
+        documentToDelete?.let { viewModel.deleteDocumento(it) }
+        documentToDelete = null
+    },
+    onDismiss = { documentToDelete = null }
+  )
 
   if (showAddDialog) {
     AddDocumentDialog(
@@ -150,7 +177,7 @@ fun SmartSafeScreen(
                 }
             },
             onEdit = { editingDocument = doc },
-            onDelete = { viewModel.deleteDocumento(doc) },
+            onDelete = { documentToDelete = doc },
             onCloudSync = { viewModel.uploadToCloud(doc) }
           )
         }

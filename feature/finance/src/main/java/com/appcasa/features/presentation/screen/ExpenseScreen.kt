@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaEmptyState
+import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.finance.data.local.ExpenseEntity
 import com.appcasa.features.finance.presentation.viewmodel.FinanceViewModel
@@ -43,7 +44,19 @@ fun ExpenseScreen(
   val ocrResult by viewModel.ocrResult.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
   var editingExpense by remember { mutableStateOf<ExpenseEntity?>(null) }
+  var expenseToDelete by remember { mutableStateOf<ExpenseEntity?>(null) }
   val context = LocalContext.current
+
+  AppCasaConfirmDialog(
+    show = expenseToDelete != null,
+    title = "Borrar Gasto",
+    text = "¿Estás seguro de que quieres eliminar '${expenseToDelete?.concepto}'? Esta acción no se puede deshacer.",
+    onConfirm = {
+        expenseToDelete?.let { viewModel.deleteExpense(it) }
+        expenseToDelete = null
+    },
+    onDismiss = { expenseToDelete = null }
+  )
 
   val galleryLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.GetContent()
@@ -161,7 +174,7 @@ fun ExpenseScreen(
               expense = expense,
               currency = currency,
               onEdit = { editingExpense = expense },
-              onDelete = { viewModel.deleteExpense(expense) }
+              onDelete = { expenseToDelete = expense }
             )
           }
         }
