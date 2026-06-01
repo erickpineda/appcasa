@@ -10,10 +10,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.navigation.Screen
 
@@ -22,42 +24,45 @@ import com.appcasa.navigation.Screen
 fun FamilyHubScreen(
   navController: NavController
 ) {
-  PullToRefreshWrapper {
-    Scaffold(
-      topBar = {
-        TopAppBar(
-          title = { Text("Familia y Vida") },
-          colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            titleContentColor = MaterialTheme.colorScheme.onPrimary
+  AppCasaMeshBackground {
+    PullToRefreshWrapper {
+      Scaffold(
+        topBar = {
+          TopAppBar(
+            title = { Text("Familia y Vida") },
+            colors = TopAppBarDefaults.topAppBarColors(
+              containerColor = MaterialTheme.colorScheme.primary,
+              titleContentColor = MaterialTheme.colorScheme.onPrimary
+            )
           )
-        )
-      }
-    ) { padding ->
-      Column(
-        modifier = Modifier
-          .padding(padding)
-          .padding(16.dp)
-          .fillMaxSize()
-          .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-      ) {
-        HubCard(
-          title = "Miembros",
-          subtitle = "Humanos y pasaportes de mascotas",
-          icon = Icons.Default.Groups,
-          color = MaterialTheme.colorScheme.primary,
-          onClick = { navController.navigate(Screen.Family.route) }
-        )
+        },
+        containerColor = Color.Transparent
+      ) { padding ->
+        Column(
+          modifier = Modifier
+            .padding(padding)
+            .padding(16.dp)
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+          verticalArrangement = Arrangement.spacedBy(16.dp),
+          horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+          HubCard(
+            title = "Miembros",
+            subtitle = "Humanos y pasaportes de mascotas",
+            icon = Icons.Default.Groups,
+            color = MaterialTheme.colorScheme.primary,
+            onClick = { navController.navigate(Screen.Family.route) }
+          )
 
-        HubCard(
-          title = "Agenda",
-          subtitle = "Eventos, vacunas y turnos",
-          icon = Icons.Default.CalendarMonth,
-          color = MaterialTheme.colorScheme.secondary,
-          onClick = { navController.navigate(Screen.Calendar.route) }
-        )
+          HubCard(
+            title = "Agenda",
+            subtitle = "Eventos, vacunas y turnos",
+            icon = Icons.Default.CalendarMonth,
+            color = MaterialTheme.colorScheme.secondary,
+            onClick = { navController.navigate(Screen.Calendar.route) }
+          )
+        }
       }
     }
   }
@@ -68,7 +73,7 @@ private fun HubCard(
   title: String,
   subtitle: String,
   icon: ImageVector,
-  color: androidx.compose.ui.graphics.Color,
+  color: Color,
   onClick: () -> Unit
 ) {
   Card(

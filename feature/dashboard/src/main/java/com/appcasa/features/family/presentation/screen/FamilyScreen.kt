@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,6 +22,8 @@ import androidx.navigation.NavController
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
+import com.appcasa.core.ui.components.AppCasaMeshBackground
+import com.appcasa.core.ui.components.PremiumProgressBar
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.features.family.data.local.MiembroEntity
@@ -52,21 +55,23 @@ fun FamilyScreen(
     onDismiss = { memberToDelete = null }
   )
 
-  PullToRefreshWrapper {
-    FamilyContent(
-      navController = navController,
-      people = people,
-      pets = pets,
-      onAddClick = { navController.navigate(Screen.AddMember.route) },
-      onDeleteMember = { memberToDelete = it },
-      onMemberClick = { member ->
-        if (member.tipo == TipoMiembro.PERSONA.name) {
-          navController.navigate(Screen.MemberDetail.createRoute(member.id))
-        } else {
-          navController.navigate(Screen.PetDetail.createRoute(member.id))
+  AppCasaMeshBackground {
+    PullToRefreshWrapper {
+      FamilyContent(
+        navController = navController,
+        people = people,
+        pets = pets,
+        onAddClick = { navController.navigate(Screen.AddMember.route) },
+        onDeleteMember = { memberToDelete = it },
+        onMemberClick = { member ->
+          if (member.tipo == TipoMiembro.PERSONA.name) {
+            navController.navigate(Screen.MemberDetail.createRoute(member.id))
+          } else {
+            navController.navigate(Screen.PetDetail.createRoute(member.id))
+          }
         }
-      }
-    )
+      )
+    }
   }
 }
 
@@ -95,6 +100,7 @@ fun FamilyContent(
         )
       )
     },
+    containerColor = Color.Transparent, // Para ver el MeshBackground
     floatingActionButton = {
       FloatingActionButton(onClick = onAddClick) {
         Icon(Icons.Default.Add, contentDescription = "Añadir")
@@ -228,17 +234,29 @@ fun MemberCard(
             }
           }
         }
-        val description = when {
-          member.tipo == TipoMiembro.PERSONA.name -> "XP: ${member.puntos}"
-          !member.raza.isNullOrBlank() -> member.raza
-          !member.colorPelaje.isNullOrBlank() -> member.colorPelaje
-          else -> member.tipo
+        val pointsToNextLevel = 100
+        val currentLevelXP = member.puntos % pointsToNextLevel
+        val progress = currentLevelXP.toFloat() / pointsToNextLevel.toFloat()
+
+        if (member.tipo == TipoMiembro.PERSONA.name) {
+            PremiumProgressBar(
+                progress = progress,
+                label = "XP: ${member.puntos}",
+                modifier = Modifier.padding(top = 4.dp),
+                color = MaterialTheme.colorScheme.tertiary
+            )
+        } else {
+            val description = when {
+              !member.raza.isNullOrBlank() -> member.raza
+              !member.colorPelaje.isNullOrBlank() -> member.colorPelaje
+              else -> member.tipo
+            }
+            Text(
+              text = description ?: member.tipo,
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        Text(
-          text = description ?: member.tipo,
-          style = MaterialTheme.typography.bodySmall,
-          color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
       }
 
       IconButton(onClick = onDelete) {

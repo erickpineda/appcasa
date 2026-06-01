@@ -1,7 +1,12 @@
 package com.appcasa.features.presentation.screen
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.appcasa.core.ui.theme.AppCasaTheme
+import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -33,7 +40,9 @@ import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.navigation.Screen
 import coil3.compose.AsyncImage
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import kotlin.random.Random
 
 @Composable
 fun DashboardScreen(
@@ -55,78 +64,84 @@ fun DashboardScreen(
   val dashboardOrder by viewModel.dashboardOrder.collectAsState()
   val familyMembers by viewModel.familyMembers.collectAsState()
 
-  PullToRefreshWrapper {
-    DashboardContent(
-      petCount = petCount,
-      petSummary = petSummary,
-      pendingTasks = pendingTasks,
-      nextEvent = nextEvent,
-      nextEventDate = nextEventDate,
-      monthlyExpense = monthlyExpense,
-      lowStockCount = lowStockCount,
-      searchQuery = searchQuery,
-      searchResults = searchResults,
-      postIts = postIts,
-      dashboardOrder = dashboardOrder,
-      familyMembers = familyMembers,
-      onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
-      onAddPostIt = { viewModel.addPostIt(it) },
-      onDeletePostIt = { viewModel.deletePostIt(it) },
-      onUpdateMood = { id, emoji -> viewModel.updateMemberMood(id, emoji) },
-      onReorder = { viewModel.updateDashboardOrder(it) },
-      onResultClick = { item ->
-        navController.navigate(item.route)
-      },
-      onNavigateToTasks = { 
-        navController.navigate(Screen.Tasks.route) {
-          popUpTo(navController.graph.findStartDestination().id) { saveState = false }
-          launchSingleTop = true
-          restoreState = false
+  AppCasaMeshBackground {
+    PullToRefreshWrapper {
+      DashboardContent(
+        petCount = petCount,
+        petSummary = petSummary,
+        pendingTasks = pendingTasks,
+        nextEvent = nextEvent,
+        nextEventDate = nextEventDate,
+        monthlyExpense = monthlyExpense,
+        lowStockCount = lowStockCount,
+        searchQuery = searchQuery,
+        searchResults = searchResults,
+        postIts = postIts,
+        dashboardOrder = dashboardOrder,
+        familyMembers = familyMembers,
+        onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+        onAddPostIt = { viewModel.addPostIt(it) },
+        onEditPostIt = { postIt, newContent -> 
+            viewModel.deletePostIt(postIt)
+            viewModel.addPostIt(newContent, postIt.colorHex)
+        },
+        onDeletePostIt = { viewModel.deletePostIt(it) },
+        onUpdateMood = { id, emoji -> viewModel.updateMemberMood(id, emoji) },
+        onReorder = { viewModel.updateDashboardOrder(it) },
+        onResultClick = { item ->
+          navController.navigate(item.route)
+        },
+        onNavigateToTasks = { 
+          navController.navigate(Screen.Tasks.route) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = false }
+            launchSingleTop = true
+            restoreState = false
+          }
+        },
+        onNavigateToFamily = { 
+          navController.navigate(Screen.Family.route) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = false }
+            launchSingleTop = true
+            restoreState = false
+          }
+        },
+        onNavigateToCalendar = { 
+          navController.navigate(Screen.Calendar.route) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = false }
+            launchSingleTop = true
+            restoreState = false
+          }
+        },
+        onNavigateToUtilities = { 
+          navController.navigate(Screen.Utilities.route) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = false }
+            launchSingleTop = true
+            restoreState = false
+          }
+        },
+        onNavigateToLists = { 
+          navController.navigate(Screen.Lists.route)
+        },
+        onNavigateToSettings = {
+          navController.navigate(Screen.Settings.route)
+        },
+        onNavigateToExpenses = {
+          navController.navigate(Screen.Expenses.route)
+        },
+        onNavigateToInventory = {
+          navController.navigate(Screen.Inventory.route)
+        },
+        onNavigateToDosage = {
+          navController.navigate(Screen.DosageCalculator.route)
+        },
+        onNavigateToPdf = {
+          navController.navigate(Screen.PhotoToPdf.route)
+        },
+        onNavigateToSafe = {
+          navController.navigate(Screen.SmartSafe.route)
         }
-      },
-      onNavigateToFamily = { 
-        navController.navigate(Screen.Family.route) {
-          popUpTo(navController.graph.findStartDestination().id) { saveState = false }
-          launchSingleTop = true
-          restoreState = false
-        }
-      },
-      onNavigateToCalendar = { 
-        navController.navigate(Screen.Calendar.route) {
-          popUpTo(navController.graph.findStartDestination().id) { saveState = false }
-          launchSingleTop = true
-          restoreState = false
-        }
-      },
-      onNavigateToUtilities = { 
-        navController.navigate(Screen.Utilities.route) {
-          popUpTo(navController.graph.findStartDestination().id) { saveState = false }
-          launchSingleTop = true
-          restoreState = false
-        }
-      },
-      onNavigateToLists = { 
-        navController.navigate(Screen.Lists.route)
-      },
-      onNavigateToSettings = {
-        navController.navigate(Screen.Settings.route)
-      },
-      onNavigateToExpenses = {
-        navController.navigate(Screen.Expenses.route)
-      },
-      onNavigateToInventory = {
-        navController.navigate(Screen.Inventory.route)
-      },
-      onNavigateToDosage = {
-        navController.navigate(Screen.DosageCalculator.route)
-      },
-      onNavigateToPdf = {
-        navController.navigate(Screen.PhotoToPdf.route)
-      },
-      onNavigateToSafe = {
-        navController.navigate(Screen.SmartSafe.route)
-      }
-    )
+      )
+    }
   }
 }
 
@@ -147,6 +162,7 @@ fun DashboardContent(
   familyMembers: List<MiembroEntity>,
   onSearchQueryChange: (String) -> Unit,
   onAddPostIt: (String) -> Unit,
+  onEditPostIt: (PostItEntity, String) -> Unit,
   onDeletePostIt: (PostItEntity) -> Unit,
   onUpdateMood: (Long, String) -> Unit,
   onReorder: (List<String>) -> Unit,
@@ -272,7 +288,7 @@ fun DashboardContent(
         )
       }
     },
-    containerColor = MaterialTheme.colorScheme.background
+    containerColor = Color.Transparent
   ) { scaffoldPadding ->
     Box(modifier = Modifier.fillMaxSize().padding(scaffoldPadding)) {
       
@@ -398,13 +414,20 @@ fun DashboardContent(
                   }
                   "POSTITS" -> if (postIts.isNotEmpty()) {
                       item {
-                          Text("Notas de la familia", style = MaterialTheme.typography.titleSmall)
+                          Text("Notas de la familia", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = 16.dp))
                           Row(
-                              modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                              horizontalArrangement = Arrangement.spacedBy(8.dp)
+                              modifier = Modifier
+                                  .fillMaxWidth()
+                                  .horizontalScroll(rememberScrollState())
+                                  .padding(vertical = 12.dp, horizontal = 16.dp),
+                              horizontalArrangement = Arrangement.spacedBy(16.dp)
                           ) {
                               postIts.forEach { postIt ->
-                                  PostItCard(postIt = postIt, onDelete = { onDeletePostIt(postIt) })
+                                  PostItCard(
+                                      postIt = postIt, 
+                                      onDelete = { onDeletePostIt(postIt) },
+                                      onEdit = { onEditPostIt(postIt, it) }
+                                  )
                               }
                           }
                       }
@@ -534,17 +557,85 @@ fun MoodAvatar(member: MiembroEntity, onMoodClick: (String) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PostItCard(postIt: PostItEntity, onDelete: () -> Unit) {
+fun PostItCard(postIt: PostItEntity, onDelete: () -> Unit, onEdit: (String) -> Unit) {
+    var isLifted by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editedText by remember { mutableStateOf(postIt.contenido) }
+
+    // Rotación aleatoria un poco más pronunciada para el efecto "pegado a mano"
+    val rotation = remember(postIt.id) { Random(postIt.id).nextFloat() * 10f - 5f }
+    
+    val lift by animateFloatAsState(
+        targetValue = if (isLifted) -15f else 0f,
+        animationSpec = tween(200),
+        label = "lift"
+    )
+
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Editar Nota") },
+            text = {
+                OutlinedTextField(
+                    value = editedText,
+                    onValueChange = { editedText = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (editedText.isNotBlank()) {
+                        onEdit(editedText)
+                        showEditDialog = false
+                    }
+                }) { Text("Guardar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
     Card(
-        colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(postIt.colorHex))),
-        modifier = Modifier.size(140.dp).bounceClick { },
-        elevation = CardDefaults.cardElevation(2.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(postIt.colorHex))
+        ),
+        modifier = Modifier
+            .size(150.dp)
+            .graphicsLayer {
+                rotationZ = rotation
+                translationY = lift
+            }
+            .combinedClickable(
+                onClick = { isLifted = !isLifted },
+                onDoubleClick = { 
+                    editedText = postIt.contenido
+                    showEditDialog = true 
+                }
+            ),
+        elevation = CardDefaults.cardElevation(if (isLifted) 12.dp else 4.dp),
+        shape = RoundedCornerShape(2.dp)
     ) {
-        Box(modifier = Modifier.padding(12.dp).fillMaxSize()) {
-            Text(postIt.contenido, style = MaterialTheme.typography.bodyMedium, color = androidx.compose.ui.graphics.Color.Black)
-            IconButton(onClick = onDelete, modifier = Modifier.align(Alignment.TopEnd).size(24.dp)) {
-                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp), tint = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
+        Box(modifier = Modifier.padding(14.dp).fillMaxSize()) {
+            Text(
+                text = postIt.contenido, 
+                style = MaterialTheme.typography.bodyMedium, 
+                color = Color.Black.copy(alpha = 0.8f),
+                fontWeight = FontWeight.Medium
+            )
+            
+            IconButton(
+                onClick = onDelete, 
+                modifier = Modifier.align(Alignment.BottomEnd).size(24.dp)
+            ) {
+                Icon(
+                    Icons.Default.Close, 
+                    contentDescription = null, 
+                    modifier = Modifier.size(16.dp), 
+                    tint = Color.Black.copy(alpha = 0.4f)
+                )
             }
         }
     }
@@ -644,6 +735,7 @@ fun DashboardPreview() {
       familyMembers = emptyList(),
       onSearchQueryChange = {},
       onAddPostIt = {},
+      onEditPostIt = { _, _ -> },
       onDeletePostIt = {},
       onUpdateMood = { _, _ -> },
       onReorder = {},

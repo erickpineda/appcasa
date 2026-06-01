@@ -13,11 +13,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.utilities.data.local.UtilidadEntity
 import com.appcasa.features.utilities.presentation.viewmodel.UtilitiesViewModel
@@ -31,28 +33,30 @@ fun UtilitiesScreen(
 ) {
   val utilities by viewModel.utilities.collectAsState()
 
-  PullToRefreshWrapper {
-    UtilitiesContent(
-      utilities = utilities,
-      onInitialize = { viewModel.initializeUtilities() },
-      onUtilityClick = { utility ->
-        when (utility.codigo) {
-          "CALC_DOSIS" -> navController.navigate(Screen.DosageCalculator.route)
-          "CALC_IMC" -> navController.navigate(Screen.BMICalculator.route)
-          "CALC_HIPOTECA" -> navController.navigate(Screen.MortgageCalculator.route)
-          "CALC_EDAD" -> navController.navigate(Screen.AgeCalculator.route)
-          "CALC_CONSUMO" -> navController.navigate(Screen.ConsumptionCalculator.route)
-          "CALC_AHORRO" -> navController.navigate(Screen.SavingsCalculator.route)
-          "FIN_GASTOS" -> navController.navigate(Screen.Expenses.route)
-          "VEH_MGR" -> navController.navigate(Screen.VehicleManager.route)
-          "UTIL_PDF" -> navController.navigate(Screen.PhotoToPdf.route)
-          "UTIL_WIFI" -> navController.navigate(Screen.WifiQR.route)
-          "UTIL_COCINA" -> navController.navigate(Screen.CocinaConverter.route)
-          "UTIL_PIENSO" -> navController.navigate(Screen.FeedingCalculator.route)
-          "UTIL_SAFE" -> navController.navigate(Screen.SmartSafe.route)
+  AppCasaMeshBackground {
+    PullToRefreshWrapper {
+      UtilitiesContent(
+        utilities = utilities,
+        onInitialize = { viewModel.initializeUtilities() },
+        onUtilityClick = { utility ->
+          when (utility.codigo) {
+            "CALC_DOSIS" -> navController.navigate(Screen.DosageCalculator.route)
+            "CALC_IMC" -> navController.navigate(Screen.BMICalculator.route)
+            "CALC_HIPOTECA" -> navController.navigate(Screen.MortgageCalculator.route)
+            "CALC_EDAD" -> navController.navigate(Screen.AgeCalculator.route)
+            "CALC_CONSUMO" -> navController.navigate(Screen.ConsumptionCalculator.route)
+            "CALC_AHORRO" -> navController.navigate(Screen.SavingsCalculator.route)
+            "FIN_GASTOS" -> navController.navigate(Screen.Expenses.route)
+            "VEH_MGR" -> navController.navigate(Screen.VehicleManager.route)
+            "UTIL_PDF" -> navController.navigate(Screen.PhotoToPdf.route)
+            "UTIL_WIFI" -> navController.navigate(Screen.WifiQR.route)
+            "UTIL_COCINA" -> navController.navigate(Screen.CocinaConverter.route)
+            "UTIL_PIENSO" -> navController.navigate(Screen.FeedingCalculator.route)
+            "UTIL_SAFE" -> navController.navigate(Screen.SmartSafe.route)
+          }
         }
-      }
-    )
+      )
+    }
   }
 }
 
@@ -92,7 +96,8 @@ fun UtilitiesContent(
           titleContentColor = MaterialTheme.colorScheme.onPrimary
         )
       )
-    }
+    },
+    containerColor = Color.Transparent
   ) { scaffoldPadding ->
     Column(
       modifier = Modifier
@@ -165,7 +170,6 @@ fun UtilitiesContent(
                       modifier = Modifier.weight(1f).fillMaxWidth(0.45f)
                     )
                   }
-                  // Si hay un número impar de utilidades, añadimos un espaciador para el layout de FlowRow
                   if (utils.size % 2 != 0) {
                       Spacer(modifier = Modifier.weight(1f).fillMaxWidth(0.45f))
                   }

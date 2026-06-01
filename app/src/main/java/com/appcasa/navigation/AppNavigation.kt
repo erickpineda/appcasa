@@ -1,15 +1,17 @@
 package com.appcasa.navigation
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.Composable
+import androidx.compose.animation.*
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -55,8 +57,12 @@ fun AppNavigation() {
 
   Scaffold(
     bottomBar = {
-      NavigationBar {
+      NavigationBar(
+          containerColor = MaterialTheme.colorScheme.surface,
+          tonalElevation = 8.dp
+      ) {
         bottomNavItems.forEach { item ->
+          // ... (existing selection logic)
           val isManagementTab = item.screen == Screen.Management && currentDestination?.route in listOf(
             Screen.Management.route, Screen.Tasks.route, Screen.Lists.route, 
             Screen.ListDetail.route, Screen.Inventory.route, Screen.AddTask.route, Screen.TaskDetail.route,
@@ -69,7 +75,8 @@ fun AppNavigation() {
           val isUtilitiesTab = item.screen == Screen.Utilities && currentDestination?.route in listOf(
             Screen.Utilities.route, Screen.DosageCalculator.route, Screen.BMICalculator.route, 
             Screen.MortgageCalculator.route, Screen.AgeCalculator.route, Screen.ConsumptionCalculator.route, 
-            Screen.SavingsCalculator.route, Screen.Expenses.route, Screen.VehicleManager.route
+            Screen.SavingsCalculator.route, Screen.Expenses.route, Screen.VehicleManager.route,
+            Screen.SmartSafe.route, Screen.PhotoToPdf.route
           )
           val isDashboardTab = item.screen == Screen.Dashboard && currentDestination?.route == Screen.Dashboard.route
 
@@ -78,6 +85,7 @@ fun AppNavigation() {
           NavigationBarItem(
             selected = selected,
             onClick = {
+              // ... (existing click logic)
               val isAtHub = currentDestination?.route == item.screen.route
               if (isAtHub) {
                 // Ya estamos en la raíz de la pestaña, no hacemos nada
@@ -103,8 +111,22 @@ fun AppNavigation() {
                 }
               }
             },
-            icon = { Icon(item.icon, contentDescription = item.label) },
-            label = { if (selected) Text(item.label) }
+            icon = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(item.icon, contentDescription = item.label)
+                    AnimatedVisibility(visible = selected) {
+                        Box(
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .size(4.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                        )
+                    }
+                }
+            },
+            label = { if (selected) Text(item.label) },
+            alwaysShowLabel = false
           )
         }
       }
