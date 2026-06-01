@@ -95,6 +95,20 @@ object Migrations {
   }
 
   /**
+   * Migración para optimizar rendimiento mediante índices en columnas críticas.
+   */
+  val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_miembros_nombre ON miembros (nombre)")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_stock_categoria ON stock (categoria)")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_stock_nombre ON stock (nombre)")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_mantenimiento_hogar_fecha_realizacion ON mantenimiento_hogar (fecha_realizacion)")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_mantenimiento_hogar_proxima_revision ON mantenimiento_hogar (proxima_revision)")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_gastos_fecha ON gastos (fecha)")
+    }
+  }
+
+  /**
    * Lista de todas las migraciones registradas.
    */
   fun getAll(): Array<Migration> {
@@ -103,7 +117,8 @@ object Migrations {
       MIGRATION_9_10,
       MIGRATION_10_11,
       MIGRATION_11_12,
-      MIGRATION_12_13
+      MIGRATION_12_13,
+      MIGRATION_13_14
     )
   }
 }

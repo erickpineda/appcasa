@@ -18,7 +18,9 @@ import com.appcasa.features.settings.data.local.HogarEntity
         )
     ],
     indices = [
-        Index("hogar_id")
+        Index("hogar_id"),
+        Index("fecha_realizacion"),
+        Index("proxima_revision")
     ]
 )
 data class MaintenanceEntity(

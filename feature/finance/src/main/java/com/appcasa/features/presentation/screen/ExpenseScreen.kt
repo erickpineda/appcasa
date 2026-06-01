@@ -1,39 +1,76 @@
 package com.appcasa.features.finance.presentation.screen
 
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
+import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
+import com.appcasa.feature.finance.R
 import com.appcasa.features.finance.data.local.ExpenseEntity
 import com.appcasa.features.finance.presentation.viewmodel.FinanceViewModel
-import androidx.compose.ui.res.stringResource
-import com.appcasa.feature.finance.R
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -152,7 +189,8 @@ fun ExpenseScreen(
         FloatingActionButton(onClick = { showAddDialog = true }) {
           Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_new_expense))
         }
-      }
+      },
+      contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { padding ->
       LazyColumn(
         modifier = Modifier
@@ -181,6 +219,10 @@ fun ExpenseScreen(
               onDelete = { expenseToDelete = expense }
             )
           }
+        }
+        
+        item {
+            Spacer(Modifier.imePadding())
         }
       }
     }
@@ -258,14 +300,25 @@ fun ExpenseActionDialog(
           onValueChange = { concepto = it }, 
           label = { Text(stringResource(R.string.finance_label_concept)) }, 
           modifier = Modifier.fillMaxWidth(),
-          isError = concepto.isEmpty()
+          isError = concepto.isEmpty(),
+          singleLine = true,
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
         OutlinedTextField(
           value = importe, 
-          onValueChange = { importe = it }, 
+          onValueChange = { 
+              // Filtro manual para asegurar que solo entren números y separadores
+              if (it.isEmpty() || it.all { char -> char.isDigit() || char == '.' || char == ',' }) {
+                  importe = it.replace(',', '.')
+              }
+          }, 
           label = { Text(stringResource(R.string.finance_label_amount, currency)) },
-          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+          keyboardOptions = KeyboardOptions(
+              keyboardType = KeyboardType.Number, // Cambiamos a Number para forzar el pad numérico
+              imeAction = ImeAction.Next
+          ),
           modifier = Modifier.fillMaxWidth(),
+          singleLine = true,
           isError = importe.isNotEmpty() && !isImporteValid,
           supportingText = {
             if (importe.isNotEmpty() && !isImporteValid) {
@@ -273,7 +326,14 @@ fun ExpenseActionDialog(
             }
           }
         )
-        OutlinedTextField(value = categoria, onValueChange = { categoria = it }, label = { Text(stringResource(R.string.finance_label_category)) }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = categoria, 
+            onValueChange = { categoria = it }, 
+            label = { Text(stringResource(R.string.finance_label_category)) }, 
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+        )
       }
     },
     confirmButton = {

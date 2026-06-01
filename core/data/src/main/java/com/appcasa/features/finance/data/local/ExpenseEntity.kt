@@ -2,9 +2,9 @@ package com.appcasa.features.finance.data.local
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
+import androidx.room.PrimaryKey
 import com.appcasa.features.settings.data.local.HogarEntity
 
 /**
@@ -22,7 +22,8 @@ import com.appcasa.features.settings.data.local.HogarEntity
         )
     ],
     indices = [
-        Index("hogar_id")
+        Index("hogar_id"),
+        Index("fecha")
     ]
 )
 data class ExpenseEntity(

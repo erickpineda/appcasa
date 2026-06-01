@@ -1,6 +1,11 @@
 package com.appcasa.features.tasks.data.local
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -50,4 +55,18 @@ interface TareaDao {
 
     @Delete
     suspend fun deleteCheckItem(item: TareaCheckItemEntity)
+
+    @Query("""
+        SELECT tarea_id as taskId, COUNT(*) as total, SUM(CASE WHEN completado THEN 1 ELSE 0 END) as completed 
+        FROM tarea_check_items 
+        WHERE tarea_id IN (SELECT id FROM tareas WHERE hogar_id = :hogarId)
+        GROUP BY tarea_id
+    """)
+    fun getAllCheckItemsCounts(hogarId: Long): Flow<List<TareaSubTaskCount>>
 }
+
+data class TareaSubTaskCount(
+    val taskId: Long,
+    val total: Int,
+    val completed: Int
+)

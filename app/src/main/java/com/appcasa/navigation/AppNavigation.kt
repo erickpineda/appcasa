@@ -1,29 +1,42 @@
 package com.appcasa.navigation
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.appcasa.features.calendar.presentation.screen.CalendarScreen
-import com.appcasa.features.presentation.screen.DashboardScreen
-import com.appcasa.features.presentation.screen.FamilyHubScreen
-import com.appcasa.features.presentation.screen.ManagementHubScreen
-import com.appcasa.features.presentation.screen.HomeMaintenanceScreen
 import com.appcasa.features.family.presentation.screen.AddMemberScreen
 import com.appcasa.features.family.presentation.screen.EditMemberScreen
 import com.appcasa.features.family.presentation.screen.FamilyScreen
@@ -33,104 +46,116 @@ import com.appcasa.features.inventory.presentation.screen.StockScreen
 import com.appcasa.features.lists.presentation.screen.ListDetailScreen
 import com.appcasa.features.lists.presentation.screen.ListsScreen
 import com.appcasa.features.pets.presentation.screen.PetDetailScreen
+import com.appcasa.features.presentation.screen.DashboardScreen
+import com.appcasa.features.presentation.screen.FamilyHubScreen
+import com.appcasa.features.presentation.screen.HomeMaintenanceScreen
+import com.appcasa.features.presentation.screen.ManagementHubScreen
 import com.appcasa.features.settings.presentation.screen.SettingsScreen
 import com.appcasa.features.tasks.presentation.screen.AddTaskScreen
 import com.appcasa.features.tasks.presentation.screen.TaskDetailScreen
 import com.appcasa.features.tasks.presentation.screen.TasksScreen
 import com.appcasa.features.utilities.presentation.screen.AgeCalculatorScreen
 import com.appcasa.features.utilities.presentation.screen.BMICalculatorScreen
+import com.appcasa.features.utilities.presentation.screen.CocinaConverterScreen
 import com.appcasa.features.utilities.presentation.screen.ConsumptionCalculatorScreen
 import com.appcasa.features.utilities.presentation.screen.DosageCalculatorScreen
-import com.appcasa.features.utilities.presentation.screen.*
-import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
+import com.appcasa.features.utilities.presentation.screen.FeedingCalculatorScreen
 import com.appcasa.features.utilities.presentation.screen.MortgageCalculatorScreen
+import com.appcasa.features.utilities.presentation.screen.PhotoToPdfScreen
 import com.appcasa.features.utilities.presentation.screen.SavingsCalculatorScreen
+import com.appcasa.features.utilities.presentation.screen.SmartSafeScreen
 import com.appcasa.features.utilities.presentation.screen.UtilitiesScreen
 import com.appcasa.features.utilities.presentation.screen.VehicleManagementScreen
-
-import androidx.compose.ui.res.stringResource
+import com.appcasa.features.utilities.presentation.screen.WifiQRScreen
 
 @Composable
 fun AppNavigation() {
   val navController = rememberNavController()
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentDestination = navBackStackEntry?.destination
+  
+  val isKeyboardVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() > 0.dp
 
   Scaffold(
     bottomBar = {
-      NavigationBar(
-          containerColor = MaterialTheme.colorScheme.surface,
-          tonalElevation = 8.dp
+      AnimatedVisibility(
+        visible = !isKeyboardVisible,
+        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
       ) {
-        bottomNavItems.forEach { item ->
-          // ... (existing selection logic)
-          val isManagementTab = item.screen == Screen.Management && currentDestination?.route in listOf(
-            Screen.Management.route, Screen.Tasks.route, Screen.Lists.route, 
-            Screen.ListDetail.route, Screen.Inventory.route, Screen.AddTask.route, Screen.TaskDetail.route,
-            Screen.HomeMaintenance.route
-          )
-          val isFamilyTab = item.screen == Screen.FamilyHub && currentDestination?.route in listOf(
-            Screen.FamilyHub.route, Screen.Family.route, Screen.Calendar.route, 
-            Screen.PetDetail.route, Screen.MemberDetail.route, Screen.EditMember.route, Screen.AddMember.route
-          )
-          val isUtilitiesTab = item.screen == Screen.Utilities && currentDestination?.route in listOf(
-            Screen.Utilities.route, Screen.DosageCalculator.route, Screen.BMICalculator.route, 
-            Screen.MortgageCalculator.route, Screen.AgeCalculator.route, Screen.ConsumptionCalculator.route, 
-            Screen.SavingsCalculator.route, Screen.Expenses.route, Screen.VehicleManager.route,
-            Screen.SmartSafe.route, Screen.PhotoToPdf.route
-          )
-          val isDashboardTab = item.screen == Screen.Dashboard && currentDestination?.route == Screen.Dashboard.route
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.surface,
+            tonalElevation = 8.dp
+        ) {
+          bottomNavItems.forEach { item ->
+            // ... (existing selection logic)
+            val isManagementTab = item.screen == Screen.Management && currentDestination?.route in listOf(
+              Screen.Management.route, Screen.Tasks.route, Screen.Lists.route, 
+              Screen.ListDetail.route, Screen.Inventory.route, Screen.AddTask.route, Screen.TaskDetail.route,
+              Screen.HomeMaintenance.route
+            )
+            val isFamilyTab = item.screen == Screen.FamilyHub && currentDestination?.route in listOf(
+              Screen.FamilyHub.route, Screen.Family.route, Screen.Calendar.route, 
+              Screen.PetDetail.route, Screen.MemberDetail.route, Screen.EditMember.route, Screen.AddMember.route
+            )
+            val isUtilitiesTab = item.screen == Screen.Utilities && currentDestination?.route in listOf(
+              Screen.Utilities.route, Screen.DosageCalculator.route, Screen.BMICalculator.route, 
+              Screen.MortgageCalculator.route, Screen.AgeCalculator.route, Screen.ConsumptionCalculator.route, 
+              Screen.SavingsCalculator.route, Screen.Expenses.route, Screen.VehicleManager.route,
+              Screen.SmartSafe.route, Screen.PhotoToPdf.route
+            )
+            val isDashboardTab = item.screen == Screen.Dashboard && currentDestination?.route == Screen.Dashboard.route
 
-          val selected = isDashboardTab || isManagementTab || isFamilyTab || isUtilitiesTab
-          val label = stringResource(item.labelRes)
+            val selected = isDashboardTab || isManagementTab || isFamilyTab || isUtilitiesTab
+            val label = stringResource(item.labelRes)
 
-          NavigationBarItem(
-            selected = selected,
-            onClick = {
-              // ... (existing click logic)
-              val isAtHub = currentDestination?.route == item.screen.route
-              if (isAtHub) {
-                // Ya estamos en la raíz de la pestaña, no hacemos nada
-              } else if (selected) {
-                // Estamos en una sub-pantalla de esta sección, intentamos volver a su Hub
-                val popped = navController.popBackStack(item.screen.route, inclusive = false)
-                if (!popped) {
-                  // Si no estaba en el stack (ej: navegación directa), forzamos ir al Hub
-                  navController.navigate(item.screen.route) {
-                    popUpTo(navController.graph.findStartDestination().id) { saveState = false }
-                    launchSingleTop = true
-                    restoreState = false
-                  }
-                }
-              } else {
-                // Vamos a una pestaña diferente: siempre a su pantalla principal (Hub)
-                navController.navigate(item.screen.route) {
-                  popUpTo(navController.graph.findStartDestination().id) {
-                    saveState = false
-                  }
-                  launchSingleTop = true
-                  restoreState = false // Esto evita que se restaure la sub-pantalla anterior
-                }
-              }
-            },
-            icon = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(item.icon, contentDescription = label)
-                    AnimatedVisibility(visible = selected) {
-                        Box(
-                            modifier = Modifier
-                                .padding(top = 4.dp)
-                                .size(4.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary)
-                        )
+            NavigationBarItem(
+              selected = selected,
+              onClick = {
+                // ... (existing click logic)
+                val isAtHub = currentDestination?.route == item.screen.route
+                if (isAtHub) {
+                  // Ya estamos en la raíz de la pestaña, no hacemos nada
+                } else if (selected) {
+                  // Estamos en una sub-pantalla de esta sección, intentamos volver a su Hub
+                  val popped = navController.popBackStack(item.screen.route, inclusive = false)
+                  if (!popped) {
+                    // Si no estaba en el stack (ej: navegación directa), forzamos ir al Hub
+                    navController.navigate(item.screen.route) {
+                      popUpTo(navController.graph.findStartDestination().id) { saveState = false }
+                      launchSingleTop = true
+                      restoreState = false
                     }
+                  }
+                } else {
+                  // Vamos a una pestaña diferente: siempre a su pantalla principal (Hub)
+                  navController.navigate(item.screen.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                      saveState = false
+                    }
+                    launchSingleTop = true
+                    restoreState = false // Esto evita que se restaure la sub-pantalla anterior
+                  }
                 }
-            },
-            label = { if (selected) Text(label) },
-            alwaysShowLabel = false
-          )
+              },
+              icon = {
+                  Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                      Icon(item.icon, contentDescription = label)
+                      AnimatedVisibility(visible = selected) {
+                          Box(
+                              modifier = Modifier
+                                  .padding(top = 4.dp)
+                                  .size(4.dp)
+                                  .clip(CircleShape)
+                                  .background(MaterialTheme.colorScheme.primary)
+                          )
+                      }
+                  }
+              },
+              label = { if (selected) Text(label) },
+              alwaysShowLabel = false
+            )
+          }
         }
       }
     }
@@ -138,7 +163,10 @@ fun AppNavigation() {
     NavHost(
       navController = navController,
       startDestination = Screen.Dashboard.route,
-      modifier = Modifier.padding(innerPadding),
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(bottom = if (isKeyboardVisible) 0.dp else innerPadding.calculateBottomPadding())
+        .padding(top = innerPadding.calculateTopPadding()),
       enterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f, animationSpec = tween(300)) },
       exitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 1.05f, animationSpec = tween(200)) },
       popEnterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 1.05f, animationSpec = tween(300)) },

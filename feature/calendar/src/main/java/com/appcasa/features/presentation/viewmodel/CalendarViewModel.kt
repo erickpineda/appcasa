@@ -2,18 +2,24 @@ package com.appcasa.features.calendar.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
+import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.features.calendar.data.local.EventoDao
 import com.appcasa.features.calendar.data.local.EventoEntity
-import com.appcasa.features.tasks.data.local.TareaDao
-import com.appcasa.features.tasks.data.local.TareaEntity
+import com.appcasa.features.family.data.local.MiembroDao
 import com.appcasa.features.reminders.data.local.RecordatorioDao
 import com.appcasa.features.reminders.data.local.RecordatorioEntity
-import com.appcasa.features.family.data.local.MiembroDao
+import com.appcasa.features.tasks.data.local.TareaDao
+import com.appcasa.features.tasks.data.local.TareaEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -33,9 +39,17 @@ class CalendarViewModel @Inject constructor(
   private val _historyPage = MutableStateFlow(0)
   val historyPage = _historyPage.asStateFlow()
 
+  private val _searchQuery = MutableStateFlow("")
+  val searchQuery = _searchQuery.asStateFlow()
+
   @OptIn(ExperimentalCoroutinesApi::class)
-  val calendarItems: StateFlow<CalendarState> = currentHouseholdProvider.householdId
-    .flatMapLatest { householdId ->
+  val calendarItems: StateFlow<CalendarState> = combine(
+    currentHouseholdProvider.householdId,
+    _searchQuery
+  ) { householdId, query -> 
+    householdId to query
+  }
+    .flatMapLatest { (householdId, query) ->
       combine(
         eventoDao.getEventosByHogar(householdId),
         tareaDao.getTareasByHogar(householdId),
@@ -43,6 +57,7 @@ class CalendarViewModel @Inject constructor(
         miembroDao.getMiembrosByHogar(householdId)
       ) { eventos, tareas, recordatorios, miembros ->
         val startOfToday = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val archiveThreshold = LocalDate.now().minusMonths(3).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         
         // Generar cumpleaños dinámicos basado solo en el año actual
         val birthdayItems = miembros.filter { it.fechaNacimiento != null }.map { miembro ->
@@ -58,15 +73,29 @@ class CalendarViewModel @Inject constructor(
           )
         }
 
-        val allItems = (eventos.map { CalendarItem.Evento(it) } +
+        var allItems = (eventos.map { CalendarItem.Evento(it) } +
                tareas.filter { it.fechaLimite != null }.map { CalendarItem.Tarea(it) } +
                recordatorios.map { CalendarItem.Recordatorio(it) } +
                birthdayItems)
                .sortedBy { it.timestamp }
 
+        if (query.isNotBlank()) {
+          allItems = allItems.filter { it.title.contains(query, ignoreCase = true) }
+        }
+
+        val historyAll = allItems.filter { it.timestamp < startOfToday }.reversed()
+        
+        // Si no hay búsqueda, ocultamos lo muy antiguo (más de 3 meses)
+        val historyVisible = if (query.isBlank()) {
+            historyAll.filter { it.timestamp >= archiveThreshold }
+        } else {
+            historyAll
+        }
+
         CalendarState(
           upcoming = allItems.filter { it.timestamp >= startOfToday },
-          history = allItems.filter { it.timestamp < startOfToday }.reversed(),
+          history = historyVisible,
+          hasArchive = query.isBlank() && historyAll.any { it.timestamp < archiveThreshold },
           rawEventos = eventos,
           rawTareas = tareas.filter { it.fechaLimite != null },
           rawRecordatorios = recordatorios
@@ -78,6 +107,10 @@ class CalendarViewModel @Inject constructor(
       started = SharingStarted.WhileSubscribed(5000),
       initialValue = CalendarState()
     )
+
+  fun onSearchQueryChange(query: String) {
+    _searchQuery.value = query
+  }
 
   private fun calculateBirthdayOccurrence(birthDateMillis: Long): Long {
     val birthDate = Calendar.getInstance().apply { timeInMillis = birthDateMillis }
@@ -181,6 +214,7 @@ sealed class CalendarItem {
 data class CalendarState(
   val upcoming: List<CalendarItem> = emptyList(),
   val history: List<CalendarItem> = emptyList(),
+  val hasArchive: Boolean = false,
   val rawEventos: List<EventoEntity> = emptyList(),
   val rawTareas: List<TareaEntity> = emptyList(),
   val rawRecordatorios: List<RecordatorioEntity> = emptyList()

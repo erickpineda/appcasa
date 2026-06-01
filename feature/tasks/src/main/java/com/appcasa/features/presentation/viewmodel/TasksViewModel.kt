@@ -4,22 +4,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.model.Periodicidad
-import com.appcasa.core.domain.scheduler.ReminderScheduler
+import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
+import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.features.family.data.local.MiembroDao
+import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.features.tasks.data.local.TareaEntity
-import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
-import com.appcasa.features.settings.data.local.ConfiguracionDao
-import com.appcasa.core.domain.model.Prioridad
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -52,9 +52,9 @@ class TasksViewModel @Inject constructor(
     .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-  fun getSubTasksCount(tareaId: Long) = tareaDao.getCheckItems(tareaId).map { items ->
-    items.size to items.count { it.completado }
-  }
+  val subTaskCounts: StateFlow<Map<Long, Pair<Int, Int>>> = tareaDao.getAllCheckItemsCounts(householdId)
+    .map { list -> list.associate { it.taskId to (it.total to it.completed) } }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
   fun toggleTaskCompletion(tarea: TareaEntity) {
     viewModelScope.launch {

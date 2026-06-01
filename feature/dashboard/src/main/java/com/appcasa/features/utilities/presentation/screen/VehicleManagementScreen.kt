@@ -1,21 +1,48 @@
 package com.appcasa.features.utilities.presentation.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.ui.res.stringResource
-import com.appcasa.feature.dashboard.R
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.feature.dashboard.R
 import com.appcasa.features.utilities.presentation.viewmodel.VehicleViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,21 +98,24 @@ fun VehicleManagementScreen(
             onValueChange = { model = it },
             label = { Text(stringResource(R.string.util_vehicle_label_model)) },
             leadingIcon = { Icon(Icons.Default.DirectionsCar, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
           )
           OutlinedTextField(
             value = plate,
             onValueChange = { plate = it },
             label = { Text(stringResource(R.string.util_vehicle_label_plate)) },
             leadingIcon = { Icon(Icons.Default.Tag, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters)
           )
           OutlinedTextField(
             value = year,
             onValueChange = { year = it },
             label = { Text(stringResource(R.string.util_vehicle_label_year)) },
             leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
           )
         }
       }
@@ -104,14 +134,16 @@ fun VehicleManagementScreen(
             onValueChange = { insurance = it },
             label = { Text(stringResource(R.string.util_vehicle_label_insurance_company)) },
             leadingIcon = { Icon(Icons.Default.Shield, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
           )
           OutlinedTextField(
             value = phone,
             onValueChange = { phone = it },
             label = { Text(stringResource(R.string.util_vehicle_label_assistance_phone)) },
             leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone)
           )
         }
       }

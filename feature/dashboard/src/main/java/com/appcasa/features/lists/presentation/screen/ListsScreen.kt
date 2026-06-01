@@ -1,17 +1,54 @@
 package com.appcasa.features.lists.presentation.screen
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Flight
+import androidx.compose.material.icons.filled.MedicalServices
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -20,11 +57,10 @@ import com.appcasa.core.domain.model.TipoLista
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
+import com.appcasa.feature.dashboard.R
 import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.lists.presentation.viewmodel.ListsViewModel
 import com.appcasa.navigation.Screen
-import androidx.compose.ui.res.stringResource
-import com.appcasa.feature.dashboard.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,7 +147,7 @@ fun ListsContent(
           )
         }
       } else {
-        items(lists) { lista ->
+        items(lists, key = { it.id }) { lista ->
           CompactListCard(
             lista = lista, 
             isCompact = isCompact,
@@ -179,6 +215,7 @@ fun CompactListCard(
           modifier = Modifier.weight(1f),
           singleLine = true,
           textStyle = MaterialTheme.typography.titleMedium,
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
           trailingIcon = {
             Row {
               IconButton(onClick = { 
@@ -249,6 +286,7 @@ fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
             label = { Text(stringResource(R.string.lists_label_name)) }, 
             modifier = Modifier.fillMaxWidth(),
             isError = nameTouched && name.isBlank(),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             supportingText = {
                 if (nameTouched && name.isBlank()) {
                     Text(stringResource(R.string.family_error_name_required), color = MaterialTheme.colorScheme.error)

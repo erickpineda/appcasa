@@ -1,50 +1,102 @@
 package com.appcasa.features.presentation.screen
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SettingsSuggest
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.StickyNote2
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.appcasa.core.ui.theme.AppCasaTheme
+import coil3.compose.AsyncImage
+import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
-import com.appcasa.core.ui.components.bounceClick
-import com.appcasa.features.presentation.viewmodel.DashboardViewModel
-import com.appcasa.features.dashboard.presentation.model.SearchItem
-import com.appcasa.features.dashboard.data.local.PostItEntity
-import com.appcasa.features.family.data.local.MiembroEntity
-import com.appcasa.core.domain.model.TipoMiembro
-import com.appcasa.navigation.Screen
-import androidx.compose.ui.res.stringResource
-import com.appcasa.feature.dashboard.R
+import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.core.utils.Constants
-import coil3.compose.AsyncImage
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
+import com.appcasa.feature.dashboard.R
+import com.appcasa.features.dashboard.data.local.PostItEntity
+import com.appcasa.features.dashboard.presentation.model.SearchItem
+import com.appcasa.features.family.data.local.MiembroEntity
+import com.appcasa.features.presentation.viewmodel.DashboardViewModel
+import com.appcasa.navigation.Screen
 import kotlin.random.Random
 
 @Composable
@@ -52,11 +104,9 @@ fun DashboardScreen(
   navController: NavController,
   viewModel: DashboardViewModel = hiltViewModel()
 ) {
-  val petCount by viewModel.petCount.collectAsState()
-  val petSummary by viewModel.petSummary.collectAsState()
+  val petData by viewModel.petData.collectAsState()
   val pendingTasks by viewModel.pendingTasksCount.collectAsState()
-  val nextEvent by viewModel.nextEvent.collectAsState()
-  val nextEventDate by viewModel.nextEventDate.collectAsState()
+  val nextEventData by viewModel.nextEventData.collectAsState()
   val monthlyExpense by viewModel.monthlyExpense.collectAsState()
   val lowStockCount by viewModel.lowStockCount.collectAsState()
   
@@ -70,11 +120,11 @@ fun DashboardScreen(
   AppCasaMeshBackground {
     PullToRefreshWrapper {
       DashboardContent(
-        petCount = petCount,
-        petSummary = petSummary,
+        petCount = petData.first,
+        petSummary = petData.second,
         pendingTasks = pendingTasks,
-        nextEvent = nextEvent,
-        nextEventDate = nextEventDate,
+        nextEvent = nextEventData.first,
+        nextEventDate = nextEventData.second,
         monthlyExpense = monthlyExpense,
         lowStockCount = lowStockCount,
         searchQuery = searchQuery,
@@ -196,7 +246,8 @@ fun DashboardContent(
                 value = postItText,
                 onValueChange = { postItText = it },
                 placeholder = { Text(stringResource(R.string.dashboard_postit_placeholder)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
         },
         confirmButton = {
@@ -584,7 +635,8 @@ fun PostItCard(postIt: PostItEntity, onDelete: () -> Unit, onEdit: (String) -> U
                 OutlinedTextField(
                     value = editedText,
                     onValueChange = { editedText = it },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                 )
             },
             confirmButton = {

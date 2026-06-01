@@ -7,19 +7,78 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Task
+import androidx.compose.material.icons.filled.Today
+import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -27,30 +86,33 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.TipoEvento
+import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
-import com.appcasa.core.ui.theme.Birthday
 import com.appcasa.core.ui.theme.AppCasaTheme
-import com.appcasa.features.calendar.presentation.viewmodel.CalendarViewModel
+import com.appcasa.core.ui.theme.Birthday
+import com.appcasa.feature.calendar.R
 import com.appcasa.features.calendar.presentation.viewmodel.CalendarItem
+import com.appcasa.features.calendar.presentation.viewmodel.CalendarViewModel
 import com.appcasa.features.reminders.presentation.viewmodel.RemindersViewModel
 import com.appcasa.navigation.Screen
-import androidx.compose.ui.res.stringResource
-import com.appcasa.feature.calendar.R
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.TextStyle
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun CalendarScreen(
@@ -60,6 +122,7 @@ fun CalendarScreen(
 ) {
   val state by viewModel.calendarItems.collectAsState()
   val historyPage by viewModel.historyPage.collectAsState()
+  val searchQuery by viewModel.searchQuery.collectAsState()
   val context = LocalContext.current
   
   var showAddReminderDialog by remember { mutableStateOf(false) }
@@ -116,6 +179,8 @@ fun CalendarScreen(
       navController = navController,
       state = state,
       historyPage = historyPage,
+      searchQuery = searchQuery,
+      onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
       selectedTab = selectedTab,
       onTabChange = { selectedTab = it },
       currentMonth = currentMonth,
@@ -169,6 +234,8 @@ fun CalendarContent(
   navController: NavController,
   state: com.appcasa.features.calendar.presentation.viewmodel.CalendarState,
   historyPage: Int,
+  searchQuery: String,
+  onSearchQueryChange: (String) -> Unit,
   selectedTab: Int,
   onTabChange: (Int) -> Unit,
   currentMonth: YearMonth,
@@ -189,6 +256,8 @@ fun CalendarContent(
   val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value % 7
   val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
   val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+
+  var isSearching by remember { mutableStateOf(false) }
 
   // Selector rápido de fecha
   var showJumpDatePicker by remember { mutableStateOf(false) }
@@ -238,27 +307,60 @@ fun CalendarContent(
   Scaffold(
     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     topBar = {
-      MediumTopAppBar(
-        title = { Text(stringResource(R.string.calendar_title), fontWeight = FontWeight.Bold) },
-        scrollBehavior = scrollBehavior,
-        colors = TopAppBarDefaults.mediumTopAppBarColors(
-          containerColor = MaterialTheme.colorScheme.primary,
-          scrolledContainerColor = MaterialTheme.colorScheme.primary,
-          titleContentColor = MaterialTheme.colorScheme.onPrimary,
-          actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
-          navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-        ),
-        navigationIcon = {
-          IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
-          }
-        },
-        actions = {
-          IconButton(onClick = onImportClick) {
-            Icon(Icons.Default.UploadFile, contentDescription = stringResource(R.string.cd_import))
-          }
-        }
-      )
+      if (isSearching) {
+          TopAppBar(
+              title = {
+                  TextField(
+                      value = searchQuery,
+                      onValueChange = onSearchQueryChange,
+                      placeholder = { Text("Buscar en la agenda...") },
+                      modifier = Modifier.fillMaxWidth(),
+                      singleLine = true,
+                      colors = TextFieldDefaults.colors(
+                          focusedContainerColor = Color.Transparent,
+                          unfocusedContainerColor = Color.Transparent,
+                          cursorColor = MaterialTheme.colorScheme.onPrimary,
+                          focusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                          unfocusedTextColor = MaterialTheme.colorScheme.onPrimary
+                      ),
+                      trailingIcon = {
+                          IconButton(onClick = { 
+                              onSearchQueryChange("")
+                              isSearching = false 
+                          }) {
+                              Icon(Icons.Default.Close, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+                          }
+                      }
+                  )
+              },
+              colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
+          )
+      } else {
+          MediumTopAppBar(
+            title = { Text(stringResource(R.string.calendar_title), fontWeight = FontWeight.Bold) },
+            scrollBehavior = scrollBehavior,
+            colors = TopAppBarDefaults.mediumTopAppBarColors(
+              containerColor = MaterialTheme.colorScheme.primary,
+              scrolledContainerColor = MaterialTheme.colorScheme.primary,
+              titleContentColor = MaterialTheme.colorScheme.onPrimary,
+              actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
+              navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            navigationIcon = {
+              IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+              }
+            },
+            actions = {
+              IconButton(onClick = { isSearching = true }) {
+                  Icon(Icons.Default.Search, contentDescription = "Buscar")
+              }
+              IconButton(onClick = onImportClick) {
+                Icon(Icons.Default.UploadFile, contentDescription = stringResource(R.string.cd_import))
+              }
+            }
+          )
+      }
     },
     floatingActionButton = {
       FloatingActionButton(onClick = onAddReminderClick) {
@@ -275,7 +377,7 @@ fun CalendarContent(
       verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
       item {
-        com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true,
+        AppCasaCard(useGlassmorphism = true,
           modifier = Modifier.padding(16.dp)
         ) {
           Column(modifier = Modifier.padding(8.dp)) {
@@ -598,6 +700,29 @@ fun CalendarContent(
             }
           }
           
+          if (state.hasArchive) {
+            item {
+              AppCasaCard(
+                  useGlassmorphism = true,
+                  modifier = Modifier.padding(16.dp),
+                  onClick = { isSearching = true }
+              ) {
+                  Row(
+                      modifier = Modifier.padding(16.dp),
+                      verticalAlignment = Alignment.CenterVertically,
+                      horizontalArrangement = Arrangement.spacedBy(12.dp)
+                  ) {
+                      Icon(Icons.Default.Inventory2, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                      Column(modifier = Modifier.weight(1f)) {
+                          Text("Archivo histórico", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                          Text("Hay registros antiguos ocultos. Usa la búsqueda para encontrarlos.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                      }
+                      Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+                  }
+              }
+            }
+          }
+
           if (visibleHistory.size < state.history.size) {
             item {
               TextButton(
@@ -648,7 +773,7 @@ fun AgendaItemCompact(
     }
   }
 
-  com.appcasa.core.ui.components.AppCasaCard(
+  AppCasaCard(
     useGlassmorphism = true,
     modifier = Modifier
       .fillMaxWidth()
@@ -837,7 +962,8 @@ fun AddReminderDialog(
           value = titulo,
           onValueChange = { titulo = it },
           label = { Text(stringResource(R.string.calendar_label_what_to_remember)) },
-          modifier = Modifier.fillMaxWidth()
+          modifier = Modifier.fillMaxWidth(),
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
         Button(
           onClick = { showDatePicker = true },
@@ -949,7 +1075,8 @@ fun EditCalendarItemDialog(
           value = titulo,
           onValueChange = { titulo = it },
           label = { Text(stringResource(R.string.calendar_label_title)) },
-          modifier = Modifier.fillMaxWidth()
+          modifier = Modifier.fillMaxWidth(),
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
         Button(
           onClick = { showDatePicker = true },
@@ -986,6 +1113,8 @@ fun CalendarPreview() {
       navController = NavController(LocalContext.current),
       state = com.appcasa.features.calendar.presentation.viewmodel.CalendarState(),
       historyPage = 0,
+      searchQuery = "",
+      onSearchQueryChange = {},
       selectedTab = 0,
       onTabChange = {},
       currentMonth = YearMonth.now(),

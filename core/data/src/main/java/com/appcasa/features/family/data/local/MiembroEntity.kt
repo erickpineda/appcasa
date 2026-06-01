@@ -24,7 +24,8 @@ import com.appcasa.features.settings.data.local.HogarEntity
   )],
   indices = [
     Index("hogar_id"),
-    Index("tipo")
+    Index("tipo"),
+    Index("nombre")
   ]
 )
 data class MiembroEntity(

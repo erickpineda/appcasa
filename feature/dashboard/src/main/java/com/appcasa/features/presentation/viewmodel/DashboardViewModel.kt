@@ -1,51 +1,57 @@
 package com.appcasa.features.presentation.viewmodel
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.Task
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.model.TipoMiembro
-import com.appcasa.core.domain.model.TipoEvento
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
+import com.appcasa.core.domain.scheduler.ReminderScheduler
+import com.appcasa.core.utils.Constants
+import com.appcasa.features.calendar.data.local.EventoDao
+import com.appcasa.features.dashboard.data.local.DashboardConfigEntity
+import com.appcasa.features.dashboard.data.local.DashboardDao
+import com.appcasa.features.dashboard.data.local.PostItEntity
+import com.appcasa.features.dashboard.presentation.model.SearchItem
+import com.appcasa.features.dashboard.presentation.model.SearchType
 import com.appcasa.features.family.data.local.MiembroDao
 import com.appcasa.features.family.data.local.MiembroEntity
+import com.appcasa.features.finance.data.local.ExpenseDao
+import com.appcasa.features.inventory.data.local.StockDao
+import com.appcasa.features.lists.data.local.ListaDao
+import com.appcasa.features.lists.data.local.ListaEntity
+import com.appcasa.features.maintenance.data.local.MaintenanceDao
+import com.appcasa.features.maintenance.data.local.MaintenanceEntity
+import com.appcasa.features.reminders.data.local.RecordatorioDao
 import com.appcasa.features.settings.data.local.ConfiguracionDao
 import com.appcasa.features.settings.data.local.HogarEntity
 import com.appcasa.features.settings.data.local.UsuarioEntity
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import java.util.Calendar
-import javax.inject.Inject
-
-import com.appcasa.features.dashboard.data.local.DashboardDao
-import com.appcasa.features.dashboard.data.local.DashboardConfigEntity
-import com.appcasa.features.dashboard.data.local.PostItEntity
-import com.appcasa.features.maintenance.data.local.MaintenanceDao
-import com.appcasa.features.maintenance.data.local.MaintenanceEntity
-import com.appcasa.core.domain.model.EstadoTarea
-import com.appcasa.features.calendar.data.local.EventoDao
-import com.appcasa.features.calendar.data.local.EventoEntity
-import com.appcasa.features.reminders.data.local.RecordatorioDao
-import com.appcasa.features.reminders.data.local.RecordatorioEntity
 import com.appcasa.features.tasks.data.local.TareaDao
-import com.appcasa.features.tasks.data.local.TareaEntity
 import com.appcasa.features.utilities.data.local.UtilidadDao
 import com.appcasa.features.utilities.data.local.UtilidadEntity
-import com.appcasa.features.lists.data.local.ListaDao
-import com.appcasa.features.lists.data.local.ListaEntity
-import com.appcasa.features.inventory.data.local.StockDao
-import com.appcasa.features.inventory.data.local.StockEntity
-import com.appcasa.features.finance.data.local.ExpenseDao
-import com.appcasa.features.finance.data.local.ExpenseEntity
-import com.appcasa.core.domain.scheduler.ReminderScheduler
-import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.features.dashboard.presentation.model.SearchItem
-import com.appcasa.features.dashboard.presentation.model.SearchType
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.List
 import com.appcasa.navigation.Screen
-import com.appcasa.core.utils.Constants
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
+import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
@@ -81,26 +87,70 @@ class DashboardViewModel @Inject constructor(
     .flatMapLatest { id -> miembroDao.getMiembrosByHogar(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-  private val _petCount = MutableStateFlow("0")
-  val petCount: StateFlow<String> = _petCount.asStateFlow()
+  val petData: StateFlow<Pair<String, String>> = familyMembers
+    .map { miembros ->
+        val mascotas = miembros.filter { it.tipo != TipoMiembro.PERSONA.name }
+        val count = mascotas.size.toString()
+        val summaryList = mutableListOf<String>()
+        val perros = mascotas.count { it.tipo == TipoMiembro.PERRO.name }
+        val gatos = mascotas.count { it.tipo == TipoMiembro.GATO.name }
+        val tortugas = mascotas.count { it.tipo == TipoMiembro.TORTUGA.name }
+        if (perros > 0) summaryList.add("$perros perro${if (perros > 1) "s" else ""}")
+        if (gatos > 0) summaryList.add("$gatos gato${if (gatos > 1) "s" else ""}")
+        if (tortugas > 0) summaryList.add("$tortugas tortuga${if (tortugas > 1) "s" else ""}")
+        val summary = if (summaryList.isEmpty()) "Sin mascotas" else summaryList.joinToString(" · ")
+        count to summary
+    }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "0" to "Sin mascotas registradas")
 
-  private val _petSummary = MutableStateFlow("Sin mascotas registradas")
-  val petSummary: StateFlow<String> = _petSummary.asStateFlow()
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val pendingTasksCount: StateFlow<String> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> tareaDao.getTareasByHogar(id) }
+    .map { tareas -> tareas.count { it.estado != EstadoTarea.COMPLETADA.name }.toString() }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "0")
 
-  private val _pendingTasksCount = MutableStateFlow("0")
-  val pendingTasksCount: StateFlow<String> = _pendingTasksCount.asStateFlow()
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val monthlyExpense: StateFlow<String> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> expenseDao.getTotalMonthlyExpense(id, getStartOfMonth()) }
+    .map { total -> String.format(Locale.getDefault(), "%.2f €", total ?: 0.0) }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "0.00 €")
 
-  private val _nextEvent = MutableStateFlow("No hay eventos")
-  val nextEvent: StateFlow<String> = _nextEvent.asStateFlow()
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val lowStockCount: StateFlow<Int> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> stockDao.getLowStockItems(id) }
+    .map { it.size }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-  private val _nextEventDate = MutableStateFlow("")
-  val nextEventDate: StateFlow<String> = _nextEventDate.asStateFlow()
-
-  private val _monthlyExpense = MutableStateFlow("0.00 €")
-  val monthlyExpense: StateFlow<String> = _monthlyExpense.asStateFlow()
-
-  private val _lowStockCount = MutableStateFlow(0)
-  val lowStockCount: StateFlow<Int> = _lowStockCount.asStateFlow()
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val nextEventData: StateFlow<Pair<String, String>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id ->
+        combine(
+            eventoDao.getEventosByHogar(id), 
+            recordatorioDao.getRecordatoriosByHogar(id),
+            tareaDao.getTareasByHogar(id),
+            miembroDao.getMiembrosByHogar(id)
+        ) { eventos, recordatorios, tareas, miembros ->
+            val birthdays = miembros.filter { it.fechaNacimiento != null }.map { 
+              "Cumpleaños: ${it.nombre} 🎂" to calculateBirthdayOccurrence(it.fechaNacimiento!!)
+            }
+            
+            (eventos.map { it.titulo to it.fecha } + 
+             recordatorios.map { it.titulo to it.fechaHora } +
+             tareas.filter { it.fechaLimite != null && it.estado != EstadoTarea.COMPLETADA.name }.map { it.titulo to it.fechaLimite!! } +
+             birthdays)
+              .filter { it.second >= System.currentTimeMillis() }
+              .sortedBy { it.second }
+              .firstOrNull()
+        }
+    }
+    .map { proximo ->
+        if (proximo != null) {
+            proximo.first to formatDate(proximo.second)
+        } else {
+            "Sin eventos próximos" to ""
+        }
+    }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "No hay eventos" to "")
 
   private val _searchQuery = MutableStateFlow("")
   val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -112,7 +162,6 @@ class DashboardViewModel @Inject constructor(
     viewModelScope.launch {
       currentHouseholdProvider.householdId.collect { id ->
         ensureDefaultHogar(id)
-        observeData(id)
         observeDashboardExtras(id)
       }
     }
@@ -225,71 +274,6 @@ class DashboardViewModel @Inject constructor(
 
   fun onSearchQueryChange(query: String) {
     _searchQuery.value = query
-  }
-
-  private fun observeData(id: Long) {
-    viewModelScope.launch {
-      miembroDao.getMiembrosByHogar(id).collect { miembros ->
-        val mascotas = miembros.filter { it.tipo != TipoMiembro.PERSONA.name }
-        _petCount.value = mascotas.size.toString()
-        val summary = mutableListOf<String>()
-        val perros = mascotas.count { it.tipo == TipoMiembro.PERRO.name }
-        val gatos = mascotas.count { it.tipo == TipoMiembro.GATO.name }
-        val tortugas = mascotas.count { it.tipo == TipoMiembro.TORTUGA.name }
-        if (perros > 0) summary.add("$perros perro${if (perros > 1) "s" else ""}")
-        if (gatos > 0) summary.add("$gatos gato${if (gatos > 1) "s" else ""}")
-        if (tortugas > 0) summary.add("$tortugas tortuga${if (tortugas > 1) "s" else ""}")
-        _petSummary.value = if (summary.isEmpty()) "Sin mascotas" else summary.joinToString(" · ")
-      }
-    }
-
-    viewModelScope.launch {
-      tareaDao.getTareasByHogar(id).collect { tareas ->
-        val pendientes = tareas.count { it.estado != EstadoTarea.COMPLETADA.name }
-        _pendingTasksCount.value = pendientes.toString()
-      }
-    }
-
-    viewModelScope.launch {
-      expenseDao.getTotalMonthlyExpense(id, getStartOfMonth()).collect { total ->
-        _monthlyExpense.value = String.format(Locale.getDefault(), "%.2f €", total ?: 0.0)
-      }
-    }
-
-    viewModelScope.launch {
-      stockDao.getLowStockItems(id).collect { lowItems ->
-        _lowStockCount.value = lowItems.size
-      }
-    }
-
-    viewModelScope.launch {
-      combine(
-        eventoDao.getEventosByHogar(id), 
-        recordatorioDao.getRecordatoriosByHogar(id),
-        tareaDao.getTareasByHogar(id),
-        miembroDao.getMiembrosByHogar(id)
-      ) { eventos, recordatorios, tareas, miembros ->
-        val birthdays = miembros.filter { it.fechaNacimiento != null }.map { 
-          "Cumpleaños: ${it.nombre} 🎂" to calculateBirthdayOccurrence(it.fechaNacimiento!!)
-        }
-        
-        (eventos.map { it.titulo to it.fecha } + 
-         recordatorios.map { it.titulo to it.fechaHora } +
-         tareas.filter { it.fechaLimite != null && it.estado != EstadoTarea.COMPLETADA.name }.map { it.titulo to it.fechaLimite!! } +
-         birthdays)
-          .filter { it.second >= System.currentTimeMillis() }
-          .sortedBy { it.second }
-          .firstOrNull()
-      }.collect { proximo ->
-        if (proximo != null) {
-          _nextEvent.value = proximo.first
-          _nextEventDate.value = formatDate(proximo.second)
-        } else {
-          _nextEvent.value = "Sin eventos próximos"
-          _nextEventDate.value = ""
-        }
-      }
-    }
   }
 
   private fun calculateBirthdayOccurrence(birthDateMillis: Long): Long {
