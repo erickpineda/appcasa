@@ -3,7 +3,9 @@ package com.appcasa.features.utilities.presentation.screen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,10 +26,10 @@ fun CocinaConverterScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Conversor de Cocina") },
+        title = { Text(stringResource(R.string.util_kitchen_converter)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         }
       )
@@ -45,26 +47,26 @@ fun CocinaConverterScreen(
           OutlinedTextField(
             value = value,
             onValueChange = { value = it },
-            label = { Text("Cantidad a convertir") },
+            label = { Text(stringResource(R.string.util_kitchen_label_amount)) },
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal)
           )
         }
         item {
-          ConversionGroup("Líquidos / Volumen")
-          ConversionRow("Tazas a ml", "${String.format("%.1f", numValue * 240)} ml")
-          ConversionRow("Cucharadas a ml", "${String.format("%.1f", numValue * 15)} ml")
-          ConversionRow("Cucharaditas a ml", "${String.format("%.1f", numValue * 5)} ml")
+          ConversionGroup(stringResource(R.string.util_kitchen_group_liquids))
+          ConversionRow(stringResource(R.string.util_kitchen_cups_ml), "${String.format("%.1f", numValue * 240)} ml")
+          ConversionRow(stringResource(R.string.util_kitchen_tbsp_ml), "${String.format("%.1f", numValue * 15)} ml")
+          ConversionRow(stringResource(R.string.util_kitchen_tsp_ml), "${String.format("%.1f", numValue * 5)} ml")
         }
         item {
-          ConversionGroup("Peso (Aproximado)")
-          ConversionRow("Taza harina a gr", "${String.format("%.1f", numValue * 120)} gr")
-          ConversionRow("Taza azúcar a gr", "${String.format("%.1f", numValue * 200)} gr")
+          ConversionGroup(stringResource(R.string.util_kitchen_group_weight))
+          ConversionRow(stringResource(R.string.util_kitchen_flour_gr), "${String.format("%.1f", numValue * 120)} gr")
+          ConversionRow(stringResource(R.string.util_kitchen_sugar_gr), "${String.format("%.1f", numValue * 200)} gr")
         }
         item {
-          ConversionGroup("Temperatura")
-          ConversionRow("Fahrenheit a Celsius", "${String.format("%.1f", (numValue - 32) * 5/9)} °C")
-          ConversionRow("Celsius a Fahrenheit", "${String.format("%.1f", (numValue * 9/5) + 32)} °F")
+          ConversionGroup(stringResource(R.string.util_kitchen_group_temp))
+          ConversionRow(stringResource(R.string.util_kitchen_f_to_c), "${String.format("%.1f", (numValue - 32) * 5/9)} °C")
+          ConversionRow(stringResource(R.string.util_kitchen_c_to_f), "${String.format("%.1f", (numValue * 9/5) + 32)} °F")
         }
       }
     }

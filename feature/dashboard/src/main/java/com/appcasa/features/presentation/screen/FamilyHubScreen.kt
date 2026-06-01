@@ -18,6 +18,8 @@ import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.navigation.Screen
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +31,7 @@ fun FamilyHubScreen(
       Scaffold(
         topBar = {
           TopAppBar(
-            title = { Text("Familia y Vida") },
+            title = { Text(stringResource(R.string.hub_family_life_title)) },
             colors = TopAppBarDefaults.topAppBarColors(
               containerColor = MaterialTheme.colorScheme.primary,
               titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -48,16 +50,16 @@ fun FamilyHubScreen(
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
           HubCard(
-            title = "Miembros",
-            subtitle = "Humanos y pasaportes de mascotas",
+            title = stringResource(R.string.hub_members_title),
+            subtitle = stringResource(R.string.hub_members_subtitle),
             icon = Icons.Default.Groups,
             color = MaterialTheme.colorScheme.primary,
             onClick = { navController.navigate(Screen.Family.route) }
           )
 
           HubCard(
-            title = "Agenda",
-            subtitle = "Eventos, vacunas y turnos",
+            title = stringResource(R.string.hub_agenda_title),
+            subtitle = stringResource(R.string.hub_agenda_subtitle),
             icon = Icons.Default.CalendarMonth,
             color = MaterialTheme.colorScheme.secondary,
             onClick = { navController.navigate(Screen.Calendar.route) }

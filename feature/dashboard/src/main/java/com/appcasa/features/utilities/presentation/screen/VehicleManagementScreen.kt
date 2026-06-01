@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,10 +35,10 @@ fun VehicleManagementScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Mi Vehículo") },
+        title = { Text(stringResource(R.string.util_vehicle_title)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -55,7 +58,7 @@ fun VehicleManagementScreen(
       verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
       Text(
-        "Datos del Vehículo", 
+        stringResource(R.string.util_vehicle_section_data), 
         style = MaterialTheme.typography.titleMedium, 
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.Bold
@@ -66,21 +69,21 @@ fun VehicleManagementScreen(
           OutlinedTextField(
             value = model,
             onValueChange = { model = it },
-            label = { Text("Marca y Modelo") },
+            label = { Text(stringResource(R.string.util_vehicle_label_model)) },
             leadingIcon = { Icon(Icons.Default.DirectionsCar, contentDescription = null) },
             modifier = Modifier.fillMaxWidth()
           )
           OutlinedTextField(
             value = plate,
             onValueChange = { plate = it },
-            label = { Text("Matrícula") },
+            label = { Text(stringResource(R.string.util_vehicle_label_plate)) },
             leadingIcon = { Icon(Icons.Default.Tag, contentDescription = null) },
             modifier = Modifier.fillMaxWidth()
           )
           OutlinedTextField(
             value = year,
             onValueChange = { year = it },
-            label = { Text("Año") },
+            label = { Text(stringResource(R.string.util_vehicle_label_year)) },
             leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
             modifier = Modifier.fillMaxWidth()
           )
@@ -88,7 +91,7 @@ fun VehicleManagementScreen(
       }
 
       Text(
-        "Seguro y Asistencia", 
+        stringResource(R.string.util_vehicle_section_insurance), 
         style = MaterialTheme.typography.titleMedium, 
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.Bold
@@ -99,14 +102,14 @@ fun VehicleManagementScreen(
           OutlinedTextField(
             value = insurance,
             onValueChange = { insurance = it },
-            label = { Text("Compañía de Seguro") },
+            label = { Text(stringResource(R.string.util_vehicle_label_insurance_company)) },
             leadingIcon = { Icon(Icons.Default.Shield, contentDescription = null) },
             modifier = Modifier.fillMaxWidth()
           )
           OutlinedTextField(
             value = phone,
             onValueChange = { phone = it },
-            label = { Text("Teléfono Asistencia") },
+            label = { Text(stringResource(R.string.util_vehicle_label_assistance_phone)) },
             leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
             modifier = Modifier.fillMaxWidth()
           )
@@ -125,7 +128,7 @@ fun VehicleManagementScreen(
       ) {
         Icon(Icons.Default.Save, contentDescription = null)
         Spacer(Modifier.width(8.dp))
-        Text("GUARDAR TODO")
+        Text(stringResource(R.string.util_vehicle_btn_save_all))
       }
     }
   }

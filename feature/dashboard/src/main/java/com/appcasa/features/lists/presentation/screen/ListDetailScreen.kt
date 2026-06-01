@@ -20,6 +20,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 import com.appcasa.features.lists.data.local.ListaItemEntity
 import com.appcasa.features.lists.presentation.viewmodel.ListDetailViewModel
 
@@ -43,19 +45,19 @@ fun ListDetailScreen(
       TopAppBar(
         title = { 
           if (isSelectionMode) {
-            Text("${selectedItems.size} seleccionados")
+            Text(stringResource(R.string.lists_selected_count, selectedItems.size))
           } else {
-            Text("Items de la Lista")
+            Text(stringResource(R.string.lists_items_title))
           }
         },
         navigationIcon = {
           if (isSelectionMode) {
             IconButton(onClick = { selectedItems = emptySet() }) {
-              Icon(Icons.Default.Close, contentDescription = "Cancelar selección")
+              Icon(Icons.Default.Close, contentDescription = stringResource(R.string.lists_btn_cancel))
             }
           } else {
             IconButton(onClick = { navController.popBackStack() }) {
-              Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+              Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
             }
           }
         },
@@ -71,7 +73,7 @@ fun ListDetailScreen(
             }) {
               Icon(
                 imageVector = if (allSelectedCompleted) Icons.Default.RadioButtonUnchecked else Icons.Default.CheckCircle,
-                contentDescription = "Cambiar estado"
+                contentDescription = stringResource(R.string.dashboard_change_status_cd)
               )
             }
 
@@ -84,7 +86,7 @@ fun ListDetailScreen(
             }) {
               Icon(
                 imageVector = if (selectedItems.size == items.size) Icons.Default.Deselect else Icons.Default.SelectAll,
-                contentDescription = "Seleccionar todo"
+                contentDescription = stringResource(R.string.dashboard_select_all_cd)
               )
             }
             IconButton(onClick = {
@@ -93,7 +95,7 @@ fun ListDetailScreen(
               viewModel.deleteItems(toDelete)
               selectedItems = emptySet()
             }) {
-              Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error)
+              Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete), tint = MaterialTheme.colorScheme.error)
             }
           } else {
             IconButton(onClick = {
@@ -107,7 +109,7 @@ fun ListDetailScreen(
               }
               context.startActivity(Intent.createChooser(sendIntent, null))
             }) {
-              Icon(Icons.Default.Share, contentDescription = "Compartir")
+              Icon(Icons.Default.Share, contentDescription = stringResource(R.string.dashboard_share_cd))
             }
           }
         }
@@ -130,7 +132,7 @@ fun ListDetailScreen(
           OutlinedTextField(
             value = newItemText,
             onValueChange = { newItemText = it },
-            placeholder = { Text("Nuevo ítem...") },
+            placeholder = { Text(stringResource(R.string.lists_placeholder_new_item)) },
             modifier = Modifier.weight(1f),
             singleLine = true,
             textStyle = MaterialTheme.typography.bodyMedium,
@@ -148,7 +150,7 @@ fun ListDetailScreen(
             modifier = Modifier.size(if (isCompact) 40.dp else 48.dp),
             elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp)
           ) {
-            Icon(Icons.Default.Add, contentDescription = "Añadir")
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add))
           }
         }
       }
@@ -170,7 +172,7 @@ fun ListDetailScreen(
           ) {
             Icon(Icons.Default.LibraryAddCheck, contentDescription = null, modifier = Modifier.size(14.dp))
             Spacer(modifier = Modifier.width(4.dp))
-            Text("Seleccionar", style = if (isCompact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.lists_btn_select), style = if (isCompact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium)
           }
         }
       }
@@ -259,10 +261,10 @@ fun CompactListItemEditable(
         trailingIcon = {
           Row {
             IconButton(onClick = { if (editedText.isNotBlank()) { onEdit(editedText); isEditing = false } }, modifier = Modifier.size(28.dp)) {
-              Icon(Icons.Default.Check, contentDescription = "OK", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+              Icon(Icons.Default.Check, contentDescription = stringResource(R.string.family_btn_ok), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
             }
             IconButton(onClick = { editedText = item.texto; isEditing = false }, modifier = Modifier.size(28.dp)) {
-              Icon(Icons.Default.Close, contentDescription = "X", modifier = Modifier.size(16.dp))
+              Icon(Icons.Default.Close, contentDescription = stringResource(R.string.lists_btn_cancel), modifier = Modifier.size(16.dp))
             }
           }
         }
@@ -294,7 +296,7 @@ fun CompactListItemEditable(
         IconButton(onClick = onDelete, modifier = Modifier.size(if (isCompact) 32.dp else 40.dp)) {
           Icon(
             Icons.Default.Delete, 
-            contentDescription = "Borrar", 
+            contentDescription = stringResource(R.string.cd_delete),
             tint = MaterialTheme.colorScheme.error.copy(alpha = 0.4f),
             modifier = Modifier.size(if (isCompact) 14.dp else 16.dp)
           )

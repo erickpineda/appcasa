@@ -19,6 +19,8 @@ import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.features.presentation.viewmodel.DashboardViewModel
 import com.appcasa.features.settings.presentation.viewmodel.SettingsViewModel
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.settings.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,15 +38,17 @@ fun SettingsScreen(
   var seedStatus by remember { mutableStateOf<String?>(null) }
   var showSeedConfirm by remember { mutableStateOf(false) }
 
+  val seedSuccessMessage = stringResource(R.string.settings_seed_success)
+
   AppCasaConfirmDialog(
     show = showSeedConfirm,
-    title = "¡Atención!",
-    text = "Esta acción borrará todos tus datos actuales (gastos, tareas, familia) para cargar los datos oficiales de Erick. ¿Estás seguro?",
-    confirmText = "Sí, cargar datos",
+    title = stringResource(R.string.settings_seed_confirm_title),
+    text = stringResource(R.string.settings_seed_confirm_text),
+    confirmText = stringResource(R.string.settings_seed_confirm_btn),
     icon = Icons.Default.Warning,
     onConfirm = {
         dashboardViewModel.seedRealData(hogar?.id ?: 1L)
-        seedStatus = "¡Datos de Erick y familia cargados con éxito!"
+        seedStatus = seedSuccessMessage
         showSeedConfirm = false
     },
     onDismiss = { showSeedConfirm = false }
@@ -52,7 +56,7 @@ fun SettingsScreen(
 
   Column(modifier = Modifier.fillMaxSize()) {
     TopAppBar(
-      title = { Text("Ajustes") },
+      title = { Text(stringResource(R.string.settings_title)) },
       colors = TopAppBarDefaults.topAppBarColors(
         containerColor = MaterialTheme.colorScheme.primary,
         titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -71,7 +75,7 @@ fun SettingsScreen(
         ) {
           Text(seedStatus!!, style = MaterialTheme.typography.bodySmall)
           Spacer(Modifier.width(8.dp))
-          TextButton(onClick = { seedStatus = null }) { Text("OK") }
+          TextButton(onClick = { seedStatus = null }) { Text(stringResource(R.string.settings_ok)) }
         }
       }
     }
@@ -108,7 +112,7 @@ fun SettingsContent(
   val shopMode = configs["modo_tienda"] == "true"
   val compactView = configs["vista_compacta"] == "true"
   val preferredListId = configs["lista_compra_id"]?.toLongOrNull()
-  val preferredListName = listas.find { it.id == preferredListId }?.nombre ?: "No seleccionada"
+  val preferredListName = listas.find { it.id == preferredListId }?.nombre ?: stringResource(R.string.settings_list_not_selected)
 
   var showNameDialog by remember { mutableStateOf(false) }
   var showHogarDialog by remember { mutableStateOf(false) }
@@ -117,7 +121,7 @@ fun SettingsContent(
 
   if (showNameDialog) {
     EditValueDialog(
-      title = "Nombre de Usuario",
+      title = stringResource(R.string.settings_user_name_title),
       initialValue = userName,
       onDismiss = { showNameDialog = false },
       onConfirm = { onUpdateName(it); showNameDialog = false }
@@ -126,7 +130,7 @@ fun SettingsContent(
 
   if (showHogarDialog) {
     EditValueDialog(
-      title = "Nombre del Hogar",
+      title = stringResource(R.string.settings_household_name_title),
       initialValue = householdName,
       onDismiss = { showHogarDialog = false },
       onConfirm = { onUpdateHouseholdName(it); showHogarDialog = false }
@@ -155,11 +159,11 @@ fun SettingsContent(
     contentPadding = PaddingValues(16.dp),
     verticalArrangement = Arrangement.spacedBy(8.dp)
   ) {
-    item { SettingsSectionHeader("Perfil del Hogar") }
+    item { SettingsSectionHeader(stringResource(R.string.settings_section_profile)) }
     item {
       SettingsItem(
         icon = Icons.Default.Person,
-        title = "Nombre del Usuario",
+        title = stringResource(R.string.settings_user_name_title),
         subtitle = userName,
         onClick = { showNameDialog = true }
       )
@@ -167,20 +171,20 @@ fun SettingsContent(
     item {
       SettingsItem(
         icon = Icons.Default.Home,
-        title = "Nombre del Hogar",
+        title = stringResource(R.string.settings_household_name_title),
         subtitle = householdName,
         onClick = { showHogarDialog = true }
       )
     }
 
     item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
-    item { SettingsSectionHeader("Apariencia y Notificaciones") }
+    item { SettingsSectionHeader(stringResource(R.string.settings_section_appearance)) }
     
     item {
       SettingsToggleItem(
         icon = Icons.Default.DarkMode,
-        title = "Modo Oscuro",
-        subtitle = "Cambiar el tema de la aplicación",
+        title = stringResource(R.string.settings_dark_mode_title),
+        subtitle = stringResource(R.string.settings_dark_mode_subtitle),
         checked = darkMode,
         onCheckedChange = { onUpdateConfig("tema_oscuro", it.toString()) }
       )
@@ -188,8 +192,8 @@ fun SettingsContent(
     item {
       SettingsToggleItem(
         icon = Icons.Default.Notifications,
-        title = "Notificaciones",
-        subtitle = "Recibir avisos de tareas y eventos",
+        title = stringResource(R.string.settings_notifications_title),
+        subtitle = stringResource(R.string.settings_notifications_subtitle),
         checked = notificationsEnabled,
         onCheckedChange = { onUpdateConfig("notif_activas", it.toString()) }
       )
@@ -197,28 +201,28 @@ fun SettingsContent(
     item {
       SettingsToggleItem(
         icon = Icons.Default.Compress,
-        title = "Vista Compacta",
-        subtitle = "Mostrar listas con menos espacio",
+        title = stringResource(R.string.settings_compact_view_title),
+        subtitle = stringResource(R.string.settings_compact_view_subtitle),
         checked = compactView,
         onCheckedChange = { onUpdateConfig("vista_compacta", it.toString()) }
       )
     }
 
     item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
-    item { SettingsSectionHeader("Preferencias de Uso") }
+    item { SettingsSectionHeader(stringResource(R.string.settings_section_preferences)) }
 
     item {
       SettingsItem(
         icon = Icons.Default.Payments,
-        title = "Moneda Local",
-        subtitle = "Símbolo: $currency",
+        title = stringResource(R.string.settings_currency_title),
+        subtitle = stringResource(R.string.settings_currency_subtitle, currency),
         onClick = { showCurrencyDialog = true }
       )
     }
     item {
       SettingsItem(
         icon = Icons.Default.ShoppingCart,
-        title = "Lista de la Compra Principal",
+        title = stringResource(R.string.settings_main_list_title),
         subtitle = preferredListName,
         onClick = { showListSelector = true }
       )
@@ -226,21 +230,21 @@ fun SettingsContent(
     item {
       SettingsToggleItem(
         icon = Icons.Default.Storefront,
-        title = "Modo Tienda",
-        subtitle = "Mantener pantalla encendida en listas",
+        title = stringResource(R.string.settings_shop_mode_title),
+        subtitle = stringResource(R.string.settings_shop_mode_subtitle),
         checked = shopMode,
         onCheckedChange = { onUpdateConfig("modo_tienda", it.toString()) }
       )
     }
 
     item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
-    item { SettingsSectionHeader("Sistema") }
+    item { SettingsSectionHeader(stringResource(R.string.settings_section_system)) }
 
     item {
       SettingsItem(
         icon = Icons.Default.CloudUpload,
-        title = "Actualizar Datos Oficiales",
-        subtitle = "Cargar Erick, Alicia, Brian y mascotas",
+        title = stringResource(R.string.settings_seed_data_title),
+        subtitle = stringResource(R.string.settings_seed_data_subtitle),
         onClick = onSeedData
       )
     }
@@ -248,8 +252,8 @@ fun SettingsContent(
     item {
       SettingsItem(
         icon = Icons.Default.Info,
-        title = "Acerca de AppCasa",
-        subtitle = "Versión 1.0.0-Beta",
+        title = stringResource(R.string.settings_about_title),
+        subtitle = stringResource(R.string.settings_about_subtitle),
         onClick = {}
       )
     }
@@ -258,7 +262,7 @@ fun SettingsContent(
       Spacer(modifier = Modifier.height(24.dp))
       Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Text(
-          text = "Hecho con ❤️ para la familia",
+          text = stringResource(R.string.settings_footer),
           style = MaterialTheme.typography.labelSmall,
           color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
         )
@@ -287,10 +291,10 @@ fun EditValueDialog(
       )
     },
     confirmButton = {
-      Button(onClick = { if (text.isNotBlank()) onConfirm(text) }) { Text("Guardar") }
+      Button(onClick = { if (text.isNotBlank()) onConfirm(text) }) { Text(stringResource(R.string.settings_btn_save)) }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.settings_btn_cancel)) }
     }
   )
 }
@@ -304,7 +308,7 @@ fun CurrencySelectorDialog(
   val currencies = listOf("€", "$", "£", "¥", "₣")
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Seleccionar Moneda") },
+    title = { Text(stringResource(R.string.settings_dialog_currency_title)) },
     text = {
       Column {
         currencies.forEach { curr ->
@@ -320,7 +324,7 @@ fun CurrencySelectorDialog(
       }
     },
     confirmButton = {},
-    dismissButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } }
+    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.settings_btn_close)) } }
   )
 }
 
@@ -333,10 +337,10 @@ fun ListSelectorDialog(
 ) {
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Lista de la Compra") },
+    title = { Text(stringResource(R.string.settings_dialog_list_title)) },
     text = {
       if (listas.isEmpty()) {
-        Text("No hay listas creadas. Crea una en la sección de Listas.")
+        Text(stringResource(R.string.settings_dialog_no_lists))
       } else {
         LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)) {
           items(listas) { lista ->
@@ -353,7 +357,7 @@ fun ListSelectorDialog(
       }
     },
     confirmButton = {},
-    dismissButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } }
+    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.settings_btn_close)) } }
   )
 }
 

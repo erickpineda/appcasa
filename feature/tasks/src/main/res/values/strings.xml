@@ -1,0 +1,65 @@
+<resources>
+    <!-- Tasks Screen -->
+    <string name="tasks_title">Tareas del Hogar</string>
+    <string name="tasks_new_task">Nueva Tarea</string>
+    <string name="tasks_empty_title">¡Todo al día!</string>
+    <string name="tasks_empty_description">No hay tareas pendientes en tu hogar. Disfruta de tu tiempo libre.</string>
+    <string name="tasks_create_first">Crear primera tarea</string>
+    <string name="tasks_pending">Pendientes</string>
+    <string name="tasks_completed">Completadas</string>
+
+    <!-- Task Item -->
+    <string name="task_save">Guardar</string>
+    <string name="task_cancel">Cancelar</string>
+    <string name="task_delete">Borrar</string>
+    <string name="task_subtasks_format">📋 %1$d/%2$d</string>
+
+    <!-- Add/Edit Task -->
+    <string name="task_add_title">Nueva Tarea</string>
+    <string name="task_edit_title">Editar Tarea</string>
+    <string name="task_label_title">¿Qué hay que hacer?</string>
+    <string name="task_error_title_required">El título es obligatorio</string>
+    <string name="task_type">Tipo de tarea</string>
+    <string name="task_details_placeholder">Detalles de la tarea…</string>
+    <string name="task_repeat">Repetir</string>
+    <string name="task_notify_before">Avisar antes:</string>
+    <string name="task_assign_to">Asignar a</string>
+    <string name="task_unassigned">Sin asignar</string>
+    <string name="task_priority">Prioridad</string>
+    <string name="task_personal_checkbox">Es una tarea personal</string>
+    <string name="task_create_button">Crear Tarea</string>
+    <string name="task_next_hour">Siguiente (Hora)</string>
+    <string name="task_all_day">Todo el día</string>
+    <string name="task_ok">OK</string>
+    <string name="task_select_hour">Seleccionar Hora</string>
+    <string name="task_selected_count">%d seleccionados</string>
+    <string name="task_fallback_title">Tarea</string>
+    <string name="task_cd_cancel_selection">Cancelar selección</string>
+    <string name="task_cd_change_status">Cambiar estado</string>
+    <string name="task_cd_select_all">Seleccionar todo</string>
+    <string name="task_cd_delete_selected">Borrar seleccionados</string>
+    <string name="task_cd_photo">Foto</string>
+    <string name="task_label_vence">Vence: %s</string>
+    <string name="task_label_aviso_antes">Aviso: %d min antes</string>
+    <string name="task_no_note">Sin nota.</string>
+    <string name="task_steps_title">Pasos de la tarea</string>
+    <string name="task_btn_select">Seleccionar</string>
+    <string name="task_placeholder_add_step">Añadir paso…</string>
+    <string name="task_label_description">Descripción / Nota</string>
+    <string name="task_content_type">Tipo de Contenido</string>
+    <string name="task_content_type_list">Lista</string>
+    <string name="task_content_type_note">Nota</string>
+    <string name="task_btn_add_deadline">Añadir Fecha Límite</string>
+    <string name="task_btn_add_image">Añadir Imagen</string>
+    <string name="task_btn_change_image">Cambiar Imagen</string>
+    <string name="task_label_personal">Tarea personal</string>
+    <string name="task_label_personal_long">Es una tarea personal</string>
+    <string name="task_label_add_deadline_optional">Añadir Fecha Límite (Opcional)</string>
+    <string name="task_label_attach_photo">Adjuntar Foto</string>
+    <string name="task_label_change_photo">Cambiar Foto</string>
+    <string name="task_label_preview">Vista previa</string>
+    <string name="task_label_content_type_note">Nota de texto</string>
+    <string name="task_label_content_type_list">Lista / Pasos</string>
+    <string name="cd_back">Atrás</string>
+    <string name="cd_add">Añadir</string>
+</resources>

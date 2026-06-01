@@ -1,0 +1,33 @@
+<resources>
+    <!-- Finance Screen -->
+    <string name="finance_title">Gastos del Hogar</string>
+    <string name="finance_empty_title">Sin gastos aún</string>
+    <string name="finance_empty_description">Anota tu primer gasto para empezar a llevar el control del hogar. ¡Puedes escanear tickets!</string>
+    <string name="finance_add_action">Añadir gasto</string>
+
+    <!-- Dialogs -->
+    <string name="finance_delete_title">Borrar Gasto</string>
+    <string name="finance_delete_confirm">¿Estás seguro de que quieres eliminar \"%s\"? Esta acción no se puede deshacer.</string>
+    <string name="finance_action_add_title">Registrar Gasto</string>
+    <string name="finance_action_edit_title">Editar Gasto</string>
+    <string name="finance_ocr_detected">Ticket escaneado: %1$s %2$s</string>
+    <string name="finance_label_concept">Concepto</string>
+    <string name="finance_label_amount">Importe (%s)</string>
+    <string name="finance_error_amount_invalid">El importe debe ser un número mayor a 0</string>
+    <string name="finance_label_category">Categoría</string>
+    <string name="finance_btn_save">Guardar</string>
+    <string name="finance_btn_update">Actualizar</string>
+    <string name="finance_btn_cancel">Cancelar</string>
+
+    <!-- Sharing -->
+    <string name="finance_share_summary_title">💰 *Resumen de Gastos AppCasa*:</string>
+    <string name="finance_share_total_label">\n\n*TOTAL: %1$s %2$s*</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_back">Atrás</string>
+    <string name="cd_scan_ticket">Escanear ticket</string>
+    <string name="cd_share">Compartir gastos</string>
+    <string name="cd_new_expense">Nuevo Gasto</string>
+    <string name="cd_edit">Editar</string>
+    <string name="cd_delete">Borrar</string>
+</resources>

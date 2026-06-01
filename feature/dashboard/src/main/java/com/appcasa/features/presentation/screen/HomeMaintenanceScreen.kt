@@ -20,6 +20,8 @@ import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.maintenance.data.local.MaintenanceEntity
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 import com.appcasa.features.presentation.viewmodel.HomeMaintenanceViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -36,8 +38,8 @@ fun HomeMaintenanceScreen(
 
     AppCasaConfirmDialog(
         show = eventToDelete != null,
-        title = "Eliminar Registro",
-        text = "¿Borrar el registro de '${eventToDelete?.titulo}'? Perderás la información histórica de este mantenimiento.",
+        title = stringResource(R.string.maintenance_delete_title),
+        text = stringResource(R.string.maintenance_delete_confirm, eventToDelete?.titulo ?: ""),
         onConfirm = {
             eventToDelete?.let { viewModel.deleteEvent(it) }
             eventToDelete = null
@@ -59,10 +61,10 @@ fun HomeMaintenanceScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Mantenimiento del Hogar") },
+                    title = { Text(stringResource(R.string.maintenance_title)) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -74,7 +76,7 @@ fun HomeMaintenanceScreen(
             },
             floatingActionButton = {
                 FloatingActionButton(onClick = { showAddDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Registrar mantenimiento")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.maintenance_new_title))
                 }
             }
         ) { padding ->
@@ -88,15 +90,16 @@ fun HomeMaintenanceScreen(
                 if (events.isEmpty()) {
                     item {
                         AppCasaEmptyState(
-                            title = "Historial vacío",
-                            description = "Registra revisiones de caldera, cambios de filtros, pintura, etc.",
+                            title = stringResource(R.string.maintenance_empty_title),
+                            description = stringResource(R.string.maintenance_empty_desc),
                             icon = Icons.Default.Build,
-                            actionText = "Registrar primero",
+                            actionText = stringResource(R.string.maintenance_btn_add_first),
                             onActionClick = { showAddDialog = true },
                             modifier = Modifier.fillParentMaxSize()
                         )
                     }
-                } else {
+                }
+                else {
                     items(events) { event ->
                         MaintenanceCard(
                             event = event,
@@ -120,12 +123,12 @@ fun MaintenanceCard(
             supportingContent = {
                 Column {
                     Text(event.categoria, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                    Text("Realizado: ${formatDate(event.fechaRealizacion)}", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.maintenance_label_done, formatDate(event.fechaRealizacion)), style = MaterialTheme.typography.bodySmall)
                     event.proximaRevision?.let {
-                        Text("Próxima: ${formatDate(it)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.maintenance_label_next, formatDate(it)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                     }
                     if (event.coste != null) {
-                        Text("Coste: ${event.coste} €", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.maintenance_label_cost, event.coste.toString()), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     }
                 }
             },
@@ -142,7 +145,7 @@ fun MaintenanceCard(
             },
             trailingContent = {
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
                 }
             }
         )
@@ -197,16 +200,16 @@ fun MaintenanceActionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Registrar Mantenimiento") },
+        title = { Text(stringResource(R.string.maintenance_new_title)) },
         text = {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
-                    OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("¿Qué has hecho?") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(stringResource(R.string.maintenance_label_question)) }, modifier = Modifier.fillMaxWidth())
                 }
                 item {
                     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                         OutlinedTextField(
-                            value = cat, onValueChange = {}, readOnly = true, label = { Text("Categoría") },
+                            value = cat, onValueChange = {}, readOnly = true, label = { Text(stringResource(R.string.family_label_category)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             modifier = Modifier.menuAnchor().fillMaxWidth()
                         )
@@ -218,18 +221,18 @@ fun MaintenanceActionDialog(
                     }
                 }
                 item {
-                    OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text("Detalles (Opcional)") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+                    OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text(stringResource(R.string.maintenance_label_details_optional)) }, modifier = Modifier.fillMaxWidth(), minLines = 2)
                 }
                 item {
-                    OutlinedTextField(value = cost, onValueChange = { cost = it }, label = { Text("Coste € (Opcional)") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = cost, onValueChange = { cost = it }, label = { Text(stringResource(R.string.maintenance_label_cost_optional)) }, modifier = Modifier.fillMaxWidth())
                 }
                 item {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(onClick = { showDatePicker = true }, modifier = Modifier.weight(1f)) {
-                            Text("Realizado: " + formatDate(dateMillis))
+                            Text(stringResource(R.string.maintenance_label_done, formatDate(dateMillis)))
                         }
                         Button(onClick = { showNextDatePicker = true }, modifier = Modifier.weight(1f)) {
-                            Text(if (nextDateMillis == null) "Añadir Revisión" else "Siguiente: " + formatDate(nextDateMillis!!))
+                            Text(if (nextDateMillis == null) stringResource(R.string.maintenance_btn_add_revision) else stringResource(R.string.maintenance_label_next_format, formatDate(nextDateMillis!!)))
                         }
                     }
                 }
@@ -240,9 +243,9 @@ fun MaintenanceActionDialog(
                 if (title.isNotBlank()) {
                     onConfirm(title, cat, desc.takeIf { it.isNotBlank() }, dateMillis, nextDateMillis, cost.toDoubleOrNull())
                 }
-            }) { Text("Guardar") }
+            }) { Text(stringResource(R.string.dashboard_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dashboard_cancel)) } }
     )
 }
 

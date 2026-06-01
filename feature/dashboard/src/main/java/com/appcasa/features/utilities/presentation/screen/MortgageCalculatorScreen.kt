@@ -5,7 +5,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -44,10 +46,10 @@ fun MortgageCalculatorScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Calculadora Hipoteca") },
+        title = { Text(stringResource(R.string.util_mortgage_title)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         },
         actions = {
@@ -56,7 +58,7 @@ fun MortgageCalculatorScreen(
             viewModel.saveValue("MORTGAGE_INTEREST", interest)
             viewModel.saveValue("MORTGAGE_YEARS", years)
           }) {
-            Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
+            Text(stringResource(R.string.util_bmi_save), color = MaterialTheme.colorScheme.onPrimary)
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -77,7 +79,7 @@ fun MortgageCalculatorScreen(
       OutlinedTextField(
         value = capital,
         onValueChange = { capital = it },
-        label = { Text("Capital Prestado (€)") },
+        label = { Text(stringResource(R.string.util_mortgage_label_capital)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         modifier = Modifier.fillMaxWidth()
       )
@@ -85,7 +87,7 @@ fun MortgageCalculatorScreen(
       OutlinedTextField(
         value = interest,
         onValueChange = { interest = it },
-        label = { Text("Interés Anual (%)") },
+        label = { Text(stringResource(R.string.util_mortgage_label_interest)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         modifier = Modifier.fillMaxWidth()
       )
@@ -93,14 +95,14 @@ fun MortgageCalculatorScreen(
       OutlinedTextField(
         value = years,
         onValueChange = { years = it },
-        label = { Text("Plazo (Años)") },
+        label = { Text(stringResource(R.string.util_mortgage_label_term)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.fillMaxWidth()
       )
 
       AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(24.dp)) {
-          Text("Cuota Mensual", style = MaterialTheme.typography.labelLarge)
+          Text(stringResource(R.string.util_mortgage_result_label), style = MaterialTheme.typography.labelLarge)
           Text(
             text = "${String.format("%.2f", monthlyPayment)} €",
             style = MaterialTheme.typography.displayMedium,

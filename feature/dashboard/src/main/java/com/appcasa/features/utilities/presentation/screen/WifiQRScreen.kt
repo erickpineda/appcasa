@@ -17,6 +17,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 import com.appcasa.core.ui.components.AppCasaCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,10 +33,10 @@ fun WifiQRScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Compartir WiFi") },
+        title = { Text(stringResource(R.string.util_wifi_share)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         }
       )
@@ -54,7 +56,7 @@ fun WifiQRScreen(
           OutlinedTextField(
             value = ssid,
             onValueChange = { ssid = it },
-            label = { Text("Nombre de la Red (SSID)") },
+            label = { Text(stringResource(R.string.util_wifi_ssid)) },
             leadingIcon = { Icon(Icons.Default.Wifi, contentDescription = null) },
             modifier = Modifier.fillMaxWidth()
           )
@@ -62,7 +64,7 @@ fun WifiQRScreen(
           OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Contraseña") },
+            label = { Text(stringResource(R.string.util_wifi_password)) },
             visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
               IconButton(onClick = { showPassword = !showPassword }) {
@@ -75,7 +77,7 @@ fun WifiQRScreen(
       }
 
       if (ssid.isNotBlank()) {
-        Text("Escanea para conectarte", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.util_wifi_instructions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         
         AppCasaCard(
           modifier = Modifier.size(240.dp),
@@ -85,7 +87,7 @@ fun WifiQRScreen(
             // Aquí iría el generador de QR. Usamos un placeholder visual elegante.
             Icon(
               Icons.Default.QrCode, 
-              contentDescription = "QR Placeholder", 
+              contentDescription = stringResource(R.string.util_wifi_qr_cd), // Adding this
               modifier = Modifier.size(180.dp),
               tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
             )
@@ -99,7 +101,7 @@ fun WifiQRScreen(
         }
         
         Text(
-          "Formato estándar de conexión automática", 
+          stringResource(R.string.util_wifi_standard_format), // Adding this
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -109,7 +111,7 @@ fun WifiQRScreen(
           contentAlignment = Alignment.Center
         ) {
           Text(
-            "Introduce el nombre de tu red para generar el código",
+            stringResource(R.string.util_wifi_enter_ssid_hint), // Adding this
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             color = MaterialTheme.colorScheme.outline
           )

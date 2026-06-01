@@ -1,0 +1,35 @@
+<resources>
+    <!-- Inventory Screen -->
+    <string name="inventory_title">Inventario y Stock</string>
+    <string name="inventory_empty_title">Inventario vacío</string>
+    <string name="inventory_empty_description">Añade los productos que sueles tener en casa para controlar su stock. ¡Prueba a escanear un código!</string>
+    <string name="inventory_add_action">Añadir artículo</string>
+
+    <!-- Dialogs -->
+    <string name="inventory_add_to_list_title">Añadir a la Compra</string>
+    <string name="inventory_add_to_list_question">¿Cuántas unidades de \"%s\" quieres añadir?</string>
+    <string name="inventory_label_quantity_unit">Cantidad (%s)</string>
+    <string name="inventory_no_lists_error">No tienes listas creadas. Crea una primero.</string>
+    <string name="inventory_select_list">Seleccionar lista:</string>
+    <string name="inventory_btn_add">Añadir</string>
+    <string name="inventory_btn_cancel">Cancelar</string>
+    <string name="inventory_new_item_title">Nuevo Artículo</string>
+    <string name="inventory_edit_item_title">Editar Artículo</string>
+    <string name="inventory_barcode_detected">Código detectado: %s</string>
+    <string name="inventory_label_name">Nombre</string>
+    <string name="inventory_error_name_required">El nombre es obligatorio</string>
+    <string name="inventory_label_category">Categoría</string>
+    <string name="inventory_label_qty_short">Cant.</string>
+    <string name="inventory_label_min_short">Mín.</string>
+    <string name="inventory_label_unit">Unidad (kg, sacos...)</string>
+    <string name="inventory_btn_save">Guardar</string>
+
+    <!-- Item Card -->
+    <string name="inventory_low_stock_label">STOCK BAJO • %s</string>
+    <string name="inventory_add_to_shopping_btn">AÑADIR A LA COMPRA</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_back">Atrás</string>
+    <string name="cd_scan">Escanear barras</string>
+    <string name="cd_add_item">Añadir Artículo</string>
+</resources>

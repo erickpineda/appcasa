@@ -38,6 +38,9 @@ import com.appcasa.features.dashboard.data.local.PostItEntity
 import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.navigation.Screen
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
+import com.appcasa.core.utils.Constants
 import coil3.compose.AsyncImage
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
@@ -187,12 +190,12 @@ fun DashboardContent(
   if (showPostItDialog) {
     AlertDialog(
         onDismissRequest = { showPostItDialog = false },
-        title = { Text("Nuevo Post-it") },
+        title = { Text(stringResource(R.string.dashboard_new_postit)) },
         text = {
             OutlinedTextField(
                 value = postItText,
                 onValueChange = { postItText = it },
-                placeholder = { Text("Escribe algo para la familia...") },
+                placeholder = { Text(stringResource(R.string.dashboard_postit_placeholder)) },
                 modifier = Modifier.fillMaxWidth()
             )
         },
@@ -203,25 +206,25 @@ fun DashboardContent(
                     postItText = ""
                     showPostItDialog = false
                 }
-            }) { Text("Pegar") }
+            }) { Text(stringResource(R.string.dashboard_postit_confirm)) }
         }
     )
   }
 
   if (showReorderDialog) {
     val modules = listOf(
-        "TASKS" to "Tareas",
-        "PETS" to "Mascotas",
-        "CALENDAR" to "Agenda",
-        "EXPENSES" to "Gastos",
-        "POSTITS" to "Post-its"
+        Constants.Modules.TASKS to stringResource(R.string.module_tasks),
+        Constants.Modules.PETS to stringResource(R.string.module_pets),
+        Constants.Modules.CALENDAR to stringResource(R.string.module_calendar),
+        Constants.Modules.EXPENSES to stringResource(R.string.module_expenses),
+        Constants.Modules.POSTITS to stringResource(R.string.module_postits)
     )
     AlertDialog(
         onDismissRequest = { showReorderDialog = false },
-        title = { Text("Personalizar Dashboard") },
+        title = { Text(stringResource(R.string.dashboard_customize)) },
         text = {
             Column {
-                Text("Selecciona el orden de aparición:", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.dashboard_reorder_instruction), style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(8.dp))
                 dashboardOrder.forEachIndexed { index, code ->
                     val name = modules.find { it.first == code }?.second ?: code
@@ -245,7 +248,7 @@ fun DashboardContent(
                 }
             }
         },
-        confirmButton = { Button(onClick = { showReorderDialog = false }) { Text("Hecho") } }
+        confirmButton = { Button(onClick = { showReorderDialog = false }) { Text(stringResource(R.string.dashboard_done)) } }
     )
   }
 
@@ -256,13 +259,13 @@ fun DashboardContent(
           title = {
             Column {
               Text(
-                text = "AppCasa",
+                text = stringResource(com.appcasa.core.ui.R.string.app_name),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary
               )
               Text(
-                text = "Centro de mando familiar",
+                text = stringResource(R.string.dashboard_subtitle),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
               )
@@ -270,16 +273,16 @@ fun DashboardContent(
           },
           actions = {
             IconButton(onClick = { showPostItDialog = true }) {
-                Icon(Icons.Default.StickyNote2, contentDescription = "Post-it", tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(Icons.Default.StickyNote2, contentDescription = stringResource(R.string.cd_postit), tint = MaterialTheme.colorScheme.onPrimary)
             }
             IconButton(onClick = { showReorderDialog = true }) {
-                Icon(Icons.Default.SettingsSuggest, contentDescription = "Personalizar", tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(Icons.Default.SettingsSuggest, contentDescription = stringResource(R.string.cd_customize), tint = MaterialTheme.colorScheme.onPrimary)
             }
             IconButton(onClick = { searchActive = true }) {
-              Icon(Icons.Default.Search, contentDescription = "Buscar", tint = MaterialTheme.colorScheme.onPrimary)
+              Icon(Icons.Default.Search, contentDescription = stringResource(R.string.cd_search), tint = MaterialTheme.colorScheme.onPrimary)
             }
             IconButton(onClick = onNavigateToSettings) {
-              Icon(Icons.Default.Settings, contentDescription = "Ajustes", tint = MaterialTheme.colorScheme.onPrimary)
+              Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.cd_settings), tint = MaterialTheme.colorScheme.onPrimary)
             }
           },
           colors = TopAppBarDefaults.topAppBarColors(
@@ -299,13 +302,13 @@ fun DashboardContent(
           onSearch = { },
           active = searchActive,
           onActiveChange = { searchActive = it },
-          placeholder = { Text("Busca tareas, listas, familia...") },
+          placeholder = { Text(stringResource(R.string.dashboard_search_placeholder)) },
           leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
           trailingIcon = { 
             IconButton(onClick = { 
               if (searchQuery.isNotEmpty()) onSearchQueryChange("") else searchActive = false 
             }) {
-              Icon(Icons.Default.Close, contentDescription = "Cerrar")
+              Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close))
             }
           },
           modifier = Modifier.fillMaxWidth().padding(horizontal = if (searchActive) 0.dp else 16.dp)
@@ -339,7 +342,7 @@ fun DashboardContent(
                     tint = MaterialTheme.colorScheme.outline
                   )
                   Spacer(modifier = Modifier.height(16.dp))
-                  Text("No hay resultados para \"$searchQuery\"", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.outline)
+                  Text(stringResource(R.string.dashboard_no_results, searchQuery), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.outline)
                 }
               }
             }
@@ -359,7 +362,7 @@ fun DashboardContent(
         ) {
           item {
             Text(
-              text = "Estado de la familia",
+              text = stringResource(R.string.dashboard_family_status),
               style = MaterialTheme.typography.titleMedium,
               color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -376,43 +379,43 @@ fun DashboardContent(
 
           dashboardOrder.forEach { module ->
               when(module) {
-                  "TASKS" -> item { 
+                  Constants.Modules.TASKS -> item { 
                     DashboardCard(
                       icon = Icons.Default.CheckCircle,  
-                      title = "Tareas pendientes", 
+                      title = stringResource(R.string.module_tasks), 
                       value = pendingTasks, 
-                      subtitle = if (pendingTasks == "0") "Todo al día" else "Tareas por hacer",
+                      subtitle = if (pendingTasks == "0") stringResource(R.string.tasks_all_done) else stringResource(R.string.tasks_to_do),
                       onClick = onNavigateToTasks
                     ) 
                   }
-                  "PETS" -> item { 
+                  Constants.Modules.PETS -> item { 
                     DashboardCard(
                       icon = Icons.Default.Pets,          
-                      title = "Mascotas", 
+                      title = stringResource(R.string.module_pets), 
                       value = petCount,  
                       subtitle = petSummary,
                       onClick = onNavigateToFamily
                     ) 
                   }
-                  "CALENDAR" -> item { 
+                  Constants.Modules.CALENDAR -> item { 
                     DashboardCard(
                       icon = Icons.Default.CalendarMonth, 
-                      title = "Próximo evento", 
+                      title = stringResource(R.string.module_calendar), 
                       value = nextEvent, 
                       subtitle = nextEventDate,
                       onClick = onNavigateToCalendar
                     ) 
                   }
-                  "EXPENSES" -> item { 
+                  Constants.Modules.EXPENSES -> item { 
                     DashboardCard(
                       icon = Icons.Default.Payments, 
-                      title = "Gastos del mes", 
+                      title = stringResource(R.string.module_expenses), 
                       value = monthlyExpense, 
-                      subtitle = "Presupuesto familiar",
+                      subtitle = stringResource(R.string.expenses_budget),
                       onClick = onNavigateToExpenses
                     ) 
                   }
-                  "POSTITS" -> if (postIts.isNotEmpty()) {
+                  Constants.Modules.POSTITS -> if (postIts.isNotEmpty()) {
                       item {
                           Text("Notas de la familia", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = 16.dp))
                           Row(
@@ -439,9 +442,9 @@ fun DashboardContent(
             item {
               DashboardCard(
                 icon = Icons.Default.Inventory,
-                title = "Stock Crítico",
-                value = "$lowStockCount artículos",
-                subtitle = "Necesitan reposición",
+                title = stringResource(R.string.inventory_low_stock),
+                value = stringResource(R.string.inventory_items_count, lowStockCount),
+                subtitle = stringResource(R.string.inventory_needs_restock),
                 onClick = onNavigateToInventory,
                 containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
               )
@@ -451,7 +454,7 @@ fun DashboardContent(
           item {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-              text = "Utilidades rápidas",
+              text = stringResource(R.string.quick_utilities),
               style = MaterialTheme.typography.titleMedium,
               color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -465,25 +468,25 @@ fun DashboardContent(
               QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.Medication,
-                label = "Dosis",
+                label = stringResource(R.string.action_dosage),
                 onClick = onNavigateToDosage
               )
               QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.PictureAsPdf,
-                label = "PDF",
+                label = stringResource(R.string.action_pdf),
                 onClick = onNavigateToPdf
               )
               QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.Lock,
-                label = "Safe",
+                label = stringResource(R.string.action_safe),
                 onClick = onNavigateToSafe
               )
               QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.ShoppingCart,
-                label = "Compra",
+                label = stringResource(R.string.action_shopping),
                 onClick = onNavigateToLists
               )
             }
@@ -537,7 +540,7 @@ fun MoodAvatar(member: MiembroEntity, onMoodClick: (String) -> Unit) {
     if (showMoodPicker) {
         AlertDialog(
             onDismissRequest = { showMoodPicker = false },
-            title = { Text("¿Cómo estás, ${member.nombre}?") },
+            title = { Text(stringResource(R.string.dashboard_mood_question, member.nombre)) },
             text = {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     emojis.forEach { emoji ->
@@ -576,7 +579,7 @@ fun PostItCard(postIt: PostItEntity, onDelete: () -> Unit, onEdit: (String) -> U
     if (showEditDialog) {
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Editar Nota") },
+            title = { Text(stringResource(R.string.dashboard_edit_note)) },
             text = {
                 OutlinedTextField(
                     value = editedText,
@@ -590,10 +593,10 @@ fun PostItCard(postIt: PostItEntity, onDelete: () -> Unit, onEdit: (String) -> U
                         onEdit(editedText)
                         showEditDialog = false
                     }
-                }) { Text("Guardar") }
+                }) { Text(stringResource(R.string.dashboard_save)) }
             },
             dismissButton = {
-                TextButton(onClick = { showEditDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showEditDialog = false }) { Text(stringResource(R.string.dashboard_cancel)) }
             }
         )
     }

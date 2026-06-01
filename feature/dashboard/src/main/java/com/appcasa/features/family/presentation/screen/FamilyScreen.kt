@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,6 +29,8 @@ import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 import com.appcasa.navigation.Screen
 
 import androidx.compose.ui.draw.clip
@@ -46,8 +49,8 @@ fun FamilyScreen(
 
   AppCasaConfirmDialog(
     show = memberToDelete != null,
-    title = "Eliminar Miembro",
-    text = "¿Estás seguro de que quieres eliminar a ${memberToDelete?.nombre}? Se perderá todo su progreso y XP.",
+    title = stringResource(R.string.dashboard_delete_title_fallback, "Miembro"), // Added fallback title to strings.xml if needed, but let's use a better one
+    text = stringResource(R.string.dashboard_delete_confirm_fallback, memberToDelete?.nombre ?: ""), 
     onConfirm = {
         memberToDelete?.let { viewModel.deleteMember(it) }
         memberToDelete = null
@@ -88,10 +91,10 @@ fun FamilyContent(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Familia y Mascotas") },
+        title = { Text(stringResource(R.string.family_title)) },
         navigationIcon = {
             IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -103,7 +106,7 @@ fun FamilyContent(
     containerColor = Color.Transparent, // Para ver el MeshBackground
     floatingActionButton = {
       FloatingActionButton(onClick = onAddClick) {
-        Icon(Icons.Default.Add, contentDescription = "Añadir")
+        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.family_btn_add))
       }
     }
   ) { scaffoldPadding ->
@@ -117,10 +120,10 @@ fun FamilyContent(
       if (people.isEmpty() && pets.isEmpty()) {
         item {
           AppCasaEmptyState(
-            title = "Tu hogar está vacío",
-            description = "Añade a los miembros de tu familia y a tus mascotas para organizar mejor el día a día.",
+            title = stringResource(R.string.dashboard_empty_household_title), // Adding these to strings.xml
+            description = stringResource(R.string.dashboard_empty_household_desc),
             icon = Icons.Default.Groups,
-            actionText = "Añadir primer miembro",
+            actionText = stringResource(R.string.family_btn_add_first),
             onActionClick = onAddClick,
             modifier = Modifier.fillParentMaxSize()
           )
@@ -130,7 +133,7 @@ fun FamilyContent(
       if (people.isNotEmpty()) {
         item {
           Text(
-            text = "Miembros de la Familia",
+            text = stringResource(R.string.dashboard_family_members),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold
@@ -150,7 +153,7 @@ fun FamilyContent(
         item {
           Spacer(modifier = Modifier.height(16.dp))
           Text(
-            text = "Nuestras Mascotas (${pets.size})",
+            text = stringResource(R.string.dashboard_pets_title, pets.size),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.secondary,
             fontWeight = FontWeight.Bold
@@ -225,7 +228,7 @@ fun MemberCard(
               shape = RoundedCornerShape(4.dp)
             ) {
               Text(
-                text = "Nivel ${member.nivel}",
+                text = stringResource(R.string.dashboard_level_format, member.nivel),
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
                 fontWeight = FontWeight.Black,
@@ -260,7 +263,7 @@ fun MemberCard(
       }
 
       IconButton(onClick = onDelete) {
-        Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
       }
     }
   }

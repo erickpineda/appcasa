@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -32,10 +34,10 @@ fun BMICalculatorScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Calculadora IMC") },
+        title = { Text(stringResource(R.string.util_bmi_calculator)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         },
         actions = {
@@ -43,7 +45,7 @@ fun BMICalculatorScreen(
             viewModel.saveValue("BMI_HEIGHT", height)
             viewModel.saveValue("BMI_WEIGHT", weight)
           }) {
-            Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
+            Text(stringResource(R.string.util_bmi_save), color = MaterialTheme.colorScheme.onPrimary)
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -64,20 +66,20 @@ fun BMICalculatorScreen(
       OutlinedTextField(
         value = height,
         onValueChange = { height = it },
-        label = { Text("Altura (cm)") },
+        label = { Text(stringResource(R.string.util_bmi_label_height)) },
         modifier = Modifier.fillMaxWidth()
       )
 
       OutlinedTextField(
         value = weight,
         onValueChange = { weight = it },
-        label = { Text("Peso (kg)") },
+        label = { Text(stringResource(R.string.util_bmi_label_weight)) },
         modifier = Modifier.fillMaxWidth()
       )
 
       AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(24.dp)) {
-          Text("Tu IMC es", style = MaterialTheme.typography.labelLarge)
+          Text(stringResource(R.string.util_bmi_result_prefix), style = MaterialTheme.typography.labelLarge)
           Text(
             text = String.format("%.1f", bmi),
             style = MaterialTheme.typography.displayMedium,
@@ -92,7 +94,7 @@ fun BMICalculatorScreen(
       }
       
       Text(
-        "Nota: Los datos guardados aparecerán automáticamente la próxima vez que entres.",
+        stringResource(R.string.util_bmi_save_note),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.outline
       )
@@ -100,11 +102,12 @@ fun BMICalculatorScreen(
   }
 }
 
+@Composable
 private fun getBMICategory(bmi: Double): String {
   return when {
-    bmi < 18.5 -> "Bajo peso"
-    bmi < 25 -> "Normal"
-    bmi < 30 -> "Sobrepeso"
-    else -> "Obesidad"
+    bmi < 18.5 -> stringResource(R.string.util_bmi_cat_underweight)
+    bmi < 25 -> stringResource(R.string.util_bmi_cat_normal)
+    bmi < 30 -> stringResource(R.string.util_bmi_cat_overweight)
+    else -> stringResource(R.string.util_bmi_cat_obese)
   }
 }

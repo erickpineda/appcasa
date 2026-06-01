@@ -5,7 +5,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -38,10 +40,10 @@ fun ConsumptionCalculatorScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Consumo Eléctrico") },
+        title = { Text(stringResource(R.string.util_consumption_title)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         },
         actions = {
@@ -50,7 +52,7 @@ fun ConsumptionCalculatorScreen(
             viewModel.saveValue("CONS_CURR", currentReading)
             viewModel.saveValue("CONS_PRICE", pricePerKwh)
           }) {
-            Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
+            Text(stringResource(R.string.dashboard_save), color = MaterialTheme.colorScheme.onPrimary)
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -71,35 +73,35 @@ fun ConsumptionCalculatorScreen(
       OutlinedTextField(
         value = previousReading,
         onValueChange = { previousReading = it },
-        label = { Text("Lectura Anterior (kWh)") },
+        label = { Text(stringResource(R.string.util_consumption_label_prev)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.fillMaxWidth()
       )
       OutlinedTextField(
         value = currentReading,
         onValueChange = { currentReading = it },
-        label = { Text("Lectura Actual (kWh)") },
+        label = { Text(stringResource(R.string.util_consumption_label_curr)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.fillMaxWidth()
       )
       OutlinedTextField(
         value = pricePerKwh,
         onValueChange = { pricePerKwh = it },
-        label = { Text("Precio por kWh (€)") },
+        label = { Text(stringResource(R.string.util_consumption_label_price)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         modifier = Modifier.fillMaxWidth()
       )
 
       AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(24.dp)) {
-          Text("Resumen Estimado", style = MaterialTheme.typography.labelLarge)
+          Text(stringResource(R.string.util_consumption_result_header), style = MaterialTheme.typography.labelLarge)
           Text(
             text = "${String.format("%.2f", totalCost)} €",
             style = MaterialTheme.typography.displayMedium,
             color = MaterialTheme.colorScheme.primary
           )
           Text(
-            text = "Consumo: ${String.format("%.1f", totalConsumption)} kWh",
+            text = stringResource(R.string.util_consumption_result_format, String.format("%.1f", totalConsumption)),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.secondary
           )

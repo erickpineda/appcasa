@@ -9,6 +9,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.tasks.R
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -74,69 +77,69 @@ fun TaskDetailScreen(
     Scaffold(
       topBar = {
         TopAppBar(
-          title = { 
-            if (isSelectionMode) {
-              Text("${selectedItems.size} seleccionados")
-            } else {
-              Text(task?.titulo ?: "Tarea") 
+        title = { 
+          if (isSelectionMode) {
+            Text(stringResource(R.string.task_selected_count, selectedItems.size))
+          } else {
+            Text(task?.titulo ?: stringResource(R.string.task_fallback_title)) 
+          }
+        },
+        navigationIcon = {
+          if (isSelectionMode) {
+            IconButton(onClick = { selectedItems = emptySet() }) {
+              Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_cd_cancel_selection))
             }
-          },
-          navigationIcon = {
-            if (isSelectionMode) {
-              IconButton(onClick = { selectedItems = emptySet() }) {
-                Icon(Icons.Default.Close, contentDescription = "Cancelar selección")
-              }
-            } else {
-              IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
-              }
+          } else {
+            IconButton(onClick = { navController.popBackStack() }) {
+              Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
             }
-          },
-          actions = {
-            if (isSelectionMode) {
-              val selectedSubTasks = subTasks.filter { selectedItems.contains(it.id) }
-              val allSelectedCompleted = selectedSubTasks.all { it.completado }
+          }
+        },
+        actions = {
+          if (isSelectionMode) {
+            val selectedSubTasks = subTasks.filter { selectedItems.contains(it.id) }
+            val allSelectedCompleted = selectedSubTasks.all { it.completado }
 
-              IconButton(onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                viewModel.toggleSubTasksCompletion(selectedSubTasks, !allSelectedCompleted)
-                selectedItems = emptySet()
-              }) {
-                Icon(
-                  imageVector = if (allSelectedCompleted) Icons.Default.RadioButtonUnchecked else Icons.Default.CheckCircle,
-                  contentDescription = "Cambiar estado"
-                )
-              }
+            IconButton(onClick = {
+              haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+              viewModel.toggleSubTasksCompletion(selectedSubTasks, !allSelectedCompleted)
+              selectedItems = emptySet()
+            }) {
+              Icon(
+                imageVector = if (allSelectedCompleted) Icons.Default.RadioButtonUnchecked else Icons.Default.CheckCircle,
+                contentDescription = stringResource(R.string.task_cd_change_status)
+              )
+            }
 
-              IconButton(onClick = {
-                if (selectedItems.size == subTasks.size) {
-                  selectedItems = emptySet()
-                } else {
-                  selectedItems = subTasks.map { it.id }.toSet()
-                }
-              }) {
-                Icon(
-                  imageVector = if (selectedItems.size == subTasks.size) Icons.Default.Deselect else Icons.Default.SelectAll,
-                  contentDescription = "Seleccionar todo"
-                )
-              }
-              IconButton(onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                val toDelete = subTasks.filter { selectedItems.contains(it.id) }
-                viewModel.deleteSubTasks(toDelete)
+            IconButton(onClick = {
+              if (selectedItems.size == subTasks.size) {
                 selectedItems = emptySet()
-              }) {
-                Icon(Icons.Default.Delete, contentDescription = "Borrar seleccionados", tint = MaterialTheme.colorScheme.error)
+              } else {
+                selectedItems = subTasks.map { it.id }.toSet()
               }
-            } else {
-              if (!isTaskCompleted) {
-                IconButton(onClick = { showEditDialog = true }) {
-                  Icon(Icons.Default.Edit, contentDescription = "Editar Tarea")
-                }
+            }) {
+              Icon(
+                imageVector = if (selectedItems.size == subTasks.size) Icons.Default.Deselect else Icons.Default.SelectAll,
+                contentDescription = stringResource(R.string.task_cd_select_all)
+              )
+            }
+            IconButton(onClick = {
+              haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+              val toDelete = subTasks.filter { selectedItems.contains(it.id) }
+              viewModel.deleteSubTasks(toDelete)
+              selectedItems = emptySet()
+            }) {
+              Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.task_cd_delete_selected), tint = MaterialTheme.colorScheme.error)
+            }
+          } else {
+            if (!isTaskCompleted) {
+              IconButton(onClick = { showEditDialog = true }) {
+                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.task_edit_title))
               }
             }
           }
-        )
+        }
+      )
       }
     ) { padding ->
       Column(
@@ -154,7 +157,7 @@ fun TaskDetailScreen(
                   key(uri) {
                     AsyncImage(
                       model = uri,
-                      contentDescription = "Foto",
+                      contentDescription = stringResource(R.string.task_cd_photo),
                       modifier = Modifier
                         .fillMaxWidth()
                         .height(220.dp)
@@ -174,7 +177,7 @@ fun TaskDetailScreen(
                     if (isTaskCompleted) {
                         SuggestionChip(
                             onClick = {},
-                            label = { Text("COMPLETADA") },
+                            label = { Text(stringResource(R.string.tasks_completed).uppercase()) },
                             icon = { Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) },
                             colors = SuggestionChipDefaults.suggestionChipColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -222,7 +225,7 @@ fun TaskDetailScreen(
                       }
                       
                       Text(
-                        text = "Vence: ${SimpleDateFormat(format, Locale("es", "ES")).format(date)}",
+                        text = stringResource(R.string.task_label_vence, SimpleDateFormat(format, Locale("es", "ES")).format(date)),
                         style = MaterialTheme.typography.labelMedium,
                         color = if (isTaskCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -231,7 +234,7 @@ fun TaskDetailScreen(
                     
                     if (currentTask.anticipacionMins > 0) {
                         Text(
-                            "Aviso: ${currentTask.anticipacionMins} min antes",
+                            stringResource(R.string.task_label_aviso_antes, currentTask.anticipacionMins),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.outline
                         )
@@ -253,7 +256,7 @@ fun TaskDetailScreen(
                         )
                     } else {
                         Box(modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
-                            Text("Sin nota.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            Text(stringResource(R.string.task_no_note), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                         }
                     }
                 }
@@ -276,7 +279,7 @@ fun TaskDetailScreen(
                   horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                   Text(
-                    text = "Pasos de la tarea",
+                    text = stringResource(R.string.task_steps_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -290,7 +293,7 @@ fun TaskDetailScreen(
                     ) {
                       Icon(Icons.Default.LibraryAddCheck, contentDescription = null, modifier = Modifier.size(14.dp))
                       Spacer(modifier = Modifier.width(4.dp))
-                      Text("Seleccionar", style = MaterialTheme.typography.labelSmall)
+                      Text(stringResource(R.string.task_btn_select), style = MaterialTheme.typography.labelSmall)
                     }
                   }
                 }
@@ -310,7 +313,7 @@ fun TaskDetailScreen(
                     OutlinedTextField(
                       value = newSubTaskText,
                       onValueChange = { newSubTaskText = it },
-                      placeholder = { Text("Añadir paso...") },
+                      placeholder = { Text(stringResource(R.string.task_placeholder_add_step)) },
                       modifier = Modifier.weight(1f),
                       singleLine = true,
                       textStyle = MaterialTheme.typography.bodyMedium,
@@ -328,7 +331,7 @@ fun TaskDetailScreen(
                       modifier = Modifier.size(40.dp),
                       elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp)
                     ) {
-                      Icon(Icons.Default.Add, contentDescription = "Añadir")
+                      Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add))
                     }
                   }
                 }
@@ -420,10 +423,10 @@ fun CompactSubTaskItemEditable(
         trailingIcon = {
           Row {
             IconButton(onClick = { if (editedText.isNotBlank()) { onEdit(editedText); isEditing = false } }, modifier = Modifier.size(28.dp)) {
-              Icon(Icons.Default.Check, contentDescription = "OK", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+              Icon(Icons.Default.Check, contentDescription = stringResource(R.string.task_ok), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
             }
             IconButton(onClick = { editedText = item.texto; isEditing = false }, modifier = Modifier.size(28.dp)) {
-              Icon(Icons.Default.Close, contentDescription = "X", modifier = Modifier.size(16.dp))
+              Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_cancel), modifier = Modifier.size(16.dp))
             }
           }
         }
@@ -444,7 +447,7 @@ fun CompactSubTaskItemEditable(
         IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
           Icon(
             Icons.Default.Delete, 
-            contentDescription = "Borrar", 
+            contentDescription = stringResource(R.string.task_delete), 
             tint = MaterialTheme.colorScheme.error.copy(alpha = 0.4f),
             modifier = Modifier.size(14.dp)
           )
@@ -501,7 +504,7 @@ fun EditTaskMainDialog(
           selectedFecha = datePickerState.selectedDateMillis
           showDatePicker = false
           showTimePicker = true
-        }) { Text("Siguiente (Hora)") }
+        }) { Text(stringResource(R.string.task_next_hour)) }
       },
       dismissButton = {
         TextButton(onClick = { 
@@ -514,7 +517,7 @@ fun EditTaskMainDialog(
             cal.timeInMillis
           }
           showDatePicker = false 
-        }) { Text("Todo el día") }
+        }) { Text(stringResource(R.string.task_all_day)) }
       }
     ) {
       DatePicker(state = datePickerState)
@@ -533,7 +536,7 @@ fun EditTaskMainDialog(
           }
           selectedFecha = cal.timeInMillis
           showTimePicker = false
-        }) { Text("OK") }
+        }) { Text(stringResource(R.string.task_ok)) }
       },
       dismissButton = {
         TextButton(onClick = {
@@ -544,33 +547,33 @@ fun EditTaskMainDialog(
           }
           selectedFecha = cal.timeInMillis
           showTimePicker = false
-        }) { Text("Todo el día") }
+        }) { Text(stringResource(R.string.task_all_day)) }
       },
-      title = { Text("Seleccionar Hora") },
+      title = { Text(stringResource(R.string.task_select_hour)) },
       text = { TimePicker(state = timePickerState) }
     )
   }
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Editar Tarea") },
+    title = { Text(stringResource(R.string.task_edit_title)) },
     text = {
       LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         item {
-          OutlinedTextField(value = t, onValueChange = { t = it }, label = { Text("Título") }, modifier = Modifier.fillMaxWidth())
+          OutlinedTextField(value = t, onValueChange = { t = it }, label = { Text(stringResource(R.string.task_label_title)) }, modifier = Modifier.fillMaxWidth())
         }
         item {
-          OutlinedTextField(value = d, onValueChange = { d = it }, label = { Text("Descripción / Nota") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+          OutlinedTextField(value = d, onValueChange = { d = it }, label = { Text(stringResource(R.string.task_label_description)) }, modifier = Modifier.fillMaxWidth(), minLines = 2)
         }
 
         item {
-          Text("Tipo de Contenido", style = MaterialTheme.typography.labelSmall)
+          Text(stringResource(R.string.task_content_type), style = MaterialTheme.typography.labelSmall)
           Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             TipoContenidoTarea.entries.forEach { tc: TipoContenidoTarea ->
               FilterChip(
                 selected = perCont == tc,
                 onClick = { perCont = tc },
-                label = { Text(if (tc == TipoContenidoTarea.LISTA) "Lista" else "Nota", style = MaterialTheme.typography.labelSmall) }
+                label = { Text(if (tc == TipoContenidoTarea.LISTA) stringResource(R.string.task_content_type_list) else stringResource(R.string.task_content_type_note), style = MaterialTheme.typography.labelSmall) }
               )
             }
           }
@@ -581,11 +584,11 @@ fun EditTaskMainDialog(
             Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             val dateLabel = if (selectedFecha == null) {
-              "Añadir Fecha Límite"
+              stringResource(R.string.task_btn_add_deadline)
             } else {
               val cal = Calendar.getInstance().apply { timeInMillis = selectedFecha!! }
               if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-                SimpleDateFormat("dd/MM/yyyy '(Todo el día)'", Locale.getDefault()).format(Date(selectedFecha!!))
+                SimpleDateFormat("dd/MM/yyyy '${stringResource(R.string.task_all_day)}'", Locale.getDefault()).format(Date(selectedFecha!!))
               } else {
                 SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(selectedFecha!!))
               }
@@ -603,7 +606,7 @@ fun EditTaskMainDialog(
               value = per.name,
               onValueChange = {},
               readOnly = true,
-              label = { Text("Repetir") },
+              label = { Text(stringResource(R.string.task_repeat)) },
               leadingIcon = { Icon(Icons.Default.Repeat, contentDescription = null, modifier = Modifier.size(18.dp)) },
               trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = repeatExpanded) },
               modifier = Modifier.menuAnchor().fillMaxWidth()
@@ -627,7 +630,7 @@ fun EditTaskMainDialog(
 
         if (selectedFecha != null) {
           item {
-            Text("Avisar antes:", style = MaterialTheme.typography.labelSmall)
+            Text(stringResource(R.string.task_notify_before), style = MaterialTheme.typography.labelSmall)
             Row(
               modifier = Modifier.fillMaxWidth(),
               horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -649,12 +652,12 @@ fun EditTaskMainDialog(
           OutlinedButton(onClick = { imagePickerLauncher.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text(if (f == null) "Añadir Imagen" else "Cambiar Imagen")
+            Text(if (f == null) stringResource(R.string.task_btn_add_image) else stringResource(R.string.task_btn_change_image))
           }
         }
         
         item {
-          Text("Prioridad", style = MaterialTheme.typography.labelSmall)
+          Text(stringResource(R.string.task_priority), style = MaterialTheme.typography.labelSmall)
           Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Prioridad.entries.forEach { prio ->
               FilterChip(
@@ -669,18 +672,18 @@ fun EditTaskMainDialog(
         item {
           Row(verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = esp, onCheckedChange = { esp = it })
-            Text("Tarea personal", style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.task_label_personal), style = MaterialTheme.typography.bodySmall)
           }
         }
       }
     },
     confirmButton = {
       Button(onClick = { if (t.isNotBlank()) onConfirm(t, d, p, per, perCont, esp, selectedFecha, f, selectedAnticipacion) }) {
-        Text("Guardar")
+        Text(stringResource(R.string.task_save))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.task_cancel)) }
     }
   )
 }

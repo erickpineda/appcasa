@@ -24,6 +24,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 import coil3.compose.AsyncImage
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.features.utilities.presentation.viewmodel.PdfImageItem
@@ -56,10 +58,10 @@ fun PhotoToPdfScreen(
     snackbarHost = { SnackbarHost(snackbarHostState) },
     topBar = {
       TopAppBar(
-        title = { Text("Fotos a PDF") },
+        title = { Text(stringResource(R.string.util_photo_pdf_title)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         },
         actions = {
@@ -74,7 +76,7 @@ fun PhotoToPdfScreen(
               } else {
                   Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
                   Spacer(Modifier.width(4.dp))
-                  Text("Generar")
+                  Text(stringResource(R.string.util_photo_pdf_generate))
               }
             }
           }
@@ -100,7 +102,7 @@ fun PhotoToPdfScreen(
               OutlinedTextField(
                   value = fileName,
                   onValueChange = { fileName = it },
-                  label = { Text("Nombre del archivo") },
+                  label = { Text(stringResource(R.string.util_photo_pdf_filename)) },
                   modifier = Modifier.weight(1f),
                   singleLine = true,
                   trailingIcon = { Text(".pdf", modifier = Modifier.padding(end = 8.dp), style = MaterialTheme.typography.bodySmall) }
@@ -110,7 +112,7 @@ fun PhotoToPdfScreen(
                   onClick = { launcher.launch("image/*") },
                   colors = IconButtonDefaults.filledIconButtonColors()
               ) {
-                  Icon(Icons.Default.AddPhotoAlternate, contentDescription = "Añadir fotos")
+                  Icon(Icons.Default.AddPhotoAlternate, contentDescription = stringResource(R.string.util_photo_pdf_cd_add_photos))
               }
           }
       }
@@ -120,9 +122,9 @@ fun PhotoToPdfScreen(
               Column(horizontalAlignment = Alignment.CenterHorizontally) {
                   Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline)
                   Spacer(Modifier.height(16.dp))
-                  Text("No hay fotos seleccionadas", color = MaterialTheme.colorScheme.outline)
+                  Text(stringResource(R.string.util_photo_pdf_no_photos), color = MaterialTheme.colorScheme.outline)
                   TextButton(onClick = { launcher.launch("image/*") }) {
-                      Text("Toca aquí para añadir fotos")
+                      Text(stringResource(R.string.util_photo_pdf_add_photos_hint))
                   }
               }
           }
@@ -148,8 +150,9 @@ fun PhotoToPdfScreen(
           }
       }
 
-      // Acciones post-generación
       AnimatedVisibility(visible = pdfUri != null) {
+          val shareChooserTitle = stringResource(R.string.util_photo_pdf_share_chooser)
+          val savedSafeMsg = stringResource(R.string.util_photo_pdf_saved_safe)
           Row(
               modifier = Modifier.fillMaxWidth().padding(16.dp),
               horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -161,13 +164,13 @@ fun PhotoToPdfScreen(
                           putExtra(Intent.EXTRA_STREAM, pdfUri)
                           addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                       }
-                      context.startActivity(Intent.createChooser(shareIntent, "Compartir PDF"))
+                      context.startActivity(Intent.createChooser(shareIntent, shareChooserTitle))
                   },
                   modifier = Modifier.weight(1f)
               ) {
                   Icon(Icons.Default.Share, contentDescription = null)
                   Spacer(Modifier.width(8.dp))
-                  Text("Compartir")
+                  Text(stringResource(R.string.util_photo_pdf_btn_share))
               }
 
               val safeViewModel: SmartSafeViewModel = hiltViewModel()
@@ -175,7 +178,7 @@ fun PhotoToPdfScreen(
                   onClick = {
                       safeViewModel.addDocumento(fileName, "Otros", pdfUri.toString())
                       scope.launch {
-                          snackbarHostState.showSnackbar("Guardado en Smart Safe")
+                          snackbarHostState.showSnackbar(savedSafeMsg)
                       }
                   },
                   modifier = Modifier.weight(1f),
@@ -183,7 +186,7 @@ fun PhotoToPdfScreen(
               ) {
                   Icon(Icons.Default.Lock, contentDescription = null)
                   Spacer(Modifier.width(8.dp))
-                  Text("Guardar Safe")
+                  Text(stringResource(R.string.util_photo_pdf_btn_save_safe))
               }
           }
       }
@@ -239,28 +242,28 @@ fun PdfImageRow(
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     IconButton(onClick = onRotate, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.RotateRight, contentDescription = "Rotar", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.RotateRight, contentDescription = stringResource(R.string.util_photo_pdf_cd_rotate), tint = MaterialTheme.colorScheme.primary)
                     }
                     IconButton(onClick = onToggleBW, modifier = Modifier.size(32.dp)) {
                         Icon(
                             if (item.isGrayscale) Icons.Default.FilterBAndW else Icons.Default.ColorLens,
-                            contentDescription = "Filtro B/N",
+                            contentDescription = stringResource(R.string.util_photo_pdf_cd_bw_filter),
                             tint = if (item.isGrayscale) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                         )
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     IconButton(onClick = onMoveUp, enabled = !isFirst, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.ArrowUpward, contentDescription = "Subir", tint = if (isFirst) Color.Gray else MaterialTheme.colorScheme.secondary)
+                        Icon(Icons.Default.ArrowUpward, contentDescription = stringResource(R.string.util_photo_pdf_cd_move_up), tint = if (isFirst) Color.Gray else MaterialTheme.colorScheme.secondary)
                     }
                     IconButton(onClick = onMoveDown, enabled = !isLast, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.ArrowDownward, contentDescription = "Bajar", tint = if (isLast) Color.Gray else MaterialTheme.colorScheme.secondary)
+                        Icon(Icons.Default.ArrowDownward, contentDescription = stringResource(R.string.util_photo_pdf_cd_move_down), tint = if (isLast) Color.Gray else MaterialTheme.colorScheme.secondary)
                     }
                 }
             }
 
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
             }
         }
     }

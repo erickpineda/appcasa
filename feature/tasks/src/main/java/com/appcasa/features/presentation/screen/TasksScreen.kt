@@ -29,6 +29,8 @@ import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.features.tasks.data.local.TareaEntity
 import com.appcasa.features.tasks.presentation.viewmodel.TasksViewModel
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.tasks.R
 import com.appcasa.navigation.Screen
 
 @Composable
@@ -77,7 +79,7 @@ fun TasksContent(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Tareas del Hogar") },
+        title = { Text(stringResource(R.string.tasks_title)) },
         colors = TopAppBarDefaults.topAppBarColors(
           containerColor = MaterialTheme.colorScheme.primary,
           titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -86,7 +88,7 @@ fun TasksContent(
     },
     floatingActionButton = {
       FloatingActionButton(onClick = onAddTask) {
-        Icon(Icons.Default.Add, contentDescription = "Nueva Tarea")
+        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.tasks_new_task))
       }
     }
   ) { scaffoldPadding ->
@@ -103,10 +105,10 @@ fun TasksContent(
       if (pendingTasks.isEmpty() && completedTasks.isEmpty()) {
         item {
           AppCasaEmptyState(
-            title = "¡Todo al día!",
-            description = "No hay tareas pendientes en tu hogar. Disfruta de tu tiempo libre.",
+            title = stringResource(R.string.tasks_empty_title),
+            description = stringResource(R.string.tasks_empty_description),
             icon = Icons.Default.CheckCircle,
-            actionText = "Crear primera tarea",
+            actionText = stringResource(R.string.tasks_create_first),
             onActionClick = onAddTask,
             modifier = Modifier.fillParentMaxSize()
           )
@@ -115,7 +117,7 @@ fun TasksContent(
 
       if (pendingTasks.isNotEmpty()) {
         item {
-          Text("Pendientes", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+          Text(stringResource(R.string.tasks_pending), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
         }
         items(pendingTasks) { tarea ->
           val subTasks by viewModel.getSubTasksCount(tarea.id).collectAsState(initial = 0 to 0)
@@ -134,7 +136,7 @@ fun TasksContent(
       if (completedTasks.isNotEmpty()) {
         item {
           Spacer(modifier = Modifier.height(if (isCompact) 8.dp else 16.dp))
-          Text("Completadas", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+          Text(stringResource(R.string.tasks_completed), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         items(completedTasks) { tarea ->
           val subTasks by viewModel.getSubTasksCount(tarea.id).collectAsState(initial = 0 to 0)
@@ -202,13 +204,13 @@ fun TaskItem(
                               isEditing = false
                           }
                       }, modifier = Modifier.size(28.dp)) {
-                          Icon(Icons.Default.Check, contentDescription = "Guardar", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                          Icon(Icons.Default.Check, contentDescription = stringResource(R.string.task_save), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                       }
                       IconButton(onClick = { 
                           editedText = tarea.titulo
                           isEditing = false 
                       }, modifier = Modifier.size(28.dp)) {
-                          Icon(Icons.Default.Close, contentDescription = "Cancelar", modifier = Modifier.size(18.dp))
+                          Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_cancel), modifier = Modifier.size(18.dp))
                       }
                   }
               }
@@ -236,7 +238,7 @@ fun TaskItem(
                 
                 if (subTaskInfo.first > 0) {
                     Text(
-                        text = "📋 ${subTaskInfo.second}/${subTaskInfo.first}",
+                        text = stringResource(R.string.task_subtasks_format, subTaskInfo.second, subTaskInfo.first),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -258,7 +260,7 @@ fun TaskItem(
           IconButton(onClick = onDelete, modifier = Modifier.size(if (isCompact) 32.dp else 48.dp)) {
             Icon(
                 Icons.Default.Delete, 
-                contentDescription = "Borrar", 
+                contentDescription = stringResource(R.string.task_delete),
                 tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
                 modifier = Modifier.size(if (isCompact) 18.dp else 24.dp)
             )

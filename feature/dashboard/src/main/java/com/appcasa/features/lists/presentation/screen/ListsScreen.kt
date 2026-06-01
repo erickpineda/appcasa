@@ -23,6 +23,8 @@ import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.lists.presentation.viewmodel.ListsViewModel
 import com.appcasa.navigation.Screen
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +73,7 @@ fun ListsContent(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Mis Listas") },
+        title = { Text(stringResource(R.string.lists_title)) },
         navigationIcon = {
           IconButton(onClick = { /* Ir atrás si fuera necesario, pero este suele ser un Hub */ }) {
             // Si quieres navegación atrás, añádela aquí. Generalmente en Hubs no hay flecha si es pestaña principal.
@@ -86,7 +88,7 @@ fun ListsContent(
     },
     floatingActionButton = {
       FloatingActionButton(onClick = onAddClick) {
-        Icon(Icons.Default.Add, contentDescription = "Nueva Lista")
+        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.lists_new_title))
       }
     }
   ) { scaffoldPadding ->
@@ -100,10 +102,10 @@ fun ListsContent(
       if (lists.isEmpty()) {
         item {
           AppCasaEmptyState(
-            title = "Sin listas",
-            description = "Crea listas de la compra, tareas pendientes o lo que necesites organizar.",
+            title = stringResource(R.string.dashboard_no_lists_title), // Adding this
+            description = stringResource(R.string.dashboard_no_lists_desc), // Adding this
             icon = Icons.AutoMirrored.Filled.List,
-            actionText = "Crear lista",
+            actionText = stringResource(R.string.dashboard_btn_create_list), // Adding this
             onActionClick = onAddClick,
             modifier = Modifier.fillParentMaxSize()
           )
@@ -216,7 +218,7 @@ fun CompactListCard(
         IconButton(onClick = onDelete, modifier = Modifier.size(if (isCompact) 32.dp else 48.dp)) {
           Icon(
             Icons.Default.Delete, 
-            contentDescription = "Borrar", 
+            contentDescription = stringResource(R.string.cd_delete), 
             tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
             modifier = Modifier.size(if (isCompact) 18.dp else 20.dp)
           )
@@ -235,7 +237,7 @@ fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Nueva Lista") },
+    title = { Text(stringResource(R.string.lists_new_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
@@ -244,12 +246,12 @@ fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
                 name = it
                 nameTouched = true
             }, 
-            label = { Text("Nombre de la lista") }, 
+            label = { Text(stringResource(R.string.lists_label_name)) }, 
             modifier = Modifier.fillMaxWidth(),
             isError = nameTouched && name.isBlank(),
             supportingText = {
                 if (nameTouched && name.isBlank()) {
-                    Text("El nombre es obligatorio", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.family_error_name_required), color = MaterialTheme.colorScheme.error)
                 }
             }
         )
@@ -259,10 +261,10 @@ fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
       Button(
         onClick = { onConfirm(name, "PERSONALIZADA") },
         enabled = canConfirm
-      ) { Text("Crear") }
+      ) { Text(stringResource(R.string.lists_btn_create)) }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.lists_btn_cancel)) }
     }
   )
 }

@@ -30,6 +30,8 @@ import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.finance.data.local.ExpenseEntity
 import com.appcasa.features.finance.presentation.viewmodel.FinanceViewModel
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.finance.R
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -46,11 +48,13 @@ fun ExpenseScreen(
   var editingExpense by remember { mutableStateOf<ExpenseEntity?>(null) }
   var expenseToDelete by remember { mutableStateOf<ExpenseEntity?>(null) }
   val context = LocalContext.current
+  val shareSummaryTitle = stringResource(R.string.finance_share_summary_title)
+  val shareTotalLabel = stringResource(R.string.finance_share_total_label)
 
   AppCasaConfirmDialog(
     show = expenseToDelete != null,
-    title = "Borrar Gasto",
-    text = "¿Estás seguro de que quieres eliminar '${expenseToDelete?.concepto}'? Esta acción no se puede deshacer.",
+    title = stringResource(R.string.finance_delete_title),
+    text = stringResource(R.string.finance_delete_confirm, expenseToDelete?.concepto ?: ""),
     onConfirm = {
         expenseToDelete?.let { viewModel.deleteExpense(it) }
         expenseToDelete = null
@@ -109,10 +113,10 @@ fun ExpenseScreen(
     Scaffold(
       topBar = {
         TopAppBar(
-          title = { Text("Gastos del Hogar") },
+          title = { Text(stringResource(R.string.finance_title)) },
           navigationIcon = {
             IconButton(onClick = { navController.popBackStack() }) {
-              Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onPrimary)
+              Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
             }
           },
           colors = TopAppBarDefaults.topAppBarColors(
@@ -122,14 +126,14 @@ fun ExpenseScreen(
           ),
           actions = {
             IconButton(onClick = { galleryLauncher.launch("image/*") }) {
-                Icon(Icons.Default.DocumentScanner, contentDescription = "Escanear ticket")
+                Icon(Icons.Default.DocumentScanner, contentDescription = stringResource(R.string.cd_scan_ticket))
             }
             if (expenses.isNotEmpty()) {
               IconButton(onClick = {
                 val total = expenses.sumOf { it.importe }
-                val shareText = "💰 *Resumen de Gastos AppCasa*:\n" + 
+                val shareText = shareSummaryTitle + "\n" + 
                   expenses.joinToString("\n") { "- ${it.concepto}: ${String.format("%.2f", it.importe)} $currency" } +
-                  "\n\n*TOTAL: ${String.format("%.2f", total)} $currency*"
+                  String.format(shareTotalLabel, String.format("%.2f", total), currency)
                 
                 val sendIntent: Intent = Intent().apply {
                   action = Intent.ACTION_SEND
@@ -138,7 +142,7 @@ fun ExpenseScreen(
                 }
                 context.startActivity(Intent.createChooser(sendIntent, null))
               }) {
-                Icon(Icons.Default.Share, contentDescription = "Compartir gastos")
+                Icon(Icons.Default.Share, contentDescription = stringResource(R.string.cd_share))
               }
             }
           }
@@ -146,7 +150,7 @@ fun ExpenseScreen(
       },
       floatingActionButton = {
         FloatingActionButton(onClick = { showAddDialog = true }) {
-          Icon(Icons.Default.Add, contentDescription = "Nuevo Gasto")
+          Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_new_expense))
         }
       }
     ) { padding ->
@@ -160,10 +164,10 @@ fun ExpenseScreen(
         if (expenses.isEmpty()) {
           item {
             AppCasaEmptyState(
-              title = "Sin gastos aún",
-              description = "Anota tu primer gasto para empezar a llevar el control del hogar. ¡Puedes escanear tickets!",
+              title = stringResource(R.string.finance_empty_title),
+              description = stringResource(R.string.finance_empty_description),
               icon = Icons.Default.ReceiptLong,
-              actionText = "Añadir gasto",
+              actionText = stringResource(R.string.finance_add_action),
               onActionClick = { showAddDialog = true },
               modifier = Modifier.fillParentMaxSize()
             )
@@ -203,10 +207,10 @@ fun ExpenseCard(expense: ExpenseEntity, currency: String, onEdit: () -> Unit, on
             color = MaterialTheme.colorScheme.error
           )
           IconButton(onClick = onEdit) {
-            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
+            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
           }
           IconButton(onClick = onDelete) {
-            Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
           }
         }
       }
@@ -233,7 +237,7 @@ fun ExpenseActionDialog(
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text(if (item == null) "Registrar Gasto" else "Editar Gasto") },
+    title = { Text(stringResource(if (item == null) R.string.finance_action_add_title else R.string.finance_action_edit_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (initialImporte.isNotEmpty()) {
@@ -243,7 +247,7 @@ fun ExpenseActionDialog(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             ) {
                 Text(
-                    "Ticket escaneado: $initialImporte $currency",
+                    stringResource(R.string.finance_ocr_detected, initialImporte, currency),
                     modifier = Modifier.padding(8.dp),
                     style = MaterialTheme.typography.labelMedium
                 )
@@ -252,24 +256,24 @@ fun ExpenseActionDialog(
         OutlinedTextField(
           value = concepto, 
           onValueChange = { concepto = it }, 
-          label = { Text("Concepto") }, 
+          label = { Text(stringResource(R.string.finance_label_concept)) }, 
           modifier = Modifier.fillMaxWidth(),
           isError = concepto.isEmpty()
         )
         OutlinedTextField(
           value = importe, 
           onValueChange = { importe = it }, 
-          label = { Text("Importe ($currency)") },
+          label = { Text(stringResource(R.string.finance_label_amount, currency)) },
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
           modifier = Modifier.fillMaxWidth(),
           isError = importe.isNotEmpty() && !isImporteValid,
           supportingText = {
             if (importe.isNotEmpty() && !isImporteValid) {
-              Text("El importe debe ser un número mayor a 0", color = MaterialTheme.colorScheme.error)
+              Text(stringResource(R.string.finance_error_amount_invalid), color = MaterialTheme.colorScheme.error)
             }
           }
         )
-        OutlinedTextField(value = categoria, onValueChange = { categoria = it }, label = { Text("Categoría") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = categoria, onValueChange = { categoria = it }, label = { Text(stringResource(R.string.finance_label_category)) }, modifier = Modifier.fillMaxWidth())
       }
     },
     confirmButton = {
@@ -279,11 +283,11 @@ fun ExpenseActionDialog(
         },
         enabled = canConfirm
       ) {
-        Text(if (item == null) "Guardar" else "Actualizar")
+        Text(stringResource(if (item == null) R.string.finance_btn_save else R.string.finance_btn_update))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.finance_btn_cancel)) }
     }
   )
 }

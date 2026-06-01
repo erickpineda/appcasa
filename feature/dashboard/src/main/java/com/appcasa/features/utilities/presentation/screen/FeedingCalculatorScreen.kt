@@ -16,6 +16,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
@@ -31,7 +33,12 @@ fun FeedingCalculatorScreen(
   val pets by familyViewModel.pets.collectAsState()
   val petWeight by dosageViewModel.petWeight.collectAsState()
   
-  var selectedPetName by remember { mutableStateOf("Seleccionar Mascota") }
+  var selectedPetName by remember { mutableStateOf("") }
+  val selectPetHint = stringResource(R.string.util_dosage_select_pet)
+  
+  if (selectedPetName.isEmpty()) {
+      selectedPetName = selectPetHint
+  }
   var selectedPetType by remember { mutableStateOf(TipoMiembro.PERRO.name) }
   var expanded by remember { mutableStateOf(false) }
 
@@ -46,34 +53,42 @@ fun FeedingCalculatorScreen(
   val ration = remember(petWeight, selectedPetType) {
     if (selectedPetType == TipoMiembro.GATO.name) {
         when {
-            petWeight <= 0 -> "Introduce un peso"
-            petWeight < 2 -> "Consultar veterinario (<2kg)"
+            petWeight <= 0 -> "" // Placeholder, using stringResource below
+            petWeight < 2 -> "CONSULT_VET_LOW"
             petWeight <= 4 -> "30 - 50 g"
             petWeight <= 6 -> "50 - 65 g"
             petWeight <= 8 -> "65 - 75 g"
-            else -> "Consultar veterinario (>8kg)"
+            else -> "CONSULT_VET_HIGH_CAT"
         }
     } else {
         // Lógica para perros
         when {
-            petWeight <= 0 -> "Introduce un peso"
+            petWeight <= 0 -> ""
             petWeight <= 5 -> "25 - 90 g"
             petWeight <= 10 -> "90 - 150 g"
             petWeight <= 25 -> "150 - 300 g"
             petWeight <= 45 -> "300 - 465 g"
             petWeight <= 70 -> "465 - 650 g"
-            else -> "Consultar veterinario (>70kg)"
+            else -> "CONSULT_VET_HIGH_DOG"
         }
     }
+  }
+
+  val rationText = when(ration) {
+      "" -> stringResource(R.string.util_feeding_enter_weight)
+      "CONSULT_VET_LOW" -> stringResource(R.string.util_feeding_consult_vet_low)
+      "CONSULT_VET_HIGH_CAT" -> stringResource(R.string.util_feeding_consult_vet_high_cat)
+      "CONSULT_VET_HIGH_DOG" -> stringResource(R.string.util_feeding_consult_vet_high_dog)
+      else -> ration
   }
 
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Ración de Pienso") },
+        title = { Text(stringResource(R.string.util_feeding_title)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -92,9 +107,9 @@ fun FeedingCalculatorScreen(
         .padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-      Text("Guía de Alimentación Diaria", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+      Text(stringResource(R.string.util_feeding_header), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
       
-      Text("1. Selecciona la mascota", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+      Text(stringResource(R.string.util_feeding_step1), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
       ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded }
@@ -124,14 +139,14 @@ fun FeedingCalculatorScreen(
         }
       }
 
-      Text("2. Peso actual (kg)", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+      Text(stringResource(R.string.util_feeding_step2), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
       OutlinedTextField(
         value = weightInput,
         onValueChange = { 
             weightInput = it
             dosageViewModel.setManualWeight(it.toDoubleOrNull() ?: 0.0)
         },
-        label = { Text("Peso") },
+        label = { Text(stringResource(R.string.util_feeding_label_weight)) },
         suffix = { Text("kg") },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         modifier = Modifier.fillMaxWidth()
@@ -144,23 +159,24 @@ fun FeedingCalculatorScreen(
         ) {
           Icon(Icons.Default.Pets, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
           Spacer(Modifier.height(16.dp))
-          Text("RACIÓN DIARIA RECOMENDADA", style = MaterialTheme.typography.labelLarge)
+          Text(stringResource(R.string.util_feeding_result_header), style = MaterialTheme.typography.labelLarge)
           Text(
-            text = ration,
+            text = rationText,
             style = MaterialTheme.typography.displayMedium,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.ExtraBold
           )
           Spacer(Modifier.height(8.dp))
           Text(
-            "Datos basados en guía oficial del fabricante",
+            stringResource(R.string.util_feeding_manufacturer_notice),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline
           )
         }
       }
 
-      Text("Tabla de referencia (${if (selectedPetType == TipoMiembro.GATO.name) "Gatos" else "Perros"})", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+      val petTypeLabel = if (selectedPetType == TipoMiembro.GATO.name) stringResource(R.string.util_feeding_gatos) else stringResource(R.string.util_feeding_perros)
+      Text(stringResource(R.string.util_feeding_table_ref, petTypeLabel), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
       Surface(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         shape = MaterialTheme.shapes.medium

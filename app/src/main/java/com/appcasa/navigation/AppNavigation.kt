@@ -49,6 +49,8 @@ import com.appcasa.features.utilities.presentation.screen.SavingsCalculatorScree
 import com.appcasa.features.utilities.presentation.screen.UtilitiesScreen
 import com.appcasa.features.utilities.presentation.screen.VehicleManagementScreen
 
+import androidx.compose.ui.res.stringResource
+
 @Composable
 fun AppNavigation() {
   val navController = rememberNavController()
@@ -81,6 +83,7 @@ fun AppNavigation() {
           val isDashboardTab = item.screen == Screen.Dashboard && currentDestination?.route == Screen.Dashboard.route
 
           val selected = isDashboardTab || isManagementTab || isFamilyTab || isUtilitiesTab
+          val label = stringResource(item.labelRes)
 
           NavigationBarItem(
             selected = selected,
@@ -113,7 +116,7 @@ fun AppNavigation() {
             },
             icon = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(item.icon, contentDescription = item.label)
+                    Icon(item.icon, contentDescription = label)
                     AnimatedVisibility(visible = selected) {
                         Box(
                             modifier = Modifier
@@ -125,7 +128,7 @@ fun AppNavigation() {
                     }
                 }
             },
-            label = { if (selected) Text(item.label) },
+            label = { if (selected) Text(label) },
             alwaysShowLabel = false
           )
         }

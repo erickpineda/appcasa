@@ -20,6 +20,8 @@ import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.navigation.Screen
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,7 +33,7 @@ fun ManagementHubScreen(
       Scaffold(
         topBar = {
           TopAppBar(
-            title = { Text("Gestión del Hogar") },
+            title = { Text(stringResource(R.string.hub_management_title)) },
             colors = TopAppBarDefaults.topAppBarColors(
               containerColor = MaterialTheme.colorScheme.primary,
               titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -50,32 +52,32 @@ fun ManagementHubScreen(
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
           HubCard(
-            title = "Tareas",
-            subtitle = "Tareas pendientes y asignaciones",
+            title = stringResource(R.string.hub_tasks_title),
+            subtitle = stringResource(R.string.hub_tasks_subtitle),
             icon = Icons.Default.CheckCircle,
             color = MaterialTheme.colorScheme.primary,
             onClick = { navController.navigate(Screen.Tasks.route) }
           )
 
           HubCard(
-            title = "Listas",
-            subtitle = "Compra, viajes y checklists",
+            title = stringResource(R.string.hub_lists_title),
+            subtitle = stringResource(R.string.hub_lists_subtitle),
             icon = Icons.Default.List,
             color = MaterialTheme.colorScheme.secondary,
             onClick = { navController.navigate(Screen.Lists.route) }
           )
 
           HubCard(
-            title = "Inventario",
-            subtitle = "Stock de despensa y mascotas",
+            title = stringResource(R.string.hub_inventory_title),
+            subtitle = stringResource(R.string.hub_inventory_subtitle),
             icon = Icons.Default.Inventory,
             color = MaterialTheme.colorScheme.tertiary,
             onClick = { navController.navigate(Screen.Inventory.route) }
           )
 
           HubCard(
-            title = "Mantenimiento",
-            subtitle = "Log de reparaciones y filtros",
+            title = stringResource(R.string.hub_maintenance_title),
+            subtitle = stringResource(R.string.hub_maintenance_subtitle),
             icon = Icons.Default.HomeRepairService,
             color = MaterialTheme.colorScheme.error,
             onClick = { navController.navigate(Screen.HomeMaintenance.route) }

@@ -23,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
@@ -61,11 +63,11 @@ fun SmartSafeScreen(
           Column(horizontalAlignment = Alignment.CenterHorizontally) {
               Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
               Spacer(Modifier.height(16.dp))
-              Text("Baúl bloqueado", style = MaterialTheme.typography.titleLarge)
+              Text(stringResource(R.string.util_safe_locked), style = MaterialTheme.typography.titleLarge)
               TextButton(onClick = { 
                   context.findActivity()?.let { viewModel.authenticate(it) }
               }) {
-                  Text("Desbloquear con biometría")
+                  Text(stringResource(R.string.util_safe_unlock_biometric))
               }
           }
       }
@@ -79,8 +81,8 @@ fun SmartSafeScreen(
 
   AppCasaConfirmDialog(
     show = documentToDelete != null,
-    title = "Eliminar Documento",
-    text = "¿Estás seguro de borrar '${documentToDelete?.nombre}'? Esta acción es irreversible.",
+    title = stringResource(R.string.util_safe_delete_title),
+    text = stringResource(R.string.util_safe_delete_confirm, documentToDelete?.nombre ?: ""),
     onConfirm = {
         documentToDelete?.let { viewModel.deleteDocumento(it) }
         documentToDelete = null
@@ -116,10 +118,10 @@ fun SmartSafeScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Smart Safe") },
+        title = { Text(stringResource(R.string.util_safe_title)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -131,7 +133,7 @@ fun SmartSafeScreen(
     },
     floatingActionButton = {
       FloatingActionButton(onClick = { showAddDialog = true }) {
-        Icon(Icons.Default.Add, contentDescription = "Añadir Documento")
+        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.util_safe_btn_add_doc))
       }
     }
   ) { padding ->
@@ -144,7 +146,7 @@ fun SmartSafeScreen(
     ) {
       item {
         Text(
-          "Tus documentos importantes",
+          stringResource(R.string.util_safe_important_docs_header),
           style = MaterialTheme.typography.titleMedium,
           fontWeight = FontWeight.Bold
         )
@@ -153,10 +155,10 @@ fun SmartSafeScreen(
       if (documentos.isEmpty()) {
         item {
           AppCasaEmptyState(
-            title = "El baúl está vacío",
-            description = "Añade documentos importantes como garantías, seguros o certificados.",
+            title = stringResource(R.string.util_safe_empty_title),
+            description = stringResource(R.string.util_safe_empty_desc),
             icon = Icons.Default.FolderOpen,
-            actionText = "Añadir Documento",
+            actionText = stringResource(R.string.util_safe_btn_add_doc),
             onActionClick = { showAddDialog = true },
             modifier = Modifier.fillParentMaxHeight(0.7f)
           )
@@ -171,7 +173,7 @@ fun SmartSafeScreen(
                         setDataAndType(Uri.parse(doc.uriPdf), "application/pdf")
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    context.startActivity(Intent.createChooser(intent, "Abrir documento"))
+                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.util_safe_open_doc_chooser)))
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -202,7 +204,7 @@ fun DocumentCard(
           Text(documento.categoria, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
           documento.fechaVencimiento?.let { fecha ->
             val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(fecha))
-            Text("Vence: $date", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            Text(stringResource(R.string.util_safe_expiry, date), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
           }
         }
       },
@@ -219,17 +221,17 @@ fun DocumentCard(
       trailingContent = {
         Row {
           IconButton(onClick = onEdit) {
-            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
+            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
           }
           if (!documento.sincronizado) {
             IconButton(onClick = onCloudSync) {
-              Icon(Icons.Default.CloudUpload, contentDescription = "Subir a la nube", tint = MaterialTheme.colorScheme.outline)
+              Icon(Icons.Default.CloudUpload, contentDescription = stringResource(R.string.util_safe_cd_cloud_upload), tint = MaterialTheme.colorScheme.outline)
             }
           } else {
-            Icon(Icons.Default.CloudDone, contentDescription = "Sincronizado", tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(12.dp))
+            Icon(Icons.Default.CloudDone, contentDescription = stringResource(R.string.util_safe_cd_synced), tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(12.dp))
           }
           IconButton(onClick = onDelete) {
-            Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
           }
         }
       },
@@ -271,7 +273,7 @@ fun AddDocumentDialog(
         TextButton(onClick = {
           selectedDate = datePickerState.selectedDateMillis
           showDatePicker = false
-        }) { Text("OK") }
+        }) { Text(stringResource(R.string.family_btn_ok)) }
       }
     ) {
       DatePicker(state = datePickerState)
@@ -280,21 +282,24 @@ fun AddDocumentDialog(
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Nuevo Documento") },
+    title = { Text(stringResource(R.string.util_safe_new_doc_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre del documento") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text(stringResource(R.string.util_safe_label_doc_name)) }, modifier = Modifier.fillMaxWidth())
         
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
           OutlinedTextField(
             value = categoria,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Categoría") },
+            label = { Text(stringResource(R.string.util_safe_label_category)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier.menuAnchor().fillMaxWidth()
           )
-          ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+          ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+          ) {
             categories.forEach { cat ->
               DropdownMenuItem(text = { Text(cat) }, onClick = { categoria = cat; expanded = false })
             }
@@ -307,11 +312,11 @@ fun AddDocumentDialog(
         ) {
           Icon(if (selectedUri != null) Icons.Default.CheckCircle else Icons.Default.PictureAsPdf, contentDescription = null)
           Spacer(Modifier.width(8.dp))
-          Text(if (selectedUri != null) "PDF Seleccionado" else "Elegir Archivo PDF")
+          Text(if (selectedUri != null) stringResource(R.string.util_safe_btn_pdf_selected) else stringResource(R.string.util_safe_btn_choose_pdf))
         }
 
         OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
-          val label = if (selectedDate == null) "Añadir Vencimiento (Opcional)" else "Vence: " + SimpleDateFormat("dd/MM/yyyy").format(Date(selectedDate!!))
+          val label = if (selectedDate == null) stringResource(R.string.util_safe_label_add_expiry) else stringResource(R.string.util_safe_expiry, SimpleDateFormat("dd/MM/yyyy").format(Date(selectedDate!!)))
           Text(label)
         }
       }
@@ -322,11 +327,11 @@ fun AddDocumentDialog(
           onConfirm(nombre, categoria, selectedUri.toString(), selectedDate)
         }
       }) {
-        Text("Guardar")
+        Text(stringResource(R.string.dashboard_save))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.dashboard_cancel)) }
     }
   )
 }
@@ -354,7 +359,7 @@ fun EditDocumentDialog(
         TextButton(onClick = {
           selectedDate = datePickerState.selectedDateMillis
           showDatePicker = false
-        }) { Text("OK") }
+        }) { Text(stringResource(R.string.family_btn_ok)) }
       }
     ) {
       DatePicker(state = datePickerState)
@@ -363,21 +368,24 @@ fun EditDocumentDialog(
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Editar Documento") },
+    title = { Text(stringResource(R.string.util_safe_edit_doc_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text(stringResource(R.string.family_label_name)) }, modifier = Modifier.fillMaxWidth())
         
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
           OutlinedTextField(
             value = categoria,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Categoría") },
+            label = { Text(stringResource(R.string.util_safe_label_category)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier.menuAnchor().fillMaxWidth()
           )
-          ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+          ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+          ) {
             categories.forEach { cat ->
               DropdownMenuItem(text = { Text(cat) }, onClick = { categoria = cat; expanded = false })
             }
@@ -385,18 +393,18 @@ fun EditDocumentDialog(
         }
 
         OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
-          val label = if (selectedDate == null) "Añadir Vencimiento" else "Vence: " + SimpleDateFormat("dd/MM/yyyy").format(Date(selectedDate!!))
+          val label = if (selectedDate == null) stringResource(R.string.util_safe_label_add_expiry_edit) else stringResource(R.string.util_safe_expiry, SimpleDateFormat("dd/MM/yyyy").format(Date(selectedDate!!)))
           Text(label)
         }
       }
     },
     confirmButton = {
       Button(onClick = { if (nombre.isNotBlank()) onConfirm(nombre, categoria, selectedDate) }) {
-        Text("Guardar")
+        Text(stringResource(R.string.dashboard_save))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.dashboard_cancel)) }
     }
   )
 }

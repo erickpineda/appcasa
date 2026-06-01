@@ -1,0 +1,44 @@
+<resources>
+    <!-- Settings Screen -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_seed_confirm_title">¡Atención!</string>
+    <string name="settings_seed_confirm_text">Esta acción borrará todos tus datos actuales (gastos, tareas, familia) para cargar los datos oficiales de Erick. ¿Estás seguro?</string>
+    <string name="settings_seed_confirm_btn">Sí, cargar datos</string>
+    <string name="settings_seed_success">¡Datos de Erick y familia cargados con éxito!</string>
+    <string name="settings_ok">OK</string>
+
+    <!-- Sections -->
+    <string name="settings_section_profile">Perfil del Hogar</string>
+    <string name="settings_section_appearance">Apariencia y Notificaciones</string>
+    <string name="settings_section_preferences">Preferencias de Uso</string>
+    <string name="settings_section_system">Sistema</string>
+
+    <!-- Items -->
+    <string name="settings_user_name_title">Nombre del Usuario</string>
+    <string name="settings_household_name_title">Nombre del Hogar</string>
+    <string name="settings_dark_mode_title">Modo Oscuro</string>
+    <string name="settings_dark_mode_subtitle">Cambiar el tema de la aplicación</string>
+    <string name="settings_notifications_title">Notificaciones</string>
+    <string name="settings_notifications_subtitle">Recibir avisos de tareas y eventos</string>
+    <string name="settings_compact_view_title">Vista Compacta</string>
+    <string name="settings_compact_view_subtitle">Mostrar listas con menos espacio</string>
+    <string name="settings_currency_title">Moneda Local</string>
+    <string name="settings_currency_subtitle">Símbolo: %s</string>
+    <string name="settings_main_list_title">Lista de la Compra Principal</string>
+    <string name="settings_shop_mode_title">Modo Tienda</string>
+    <string name="settings_shop_mode_subtitle">Mantener pantalla encendida en listas</string>
+    <string name="settings_seed_data_title">Actualizar Datos Oficiales</string>
+    <string name="settings_seed_data_subtitle">Cargar Erick, Alicia, Brian y mascotas</string>
+    <string name="settings_about_title">Acerca de AppCasa</string>
+    <string name="settings_about_subtitle">Versión 1.0.0-Beta</string>
+    <string name="settings_footer">Hecho con ❤️ para la familia</string>
+
+    <!-- Dialogs -->
+    <string name="settings_dialog_currency_title">Seleccionar Moneda</string>
+    <string name="settings_dialog_list_title">Lista de la Compra</string>
+    <string name="settings_dialog_no_lists">No hay listas creadas. Crea una en la sección de Listas.</string>
+    <string name="settings_btn_save">Guardar</string>
+    <string name="settings_btn_cancel">Cancelar</string>
+    <string name="settings_btn_close">Cerrar</string>
+    <string name="settings_list_not_selected">No seleccionada</string>
+</resources>

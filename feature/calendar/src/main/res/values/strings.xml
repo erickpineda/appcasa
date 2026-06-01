@@ -1,0 +1,48 @@
+<resources>
+    <!-- Calendar Screen -->
+    <string name="calendar_title">Agenda Familiar</string>
+    <string name="calendar_btn_go_to_date">Ir a la fecha</string>
+    <string name="calendar_btn_cancel">Cancelar</string>
+    <string name="calendar_tab_upcoming">PRÓXIMOS</string>
+    <string name="calendar_tab_history">HISTORIAL</string>
+    <string name="calendar_events_on_day">Eventos del %s</string>
+    <string name="calendar_btn_close">Cerrar</string>
+    <string name="calendar_no_plans_day">Sin planes para este día</string>
+    <string name="calendar_no_events_month">Sin eventos este mes</string>
+    <string name="calendar_no_events_future">Sin eventos futuros</string>
+    <string name="calendar_empty_history_title">Sin historial</string>
+    <string name="calendar_empty_history_desc">Aquí aparecerán los eventos y recordatorios que ya han pasado.</string>
+    <string name="calendar_load_more_history">Ver más eventos pasados…</string>
+    <string name="calendar_btn_go_to_today">Ir a hoy</string>
+
+    <!-- Item Types -->
+    <string name="calendar_type_birthday">¡CUMPLE!</string>
+    <string name="calendar_type_event">Evento</string>
+    <string name="calendar_type_task">Tarea</string>
+    <string name="calendar_type_reminder">Recordatorio</string>
+
+    <!-- Dialogs -->
+    <string name="calendar_add_reminder_title">Nuevo Recordatorio</string>
+    <string name="calendar_edit_reminder_title">Editar Recordatorio</string>
+    <string name="calendar_edit_event_title">Editar Evento</string>
+    <string name="calendar_label_what_to_remember">¿Qué recordar?</string>
+    <string name="calendar_label_title">Título</string>
+    <string name="calendar_label_date">Fecha: %s</string>
+    <string name="calendar_label_datetime">Fecha y Hora: %s</string>
+    <string name="calendar_btn_save">Guardar</string>
+    <string name="calendar_btn_next_hour">Siguiente (Hora)</string>
+    <string name="calendar_btn_all_day">Todo el día</string>
+    <string name="calendar_btn_ok">OK</string>
+    <string name="calendar_select_hour">Seleccionar Hora</string>
+
+    <!-- Formatting -->
+    <string name="calendar_all_day_suffix">(Todo el día)</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_back">Atrás</string>
+    <string name="cd_import">Importar</string>
+    <string name="cd_new">Nuevo</string>
+    <string name="cd_select_date">Seleccionar fecha</string>
+    <string name="cd_edit">Editar</string>
+    <string name="cd_delete">Borrar</string>
+</resources>

@@ -36,11 +36,14 @@ import androidx.navigation.NavController
 import com.appcasa.core.domain.model.TipoEvento
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
+import com.appcasa.core.ui.theme.Birthday
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.features.calendar.presentation.viewmodel.CalendarViewModel
 import com.appcasa.features.calendar.presentation.viewmodel.CalendarItem
 import com.appcasa.features.reminders.presentation.viewmodel.RemindersViewModel
 import com.appcasa.navigation.Screen
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.calendar.R
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -202,10 +205,10 @@ fun CalendarContent(
             onMonthChange(YearMonth.from(date))
           }
           showJumpDatePicker = false
-        }) { Text("Ir a la fecha") }
+        }) { Text(stringResource(R.string.calendar_btn_go_to_date)) }
       },
       dismissButton = {
-        TextButton(onClick = { showJumpDatePicker = false }) { Text("Cancelar") }
+        TextButton(onClick = { showJumpDatePicker = false }) { Text(stringResource(R.string.calendar_btn_cancel)) }
       }
     ) {
       DatePicker(state = jumpDatePickerState)
@@ -236,7 +239,7 @@ fun CalendarContent(
     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     topBar = {
       MediumTopAppBar(
-        title = { Text("Agenda Familiar", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.calendar_title), fontWeight = FontWeight.Bold) },
         scrollBehavior = scrollBehavior,
         colors = TopAppBarDefaults.mediumTopAppBarColors(
           containerColor = MaterialTheme.colorScheme.primary,
@@ -247,19 +250,19 @@ fun CalendarContent(
         ),
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         },
         actions = {
           IconButton(onClick = onImportClick) {
-            Icon(Icons.Default.UploadFile, contentDescription = "Importar")
+            Icon(Icons.Default.UploadFile, contentDescription = stringResource(R.string.cd_import))
           }
         }
       )
     },
     floatingActionButton = {
       FloatingActionButton(onClick = onAddReminderClick) {
-        Icon(Icons.Default.Add, contentDescription = "Nuevo")
+        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_new))
       }
     }
   ) { scaffoldPadding ->
@@ -300,7 +303,7 @@ fun CalendarContent(
                 )
                 Icon(
                   Icons.Default.ArrowDropDown,
-                  contentDescription = "Seleccionar fecha",
+                  contentDescription = stringResource(R.string.cd_select_date),
                   modifier = Modifier.size(20.dp),
                   tint = MaterialTheme.colorScheme.primary
                 )
@@ -324,7 +327,7 @@ fun CalendarContent(
               ) {
                 Icon(Icons.Default.Today, contentDescription = null, modifier = Modifier.size(14.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("Ir a hoy", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.calendar_btn_go_to_today), style = MaterialTheme.typography.labelSmall)
               }
             }
             
@@ -411,12 +414,12 @@ fun CalendarContent(
           Tab(
             selected = selectedTab == 0,
             onClick = { onTabChange(0) },
-            text = { Text("PRÓXIMOS", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold) }
+            text = { Text(stringResource(R.string.calendar_tab_upcoming), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold) }
           )
           Tab(
             selected = selectedTab == 1,
             onClick = { onTabChange(1) },
-            text = { Text("HISTORIAL", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold) }
+            text = { Text(stringResource(R.string.calendar_tab_history), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold) }
           )
         }
       }
@@ -436,19 +439,19 @@ fun CalendarContent(
               verticalAlignment = Alignment.CenterVertically
             ) {
               Text(
-                text = "Eventos del " + SimpleDateFormat("d 'de' MMMM", Locale("es", "ES")).format(Date.from(selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant())),
+                text = stringResource(R.string.calendar_events_on_day, SimpleDateFormat("d 'de' MMMM", Locale("es", "ES")).format(Date.from(selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant()))),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.secondary
               )
               Spacer(Modifier.weight(1f))
               TextButton(onClick = { onDateSelected(selectedDate) }) {
-                Text("Cerrar", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.calendar_btn_close), style = MaterialTheme.typography.labelSmall)
               }
             }
           }
           if (eventsForDay.isEmpty()) {
-            item { Text("Sin planes para este día", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 16.dp), color = Color.Gray) }
+            item { Text(stringResource(R.string.calendar_no_plans_day), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 16.dp), color = Color.Gray) }
           } else {
             items(eventsForDay) { item ->
               Box(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -493,7 +496,7 @@ fun CalendarContent(
         
         if (currentMonthExpanded) {
           if (mesActualItems.isEmpty()) {
-            item { Text("Sin eventos este mes", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 16.dp), color = Color.Gray) }
+            item { Text(stringResource(R.string.calendar_no_events_month), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 16.dp), color = Color.Gray) }
           } else {
             items(mesActualItems) { item ->
               val itemDate = Instant.ofEpochMilli(item.timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
@@ -533,7 +536,7 @@ fun CalendarContent(
 
         if (otherMonthsExpanded) {
           if (otrosMesesItems.isEmpty()) {
-            item { Text("Sin eventos futuros", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 16.dp), color = Color.Gray) }
+            item { Text(stringResource(R.string.calendar_no_events_future), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 16.dp), color = Color.Gray) }
           } else {
             items(otrosMesesItems) { item ->
               val itemDate = Instant.ofEpochMilli(item.timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
@@ -565,8 +568,8 @@ fun CalendarContent(
         if (state.history.isEmpty()) {
           item {
             AppCasaEmptyState(
-              title = "Sin historial",
-              description = "Aquí aparecerán los eventos y recordatorios que ya han pasado.",
+              title = stringResource(R.string.calendar_empty_history_title),
+              description = stringResource(R.string.calendar_empty_history_desc),
               icon = Icons.Default.History,
               modifier = Modifier.fillParentMaxSize()
             )
@@ -601,7 +604,7 @@ fun CalendarContent(
                 onClick = onLoadMoreHistory,
                 modifier = Modifier.fillMaxWidth()
               ) {
-                Text("Ver más eventos pasados...", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.calendar_load_more_history), style = MaterialTheme.typography.labelMedium)
               }
             }
           }
@@ -630,18 +633,18 @@ fun AgendaItemCompact(
     is CalendarItem.Evento -> {
       val isBirthday = item.entity.tipo == TipoEvento.CUMPLEANOS.name
       icon = if (isBirthday) Icons.Default.Cake else Icons.Default.Event
-      color = if (isBirthday) Color(0xFFFF4081) else MaterialTheme.colorScheme.primary
-      typeLabel = if (isBirthday) "¡CUMPLE!" else "Evento"
+      color = if (isBirthday) Birthday else MaterialTheme.colorScheme.primary
+      typeLabel = if (isBirthday) stringResource(R.string.calendar_type_birthday) else stringResource(R.string.calendar_type_event)
     }
     is CalendarItem.Tarea -> {
       icon = Icons.Default.Task
       color = MaterialTheme.colorScheme.secondary
-      typeLabel = "Tarea"
+      typeLabel = stringResource(R.string.calendar_type_task)
     }
     is CalendarItem.Recordatorio -> {
       icon = Icons.Default.Notifications
       color = MaterialTheme.colorScheme.tertiary
-      typeLabel = "Recordatorio"
+      typeLabel = stringResource(R.string.calendar_type_reminder)
     }
   }
 
@@ -676,7 +679,8 @@ fun AgendaItemCompact(
           color = if (isHistory && !isHighlighted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
-          Text(text = formatDateCompact(item.timestamp), style = MaterialTheme.typography.labelSmall)
+          val allDaySuffix = stringResource(R.string.calendar_all_day_suffix)
+          Text(text = formatDateCompact(item.timestamp, allDaySuffix), style = MaterialTheme.typography.labelSmall)
           Text(text = " • ", style = MaterialTheme.typography.labelSmall)
           Text(text = typeLabel.uppercase(), style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.Bold)
           
@@ -689,12 +693,12 @@ fun AgendaItemCompact(
 
       if (item !is CalendarItem.Tarea) {
         IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
-          Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+          Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
         }
       }
 
       IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-        Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
       }
     }
   }
@@ -734,11 +738,11 @@ fun GroupHeader(title: String, count: Int, isExpanded: Boolean, onToggle: () -> 
   }
 }
 
-private fun formatDateCompact(timestamp: Long): String {
+private fun formatDateCompact(timestamp: Long, allDaySuffix: String): String {
   val date = Date(timestamp)
   val cal = Calendar.getInstance().apply { time = date }
   val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-    "d MMM yyyy '(Todo el día)'"
+    "d MMM yyyy '$allDaySuffix'"
   } else {
     "d MMM yyyy HH:mm"
   }
@@ -774,7 +778,7 @@ fun AddReminderDialog(
           selectedDateMillis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
           showDatePicker = false
           showTimePicker = true
-        }) { Text("Siguiente (Hora)") }
+        }) { Text(stringResource(R.string.calendar_btn_next_hour)) }
       },
       dismissButton = {
         TextButton(onClick = { 
@@ -787,7 +791,7 @@ fun AddReminderDialog(
             cal.timeInMillis
           } ?: System.currentTimeMillis()
           showDatePicker = false
-        }) { Text("Todo el día") }
+        }) { Text(stringResource(R.string.calendar_btn_all_day)) }
       }
     ) {
       DatePicker(state = datePickerState)
@@ -806,7 +810,7 @@ fun AddReminderDialog(
           }
           selectedDateMillis = calendar.timeInMillis
           showTimePicker = false
-        }) { Text("OK") }
+        }) { Text(stringResource(R.string.calendar_btn_ok)) }
       },
       dismissButton = {
         TextButton(onClick = {
@@ -817,22 +821,22 @@ fun AddReminderDialog(
           }
           selectedDateMillis = calendar.timeInMillis
           showTimePicker = false
-        }) { Text("Todo el día") }
+        }) { Text(stringResource(R.string.calendar_btn_all_day)) }
       },
-      title = { Text("Seleccionar Hora") },
+      title = { Text(stringResource(R.string.calendar_select_hour)) },
       text = { TimePicker(state = timePickerState) }
     )
   }
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Nuevo Recordatorio") },
+    title = { Text(stringResource(R.string.calendar_add_reminder_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
           value = titulo,
           onValueChange = { titulo = it },
-          label = { Text("¿Qué recordar?") },
+          label = { Text(stringResource(R.string.calendar_label_what_to_remember)) },
           modifier = Modifier.fillMaxWidth()
         )
         Button(
@@ -842,22 +846,22 @@ fun AddReminderDialog(
           val date = Date(selectedDateMillis)
           val cal = Calendar.getInstance().apply { time = date }
           val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-            "dd/MM/yyyy '(Todo el día)'"
+            "dd/MM/yyyy '${stringResource(R.string.calendar_all_day_suffix)}'"
           } else {
             "dd/MM/yyyy HH:mm"
           }
           val sdf = SimpleDateFormat(format, Locale.getDefault())
-          Text("Fecha: ${sdf.format(date)}")
+          Text(stringResource(R.string.calendar_label_date, sdf.format(date)))
         }
       }
     },
     confirmButton = {
       Button(onClick = { if (titulo.isNotBlank()) onConfirm(titulo, selectedDateMillis) }) {
-        Text("Guardar")
+        Text(stringResource(R.string.calendar_btn_save))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.calendar_btn_cancel)) }
     }
   )
 }
@@ -886,7 +890,7 @@ fun EditCalendarItemDialog(
           selectedDateMillis = datePickerState.selectedDateMillis ?: item.timestamp
           showDatePicker = false
           showTimePicker = true
-        }) { Text("Siguiente (Hora)") }
+        }) { Text(stringResource(R.string.calendar_btn_next_hour)) }
       },
       dismissButton = {
         TextButton(onClick = { 
@@ -899,7 +903,7 @@ fun EditCalendarItemDialog(
             cal.timeInMillis
           } ?: item.timestamp
           showDatePicker = false
-        }) { Text("Todo el día") }
+        }) { Text(stringResource(R.string.calendar_btn_all_day)) }
       }
     ) {
       DatePicker(state = datePickerState)
@@ -918,7 +922,7 @@ fun EditCalendarItemDialog(
           }
           selectedDateMillis = calendar.timeInMillis
           showTimePicker = false
-        }) { Text("OK") }
+        }) { Text(stringResource(R.string.calendar_btn_ok)) }
       },
       dismissButton = {
         TextButton(onClick = {
@@ -929,22 +933,22 @@ fun EditCalendarItemDialog(
           }
           selectedDateMillis = calendar.timeInMillis
           showTimePicker = false
-        }) { Text("Todo el día") }
+        }) { Text(stringResource(R.string.calendar_btn_all_day)) }
       },
-      title = { Text("Seleccionar Hora") },
+      title = { Text(stringResource(R.string.calendar_select_hour)) },
       text = { TimePicker(state = timePickerState) }
     )
   }
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Editar ${if (item is CalendarItem.Recordatorio) "Recordatorio" else "Evento"}") },
+    title = { Text(stringResource(if (item is CalendarItem.Recordatorio) R.string.calendar_edit_reminder_title else R.string.calendar_edit_event_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
           value = titulo,
           onValueChange = { titulo = it },
-          label = { Text("Título") },
+          label = { Text(stringResource(R.string.calendar_label_title)) },
           modifier = Modifier.fillMaxWidth()
         )
         Button(
@@ -954,22 +958,22 @@ fun EditCalendarItemDialog(
           val date = Date(selectedDateMillis)
           val cal = Calendar.getInstance().apply { time = date }
           val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-            "dd/MM/yyyy '(Todo el día)'"
+            "dd/MM/yyyy '${stringResource(R.string.calendar_all_day_suffix)}'"
           } else {
             "dd/MM/yyyy HH:mm"
           }
           val sdf = SimpleDateFormat(format, Locale.getDefault())
-          Text("Fecha y Hora: ${sdf.format(date)}")
+          Text(stringResource(R.string.calendar_label_datetime, sdf.format(date)))
         }
       }
     },
     confirmButton = {
       Button(onClick = { if (titulo.isNotBlank()) onConfirm(titulo, selectedDateMillis) }) {
-        Text("Guardar")
+        Text(stringResource(R.string.calendar_btn_save))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.calendar_btn_cancel)) }
     }
   )
 }

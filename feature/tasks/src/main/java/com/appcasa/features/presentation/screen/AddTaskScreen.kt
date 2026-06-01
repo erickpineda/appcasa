@@ -14,6 +14,9 @@ import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.core.domain.model.TipoContenidoTarea
 import com.appcasa.features.tasks.presentation.viewmodel.AddTaskViewModel
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.tasks.R
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -69,7 +72,7 @@ fun AddTaskScreen(
           selectedDateMillis = datePickerState.selectedDateMillis
           showDatePicker = false
           showTimePicker = true
-        }) { Text("Siguiente (Hora)") }
+        }) { Text(stringResource(R.string.task_next_hour)) }
       },
       dismissButton = {
         TextButton(onClick = { 
@@ -82,7 +85,7 @@ fun AddTaskScreen(
             cal.timeInMillis
           }
           showDatePicker = false 
-        }) { Text("Todo el día") }
+        }) { Text(stringResource(R.string.task_all_day)) }
       }
     ) {
       DatePicker(state = datePickerState)
@@ -101,7 +104,7 @@ fun AddTaskScreen(
           }
           selectedDateMillis = cal.timeInMillis
           showTimePicker = false
-        }) { Text("OK") }
+        }) { Text(stringResource(R.string.task_ok)) }
       },
       dismissButton = {
         TextButton(onClick = {
@@ -112,9 +115,9 @@ fun AddTaskScreen(
           }
           selectedDateMillis = cal.timeInMillis
           showTimePicker = false
-        }) { Text("Todo el día") }
+        }) { Text(stringResource(R.string.task_all_day)) }
       },
-      title = { Text("Seleccionar Hora") },
+      title = { Text(stringResource(R.string.task_select_hour)) },
       text = { TimePicker(state = timePickerState) }
     )
   }
@@ -128,10 +131,10 @@ fun AddTaskScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Nueva Tarea") },
+        title = { Text(stringResource(R.string.task_add_title)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onPrimary)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -155,18 +158,18 @@ fun AddTaskScreen(
             titulo = it
             tituloTouched = true
         },
-        label = { Text("¿Qué hay que hacer?") },
+        label = { Text(stringResource(R.string.task_label_title)) },
         modifier = Modifier.fillMaxWidth(),
         isError = tituloTouched && titulo.isBlank(),
         supportingText = {
             if (tituloTouched && titulo.isBlank()) {
-                Text("El título es obligatorio", color = MaterialTheme.colorScheme.error)
+                Text(stringResource(R.string.task_error_title_required), color = MaterialTheme.colorScheme.error)
             }
         }
       )
 
       // Selector de Tipo
-      Text("Tipo de tarea", style = MaterialTheme.typography.labelSmall)
+      Text(stringResource(R.string.task_type), style = MaterialTheme.typography.labelSmall)
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -175,7 +178,7 @@ fun AddTaskScreen(
           FilterChip(
             selected = tipoContenido == tipo,
             onClick = { tipoContenido = tipo },
-            label = { Text(if (tipo == TipoContenidoTarea.LISTA) "Lista / Pasos" else "Nota de texto") },
+            label = { Text(if (tipo == TipoContenidoTarea.LISTA) stringResource(R.string.task_label_content_type_list) else stringResource(R.string.task_label_content_type_note)) },
             leadingIcon = {
                 Icon(
                     imageVector = if (tipo == TipoContenidoTarea.LISTA) Icons.Default.List else Icons.Default.Notes,
@@ -192,7 +195,7 @@ fun AddTaskScreen(
         OutlinedTextField(
           value = descripcion,
           onValueChange = { descripcion = it },
-          label = { Text("Detalles de la tarea...") },
+          label = { Text(stringResource(R.string.task_details_placeholder)) },
           modifier = Modifier.fillMaxWidth(),
           minLines = 3
         )
@@ -207,16 +210,16 @@ fun AddTaskScreen(
         Spacer(Modifier.width(8.dp))
         
         val dateLabel = if (selectedDateMillis == null) {
-          "Añadir Fecha Límite (Opcional)"
+          stringResource(R.string.task_label_add_deadline_optional)
         } else {
           val date = Date(selectedDateMillis!!)
           val cal = Calendar.getInstance().apply { time = date }
           val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-            "dd/MM/yyyy '(Todo el día)'"
+            "dd/MM/yyyy '${stringResource(R.string.task_all_day)}'"
           } else {
             "dd/MM/yyyy HH:mm"
           }
-          "Vence: ${SimpleDateFormat(format, Locale.getDefault()).format(date)}"
+          stringResource(R.string.task_label_vence, SimpleDateFormat(format, Locale.getDefault()).format(date))
         }
         Text(dateLabel)
       }
@@ -230,7 +233,7 @@ fun AddTaskScreen(
           value = periodicidad.name,
           onValueChange = {},
           readOnly = true,
-          label = { Text("Repetir") },
+          label = { Text(stringResource(R.string.task_repeat)) },
           leadingIcon = { Icon(Icons.Default.Repeat, contentDescription = null) },
           trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = repeatExpanded) },
           modifier = Modifier.menuAnchor().fillMaxWidth()
@@ -252,7 +255,7 @@ fun AddTaskScreen(
       }
 
       if (selectedDateMillis != null) {
-        Text("Avisar antes:", style = MaterialTheme.typography.labelSmall)
+        Text(stringResource(R.string.task_notify_before), style = MaterialTheme.typography.labelSmall)
         Row(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -281,13 +284,13 @@ fun AddTaskScreen(
         ) {
           Icon(Icons.Default.PhotoCamera, contentDescription = null)
           Spacer(Modifier.width(8.dp))
-          Text(if (fotoUri == null) "Adjuntar Foto" else "Cambiar Foto")
+          Text(if (fotoUri == null) stringResource(R.string.task_label_attach_photo) else stringResource(R.string.task_label_change_photo))
         }
         
         fotoUri?.let { uri ->
           AsyncImage(
             model = uri,
-            contentDescription = "Vista previa",
+            contentDescription = stringResource(R.string.task_label_preview),
             modifier = Modifier
               .size(56.dp)
               .clip(RoundedCornerShape(8.dp))
@@ -297,12 +300,13 @@ fun AddTaskScreen(
         }
       }
 
-      Text("Asignar a", style = MaterialTheme.typography.titleMedium)
+      Text(stringResource(R.string.task_assign_to), style = MaterialTheme.typography.titleMedium)
       ExposedDropdownMenuBox(
         expanded = memberExpanded,
         onExpandedChange = { memberExpanded = !memberExpanded }
       ) {
-        val selectedName = familyMembers.find { it.id == selectedMemberId }?.nombre ?: "Sin asignar"
+        val unassignedLabel = stringResource(R.string.task_unassigned)
+        val selectedName = familyMembers.find { it.id == selectedMemberId }?.nombre ?: unassignedLabel
         OutlinedTextField(
           value = selectedName,
           onValueChange = {},
@@ -314,7 +318,7 @@ fun AddTaskScreen(
           expanded = memberExpanded,
           onDismissRequest = { memberExpanded = false }
         ) {
-          DropdownMenuItem(text = { Text("Sin asignar") }, onClick = { selectedMemberId = null; memberExpanded = false })
+          DropdownMenuItem(text = { Text(unassignedLabel) }, onClick = { selectedMemberId = null; memberExpanded = false })
           familyMembers.forEach { member ->
             DropdownMenuItem(
               text = { Text(member.nombre) },
@@ -327,7 +331,7 @@ fun AddTaskScreen(
         }
       }
 
-      Text("Prioridad", style = MaterialTheme.typography.titleMedium)
+      Text(stringResource(R.string.task_priority), style = MaterialTheme.typography.titleMedium)
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -350,7 +354,7 @@ fun AddTaskScreen(
           checked = esPersonal,
           onCheckedChange = { esPersonal = it }
         )
-        Text("Es una tarea personal")
+        Text(stringResource(R.string.task_label_personal_long))
       }
 
       Spacer(modifier = Modifier.height(24.dp))
@@ -363,7 +367,7 @@ fun AddTaskScreen(
         modifier = Modifier.fillMaxWidth(),
         enabled = canSave
       ) {
-        Text("Crear Tarea")
+        Text(stringResource(R.string.task_create_button))
       }
     }
   }

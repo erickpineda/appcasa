@@ -31,7 +31,10 @@ import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.inventory.data.local.StockEntity
 import com.appcasa.features.inventory.presentation.viewmodel.StockViewModel
+import androidx.compose.ui.res.stringResource
 import com.google.mlkit.vision.common.InputImage
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.inventory.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,10 +110,10 @@ fun StockScreen(
     Scaffold(
       topBar = {
         TopAppBar(
-          title = { Text("Inventario y Stock") },
+          title = { Text(stringResource(R.string.inventory_title)) },
           navigationIcon = {
             IconButton(onClick = { navController.popBackStack() }) {
-              Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onPrimary)
+              Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
             }
           },
           colors = TopAppBarDefaults.topAppBarColors(
@@ -119,14 +122,14 @@ fun StockScreen(
           ),
           actions = {
               IconButton(onClick = { barcodeLauncher.launch("image/*") }) {
-                  Icon(Icons.Default.QrCodeScanner, contentDescription = "Escanear barras")
+                  Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.cd_scan))
               }
           }
         )
       },
       floatingActionButton = {
         FloatingActionButton(onClick = { showAddDialog = true }) {
-          Icon(Icons.Default.Add, contentDescription = "Añadir Artículo")
+          Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_item))
         }
       }
     ) { padding ->
@@ -140,10 +143,10 @@ fun StockScreen(
         if (stockItems.isEmpty()) {
           item {
             AppCasaEmptyState(
-              title = "Inventario vacío",
-              description = "Añade los productos que sueles tener en casa para controlar su stock. ¡Prueba a escanear un código!",
+              title = stringResource(R.string.inventory_empty_title),
+              description = stringResource(R.string.inventory_empty_description),
               icon = Icons.Default.Inventory,
-              actionText = "Añadir artículo",
+              actionText = stringResource(R.string.inventory_add_action),
               onActionClick = { showAddDialog = true },
               modifier = Modifier.fillParentMaxSize()
             )
@@ -180,29 +183,29 @@ fun AddToListDialog(
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Añadir a la Compra") },
+    title = { Text(stringResource(R.string.inventory_add_to_list_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("¿Cuántas unidades de '${item.nombre}' quieres añadir?", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.inventory_add_to_list_question, item.nombre), style = MaterialTheme.typography.bodyMedium)
         
         OutlinedTextField(
           value = quantity,
           onValueChange = { quantity = it },
-          label = { Text("Cantidad (${item.unidad})") },
+          label = { Text(stringResource(R.string.inventory_label_quantity_unit, item.unidad)) },
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
           modifier = Modifier.fillMaxWidth()
         )
 
         if (lists.isEmpty()) {
-          Text("No tienes listas creadas. Crea una primero.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+          Text(stringResource(R.string.inventory_no_lists_error), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
         } else {
-          Text("Seleccionar lista:", style = MaterialTheme.typography.labelSmall)
+          Text(stringResource(R.string.inventory_select_list), style = MaterialTheme.typography.labelSmall)
           Box {
             OutlinedButton(
               onClick = { expanded = true },
               modifier = Modifier.fillMaxWidth()
             ) {
-              val selectedName = lists.find { it.id == selectedListId }?.nombre ?: "Seleccionar lista"
+              val selectedName = lists.find { it.id == selectedListId }?.nombre ?: stringResource(R.string.inventory_select_list)
               Text(selectedName)
               Spacer(Modifier.weight(1f))
               Icon(Icons.Default.ArrowDropDown, contentDescription = null)
@@ -230,11 +233,11 @@ fun AddToListDialog(
         },
         enabled = selectedListId != null && quantity.toDoubleOrNull() != null
       ) {
-        Text("Añadir")
+        Text(stringResource(R.string.inventory_btn_add))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.inventory_btn_cancel)) }
     }
   )
 }
@@ -258,7 +261,7 @@ fun StockActionDialog(
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text(if (item == null) "Nuevo Artículo" else "Editar Artículo") },
+    title = { Text(stringResource(if (item == null) R.string.inventory_new_item_title else R.string.inventory_edit_item_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (initialBarcode.isNotEmpty()) {
@@ -268,7 +271,7 @@ fun StockActionDialog(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             ) {
                 Text(
-                    "Código detectado: $initialBarcode",
+                    stringResource(R.string.inventory_barcode_detected, initialBarcode),
                     modifier = Modifier.padding(8.dp),
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -280,33 +283,33 @@ fun StockActionDialog(
                 nombre = it
                 nombreTouched = true
             }, 
-            label = { Text("Nombre") }, 
+            label = { Text(stringResource(R.string.inventory_label_name)) }, 
             modifier = Modifier.fillMaxWidth(),
             isError = nombreTouched && !isNombreValid,
             supportingText = {
                 if (nombreTouched && !isNombreValid) {
-                    Text("El nombre es obligatorio", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.inventory_error_name_required), color = MaterialTheme.colorScheme.error)
                 }
             }
         )
-        OutlinedTextField(value = categoria, onValueChange = { categoria = it }, label = { Text("Categoría") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = categoria, onValueChange = { categoria = it }, label = { Text(stringResource(R.string.inventory_label_category)) }, modifier = Modifier.fillMaxWidth())
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           OutlinedTextField(
             value = cantidad, 
             onValueChange = { cantidad = it }, 
-            label = { Text("Cant.") }, 
+            label = { Text(stringResource(R.string.inventory_label_qty_short)) }, 
             modifier = Modifier.weight(1f),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
           )
           OutlinedTextField(
             value = minima, 
             onValueChange = { minima = it }, 
-            label = { Text("Mín.") }, 
+            label = { Text(stringResource(R.string.inventory_label_min_short)) }, 
             modifier = Modifier.weight(1f),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
           )
         }
-        OutlinedTextField(value = unidad, onValueChange = { unidad = it }, label = { Text("Unidad (kg, sacos...)") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = unidad, onValueChange = { unidad = it }, label = { Text(stringResource(R.string.inventory_label_unit)) }, modifier = Modifier.fillMaxWidth())
       }
     },
     confirmButton = {
@@ -316,11 +319,11 @@ fun StockActionDialog(
         },
         enabled = canConfirm
       ) {
-        Text(if (item == null) "Añadir" else "Guardar")
+        Text(stringResource(if (item == null) R.string.inventory_btn_add else R.string.inventory_btn_save))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.inventory_btn_cancel)) }
     }
   )
 }
@@ -370,7 +373,7 @@ fun StockItemCard(
             }
           }
           Text(
-            text = if (isLowStock) "STOCK BAJO • ${item.categoria}" else item.categoria, 
+            text = if (isLowStock) stringResource(R.string.inventory_low_stock_label, item.categoria) else item.categoria, 
             style = MaterialTheme.typography.labelSmall,
             color = if (isLowStock) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             fontWeight = if (isLowStock) FontWeight.ExtraBold else FontWeight.Normal
@@ -417,7 +420,7 @@ fun StockItemCard(
         ) {
           Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(12.dp))
           Spacer(Modifier.width(4.dp))
-          Text("AÑADIR A LA COMPRA", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+          Text(stringResource(R.string.inventory_add_to_shopping_btn), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
         }
       }
     }

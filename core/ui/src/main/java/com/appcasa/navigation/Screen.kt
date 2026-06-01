@@ -10,6 +10,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
+import com.appcasa.core.ui.R
+
 sealed class Screen(val route: String) {
 
   // ─── Destinos del menú inferior (Los 4 Pilares) ─────
@@ -62,13 +64,13 @@ sealed class Screen(val route: String) {
 
 data class BottomNavItem(
   val screen: Screen,
-  val label: String,
+  val labelRes: Int,
   val icon: ImageVector
 )
 
 val bottomNavItems = listOf(
-  BottomNavItem(Screen.Dashboard,  "Inicio",       Icons.Default.Home),
-  BottomNavItem(Screen.Management, "Gestión",      Icons.Default.CheckCircle),
-  BottomNavItem(Screen.FamilyHub,  "Familia",      Icons.Default.Groups),
-  BottomNavItem(Screen.Utilities,  "Utilidades",   Icons.Default.Apps),
+  BottomNavItem(Screen.Dashboard,  R.string.nav_dashboard,  Icons.Default.Home),
+  BottomNavItem(Screen.Management, R.string.nav_management, Icons.Default.CheckCircle),
+  BottomNavItem(Screen.FamilyHub,  R.string.nav_family,      Icons.Default.Groups),
+  BottomNavItem(Screen.Utilities,  R.string.nav_utilities,   Icons.Default.Apps),
 )

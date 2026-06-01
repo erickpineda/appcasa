@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AppCasa</string>
+    <!-- Navigation labels -->
+    <string name="nav_dashboard">Inicio</string>
+    <string name="nav_management">Gestión</string>
+    <string name="nav_family">Familia</string>
+    <string name="nav_utilities">Utilidades</string>
+</resources>

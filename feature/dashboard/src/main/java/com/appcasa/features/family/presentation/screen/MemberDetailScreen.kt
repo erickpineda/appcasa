@@ -25,6 +25,10 @@ import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.components.skeletonShimmer
 import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
+import com.appcasa.core.domain.model.TipoMiembro
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -44,17 +48,17 @@ fun MemberDetailScreen(
       Scaffold(
         topBar = {
           TopAppBar(
-            title = { Text(member?.nombre ?: "Miembro") },
+            title = { Text(member?.nombre ?: stringResource(R.string.dashboard_member_fallback)) },
             navigationIcon = {
               IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
               }
             },
             actions = {
               IconButton(onClick = { 
                 member?.let { navController.navigate(com.appcasa.navigation.Screen.EditMember.createRoute(it.id)) }
               }) {
-                Icon(Icons.Default.Edit, contentDescription = "Editar")
+                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit))
               }
             }
           )
@@ -92,7 +96,7 @@ fun MemberDetailScreen(
                   )
                 } else {
                   Icon(
-                    imageVector = if (member.tipo == "PERSONA") Icons.Default.Person else Icons.Default.Pets,
+                    imageVector = if (member.tipo == TipoMiembro.PERSONA.name) Icons.Default.Person else Icons.Default.Pets,
                     contentDescription = null,
                     modifier = Modifier.size(80.dp),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -109,7 +113,7 @@ fun MemberDetailScreen(
               fontWeight = FontWeight.Bold
             )
             Text(
-              text = if (member.tipo == "PERSONA") "Miembro de la Familia" else "Perfil de Mascota",
+              text = if (member.tipo == TipoMiembro.PERSONA.name) stringResource(R.string.dashboard_family_member_label) else stringResource(R.string.dashboard_pet_profile_label),
               style = MaterialTheme.typography.bodyLarge,
               color = MaterialTheme.colorScheme.primary
             )
@@ -122,23 +126,23 @@ fun MemberDetailScreen(
               modifier = Modifier.fillMaxWidth()
             ) {
               Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                DetailRow(icon = Icons.Default.Category, label = "Tipo", value = member.tipo)
+                DetailRow(icon = Icons.Default.Category, label = stringResource(R.string.family_label_type), value = member.tipo)
                 
                 if (member.fechaNacimiento != null) {
                   val dateStr = SimpleDateFormat("dd 'de' MMMM", Locale("es", "ES")).format(Date(member.fechaNacimiento!!))
-                  DetailRow(icon = Icons.Default.Cake, label = "Cumpleaños", value = dateStr)
+                  DetailRow(icon = Icons.Default.Cake, label = stringResource(R.string.dashboard_birthday_label), value = dateStr)
                 }
 
                 if (!member.raza.isNullOrBlank()) {
-                  DetailRow(icon = Icons.Default.Pets, label = "Raza / Especie", value = member.raza!!)
+                  DetailRow(icon = Icons.Default.Pets, label = stringResource(R.string.family_label_breed), value = member.raza!!)
                 }
                 
                 if (!member.colorPelaje.isNullOrBlank()) {
-                  DetailRow(icon = Icons.Default.Palette, label = "Color / Descripción", value = member.colorPelaje!!)
+                  DetailRow(icon = Icons.Default.Palette, label = stringResource(R.string.family_label_color), value = member.colorPelaje!!)
                 }
                 
                 if (!member.numeroChip.isNullOrBlank()) {
-                  DetailRow(icon = Icons.Default.Tag, label = "Nº Chip", value = member.numeroChip!!)
+                  DetailRow(icon = Icons.Default.Tag, label = stringResource(R.string.dashboard_chip_short_label), value = member.numeroChip!!)
                 }
               }
             }
@@ -150,14 +154,14 @@ fun MemberDetailScreen(
                 modifier = Modifier.fillMaxWidth()
               ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                  Text("Información de Contacto", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                  Text(stringResource(R.string.family_contact_info), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                   
                   if (!member.veterinarioNombre.isNullOrBlank()) {
-                    DetailRow(icon = Icons.Default.LocalHospital, label = "Clínica/Vet", value = member.veterinarioNombre!!)
+                    DetailRow(icon = Icons.Default.LocalHospital, label = stringResource(R.string.dashboard_vet_clinic_label), value = member.veterinarioNombre!!)
                   }
                   
                   if (!member.veterinarioTelefono.isNullOrBlank()) {
-                    DetailRow(icon = Icons.Default.Phone, label = "Teléfono", value = member.veterinarioTelefono!!)
+                    DetailRow(icon = Icons.Default.Phone, label = stringResource(R.string.dashboard_phone_label), value = member.veterinarioTelefono!!)
                   }
                 }
               }

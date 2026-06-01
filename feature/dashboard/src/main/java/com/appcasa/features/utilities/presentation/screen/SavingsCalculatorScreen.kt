@@ -5,7 +5,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -34,10 +36,10 @@ fun SavingsCalculatorScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Ahorro Mensual") },
+        title = { Text(stringResource(R.string.util_savings_title)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         },
         actions = {
@@ -45,7 +47,7 @@ fun SavingsCalculatorScreen(
             viewModel.saveValue("SAVINGS_GOAL", goalAmount)
             viewModel.saveValue("SAVINGS_MONTHS", months)
           }) {
-            Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
+            Text(stringResource(R.string.util_bmi_save), color = MaterialTheme.colorScheme.onPrimary)
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -66,21 +68,21 @@ fun SavingsCalculatorScreen(
       OutlinedTextField(
         value = goalAmount,
         onValueChange = { goalAmount = it },
-        label = { Text("Objetivo total (€)") },
+        label = { Text(stringResource(R.string.util_savings_label_goal)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.fillMaxWidth()
       )
       OutlinedTextField(
         value = months,
         onValueChange = { months = it },
-        label = { Text("Plazo (Meses)") },
+        label = { Text(stringResource(R.string.util_savings_label_months)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.fillMaxWidth()
       )
 
       AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(24.dp)) {
-          Text("Necesitas ahorrar al mes", style = MaterialTheme.typography.labelLarge)
+          Text(stringResource(R.string.util_savings_result_prefix), style = MaterialTheme.typography.labelLarge)
           Text(
             text = "${String.format("%.2f", monthlySaving)} €",
             style = MaterialTheme.typography.displayMedium,

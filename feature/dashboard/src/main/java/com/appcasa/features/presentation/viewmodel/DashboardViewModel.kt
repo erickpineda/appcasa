@@ -43,6 +43,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.List
 import com.appcasa.navigation.Screen
+import com.appcasa.core.utils.Constants
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -66,7 +67,13 @@ class DashboardViewModel @Inject constructor(
   private val _postIts = MutableStateFlow<List<PostItEntity>>(emptyList())
   val postIts = _postIts.asStateFlow()
 
-  private val _dashboardOrder = MutableStateFlow(listOf("TASKS", "PETS", "CALENDAR", "EXPENSES", "POSTITS"))
+  private val _dashboardOrder = MutableStateFlow(listOf(
+    Constants.Modules.TASKS, 
+    Constants.Modules.PETS, 
+    Constants.Modules.CALENDAR, 
+    Constants.Modules.EXPENSES, 
+    Constants.Modules.POSTITS
+  ))
   val dashboardOrder = _dashboardOrder.asStateFlow()
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -307,6 +314,7 @@ class DashboardViewModel @Inject constructor(
     val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
       "d 'de' MMMM '(Todo el día)'"
     } else {
+      Constants.Formatting.DATETIME_FORMAT_ES // Or a specific one for dashboard
       "d 'de' MMMM HH:mm"
     }
     val sdf = SimpleDateFormat(format, Locale("es", "ES"))

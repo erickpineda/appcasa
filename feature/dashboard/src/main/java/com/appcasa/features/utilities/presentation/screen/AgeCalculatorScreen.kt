@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,7 +34,13 @@ fun AgeCalculatorScreen(
     mutableStateOf(savedValues["AGE_CALC_MILLIS"]?.toLongOrNull()) 
   }
   
-  var ageResult by remember { mutableStateOf("Selecciona una fecha") }
+  var ageResult by remember { mutableStateOf("") }
+  val selectHint = stringResource(R.string.util_age_select_hint)
+  val resultFormat = stringResource(R.string.util_age_result_format)
+  
+  if (ageResult.isEmpty() && selectedMillis == null) {
+      ageResult = selectHint
+  }
 
   val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedMillis)
   var showDatePicker by remember { mutableStateOf(false) }
@@ -42,7 +51,7 @@ fun AgeCalculatorScreen(
       val selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
       val now = LocalDate.now()
       val period = java.time.Period.between(selectedDate, now)
-      ageResult = "${period.years} años, ${period.months} meses y ${period.days} días"
+      ageResult = java.lang.String.format(resultFormat, period.years, period.months, period.days)
     }
   }
 
@@ -56,7 +65,7 @@ fun AgeCalculatorScreen(
             viewModel.saveValue("AGE_CALC_MILLIS", it.toString())
           }
           showDatePicker = false
-        }) { Text("OK") }
+        }) { Text(stringResource(R.string.family_btn_ok)) }
       }
     ) {
       DatePicker(state = datePickerState)
@@ -66,10 +75,10 @@ fun AgeCalculatorScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Calculadora de Edad") },
+        title = { Text(stringResource(R.string.util_age_title)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -91,7 +100,7 @@ fun AgeCalculatorScreen(
       Button(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
         Icon(Icons.Default.Event, contentDescription = null)
         Spacer(Modifier.width(8.dp))
-        Text(if (selectedMillis == null) "Seleccionar Fecha de Nacimiento" else "Cambiar Fecha")
+        Text(if (selectedMillis == null) stringResource(R.string.util_age_btn_select) else stringResource(R.string.util_age_btn_change))
       }
 
       AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
@@ -99,7 +108,7 @@ fun AgeCalculatorScreen(
           modifier = Modifier.padding(24.dp),
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
-          Text("Edad Exacta", style = MaterialTheme.typography.labelLarge)
+          Text(stringResource(R.string.util_age_label_exact), style = MaterialTheme.typography.labelLarge)
           Spacer(Modifier.height(12.dp))
           Text(
             text = ageResult,

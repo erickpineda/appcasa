@@ -24,6 +24,8 @@ import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.features.utilities.data.local.UtilidadEntity
 import com.appcasa.features.utilities.presentation.viewmodel.UtilitiesViewModel
 import com.appcasa.navigation.Screen
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -74,7 +76,7 @@ fun UtilitiesContent(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Utilidades") },
+        title = { Text(stringResource(R.string.utilities_title)) },
         actions = {
           if (groupedUtilities.isNotEmpty()) {
             IconButton(
@@ -84,7 +86,7 @@ fun UtilitiesContent(
             ) {
               Icon(
                 imageVector = if (allExpanded) Icons.Default.UnfoldLess else Icons.Default.UnfoldMore,
-                contentDescription = if (allExpanded) "Contraer todo" else "Expandir todo",
+                contentDescription = if (allExpanded) stringResource(R.string.utilities_collapse_all) else stringResource(R.string.utilities_expand_all),
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(20.dp)
               )
@@ -107,9 +109,9 @@ fun UtilitiesContent(
       if (utilities.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
           Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("No hay utilidades configuradas")
+            Text(stringResource(R.string.utilities_empty))
             Button(onClick = onInitialize, modifier = Modifier.padding(top = 16.dp)) {
-              Text("Inicializar Utilidades")
+              Text(stringResource(R.string.utilities_btn_initialize))
             }
           }
         }
@@ -144,7 +146,7 @@ fun UtilitiesContent(
                 )
                 Icon(
                   imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                  contentDescription = if (isExpanded) "Contraer" else "Expandir",
+                  contentDescription = if (isExpanded) stringResource(R.string.utilities_collapse) else stringResource(R.string.utilities_expand),
                   tint = MaterialTheme.colorScheme.primary,
                   modifier = Modifier.size(20.dp)
                 )

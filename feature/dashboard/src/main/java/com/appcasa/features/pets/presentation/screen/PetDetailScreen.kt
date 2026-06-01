@@ -6,6 +6,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -111,15 +114,15 @@ fun PetDetailScreen(
       Scaffold(
         topBar = {
           TopAppBar(
-            title = { Text(pet?.nombre ?: "Mascota") },
+            title = { Text(pet?.nombre ?: stringResource(R.string.dashboard_pet_fallback)) },
             navigationIcon = {
               IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
               }
             },
             actions = {
               IconButton(onClick = { pet?.let { navController.navigate(com.appcasa.navigation.Screen.EditMember.createRoute(it.id)) } }) {
-                Icon(Icons.Default.Edit, contentDescription = "Editar")
+                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit))
               }
             },
             colors = TopAppBarDefaults.topAppBarColors(
@@ -161,33 +164,33 @@ fun PetDetailScreen(
             // Información básica
             com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
               Column(modifier = Modifier.padding(16.dp)) {
-                Text("Información General", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.family_general_info), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Tipo: ${pet!!.tipo}")
-                pet!!.raza?.let { Text("Raza: $it") }
-                pet!!.numeroChip?.let { Text("Chip: $it") }
+                Text(stringResource(R.string.family_type_format, pet!!.tipo))
+                pet!!.raza?.let { Text(stringResource(R.string.family_breed_format, it)) }
+                pet!!.numeroChip?.let { Text(stringResource(R.string.family_chip_format, it)) }
               }
             }
 
             // Gráfica de Peso
             if (pesos.size >= 2) {
-              Text("Evolución de Peso", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+              Text(stringResource(R.string.family_weight_evolution), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
               WeightTrendGraph(pesos = pesos.sortedBy { it.fecha })
             }
 
             // Secciones
-            SectionHeader("Desparasitación", { showDewormingDialog = true })
+            SectionHeader(stringResource(R.string.dashboard_deworming_label), { showDewormingDialog = true })
             if (desparasitaciones.isEmpty()) {
-              Text("Sin registros", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 8.dp))
+              Text(stringResource(R.string.family_no_records), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 8.dp))
             } else {
               desparasitaciones.forEach { item ->
-                PetListItem(item.producto ?: "Sin producto", "${item.tipo} · ${formatDate(item.fechaAplicacion)}", Icons.Default.BugReport, { viewModel.deleteDesparasitacion(item) })
+                PetListItem(item.producto ?: stringResource(R.string.dashboard_no_product), "${item.tipo} · ${formatDate(item.fechaAplicacion)}", Icons.Default.BugReport, { viewModel.deleteDesparasitacion(item) })
               }
             }
 
-            SectionHeader("Medicaciones Activas", { showMedicationDialog = true })
+            SectionHeader(stringResource(R.string.dashboard_medications_label), { showMedicationDialog = true })
             if (medicaciones.isEmpty()) {
-              Text("Sin medicaciones", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 8.dp))
+              Text(stringResource(R.string.family_no_meds), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 8.dp))
             } else {
               medicaciones.forEach { med ->
                 PetListItem(med.nombre, "${med.dosis} · ${med.frecuencia}", Icons.Default.Medication, { viewModel.deleteMedicacion(med) }, { editingMedication = med })
@@ -222,7 +225,7 @@ fun SectionHeader(title: String, onAdd: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        TextButton(onClick = onAdd) { Text("Añadir") }
+        TextButton(onClick = onAdd) { Text(stringResource(R.string.family_btn_add)) }
     }
 }
 
@@ -306,21 +309,21 @@ fun MedicationActionDialog(
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text(if (item == null) "Nueva Medicación" else "Editar Medicación") },
+    title = { Text(stringResource(if (item == null) R.string.dashboard_new_med_title else R.string.dashboard_edit_med_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre (ej: Apoquel)") }, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = dosis, onValueChange = { dosis = it }, label = { Text("Dosis (ej: 1 pastilla)") }, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = frecuencia, onValueChange = { frecuencia = it }, label = { Text("Frecuencia (ej: Cada 12h)") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text(stringResource(R.string.dashboard_label_med_name)) }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = dosis, onValueChange = { dosis = it }, label = { Text(stringResource(R.string.dashboard_label_med_dose)) }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = frecuencia, onValueChange = { frecuencia = it }, label = { Text(stringResource(R.string.dashboard_label_med_freq)) }, modifier = Modifier.fillMaxWidth())
       }
     },
     confirmButton = {
       Button(onClick = { if (nombre.isNotBlank()) onConfirm(nombre, dosis, frecuencia) }) {
-        Text("Guardar")
+        Text(stringResource(R.string.dashboard_save))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.dashboard_cancel)) }
     }
   )
 }
@@ -334,22 +337,22 @@ fun VaccineDialog(
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Registrar Vacuna") },
+    title = { Text(stringResource(R.string.dashboard_register_vaccine_title)) },
     text = {
       OutlinedTextField(
         value = nombre,
         onValueChange = { nombre = it },
-        label = { Text("Nombre de la vacuna") },
+        label = { Text(stringResource(R.string.dashboard_label_vaccine_name)) },
         modifier = Modifier.fillMaxWidth()
       )
     },
     confirmButton = {
       Button(onClick = { if (nombre.isNotBlank()) onConfirm(nombre) }) {
-        Text("Guardar")
+        Text(stringResource(R.string.dashboard_save))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.dashboard_cancel)) }
     }
   )
 }
@@ -365,14 +368,14 @@ fun DewormingDialog(
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Nueva Desparasitación") },
+    title = { Text(stringResource(R.string.dashboard_new_deworming_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedTextField(value = producto, onValueChange = { producto = it }, label = { Text("Producto (ej: Advocate)") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = producto, onValueChange = { producto = it }, label = { Text(stringResource(R.string.dashboard_label_product_name)) }, modifier = Modifier.fillMaxWidth())
         
         Box {
           OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-            Text("Tipo: $tipo")
+            Text(stringResource(R.string.family_type_format, tipo))
           }
           DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             listOf("INTERNA", "EXTERNA", "AMBAS").forEach { t ->
@@ -384,11 +387,11 @@ fun DewormingDialog(
     },
     confirmButton = {
       Button(onClick = { if (producto.isNotBlank()) onConfirm(tipo, producto) }) {
-        Text("Guardar")
+        Text(stringResource(R.string.dashboard_save))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.dashboard_cancel)) }
     }
   )
 }
@@ -402,12 +405,12 @@ fun WeightDialog(
 
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text("Registrar Peso") },
+    title = { Text(stringResource(R.string.dashboard_register_weight_title)) },
     text = {
       OutlinedTextField(
         value = weightInput,
         onValueChange = { weightInput = it },
-        label = { Text("Peso en kg") },
+        label = { Text(stringResource(R.string.dashboard_label_weight_kg)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         singleLine = true,
         modifier = Modifier.fillMaxWidth()
@@ -419,11 +422,11 @@ fun WeightDialog(
           weightInput.toDoubleOrNull()?.let { onConfirm(it) }
         }
       ) {
-        Text("Guardar")
+        Text(stringResource(R.string.dashboard_save))
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text("Cancelar") }
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.dashboard_cancel)) }
     }
   )
 }

@@ -52,3 +52,8 @@ val ErrorContainerDark = Color(0xFF881337) // Rose 900
 val OnError      = Color(0xFFFFFFFF)
 val OnErrorContainer = Color(0xFF881337)
 val OnErrorContainerDark = Color(0xFFFFE4E6)
+
+// ✨ COLORES ESPECIALES ✨
+val Gold     = Color(0xFFFFD700)
+val Birthday = Color(0xFFFF4081)
+val PostItYellow = Color(0xFFFFF9C4)

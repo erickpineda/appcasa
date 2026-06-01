@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -50,6 +52,8 @@ fun AddMemberScreen(
   var showDatePicker by remember { mutableStateOf(false) }
   val datePickerState = rememberDatePickerState()
 
+  val confirmText = stringResource(R.string.family_btn_ok)
+
   if (showDatePicker) {
     DatePickerDialog(
       onDismissRequest = { showDatePicker = false },
@@ -57,7 +61,7 @@ fun AddMemberScreen(
         TextButton(onClick = {
           selectedBirthDate = datePickerState.selectedDateMillis
           showDatePicker = false
-        }) { Text("OK") }
+        }) { Text(confirmText) }
       }
     ) {
       DatePicker(state = datePickerState)
@@ -77,10 +81,10 @@ fun AddMemberScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Añadir Miembro") },
+        title = { Text(stringResource(R.string.family_add_member_title)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onPrimary)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -132,7 +136,7 @@ fun AddMemberScreen(
         } else {
           Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Text("Foto", style = MaterialTheme.typography.labelSmall)
+            Text(stringResource(R.string.family_label_photo), style = MaterialTheme.typography.labelSmall)
           }
         }
       }
@@ -143,12 +147,12 @@ fun AddMemberScreen(
             nombre = it
             nombreTouched = true
         },
-        label = { Text("Nombre") },
+        label = { Text(stringResource(R.string.family_label_name)) },
         modifier = Modifier.fillMaxWidth(),
         isError = nombreTouched && nombre.isBlank(),
         supportingText = {
             if (nombreTouched && nombre.isBlank()) {
-                Text("El nombre es obligatorio", color = MaterialTheme.colorScheme.error)
+                Text(stringResource(R.string.family_error_name_required), color = MaterialTheme.colorScheme.error)
             }
         }
       )
@@ -161,7 +165,7 @@ fun AddMemberScreen(
           value = tipo.name,
           onValueChange = {},
           readOnly = true,
-          label = { Text("Tipo") },
+          label = { Text(stringResource(R.string.family_label_type)) },
           trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
           modifier = Modifier.menuAnchor().fillMaxWidth()
         )
@@ -197,19 +201,19 @@ fun AddMemberScreen(
         OutlinedTextField(
           value = raza,
           onValueChange = { raza = it },
-          label = { Text("Raza / Especie") },
+          label = { Text(stringResource(R.string.family_label_breed)) },
           modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
           value = color,
           onValueChange = { color = it },
-          label = { Text("Color / Descripción") },
+          label = { Text(stringResource(R.string.family_label_color)) },
           modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
           value = chip,
           onValueChange = { chip = it },
-          label = { Text("Número de Chip") },
+          label = { Text(stringResource(R.string.family_label_chip)) },
           modifier = Modifier.fillMaxWidth()
         )
       }
@@ -232,7 +236,7 @@ fun AddMemberScreen(
         modifier = Modifier.fillMaxWidth(),
         enabled = nombre.isNotBlank()
       ) {
-        Text("Guardar Miembro")
+        Text(stringResource(R.string.family_btn_save))
       }
     }
   }

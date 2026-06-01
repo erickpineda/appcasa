@@ -15,6 +15,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.compose.ui.res.stringResource
+import com.appcasa.feature.dashboard.R
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
@@ -30,7 +32,12 @@ fun DosageCalculatorScreen(
   val pets by familyViewModel.pets.collectAsState()
   val petWeight by dosageViewModel.petWeight.collectAsState()
   
-  var selectedPetName by remember { mutableStateOf("Seleccionar Mascota") }
+  var selectedPetName by remember { mutableStateOf("") }
+  val selectPetHint = stringResource(R.string.util_dosage_select_pet)
+  
+  if (selectedPetName.isEmpty()) {
+      selectedPetName = selectPetHint
+  }
   var petType by remember { mutableStateOf(TipoMiembro.PERRO.name) }
   var doseValueInput by remember { mutableStateOf("") }
   
@@ -68,10 +75,10 @@ fun DosageCalculatorScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Dosis Mascotas") },
+        title = { Text(stringResource(R.string.util_pet_dosage)) },
         navigationIcon = {
           IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -90,7 +97,7 @@ fun DosageCalculatorScreen(
         .padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-      Text("1. Mascota y Especie", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+      Text(stringResource(R.string.util_dosage_section_pet), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
       
       ExposedDropdownMenuBox(
         expanded = expanded,
@@ -124,7 +131,7 @@ fun DosageCalculatorScreen(
       if (petType == TipoMiembro.TORTUGA.name) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f))) {
             Text(
-                "🐢 Atención: Las tortugas tienen un metabolismo muy lento. Confirma siempre con un experto en exóticos.",
+                stringResource(R.string.util_dosage_turtle_warning),
                 modifier = Modifier.padding(12.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error
@@ -132,7 +139,7 @@ fun DosageCalculatorScreen(
         }
       }
 
-      Text("2. Peso y Dosis Recomendada", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+      Text(stringResource(R.string.util_dosage_section_dose), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
       
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
@@ -141,14 +148,14 @@ fun DosageCalculatorScreen(
               weightInput = it
               dosageViewModel.setManualWeight(it.toDoubleOrNull() ?: 0.0)
           },
-          label = { Text("Peso (kg)") },
+          label = { Text(stringResource(R.string.util_dosage_label_manual_weight)) },
           modifier = Modifier.weight(1f),
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
         )
         OutlinedTextField(
           value = doseValueInput,
           onValueChange = { doseValueInput = it },
-          label = { Text("Dosis") },
+          label = { Text(stringResource(R.string.util_dosage_label_dose)) },
           modifier = Modifier.weight(1f),
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
         )
@@ -171,16 +178,16 @@ fun DosageCalculatorScreen(
 
       Row(verticalAlignment = Alignment.CenterVertically) {
         Checkbox(checked = isLiquid, onCheckedChange = { isLiquid = it })
-        Text("Es un medicamento líquido (Jarabe)")
+        Text(stringResource(R.string.util_dosage_is_liquid))
       }
 
       if (isLiquid) {
-        Text("3. Concentración del Bote", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(stringResource(R.string.util_dosage_section_concentration), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           OutlinedTextField(
             value = concentrationMg,
             onValueChange = { concentrationMg = it },
-            label = { Text("mg totales") },
+            label = { Text(stringResource(R.string.util_dosage_label_total_mg)) },
             modifier = Modifier.weight(1f),
             placeholder = { Text("Ej: 100") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
@@ -188,7 +195,7 @@ fun DosageCalculatorScreen(
           OutlinedTextField(
             value = concentrationMl,
             onValueChange = { concentrationMl = it },
-            label = { Text("en cada (ml)") },
+            label = { Text(stringResource(R.string.util_dosage_label_each_ml)) },
             modifier = Modifier.weight(1f),
             placeholder = { Text("Ej: 5") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
@@ -198,7 +205,7 @@ fun DosageCalculatorScreen(
 
       AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-          Text("DOSIS FINAL CALCULADA", style = MaterialTheme.typography.labelLarge)
+          Text(stringResource(R.string.util_dosage_result_title), style = MaterialTheme.typography.labelLarge)
           Spacer(Modifier.height(8.dp))
           
           if (isLiquid && finalMl > 0) {
@@ -208,7 +215,7 @@ fun DosageCalculatorScreen(
               color = MaterialTheme.colorScheme.primary,
               fontWeight = FontWeight.ExtraBold
             )
-            Text("Equivale a ${String.format("%.1f", totalDoseMg)} mg", style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.util_dosage_equiv_mg, String.format("%.1f", totalDoseMg)), style = MaterialTheme.typography.bodySmall)
           } else {
             val displayValue = if (totalDoseMg >= 1000) totalDoseMg / 1000 else totalDoseMg
             val displayUnit = if (totalDoseMg >= 1000) "gr" else "mg"
@@ -227,7 +234,7 @@ fun DosageCalculatorScreen(
       }
 
       Text(
-        "Aviso: Consulta siempre con tu veterinario antes de medicar.",
+        stringResource(R.string.util_dosage_vet_notice),
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.outline,
         modifier = Modifier.padding(top = 8.dp)
