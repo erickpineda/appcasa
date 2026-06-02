@@ -59,9 +59,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.feature.settings.R
+import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.presentation.viewmodel.DashboardViewModel
 import com.appcasa.features.settings.presentation.viewmodel.SettingsViewModel
 
@@ -143,7 +145,7 @@ fun SettingsContent(
   userName: String,
   householdName: String,
   configs: Map<String, String>,
-  listas: List<com.appcasa.features.lists.data.local.ListaEntity>,
+  listas: List<ListaEntity>,
   onUpdateName: (String) -> Unit,
   onUpdateHouseholdName: (String) -> Unit,
   onUpdateConfig: (String, String) -> Unit,
@@ -374,7 +376,7 @@ fun CurrencySelectorDialog(
 
 @Composable
 fun ListSelectorDialog(
-  listas: List<com.appcasa.features.lists.data.local.ListaEntity>,
+  listas: List<ListaEntity>,
   selectedListId: Long?,
   onDismiss: () -> Unit,
   onSelect: (Long) -> Unit
@@ -423,7 +425,7 @@ fun SettingsItem(
   subtitle: String,
   onClick: () -> Unit
 ) {
-  com.appcasa.core.ui.components.AppCasaCard(
+  AppCasaCard(
     onClick = onClick,
     useGlassmorphism = true,
     modifier = Modifier.fillMaxWidth()
@@ -445,7 +447,7 @@ fun SettingsToggleItem(
   checked: Boolean,
   onCheckedChange: (Boolean) -> Unit
 ) {
-  com.appcasa.core.ui.components.AppCasaCard(
+  AppCasaCard(
     useGlassmorphism = true,
     modifier = Modifier.fillMaxWidth()
   ) {

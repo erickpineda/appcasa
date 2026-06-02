@@ -47,6 +47,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -63,6 +66,7 @@ import com.appcasa.feature.dashboard.R
 import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.lists.presentation.viewmodel.ListsViewModel
 import com.appcasa.navigation.Screen
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,7 +89,7 @@ fun ListsScreen(
   AppCasaConfirmDialog(
     show = listToArchive != null,
     title = stringResource(R.string.cd_delete),
-    text = "Se moverá esta lista al Cajón de Archivo. Podrás recuperarla desde allí si la necesitas.",
+    text = stringResource(R.string.lists_archive_confirm),
     onConfirm = {
         listToArchive?.let { viewModel.archiveList(it) }
         listToArchive = null
@@ -187,7 +191,7 @@ fun ListsContent(
             onClick = onLoadMore, 
             modifier = Modifier.fillMaxWidth()
           ) {
-            Text("Cargar más listas antiguas...")
+            Text(stringResource(R.string.lists_load_more))
           }
         }
       }
@@ -304,6 +308,15 @@ fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
   var name by remember { mutableStateOf("") }
   var nameTouched by remember { mutableStateOf(false) }
 
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(Unit) {
+      delay(300)
+      focusRequester.requestFocus()
+      keyboardController?.show()
+  }
+
   val canConfirm = name.isNotBlank()
 
   AlertDialog(
@@ -318,7 +331,7 @@ fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
                 nameTouched = true
             }, 
             label = { Text(stringResource(R.string.lists_label_name)) }, 
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             isError = nameTouched && name.isBlank(),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             supportingText = {
@@ -331,7 +344,7 @@ fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
     },
     confirmButton = {
       Button(
-        onClick = { onConfirm(name, "PERSONALIZADA") },
+        onClick = { onConfirm(name, "PERSONALIZADA") }, // Keep value, just use resource in UI if needed, but it's an enum name
         enabled = canConfirm
       ) { Text(stringResource(R.string.lists_btn_create)) }
     },

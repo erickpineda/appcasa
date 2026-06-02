@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import com.appcasa.features.calendar.data.local.EventoDao
 import com.appcasa.features.calendar.data.local.EventoEntity
 import com.appcasa.features.dashboard.data.local.DashboardConfigEntity
+import com.appcasa.features.dashboard.data.local.DashboardDao
 import com.appcasa.features.dashboard.data.local.PostItEntity
 import com.appcasa.features.documents.data.local.DocumentoDao
 import com.appcasa.features.documents.data.local.DocumentoEntity
@@ -17,6 +18,7 @@ import com.appcasa.features.inventory.data.local.StockEntity
 import com.appcasa.features.lists.data.local.ListaDao
 import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.lists.data.local.ListaItemEntity
+import com.appcasa.features.maintenance.data.local.MaintenanceDao
 import com.appcasa.features.maintenance.data.local.MaintenanceEntity
 import com.appcasa.features.pets.data.local.MascotaDao
 import com.appcasa.features.pets.data.local.MascotaDesparasitacionEntity
@@ -88,7 +90,7 @@ abstract class AppCasaDatabase : RoomDatabase() {
   abstract fun stockDao(): StockDao
   abstract fun expenseDao(): ExpenseDao
   abstract fun documentoDao(): DocumentoDao
-  abstract fun dashboardDao(): com.appcasa.features.dashboard.data.local.DashboardDao
-  abstract fun maintenanceDao(): com.appcasa.features.maintenance.data.local.MaintenanceDao
+  abstract fun dashboardDao(): DashboardDao
+  abstract fun maintenanceDao(): MaintenanceDao
   abstract fun recompensaDao(): RecompensaDao
 }

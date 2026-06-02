@@ -43,7 +43,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -63,6 +66,7 @@ import com.appcasa.feature.tasks.R
 import com.appcasa.features.tasks.data.local.TareaEntity
 import com.appcasa.features.tasks.presentation.viewmodel.TasksViewModel
 import com.appcasa.navigation.Screen
+import kotlinx.coroutines.delay
 
 @Composable
 fun TasksScreen(
@@ -86,7 +90,7 @@ fun TasksScreen(
   AppCasaConfirmDialog(
     show = taskToArchive != null,
     title = stringResource(R.string.task_delete),
-    text = "Se moverá esta tarea al Cajón de Archivo. Podrás recuperarla desde allí si la necesitas.",
+    text = stringResource(R.string.task_archive_confirm),
     onConfirm = {
         taskToArchive?.let { viewModel.archiveTask(it) }
         taskToArchive = null
@@ -216,7 +220,7 @@ fun TasksContent(
             onClick = onLoadMore,
             modifier = Modifier.fillMaxWidth()
           ) {
-            Text("Cargar más tareas antiguas...")
+            Text(stringResource(R.string.task_load_more))
           }
         }
       }
@@ -237,6 +241,17 @@ fun TaskItem(
   val isCompleted = tarea.estado == EstadoTarea.COMPLETADA.name
   var isEditing by remember { mutableStateOf(false) }
   var editedText by remember { mutableStateOf(tarea.titulo) }
+
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(isEditing) {
+      if (isEditing) {
+          delay(50)
+          focusRequester.requestFocus()
+          keyboardController?.show()
+      }
+  }
   
   AppCasaCard(
     modifier = Modifier.fillMaxWidth().alpha(if (isCompleted) 0.6f else 1f),
@@ -262,7 +277,7 @@ fun TaskItem(
           OutlinedTextField(
               value = editedText,
               onValueChange = { editedText = it },
-              modifier = Modifier.weight(1f),
+              modifier = Modifier.weight(1f).focusRequester(focusRequester),
               singleLine = true,
               textStyle = MaterialTheme.typography.bodyLarge,
               trailingIcon = {

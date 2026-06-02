@@ -30,4 +30,9 @@
     <string name="cd_new_expense">Nuevo Gasto</string>
     <string name="cd_edit">Editar</string>
     <string name="cd_delete">Borrar</string>
+
+    <!-- Stats -->
+    <string name="finance_stats_title">Estadísticas de Gastos</string>
+    <string name="finance_stats_by_category">Distribución por Categoría</string>
+    <string name="finance_stats_monthly">Evolución Mensual</string>
 </resources>

@@ -40,6 +40,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +49,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -57,6 +60,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -65,6 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.components.skeletonShimmer
@@ -72,6 +77,8 @@ import com.appcasa.feature.dashboard.R
 import com.appcasa.features.pets.data.local.MascotaMedicacionEntity
 import com.appcasa.features.pets.data.local.MascotaPesoEntity
 import com.appcasa.features.pets.presentation.viewmodel.PetDetailViewModel
+import com.appcasa.navigation.Screen
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -159,7 +166,7 @@ fun PetDetailScreen(
               }
             },
             actions = {
-              IconButton(onClick = { pet?.let { navController.navigate(com.appcasa.navigation.Screen.EditMember.createRoute(it.id)) } }) {
+              IconButton(onClick = { pet?.let { navController.navigate(Screen.EditMember.createRoute(it.id)) } }) {
                 Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit))
               }
             },
@@ -200,7 +207,7 @@ fun PetDetailScreen(
             }
 
             // Información básica
-            com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
+            AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
               Column(modifier = Modifier.padding(16.dp)) {
                 Text(stringResource(R.string.family_general_info), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
@@ -345,6 +352,15 @@ fun MedicationActionDialog(
   var dosis by remember { mutableStateOf(item?.dosis ?: "") }
   var frecuencia by remember { mutableStateOf(item?.frecuencia ?: "") }
 
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(Unit) {
+      delay(300)
+      focusRequester.requestFocus()
+      keyboardController?.show()
+  }
+
   AlertDialog(
     onDismissRequest = onDismiss,
     title = { Text(stringResource(if (item == null) R.string.dashboard_new_med_title else R.string.dashboard_edit_med_title)) },
@@ -354,7 +370,7 @@ fun MedicationActionDialog(
             value = nombre, 
             onValueChange = { nombre = it }, 
             label = { Text(stringResource(R.string.dashboard_label_med_name)) }, 
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
         OutlinedTextField(
@@ -391,6 +407,15 @@ fun VaccineDialog(
 ) {
   var nombre by remember { mutableStateOf("") }
 
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(Unit) {
+      delay(300)
+      focusRequester.requestFocus()
+      keyboardController?.show()
+  }
+
   AlertDialog(
     onDismissRequest = onDismiss,
     title = { Text(stringResource(R.string.dashboard_register_vaccine_title)) },
@@ -399,7 +424,7 @@ fun VaccineDialog(
         value = nombre,
         onValueChange = { nombre = it },
         label = { Text(stringResource(R.string.dashboard_label_vaccine_name)) },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
       )
     },
@@ -423,6 +448,15 @@ fun DewormingDialog(
   var tipo by remember { mutableStateOf("AMBAS") }
   var expanded by remember { mutableStateOf(false) }
 
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(Unit) {
+      delay(300)
+      focusRequester.requestFocus()
+      keyboardController?.show()
+  }
+
   AlertDialog(
     onDismissRequest = onDismiss,
     title = { Text(stringResource(R.string.dashboard_new_deworming_title)) },
@@ -432,7 +466,7 @@ fun DewormingDialog(
             value = producto, 
             onValueChange = { producto = it }, 
             label = { Text(stringResource(R.string.dashboard_label_product_name)) }, 
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
         
@@ -466,6 +500,15 @@ fun WeightDialog(
 ) {
   var weightInput by remember { mutableStateOf("") }
 
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(Unit) {
+      delay(300)
+      focusRequester.requestFocus()
+      keyboardController?.show()
+  }
+
   AlertDialog(
     onDismissRequest = onDismiss,
     title = { Text(stringResource(R.string.dashboard_register_weight_title)) },
@@ -476,7 +519,7 @@ fun WeightDialog(
         label = { Text(stringResource(R.string.dashboard_label_weight_kg)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         singleLine = true,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
       )
     },
     confirmButton = {

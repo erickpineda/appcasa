@@ -58,6 +58,7 @@ dependencies {
     // ML Kit
     implementation(libs.mlkit.barcode.scanning)
     implementation(libs.mlkit.text.recognition)
+    implementation(libs.zxing.core)
 
     // Módulos Core
     implementation(project(":core:ui"))

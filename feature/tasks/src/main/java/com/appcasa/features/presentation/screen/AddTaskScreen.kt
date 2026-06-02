@@ -51,6 +51,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +60,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -71,6 +75,7 @@ import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.TipoContenidoTarea
 import com.appcasa.feature.tasks.R
 import com.appcasa.features.tasks.presentation.viewmodel.AddTaskViewModel
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -104,6 +109,14 @@ fun AddTaskScreen(
   var showTimePicker by remember { mutableStateOf(false) }
   val datePickerState = rememberDatePickerState()
   val timePickerState = rememberTimePickerState()
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(Unit) {
+      delay(100)
+      focusRequester.requestFocus()
+      keyboardController?.show()
+  }
 
   val canSave = titulo.isNotBlank()
 
@@ -203,7 +216,7 @@ fun AddTaskScreen(
             tituloTouched = true
         },
         label = { Text(stringResource(R.string.task_label_title)) },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
         isError = tituloTouched && titulo.isBlank(),
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
         supportingText = {
@@ -306,7 +319,12 @@ fun AddTaskScreen(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-          val options = listOf(0 to "En punto", 5 to "5 min", 15 to "15 min", 30 to "30 min")
+          val options = listOf(
+              0 to stringResource(R.string.task_notify_on_time), 
+              5 to stringResource(R.string.task_notify_5_min), 
+              15 to stringResource(R.string.task_notify_15_min), 
+              30 to stringResource(R.string.task_notify_30_min)
+          )
           options.forEach { (mins, label) ->
             FilterChip(
               selected = selectedAnticipacion == mins,
@@ -392,15 +410,27 @@ fun AddTaskScreen(
         }
       }
 
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+      Column(
+        modifier = Modifier.fillMaxWidth()
       ) {
-        Checkbox(
-          checked = esPersonal,
-          onCheckedChange = { esPersonal = it }
-        )
-        Text(stringResource(R.string.task_label_personal_long))
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Checkbox(
+            checked = esPersonal,
+            onCheckedChange = { esPersonal = it }
+          )
+          Text(stringResource(R.string.task_label_personal_long))
+        }
+        if (esPersonal) {
+          Text(
+            text = stringResource(R.string.task_personal_xp_warning),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.padding(start = 48.dp, end = 16.dp)
+          )
+        }
       }
 
       Spacer(modifier = Modifier.height(24.dp))

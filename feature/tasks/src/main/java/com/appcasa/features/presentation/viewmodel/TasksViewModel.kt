@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.core.domain.model.Prioridad
+import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.features.family.data.local.MiembroDao
@@ -109,14 +110,21 @@ class TasksViewModel @Inject constructor(
         reminderScheduler.cancelReminder((tarea.id + 20000).toInt())
         
         // Gamificación: Calcular y otorgar puntos solo si no se dieron antes
-        val points = when(tarea.prioridad) {
+        var points = when(tarea.prioridad) {
           Prioridad.ALTA.name -> 20
           Prioridad.BAJA.name -> 5
           else -> 10
         }
+        
+        if (tarea.esPersonal) {
+            points = 0 // Tareas personales no otorgan puntos para garantizar la justicia en el ranking familiar
+        }
+
         _gainedXP.value = points
-        _showCelebration.value = true
-        awardPointsForTask(tarea, points)
+        if (points > 0) {
+            _showCelebration.value = true
+            awardPointsForTask(tarea, points)
+        }
         
         // Marcamos la tarea para que no vuelva a dar puntos
         tareaDao.updateTarea(updated.copy(puntosOtorgados = true))
@@ -142,9 +150,9 @@ class TasksViewModel @Inject constructor(
       val user = configuracionDao.getUsuarioActual().first()
       // Buscamos un miembro con ese nombre o el primer miembro PERSONA
       miembroDao.getMiembrosByHogar(householdId).first().find { 
-        it.nombre == user?.nombre && it.tipo == com.appcasa.core.domain.model.TipoMiembro.PERSONA.name 
+        it.nombre == user?.nombre && it.tipo == TipoMiembro.PERSONA.name 
       }?.id ?: miembroDao.getMiembrosByHogar(householdId).first().find { 
-        it.tipo == com.appcasa.core.domain.model.TipoMiembro.PERSONA.name 
+        it.tipo == TipoMiembro.PERSONA.name
       }?.id
     }
 

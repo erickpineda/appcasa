@@ -2,8 +2,10 @@ package com.appcasa.features.tasks.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.features.family.data.local.MiembroDao
+import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.tasks.data.local.RecompensaDao
 import com.appcasa.features.tasks.data.local.RecompensaEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,9 +32,9 @@ class RewardStoreViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val members: StateFlow<List<com.appcasa.features.family.data.local.MiembroEntity>> = currentHouseholdProvider.householdId
+    val members: StateFlow<List<MiembroEntity>> = currentHouseholdProvider.householdId
         .flatMapLatest { miembroDao.getMiembrosByHogar(it) }
-        .map { list -> list.filter { it.tipo == com.appcasa.core.domain.model.TipoMiembro.PERSONA.name } }
+        .map { list -> list.filter { it.tipo == TipoMiembro.PERSONA.name } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun addRecompensa(titulo: String, puntos: Int, desc: String?) {

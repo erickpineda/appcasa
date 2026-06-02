@@ -42,9 +42,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.ui.R
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaSutilToast
@@ -70,7 +72,12 @@ fun ArchiveScreen(
     maintenanceViewModel: HomeMaintenanceViewModel = hiltViewModel()
 ) {
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("Tareas", "Listas", "Gastos", "Mantenimiento")
+    val tabs = listOf(
+        stringResource(R.string.archive_tab_tasks),
+        stringResource(R.string.archive_tab_lists),
+        stringResource(R.string.archive_tab_expenses),
+        stringResource(R.string.archive_tab_maintenance)
+    )
     var showDeleteAllDialog by remember { mutableStateOf(false) }
     var showEmptyVaultDialog by remember { mutableStateOf(false) }
     
@@ -92,8 +99,8 @@ fun ArchiveScreen(
 
     AppCasaConfirmDialog(
         show = showDeleteAllDialog,
-        title = "Borrar sección",
-        text = "¿Estás seguro de que quieres borrar TODOS los elementos de esta pestaña del archivo? No se podrán recuperar.",
+        title = stringResource(R.string.archive_delete_section_title),
+        text = stringResource(R.string.archive_delete_section_text),
         onConfirm = {
             when(selectedTab) {
                 0 -> tasksViewModel.clearAllArchived()
@@ -108,8 +115,8 @@ fun ArchiveScreen(
 
     AppCasaConfirmDialog(
         show = showEmptyVaultDialog,
-        title = "Vaciar Caja Fuerte",
-        text = "¿Quieres vaciar COMPLETAMENTE el archivo de todas las secciones? Esta acción es irreversible.",
+        title = stringResource(R.string.archive_empty_vault_title),
+        text = stringResource(R.string.archive_empty_vault_text),
         onConfirm = {
             tasksViewModel.clearAllArchived()
             listsViewModel.clearAllArchived()
@@ -122,8 +129,8 @@ fun ArchiveScreen(
 
     AppCasaConfirmDialog(
         show = itemToDelete != null,
-        title = "Eliminar permanentemente",
-        text = "¿Estás seguro de que quieres eliminar este elemento para siempre del historial?",
+        title = stringResource(R.string.archive_delete_permanent_title),
+        text = stringResource(R.string.archive_delete_permanent_text),
         onConfirm = {
             when(itemToDelete) {
                 is TareaEntity -> tasksViewModel.deleteTask(itemToDelete as TareaEntity)
@@ -140,10 +147,10 @@ fun ArchiveScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Cajón de Archivo") },
+                    title = { Text(stringResource(R.string.archive_title)) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                         }
                     },
                     actions = {
@@ -154,13 +161,13 @@ fun ArchiveScreen(
                                 3 -> maintenanceViewModel.archiveOldEvents()
                             }
                         }) {
-                            Icon(Icons.Default.AutoDelete, contentDescription = "Auto-archivar")
+                            Icon(Icons.Default.AutoDelete, contentDescription = stringResource(R.string.archive_auto_archive_cd))
                         }
                         IconButton(onClick = { showDeleteAllDialog = true }) {
-                            Icon(Icons.Default.DeleteSweep, contentDescription = "Borrar sección")
+                            Icon(Icons.Default.DeleteSweep, contentDescription = stringResource(R.string.archive_delete_section_cd))
                         }
                         IconButton(onClick = { showEmptyVaultDialog = true }) {
-                            Icon(Icons.Default.Dangerous, contentDescription = "Vaciar todo", tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Default.Dangerous, contentDescription = stringResource(R.string.archive_empty_vault_cd), tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 )
@@ -198,7 +205,7 @@ fun ArchivedTasksList(viewModel: TasksViewModel, onDelete: (TareaEntity) -> Unit
     val tasks by viewModel.archivedTasks.collectAsState()
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (tasks.isEmpty()) {
-            item { Text("No hay tareas archivadas", style = MaterialTheme.typography.bodyMedium, color = Color.Gray) }
+            item { Text(stringResource(R.string.archive_empty_tasks), style = MaterialTheme.typography.bodyMedium, color = Color.Gray) }
         } else {
             items(tasks) { task ->
                 AppCasaCard(useGlassmorphism = true) {
@@ -224,7 +231,7 @@ fun ArchivedTasksList(viewModel: TasksViewModel, onDelete: (TareaEntity) -> Unit
                     onClick = { viewModel.loadMoreArchived() }, 
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Cargar más...")
+                    Text(stringResource(R.string.common_load_more))
                 }
             }
         }
@@ -236,7 +243,7 @@ fun ArchivedListsList(viewModel: ListsViewModel, onDelete: (ListaEntity) -> Unit
     val lists by viewModel.archivedLists.collectAsState()
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (lists.isEmpty()) {
-            item { Text("No hay listas archivadas", style = MaterialTheme.typography.bodyMedium, color = Color.Gray) }
+            item { Text(stringResource(R.string.archive_empty_lists), style = MaterialTheme.typography.bodyMedium, color = Color.Gray) }
         } else {
             items(lists) { list ->
                 AppCasaCard(useGlassmorphism = true) {
@@ -262,7 +269,7 @@ fun ArchivedListsList(viewModel: ListsViewModel, onDelete: (ListaEntity) -> Unit
                     onClick = { viewModel.loadMoreArchived() }, 
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Cargar más...")
+                    Text(stringResource(R.string.common_load_more))
                 }
             }
         }
@@ -275,12 +282,12 @@ fun ArchivedExpensesList(viewModel: FinanceViewModel, onDelete: (ExpenseEntity) 
     Column {
         Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { viewModel.purgeOldPhotos() }, modifier = Modifier.weight(1f)) {
-                Text("Purgar Fotos > 1 año", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.archive_btn_purge_photos), style = MaterialTheme.typography.labelSmall)
             }
         }
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (expenses.isEmpty()) {
-                item { Text("No hay gastos archivados", style = MaterialTheme.typography.bodyMedium, color = Color.Gray) }
+                item { Text(stringResource(R.string.archive_empty_expenses), style = MaterialTheme.typography.bodyMedium, color = Color.Gray) }
             } else {
                 items(expenses) { expense ->
                     AppCasaCard(useGlassmorphism = true) {
@@ -306,7 +313,7 @@ fun ArchivedExpensesList(viewModel: FinanceViewModel, onDelete: (ExpenseEntity) 
                         onClick = { viewModel.loadMoreArchived() }, 
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Cargar más...")
+                        Text(stringResource(R.string.common_load_more))
                     }
                 }
             }
@@ -319,7 +326,7 @@ fun ArchivedMaintenanceList(viewModel: HomeMaintenanceViewModel, onDelete: (Main
     val events by viewModel.archivedEvents.collectAsState()
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (events.isEmpty()) {
-            item { Text("No hay registros de mantenimiento archivados", style = MaterialTheme.typography.bodyMedium, color = Color.Gray) }
+            item { Text(stringResource(R.string.archive_empty_maintenance), style = MaterialTheme.typography.bodyMedium, color = Color.Gray) }
         } else {
             items(events) { event ->
                 AppCasaCard(useGlassmorphism = true) {
@@ -342,10 +349,10 @@ fun ArchivedMaintenanceList(viewModel: HomeMaintenanceViewModel, onDelete: (Main
             }
             item {
                 TextButton(
-                    onClick = { viewModel.loadMoreArchived() },
+                    onClick = { viewModel.loadMoreArchived() }, 
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Cargar más...")
+                    Text(stringResource(R.string.common_load_more))
                 }
             }
         }

@@ -59,7 +59,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -68,6 +71,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.domain.model.TipoLista
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
@@ -76,7 +80,10 @@ import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.inventory.R
 import com.appcasa.features.inventory.data.local.StockEntity
 import com.appcasa.features.inventory.presentation.viewmodel.StockViewModel
+import com.appcasa.features.lists.data.local.ListaEntity
 import com.google.mlkit.vision.common.InputImage
+import kotlinx.coroutines.delay
+import com.appcasa.core.ui.R as CoreR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,8 +111,8 @@ fun StockScreen(
 
   AppCasaConfirmDialog(
     show = itemToDelete != null,
-    title = "Eliminar producto",
-    text = "¿Estás seguro de que quieres eliminar este producto del inventario?",
+    title = stringResource(R.string.inventory_delete_title),
+    text = stringResource(R.string.inventory_delete_confirm),
     onConfirm = {
         itemToDelete?.let { viewModel.deleteItem(it) }
         itemToDelete = null
@@ -175,7 +182,7 @@ fun StockScreen(
               title = { Text(stringResource(R.string.inventory_title)) },
               navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
-                  Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
+                  Icon(Icons.Default.ArrowBack, contentDescription = stringResource(CoreR.string.common_back), tint = MaterialTheme.colorScheme.onPrimary)
                 }
               },
               colors = TopAppBarDefaults.topAppBarColors(
@@ -232,7 +239,7 @@ fun StockScreen(
                   onClick = { viewModel.loadMore() }, 
                   modifier = Modifier.fillMaxWidth()
                 ) {
-                  Text("Cargar más inventario antiguo...")
+                  Text(stringResource(R.string.inventory_load_more))
                 }
               }
             }
@@ -254,13 +261,13 @@ fun StockScreen(
 @Composable
 fun AddToListDialog(
   item: StockEntity,
-  lists: List<com.appcasa.features.lists.data.local.ListaEntity>,
+  lists: List<ListaEntity>,
   onDismiss: () -> Unit,
   onConfirm: (Long, Double) -> Unit
 ) {
   val initialMissing = (item.cantidadMinima - item.cantidadActual).coerceAtLeast(1.0)
   var quantity by remember { mutableStateOf(initialMissing.toString()) }
-  var selectedListId by remember { mutableStateOf<Long?>(lists.find { it.tipo == com.appcasa.core.domain.model.TipoLista.COMPRA.name }?.id ?: lists.firstOrNull()?.id) }
+  var selectedListId by remember { mutableStateOf<Long?>(lists.find { it.tipo == TipoLista.COMPRA.name }?.id ?: lists.firstOrNull()?.id) }
   var expanded by remember { mutableStateOf(false) }
 
   AlertDialog(
@@ -320,7 +327,7 @@ fun AddToListDialog(
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text(stringResource(R.string.inventory_btn_cancel)) }
+      TextButton(onClick = onDismiss) { Text(stringResource(CoreR.string.common_cancel)) }
     }
   )
 }
@@ -338,6 +345,15 @@ fun StockActionDialog(
   var cantidad by remember { mutableStateOf(item?.cantidadActual?.toString() ?: "") }
   var minima by remember { mutableStateOf(item?.cantidadMinima?.toString() ?: "") }
   var unidad by remember { mutableStateOf(item?.unidad ?: "uds") }
+
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(Unit) {
+      delay(300)
+      focusRequester.requestFocus()
+      keyboardController?.show()
+  }
 
   val isNombreValid = nombre.isNotBlank()
   val canConfirm = isNombreValid
@@ -367,7 +383,7 @@ fun StockActionDialog(
                 nombreTouched = true
             }, 
             label = { Text(stringResource(R.string.inventory_label_name)) }, 
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             isError = nombreTouched && !isNombreValid,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             supportingText = {
@@ -421,7 +437,7 @@ fun StockActionDialog(
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) { Text(stringResource(R.string.inventory_btn_cancel)) }
+      TextButton(onClick = onDismiss) { Text(stringResource(CoreR.string.common_cancel)) }
     }
   )
 }

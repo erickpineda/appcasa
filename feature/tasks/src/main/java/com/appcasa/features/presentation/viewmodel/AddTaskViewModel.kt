@@ -2,23 +2,23 @@ package com.appcasa.features.tasks.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.Periodicidad
+import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.TipoContenidoTarea
-import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.features.tasks.data.local.TareaDao
-import com.appcasa.features.tasks.data.local.TareaEntity
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-
+import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.features.family.data.local.MiembroDao
 import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.features.tasks.data.local.TareaAsignacionEntity
+import com.appcasa.features.tasks.data.local.TareaDao
+import com.appcasa.features.tasks.data.local.TareaEntity
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class AddTaskViewModel @Inject constructor(
@@ -66,7 +66,7 @@ class AddTaskViewModel @Inject constructor(
       
       if (asignadoId != null) {
         tareaDao.insertAsignacion(
-          com.appcasa.features.tasks.data.local.TareaAsignacionEntity(
+          TareaAsignacionEntity(
             tareaId = tareaId,
             miembroId = asignadoId
           )

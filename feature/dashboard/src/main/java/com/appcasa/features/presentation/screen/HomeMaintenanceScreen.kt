@@ -56,7 +56,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -74,6 +77,7 @@ import com.appcasa.features.presentation.viewmodel.HomeMaintenanceViewModel
 import com.appcasa.navigation.Screen
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -198,7 +202,7 @@ fun HomeMaintenanceScreen(
                                 onClick = { viewModel.loadMoreActive() }, 
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Cargar más registros antiguos...")
+                                Text(stringResource(R.string.maintenance_load_more))
                             }
                         }
                     }
@@ -275,6 +279,15 @@ fun MaintenanceActionDialog(
     val categories = listOf("Electrodomésticos", "Fontanería", "Electricidad", "Pintura", "Climatización", "Estructura", "Otros")
     var expanded by remember { mutableStateOf(false) }
 
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(Unit) {
+        delay(300)
+        focusRequester.requestFocus()
+        keyboardController?.show()
+    }
+
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(initialSelectedDateMillis = dateMillis)
         DatePickerDialog(
@@ -283,7 +296,7 @@ fun MaintenanceActionDialog(
                 TextButton(onClick = {
                     dateMillis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
                     showDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.maintenance_btn_ok)) }
             }
         ) { DatePicker(state = datePickerState) }
     }
@@ -296,7 +309,7 @@ fun MaintenanceActionDialog(
                 TextButton(onClick = {
                     nextDateMillis = datePickerState.selectedDateMillis
                     showNextDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.maintenance_btn_ok)) }
             }
         ) { DatePicker(state = datePickerState) }
     }
@@ -311,7 +324,7 @@ fun MaintenanceActionDialog(
                         value = title, 
                         onValueChange = { title = it }, 
                         label = { Text(stringResource(R.string.maintenance_label_question)) }, 
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                     )
                 }

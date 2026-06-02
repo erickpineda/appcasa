@@ -42,6 +42,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.utilities.presentation.viewmodel.VehicleViewModel
 
@@ -91,7 +92,7 @@ fun VehicleManagementScreen(
         fontWeight = FontWeight.Bold
       )
 
-      com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true) {
+      AppCasaCard(useGlassmorphism = true) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
           OutlinedTextField(
             value = model,
@@ -127,7 +128,7 @@ fun VehicleManagementScreen(
         fontWeight = FontWeight.Bold
       )
 
-      com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true) {
+      AppCasaCard(useGlassmorphism = true) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
           OutlinedTextField(
             value = insurance,

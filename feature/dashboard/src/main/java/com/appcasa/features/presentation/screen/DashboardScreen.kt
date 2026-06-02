@@ -87,6 +87,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
@@ -98,6 +99,7 @@ import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.presentation.viewmodel.DashboardViewModel
 import com.appcasa.navigation.Screen
 import kotlin.random.Random
+import com.appcasa.core.ui.R as CoreR
 
 @Composable
 fun DashboardScreen(
@@ -310,7 +312,7 @@ fun DashboardContent(
           title = {
             Column {
               Text(
-                text = stringResource(com.appcasa.core.ui.R.string.app_name),
+                text = stringResource(CoreR.string.app_name),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary
@@ -705,7 +707,7 @@ private fun DashboardCard(
   onClick: () -> Unit = {},
   containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surface
 ) {
-  com.appcasa.core.ui.components.AppCasaCard(
+  AppCasaCard(
     modifier = Modifier.fillMaxWidth(),
     useGlassmorphism = true,
     onClick = onClick
@@ -747,7 +749,7 @@ private fun QuickActionCard(
   label: String,
   onClick: () -> Unit
 ) {
-  com.appcasa.core.ui.components.AppCasaCard(
+  AppCasaCard(
     modifier = modifier,
     useGlassmorphism = true,
     onClick = onClick

@@ -38,5 +38,6 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons)
     implementation(libs.lottie.compose)
+    implementation(libs.zxing.core)
     debugImplementation(libs.compose.ui.tooling)
 }

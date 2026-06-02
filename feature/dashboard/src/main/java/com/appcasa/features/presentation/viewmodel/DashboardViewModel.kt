@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Task
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.EstadoTarea
+import com.appcasa.core.domain.model.TipoLista
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.scheduler.ReminderScheduler
@@ -373,7 +374,7 @@ class DashboardViewModel @Inject constructor(
         )
         initialUtils.forEach { utilidadDao.insertUtilidad(it) }
 
-        listaDao.insertLista(ListaEntity(hogarId = id, nombre = "Lista de la Compra", tipo = com.appcasa.core.domain.model.TipoLista.COMPRA.name))
+        listaDao.insertLista(ListaEntity(hogarId = id, nombre = "Lista de la Compra", tipo = TipoLista.COMPRA.name))
 
         // Datos de Mantenimiento
         maintenanceDao.insertEvent(MaintenanceEntity(hogarId = id, titulo = "Revisión Caldera", categoria = "Climatización", fechaRealizacion = System.currentTimeMillis() - 15552000000L, proximaRevision = System.currentTimeMillis() + 15552000000L, coste = 90.0))

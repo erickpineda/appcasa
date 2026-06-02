@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -141,7 +142,7 @@ fun DosageCalculatorScreen(
           readOnly = true,
           trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
           modifier = Modifier.menuAnchor().fillMaxWidth(),
-          keyboardOptions = KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences)
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
         ExposedDropdownMenu(
           expanded = expanded,

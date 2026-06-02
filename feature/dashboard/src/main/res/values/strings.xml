@@ -94,6 +94,8 @@
     <string name="family_label_vet_phone">Teléfono Veterinario</string>
     <string name="family_label_category">Categoría</string>
     <string name="family_btn_add_first">Añadir primer miembro</string>
+    <string name="family_label_add_birthday">Añadir Cumpleaños</string>
+    <string name="family_label_birthday_format">Cumpleaños: %s</string>
 
     <string name="dashboard_member_fallback">Miembro</string>
     <string name="dashboard_family_member_label">Miembro de la Familia</string>
@@ -139,6 +141,9 @@
     <string name="dashboard_no_lists_title">Sin listas</string>
     <string name="dashboard_no_lists_desc">Crea listas de la compra, tareas pendientes o lo que necesites organizar.</string>
     <string name="dashboard_btn_create_list">Crear lista</string>
+    <string name="lists_archive_confirm">Se moverá esta lista al Cajón de Archivo. Podrás recuperarla desde allí si la necesitas.</string>
+    <string name="lists_load_more">Cargar más listas antiguas…</string>
+    <string name="lists_type_custom">PERSONALIZADA</string>
 
     <string name="util_kitchen_label_amount">Cantidad a convertir</string>
     <string name="util_kitchen_group_liquids">Líquidos / Volumen</string>
@@ -242,6 +247,10 @@
     <string name="maintenance_label_cost_optional">Coste € (Opcional)</string>
     <string name="maintenance_btn_add_revision">Añadir Revisión</string>
     <string name="maintenance_label_next_format">Siguiente: %s</string>
+    <string name="maintenance_load_more">Cargar más registros antiguos…</string>
+    <string name="maintenance_btn_next_hour">Siguiente (Hora)</string>
+    <string name="maintenance_btn_all_day">Todo el día</string>
+    <string name="maintenance_btn_ok">OK</string>
     <string name="hub_management_title">Gestión del Hogar</string>
     <string name="hub_tasks_title">Tareas</string>
     <string name="hub_tasks_subtitle">Tareas pendientes y asignaciones</string>
@@ -294,4 +303,7 @@
     <string name="util_feeding_consult_vet_high_cat">Consultar veterinario (&gt;8kg)</string>
     <string name="util_feeding_consult_vet_high_dog">Consultar veterinario (&gt;70kg)</string>
     <string name="util_feeding_manufacturer_notice">Datos basados en guía oficial del fabricante</string>
+    <string name="maintenance_detail_title">Detalle de Mantenimiento</string>
+    <string name="maintenance_category_format">Categoría: %s</string>
+    <string name="maintenance_qr_ident_label">QR de Identificación</string>
 </resources>

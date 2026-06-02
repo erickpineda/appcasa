@@ -44,6 +44,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,9 +52,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -64,6 +68,7 @@ import com.appcasa.core.data.utils.FileUtils
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.family.presentation.viewmodel.AddMemberViewModel
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -86,6 +91,15 @@ fun AddMemberScreen(
   var selectedBirthDate by remember { mutableStateOf<Long?>(null) }
   var showDatePicker by remember { mutableStateOf(false) }
   val datePickerState = rememberDatePickerState()
+  
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(Unit) {
+      delay(300)
+      focusRequester.requestFocus()
+      keyboardController?.show()
+  }
 
   val confirmText = stringResource(R.string.family_btn_ok)
 
@@ -184,7 +198,7 @@ fun AddMemberScreen(
             nombreTouched = true
         },
         label = { Text(stringResource(R.string.family_label_name)) },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
         isError = nombreTouched && nombre.isBlank(),
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
         supportingText = {
@@ -229,8 +243,8 @@ fun AddMemberScreen(
       ) {
         Icon(Icons.Default.Cake, contentDescription = null)
         Spacer(Modifier.width(8.dp))
-        val label = if (selectedBirthDate == null) "Añadir Cumpleaños" 
-                    else "Cumpleaños: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(selectedBirthDate!!))}"
+        val label = if (selectedBirthDate == null) stringResource(R.string.family_label_add_birthday) 
+                    else stringResource(R.string.family_label_birthday_format, SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(selectedBirthDate!!)))
         Text(label)
       }
 

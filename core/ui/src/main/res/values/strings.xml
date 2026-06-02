@@ -5,4 +5,36 @@
     <string name="nav_management">Gestión</string>
     <string name="nav_family">Familia</string>
     <string name="nav_utilities">Utilidades</string>
+
+    <!-- Common UI Strings -->
+    <string name="common_ok">OK</string>
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_delete">Borrar</string>
+    <string name="common_back">Atrás</string>
+    <string name="common_close">Cerrar</string>
+    <string name="common_loading">Cargando...</string>
+    <string name="common_load_more">Cargar más...</string>
+    <string name="common_no_more_data">No hay más registros para cargar</string>
+
+    <!-- Archive Screen -->
+    <string name="archive_title">Cajón de Archivo</string>
+    <string name="archive_tab_tasks">Tareas</string>
+    <string name="archive_tab_lists">Listas</string>
+    <string name="archive_tab_expenses">Gastos</string>
+    <string name="archive_tab_maintenance">Mantenimiento</string>
+    <string name="archive_delete_section_title">Borrar sección</string>
+    <string name="archive_delete_section_text">¿Estás seguro de que quieres borrar TODOS los elementos de esta pestaña del archivo? No se podrán recuperar.</string>
+    <string name="archive_empty_vault_title">Vaciar Caja Fuerte</string>
+    <string name="archive_empty_vault_text">¿Quieres vaciar COMPLETAMENTE el archivo de todas las secciones? Esta acción es irreversible.</string>
+    <string name="archive_delete_permanent_title">Eliminar permanentemente</string>
+    <string name="archive_delete_permanent_text">¿Estás seguro de que quieres eliminar este elemento para siempre del historial?</string>
+    <string name="archive_empty_tasks">No hay tareas archivadas</string>
+    <string name="archive_empty_lists">No hay listas archivadas</string>
+    <string name="archive_empty_expenses">No hay gastos archivados</string>
+    <string name="archive_empty_maintenance">No hay registros de mantenimiento archivados</string>
+    <string name="archive_btn_purge_photos">Purgar Fotos > 1 año</string>
+    <string name="archive_auto_archive_cd">Auto-archivar</string>
+    <string name="archive_delete_section_cd">Borrar sección</string>
+    <string name="archive_empty_vault_cd">Vaciar todo</string>
 </resources>

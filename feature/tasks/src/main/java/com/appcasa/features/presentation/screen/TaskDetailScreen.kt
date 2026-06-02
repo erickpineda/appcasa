@@ -66,6 +66,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -75,10 +76,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -87,6 +91,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.TipoContenidoTarea
@@ -94,6 +99,7 @@ import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.tasks.R
 import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.tasks.presentation.viewmodel.TaskDetailViewModel
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -111,7 +117,7 @@ fun TaskDetailScreen(
   var newSubTaskText by remember { mutableStateOf("") }
   val haptic = LocalHapticFeedback.current
   
-  val isTaskCompleted = task?.estado == com.appcasa.core.domain.model.EstadoTarea.COMPLETADA.name
+  val isTaskCompleted = task?.estado == EstadoTarea.COMPLETADA.name
   var selectedItems by remember { mutableStateOf(setOf<Long>()) }
   val isSelectionMode = selectedItems.isNotEmpty()
   var showEditDialog by remember { mutableStateOf(false) }
@@ -452,6 +458,17 @@ fun CompactSubTaskItemEditable(
   var isEditing by remember { mutableStateOf(false) }
   var editedText by remember { mutableStateOf(item.texto) }
 
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(isEditing) {
+      if (isEditing) {
+          delay(50)
+          focusRequester.requestFocus()
+          keyboardController?.show()
+      }
+  }
+
   Row(
     modifier = Modifier
       .fillMaxWidth()
@@ -480,7 +497,7 @@ fun CompactSubTaskItemEditable(
       OutlinedTextField(
         value = editedText,
         onValueChange = { editedText = it },
-        modifier = Modifier.weight(1f).padding(vertical = 2.dp),
+        modifier = Modifier.weight(1f).padding(vertical = 2.dp).focusRequester(focusRequester),
         singleLine = true,
         textStyle = MaterialTheme.typography.bodyMedium,
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
@@ -550,6 +567,15 @@ fun EditTaskMainDialog(
   var showTimePicker by remember { mutableStateOf(false) }
   
   var repeatExpanded by remember { mutableStateOf(false) }
+  
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(Unit) {
+      delay(300)
+      focusRequester.requestFocus()
+      keyboardController?.show()
+  }
   
   val initialDate = fechaLimite ?: System.currentTimeMillis()
   val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDate)
@@ -628,7 +654,7 @@ fun EditTaskMainDialog(
               value = t, 
               onValueChange = { t = it }, 
               label = { Text(stringResource(R.string.task_label_title)) }, 
-              modifier = Modifier.fillMaxWidth(),
+              modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
               keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
           )
         }

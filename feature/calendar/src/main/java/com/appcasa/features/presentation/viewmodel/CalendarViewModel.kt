@@ -2,6 +2,7 @@ package com.appcasa.features.calendar.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.model.TipoEvento
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.features.calendar.data.local.EventoDao
@@ -59,16 +60,15 @@ class CalendarViewModel @Inject constructor(
         val startOfToday = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val archiveThreshold = LocalDate.now().minusMonths(3).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         
-        // Generar cumpleaños dinámicos basado solo en el año actual
         val birthdayItems = miembros.filter { it.fechaNacimiento != null }.map { miembro ->
           val bdayMillis = calculateBirthdayOccurrence(miembro.fechaNacimiento!!)
           CalendarItem.Evento(
             EventoEntity(
-              id = -miembro.id, // Virtual ID
+              id = -miembro.id,
               hogarId = miembro.hogarId,
               titulo = "Cumpleaños: ${miembro.nombre} 🎂",
               fecha = bdayMillis,
-              tipo = com.appcasa.core.domain.model.TipoEvento.CUMPLEANOS.name
+              tipo = TipoEvento.CUMPLEANOS.name
             )
           )
         }
@@ -85,7 +85,6 @@ class CalendarViewModel @Inject constructor(
 
         val historyAll = allItems.filter { it.timestamp < startOfToday }.reversed()
         
-        // Si no hay búsqueda, ocultamos lo muy antiguo (más de 3 meses)
         val historyVisible = if (query.isBlank()) {
             historyAll.filter { it.timestamp >= archiveThreshold }
         } else {
@@ -171,7 +170,7 @@ class CalendarViewModel @Inject constructor(
                   hogarId = householdId,
                   titulo = "Turno: $title",
                   fecha = date,
-                  tipo = com.appcasa.core.domain.model.TipoEvento.REUNION.name
+                  tipo = TipoEvento.REUNION.name
                 )
               )
               

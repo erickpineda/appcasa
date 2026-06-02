@@ -64,8 +64,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -76,6 +79,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.data.utils.FileUtils
+import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.AppCasaSutilToast
@@ -83,6 +87,8 @@ import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.finance.R
 import com.appcasa.features.finance.data.local.ExpenseEntity
 import com.appcasa.features.finance.presentation.viewmodel.FinanceViewModel
+import com.appcasa.navigation.Screen
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -186,7 +192,7 @@ fun ExpenseScreen(
                 actionIconContentColor = MaterialTheme.colorScheme.onPrimary
               ),
               actions = {
-                IconButton(onClick = { navController.navigate(com.appcasa.navigation.Screen.FinanceStats.route) }) {
+                IconButton(onClick = { navController.navigate(Screen.FinanceStats.route) }) {
                     Icon(Icons.Default.Assessment, contentDescription = "Estadísticas")
                 }
                 IconButton(onClick = { galleryLauncher.launch("image/*") }) {
@@ -294,7 +300,7 @@ fun ExpenseCard(expense: ExpenseEntity, currency: String, onEdit: () -> Unit, on
       )
   }
 
-  com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true,
+  AppCasaCard(useGlassmorphism = true,
     modifier = Modifier.fillMaxWidth()
   ) {
     ListItem(
@@ -350,6 +356,15 @@ fun ExpenseActionDialog(
   var fotoUri by remember { mutableStateOf(item?.fotoUri) }
   
   val context = LocalContext.current
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(Unit) {
+      delay(300)
+      focusRequester.requestFocus()
+      keyboardController?.show()
+  }
+
   val imagePickerLauncher = rememberLauncherForActivityResult(
       contract = ActivityResultContracts.GetContent()
   ) { uri ->
@@ -385,10 +400,10 @@ fun ExpenseActionDialog(
           value = concepto, 
           onValueChange = { concepto = it }, 
           label = { Text(stringResource(R.string.finance_label_concept)) }, 
-          modifier = Modifier.fillMaxWidth(),
+          modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
           isError = concepto.isEmpty(),
           singleLine = true,
-          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next)
         )
         OutlinedTextField(
           value = importe, 
@@ -417,7 +432,7 @@ fun ExpenseActionDialog(
             label = { Text(stringResource(R.string.finance_label_category)) }, 
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done)
         )
 
         Spacer(Modifier.height(8.dp))

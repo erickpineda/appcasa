@@ -31,13 +31,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.feature.finance.R
 import com.appcasa.features.finance.presentation.viewmodel.FinanceViewModel
 import java.util.Locale
+import com.appcasa.core.ui.R as CoreR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,10 +55,10 @@ fun FinanceStatsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Estadísticas de Gastos") },
+                title = { Text(stringResource(R.string.finance_stats_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(CoreR.string.common_back))
                     }
                 }
             )
@@ -69,10 +72,10 @@ fun FinanceStatsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text("Distribución por Categoría", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.finance_stats_by_category), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             CategoryPieChart(data = expensesByCategory, currency = currency)
 
-            Text("Evolución Mensual", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.finance_stats_monthly), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             MonthlyBarChart(data = monthlyEvolution)
         }
     }

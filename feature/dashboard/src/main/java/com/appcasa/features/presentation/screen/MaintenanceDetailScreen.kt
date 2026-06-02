@@ -1,5 +1,6 @@
 package com.appcasa.features.presentation.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,13 +23,19 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.utils.QRUtils
+import com.appcasa.feature.dashboard.R
 import com.appcasa.features.presentation.viewmodel.HomeMaintenanceViewModel
+import com.appcasa.core.ui.R as CoreR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,10 +50,10 @@ fun MaintenanceDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(event?.titulo ?: "Detalle de Mantenimiento") },
+                title = { Text(event?.titulo ?: stringResource(R.string.maintenance_detail_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(CoreR.string.common_back))
                     }
                 }
             )
@@ -62,7 +69,7 @@ fun MaintenanceDetailScreen(
             ) {
                 AppCasaCard(useGlassmorphism = true) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Categoría: ${event.categoria}", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.maintenance_category_format, event.categoria), style = MaterialTheme.typography.titleMedium)
                         event.descripcion?.let {
                             Spacer(Modifier.height(8.dp))
                             Text(it)
@@ -70,12 +77,20 @@ fun MaintenanceDetailScreen(
                     }
                 }
                 
-                // Aquí se podría mostrar el QR generado para este equipo
-                Text("QR de Identificación", style = MaterialTheme.typography.labelLarge)
-                AppCasaCard(useGlassmorphism = true, modifier = Modifier.size(200.dp).align(Alignment.CenterHorizontally)) {
+                Text(stringResource(R.string.maintenance_qr_ident_label), style = MaterialTheme.typography.labelLarge)
+                AppCasaCard(useGlassmorphism = true, modifier = Modifier.size(240.dp).align(Alignment.CenterHorizontally)) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Build, null, modifier = Modifier.size(100.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
-                        Text("QR: maintenance/$id", style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.BottomCenter))
+                        val qrBitmap = remember(id) { QRUtils.generateQRCode("maintenance/$id", 400) }
+                        if (qrBitmap != null) {
+                            Image(
+                                bitmap = qrBitmap.asImageBitmap(),
+                                contentDescription = "QR Code",
+                                modifier = Modifier.size(200.dp)
+                            )
+                        } else {
+                            Icon(Icons.Default.Build, null, modifier = Modifier.size(100.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                        }
+                        Text("maintenance/$id", style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp))
                     }
                 }
             }

@@ -1,12 +1,38 @@
 package com.appcasa.features.family.presentation.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocalHospital
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,21 +42,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.components.skeletonShimmer
-import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
-import androidx.compose.ui.res.stringResource
 import com.appcasa.feature.dashboard.R
-import com.appcasa.core.domain.model.TipoMiembro
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
+import com.appcasa.navigation.Screen
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,7 +84,7 @@ fun MemberDetailScreen(
             },
             actions = {
               IconButton(onClick = { 
-                member?.let { navController.navigate(com.appcasa.navigation.Screen.EditMember.createRoute(it.id)) }
+                member?.let { navController.navigate(Screen.EditMember.createRoute(it.id)) }
               }) {
                 Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit))
               }
@@ -121,7 +149,7 @@ fun MemberDetailScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Tarjeta de Detalles
-            com.appcasa.core.ui.components.AppCasaCard(
+            AppCasaCard(
               useGlassmorphism = true,
               modifier = Modifier.fillMaxWidth()
             ) {
@@ -149,7 +177,7 @@ fun MemberDetailScreen(
 
             if (!member.veterinarioNombre.isNullOrBlank() || !member.veterinarioTelefono.isNullOrBlank()) {
               Spacer(modifier = Modifier.height(16.dp))
-              com.appcasa.core.ui.components.AppCasaCard(
+              AppCasaCard(
                 useGlassmorphism = true,
                 modifier = Modifier.fillMaxWidth()
               ) {

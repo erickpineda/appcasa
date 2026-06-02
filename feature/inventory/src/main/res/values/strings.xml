@@ -32,4 +32,7 @@
     <string name="cd_back">Atrás</string>
     <string name="cd_scan">Escanear barras</string>
     <string name="cd_add_item">Añadir Artículo</string>
+    <string name="inventory_delete_title">Eliminar producto</string>
+    <string name="inventory_delete_confirm">¿Estás seguro de que quieres eliminar este producto del inventario?</string>
+    <string name="inventory_load_more">Cargar más inventario antiguo...</string>
 </resources>

@@ -54,12 +54,31 @@
     <string name="task_btn_change_image">Cambiar Imagen</string>
     <string name="task_label_personal">Tarea personal</string>
     <string name="task_label_personal_long">Es una tarea personal</string>
+    <string name="task_personal_xp_warning">Las tareas personales son privadas y no otorgan puntos XP para mantener la competencia familiar justa.</string>
     <string name="task_label_add_deadline_optional">Añadir Fecha Límite (Opcional)</string>
     <string name="task_label_attach_photo">Adjuntar Foto</string>
     <string name="task_label_change_photo">Cambiar Foto</string>
     <string name="task_label_preview">Vista previa</string>
     <string name="task_label_content_type_note">Nota de texto</string>
     <string name="task_label_content_type_list">Lista / Pasos</string>
+    <string name="task_archive_confirm">Se moverá esta tarea al Cajón de Archivo. Podrás recuperarla desde allí si la necesitas.</string>
+    <string name="task_load_more">Cargar más tareas antiguas…</string>
+    <string name="task_notify_on_time">En punto</string>
+    <string name="task_notify_5_min">5 min</string>
+    <string name="task_notify_15_min">15 min</string>
+    <string name="task_notify_30_min">30 min</string>
     <string name="cd_back">Atrás</string>
     <string name="cd_add">Añadir</string>
+
+    <!-- Reward Store -->
+    <string name="rewards_title">Tienda de Recompensas</string>
+    <string name="rewards_new_reward">Nueva Recompensa</string>
+    <string name="rewards_empty_title">Sin recompensas</string>
+    <string name="rewards_empty_desc">Crea metas para motivar a la familia.</string>
+    <string name="rewards_btn_create_first">Crear primera</string>
+    <string name="rewards_dialog_title">Nueva Meta Familiar</string>
+    <string name="rewards_label_title">Título</string>
+    <string name="rewards_label_puntos">Coste en XP</string>
+    <string name="rewards_label_desc">Descripción (opcional)</string>
+    <string name="rewards_btn_redeem">Canjear</string>
 </resources>

@@ -2,6 +2,7 @@ package com.appcasa.features.inventory.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.model.TipoLista
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.features.inventory.data.local.StockDao
 import com.appcasa.features.inventory.data.local.StockEntity
@@ -122,7 +123,7 @@ class StockViewModel @Inject constructor(
     val preferredListId = configs.find { it.clave == "lista_compra_id" }?.valor?.toLongOrNull()
     val listId = preferredListId ?: run {
       val listList = listaDao.getListasPaged(householdId, 50, 0).first()
-      listList.find { it.tipo == com.appcasa.core.domain.model.TipoLista.COMPRA.name }?.id
+      listList.find { it.tipo == TipoLista.COMPRA.name }?.id
     }
     if (listId != null) {
       performAddToList(item, listId, delta)

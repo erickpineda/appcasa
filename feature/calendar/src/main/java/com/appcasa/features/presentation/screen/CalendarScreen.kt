@@ -93,6 +93,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.core.domain.model.TipoEvento
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaEmptyState
@@ -100,8 +101,11 @@ import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.core.ui.theme.Birthday
 import com.appcasa.feature.calendar.R
+import com.appcasa.features.calendar.data.local.EventoEntity
 import com.appcasa.features.calendar.presentation.viewmodel.CalendarItem
+import com.appcasa.features.calendar.presentation.viewmodel.CalendarState
 import com.appcasa.features.calendar.presentation.viewmodel.CalendarViewModel
+import com.appcasa.features.reminders.data.local.RecordatorioEntity
 import com.appcasa.features.reminders.presentation.viewmodel.RemindersViewModel
 import com.appcasa.navigation.Screen
 import java.text.SimpleDateFormat
@@ -232,7 +236,7 @@ fun CalendarScreen(
 @Composable
 fun CalendarContent(
   navController: NavController,
-  state: com.appcasa.features.calendar.presentation.viewmodel.CalendarState,
+  state: CalendarState,
   historyPage: Int,
   searchQuery: String,
   onSearchQueryChange: (String) -> Unit,
@@ -248,8 +252,8 @@ fun CalendarContent(
   onEditItem: (CalendarItem) -> Unit,
   onImportClick: () -> Unit,
   onAddReminderClick: () -> Unit = {},
-  onDeleteReminder: (com.appcasa.features.reminders.data.local.RecordatorioEntity) -> Unit = {},
-  onDeleteEvento: (com.appcasa.features.calendar.data.local.EventoEntity) -> Unit = {},
+  onDeleteReminder: (RecordatorioEntity) -> Unit = {},
+  onDeleteEvento: (EventoEntity) -> Unit = {},
   onLoadMoreHistory: () -> Unit
 ) {
   val daysInMonth = currentMonth.lengthOfMonth()
@@ -809,7 +813,7 @@ fun AgendaItemCompact(
           Text(text = " • ", style = MaterialTheme.typography.labelSmall)
           Text(text = typeLabel.uppercase(), style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.Bold)
           
-          if (item is CalendarItem.Tarea && item.entity.periodicidad != com.appcasa.core.domain.model.Periodicidad.NINGUNA.name) {
+          if (item is CalendarItem.Tarea && item.entity.periodicidad != Periodicidad.NINGUNA.name) {
             Spacer(Modifier.width(8.dp))
             Icon(Icons.Default.Repeat, contentDescription = null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.secondary)
           }
@@ -1111,7 +1115,7 @@ fun CalendarPreview() {
   AppCasaTheme {
     CalendarContent(
       navController = NavController(LocalContext.current),
-      state = com.appcasa.features.calendar.presentation.viewmodel.CalendarState(),
+      state = CalendarState(),
       historyPage = 0,
       searchQuery = "",
       onSearchQueryChange = {},
