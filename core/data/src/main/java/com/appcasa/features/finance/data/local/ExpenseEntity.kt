@@ -46,6 +46,9 @@ data class ExpenseEntity(
     @ColumnInfo(name = "fecha")
     val fecha: Long = System.currentTimeMillis(),
 
+    @ColumnInfo(name = "foto_uri")
+    val fotoUri: String? = null,
+
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis()
 )

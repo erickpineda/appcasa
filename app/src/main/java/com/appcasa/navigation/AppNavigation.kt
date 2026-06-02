@@ -42,6 +42,7 @@ import com.appcasa.features.family.presentation.screen.EditMemberScreen
 import com.appcasa.features.family.presentation.screen.FamilyScreen
 import com.appcasa.features.family.presentation.screen.MemberDetailScreen
 import com.appcasa.features.finance.presentation.screen.ExpenseScreen
+import com.appcasa.features.finance.presentation.screen.FinanceStatsScreen
 import com.appcasa.features.inventory.presentation.screen.StockScreen
 import com.appcasa.features.lists.presentation.screen.ListDetailScreen
 import com.appcasa.features.lists.presentation.screen.ListsScreen
@@ -49,9 +50,11 @@ import com.appcasa.features.pets.presentation.screen.PetDetailScreen
 import com.appcasa.features.presentation.screen.DashboardScreen
 import com.appcasa.features.presentation.screen.FamilyHubScreen
 import com.appcasa.features.presentation.screen.HomeMaintenanceScreen
+import com.appcasa.features.presentation.screen.MaintenanceDetailScreen
 import com.appcasa.features.presentation.screen.ManagementHubScreen
 import com.appcasa.features.settings.presentation.screen.SettingsScreen
 import com.appcasa.features.tasks.presentation.screen.AddTaskScreen
+import com.appcasa.features.tasks.presentation.screen.RewardStoreScreen
 import com.appcasa.features.tasks.presentation.screen.TaskDetailScreen
 import com.appcasa.features.tasks.presentation.screen.TasksScreen
 import com.appcasa.features.utilities.presentation.screen.AgeCalculatorScreen
@@ -240,6 +243,15 @@ fun AppNavigation() {
       composable(Screen.FeedingCalculator.route) { FeedingCalculatorScreen(navController = navController) }
       composable(Screen.SmartSafe.route) { SmartSafeScreen(navController = navController) }
       composable(Screen.HomeMaintenance.route) { HomeMaintenanceScreen(navController = navController) }
+      composable(
+        route = Screen.MaintenanceDetail.route,
+        arguments = listOf(androidx.navigation.navArgument("id") { type = androidx.navigation.NavType.LongType })
+      ) { backStackEntry ->
+        val id = backStackEntry.arguments?.getLong("id") ?: 0L
+        MaintenanceDetailScreen(id = id, navController = navController)
+      }
+      composable(Screen.FinanceStats.route) { FinanceStatsScreen(navController = navController) }
+      composable(Screen.RewardStore.route) { RewardStoreScreen(navController = navController) }
     }
   }
 }

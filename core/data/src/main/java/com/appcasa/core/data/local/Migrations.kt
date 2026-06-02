@@ -109,6 +109,35 @@ object Migrations {
   }
 
   /**
+   * Migración para añadir la tienda de recompensas (Gamificación 2.0).
+   */
+  val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("""
+        CREATE TABLE IF NOT EXISTS recompensas (
+          id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+          hogar_id INTEGER NOT NULL,
+          titulo TEXT NOT NULL,
+          descripcion TEXT,
+          coste_puntos INTEGER NOT NULL,
+          icono TEXT NOT NULL,
+          FOREIGN KEY(hogar_id) REFERENCES hogares(id) ON UPDATE NO ACTION ON DELETE CASCADE
+        )
+      """.trimIndent())
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_recompensas_hogar_id ON recompensas (hogar_id)")
+    }
+  }
+
+  /**
+   * Migración para añadir soporte de fotos/capturas a los gastos.
+   */
+  val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE gastos ADD COLUMN foto_uri TEXT")
+    }
+  }
+
+  /**
    * Lista de todas las migraciones registradas.
    */
   fun getAll(): Array<Migration> {
@@ -118,7 +147,9 @@ object Migrations {
       MIGRATION_10_11,
       MIGRATION_11_12,
       MIGRATION_12_13,
-      MIGRATION_13_14
+      MIGRATION_13_14,
+      MIGRATION_14_15,
+      MIGRATION_15_16
     )
   }
 }

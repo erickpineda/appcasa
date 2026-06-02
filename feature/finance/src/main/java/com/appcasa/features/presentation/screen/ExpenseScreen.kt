@@ -7,6 +7,8 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,8 +17,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,10 +29,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -53,6 +60,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +71,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
+import com.appcasa.core.data.utils.FileUtils
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
@@ -81,6 +92,7 @@ fun ExpenseScreen(
   val expenses by viewModel.expenses.collectAsState()
   val currency by viewModel.currencySymbol.collectAsState()
   val ocrResult by viewModel.ocrResult.collectAsState()
+  val ocrStore by viewModel.ocrStore.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
   var editingExpense by remember { mutableStateOf<ExpenseEntity?>(null) }
   var expenseToDelete by remember { mutableStateOf<ExpenseEntity?>(null) }
@@ -118,12 +130,13 @@ fun ExpenseScreen(
     ExpenseActionDialog(
       currency = currency,
       initialImporte = ocrResult?.toString() ?: "",
+      initialConcepto = ocrStore ?: "",
       onDismiss = { 
           showAddDialog = false
           viewModel.clearOcr()
       },
-      onConfirm = { concepto, importe, categoria ->
-        viewModel.addExpense(concepto, importe, categoria)
+      onConfirm = { concepto, importe, categoria, fotoUri ->
+        viewModel.addExpense(concepto, importe, categoria, fotoUri)
         showAddDialog = false
         viewModel.clearOcr()
       }
@@ -135,11 +148,12 @@ fun ExpenseScreen(
       item = expense,
       currency = currency,
       onDismiss = { editingExpense = null },
-      onConfirm = { concepto, importe, categoria ->
+      onConfirm = { concepto, importe, categoria, fotoUri ->
         viewModel.updateExpense(expense.copy(
             concepto = concepto,
             importe = importe,
-            categoria = categoria
+            categoria = categoria,
+            fotoUri = fotoUri
         ))
         editingExpense = null
       }
@@ -162,6 +176,9 @@ fun ExpenseScreen(
             actionIconContentColor = MaterialTheme.colorScheme.onPrimary
           ),
           actions = {
+            IconButton(onClick = { navController.navigate(com.appcasa.navigation.Screen.FinanceStats.route) }) {
+                Icon(Icons.Default.Payments, contentDescription = "Estadísticas")
+            }
             IconButton(onClick = { galleryLauncher.launch("image/*") }) {
                 Icon(Icons.Default.DocumentScanner, contentDescription = stringResource(R.string.cd_scan_ticket))
             }
@@ -231,6 +248,25 @@ fun ExpenseScreen(
 
 @Composable
 fun ExpenseCard(expense: ExpenseEntity, currency: String, onEdit: () -> Unit, onDelete: () -> Unit) {
+  var showImagePreview by remember { mutableStateOf(false) }
+
+  if (showImagePreview && expense.fotoUri != null) {
+      AlertDialog(
+          onDismissRequest = { showImagePreview = false },
+          text = {
+              AsyncImage(
+                  model = expense.fotoUri,
+                  contentDescription = null,
+                  modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
+                  contentScale = ContentScale.Fit
+              )
+          },
+          confirmButton = {
+              TextButton(onClick = { showImagePreview = false }) { Text("Cerrar") }
+          }
+      )
+  }
+
   com.appcasa.core.ui.components.AppCasaCard(useGlassmorphism = true,
     modifier = Modifier.fillMaxWidth()
   ) {
@@ -238,7 +274,19 @@ fun ExpenseCard(expense: ExpenseEntity, currency: String, onEdit: () -> Unit, on
       headlineContent = { Text(expense.concepto) },
       supportingContent = { Text("${expense.categoria} · ${formatDate(expense.fecha)}") },
       leadingContent = {
-        Icon(Icons.Default.Payments, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+          if (expense.fotoUri != null) {
+              AsyncImage(
+                  model = expense.fotoUri,
+                  contentDescription = null,
+                  modifier = Modifier
+                      .size(48.dp)
+                      .clip(RoundedCornerShape(4.dp))
+                      .clickable { showImagePreview = true },
+                  contentScale = ContentScale.Crop
+              )
+          } else {
+              Icon(Icons.Default.Payments, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+          }
       },
       trailingContent = {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -265,13 +313,24 @@ fun ExpenseActionDialog(
   item: ExpenseEntity? = null,
   currency: String,
   initialImporte: String = "",
+  initialConcepto: String = "",
   onDismiss: () -> Unit,
-  onConfirm: (String, Double, String) -> Unit
+  onConfirm: (String, Double, String, String?) -> Unit
 ) {
-  var concepto by remember { mutableStateOf(item?.concepto ?: "") }
+  var concepto by remember { mutableStateOf(if (initialConcepto.isNotEmpty()) initialConcepto else item?.concepto ?: "") }
   var importe by remember { mutableStateOf(if (initialImporte.isNotEmpty()) initialImporte else item?.importe?.toString() ?: "") }
   var categoria by remember { mutableStateOf(item?.categoria ?: "Otros") }
+  var fotoUri by remember { mutableStateOf(item?.fotoUri) }
   
+  val context = LocalContext.current
+  val imagePickerLauncher = rememberLauncherForActivityResult(
+      contract = ActivityResultContracts.GetContent()
+  ) { uri ->
+      uri?.let {
+          fotoUri = FileUtils.saveImageLocally(context, it.toString())
+      }
+  }
+
   val isImporteValid = remember(importe) { 
     importe.toDoubleOrNull()?.let { it > 0 } ?: false 
   }
@@ -282,6 +341,7 @@ fun ExpenseActionDialog(
     title = { Text(stringResource(if (item == null) R.string.finance_action_add_title else R.string.finance_action_edit_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // ... (ocr info unchanged)
         if (initialImporte.isNotEmpty()) {
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer,
@@ -307,14 +367,13 @@ fun ExpenseActionDialog(
         OutlinedTextField(
           value = importe, 
           onValueChange = { 
-              // Filtro manual para asegurar que solo entren números y separadores
               if (it.isEmpty() || it.all { char -> char.isDigit() || char == '.' || char == ',' }) {
                   importe = it.replace(',', '.')
               }
           }, 
           label = { Text(stringResource(R.string.finance_label_amount, currency)) },
           keyboardOptions = KeyboardOptions(
-              keyboardType = KeyboardType.Number, // Cambiamos a Number para forzar el pad numérico
+              keyboardType = KeyboardType.Number,
               imeAction = ImeAction.Next
           ),
           modifier = Modifier.fillMaxWidth(),
@@ -334,12 +393,42 @@ fun ExpenseActionDialog(
             singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
+
+        Spacer(Modifier.height(8.dp))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = { imagePickerLauncher.launch("image/*") },
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                Icon(Icons.Default.PhotoCamera, null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(if (fotoUri == null) "Adjuntar Ticket" else "Cambiar Foto", style = MaterialTheme.typography.labelSmall)
+            }
+            
+            if (fotoUri != null) {
+                AsyncImage(
+                    model = fotoUri,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(4.dp)).border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(4.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                IconButton(onClick = { fotoUri = null }, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.Close, null, tint = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
       }
     },
     confirmButton = {
       Button(
         onClick = { 
-          onConfirm(concepto, importe.toDouble(), categoria)
+          onConfirm(concepto, importe.toDouble(), categoria, fotoUri)
         },
         enabled = canConfirm
       ) {

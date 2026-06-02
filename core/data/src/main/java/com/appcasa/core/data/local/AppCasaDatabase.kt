@@ -30,6 +30,8 @@ import com.appcasa.features.settings.data.local.ConfiguracionEntity
 import com.appcasa.features.settings.data.local.HogarEntity
 import com.appcasa.features.settings.data.local.UsuarioEntity
 import com.appcasa.features.tasks.data.local.CategoriaTareaEntity
+import com.appcasa.features.tasks.data.local.RecompensaDao
+import com.appcasa.features.tasks.data.local.RecompensaEntity
 import com.appcasa.features.tasks.data.local.TareaAsignacionEntity
 import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.tasks.data.local.TareaDao
@@ -68,8 +70,9 @@ import com.appcasa.features.utilities.data.local.UtilidadEntity
     PostItEntity::class,
     DashboardConfigEntity::class,
     MaintenanceEntity::class,
+    RecompensaEntity::class,
   ],
-  version      = 14,
+  version      = 16,
   exportSchema = true
 )
 abstract class AppCasaDatabase : RoomDatabase() {
@@ -87,4 +90,5 @@ abstract class AppCasaDatabase : RoomDatabase() {
   abstract fun documentoDao(): DocumentoDao
   abstract fun dashboardDao(): com.appcasa.features.dashboard.data.local.DashboardDao
   abstract fun maintenanceDao(): com.appcasa.features.maintenance.data.local.MaintenanceDao
+  abstract fun recompensaDao(): RecompensaDao
 }

@@ -1,5 +1,8 @@
 package com.appcasa.features.presentation.screen
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +24,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.FormatPaint
 import androidx.compose.material.icons.filled.Kitchen
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -34,6 +38,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -49,6 +54,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -62,6 +68,9 @@ import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.maintenance.data.local.MaintenanceEntity
 import com.appcasa.features.presentation.viewmodel.HomeMaintenanceViewModel
+import com.appcasa.navigation.Screen
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.common.InputImage
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -75,6 +84,24 @@ fun HomeMaintenanceScreen(
     val events by viewModel.events.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var eventToDelete by remember { mutableStateOf<MaintenanceEntity?>(null) }
+    val context = LocalContext.current
+
+    val qrLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            val image = InputImage.fromFilePath(context, it)
+            val scanner = BarcodeScanning.getClient()
+            scanner.process(image).addOnSuccessListener { barcodes ->
+                barcodes.firstOrNull()?.rawValue?.let { code ->
+                    if (code.startsWith("maintenance/")) {
+                        val id = code.substringAfter("maintenance/").toLongOrNull()
+                        id?.let { navController.navigate(Screen.MaintenanceDetail.createRoute(it)) }
+                    }
+                }
+            }
+        }
+    }
 
     AppCasaConfirmDialog(
         show = eventToDelete != null,
@@ -111,7 +138,12 @@ fun HomeMaintenanceScreen(
                         containerColor = MaterialTheme.colorScheme.primary,
                         titleContentColor = MaterialTheme.colorScheme.onPrimary,
                         navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    ),
+                    actions = {
+                        IconButton(onClick = { qrLauncher.launch("image/*") }) {
+                            Icon(Icons.Default.QrCodeScanner, contentDescription = null)
+                        }
+                    }
                 )
             },
             floatingActionButton = {
@@ -145,7 +177,8 @@ fun HomeMaintenanceScreen(
                     items(events) { event ->
                         MaintenanceCard(
                             event = event,
-                            onDelete = { eventToDelete = event }
+                            onDelete = { eventToDelete = event },
+                            onClick = { navController.navigate(Screen.MaintenanceDetail.createRoute(event.id)) }
                         )
                     }
                 }
@@ -157,9 +190,10 @@ fun HomeMaintenanceScreen(
 @Composable
 fun MaintenanceCard(
     event: MaintenanceEntity,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: () -> Unit
 ) {
-    AppCasaCard(useGlassmorphism = true) {
+    AppCasaCard(useGlassmorphism = true, onClick = onClick) {
         ListItem(
             headlineContent = { Text(event.titulo, fontWeight = FontWeight.Bold) },
             supportingContent = {
@@ -189,7 +223,8 @@ fun MaintenanceCard(
                 IconButton(onClick = onDelete) {
                     Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
                 }
-            }
+            },
+            colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
         )
     }
 }

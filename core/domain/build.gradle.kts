@@ -25,5 +25,6 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.coroutines.android)
+    implementation(libs.google.play.location)
     implementation("javax.inject:javax.inject:1")
 }

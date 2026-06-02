@@ -17,19 +17,18 @@ object DatabaseModule {
 
   @Provides
   @Singleton
-  fun provideAppCasaDatabase(
-    @ApplicationContext context: Context
-  ): AppCasaDatabase = Room.databaseBuilder(
-    context,
-    AppCasaDatabase::class.java,
-    "appcasa.db"
-  )
+  fun provideDatabase(@ApplicationContext context: Context): AppCasaDatabase {
+    return Room.databaseBuilder(
+      context,
+      AppCasaDatabase::class.java,
+      "appcasa_db"
+    )
     .addMigrations(*Migrations.getAll())
-    .fallbackToDestructiveMigration() // Mejor usar la opción global en desarrollo para evitar inconsistencias
     .build()
+  }
 
   @Provides
-  fun provideConfiguracionDao(db: AppCasaDatabase) = db.hogarDao()
+  fun provideHogarDao(db: AppCasaDatabase) = db.hogarDao()
 
   @Provides
   fun provideMiembroDao(db: AppCasaDatabase) = db.miembroDao()
@@ -66,4 +65,7 @@ object DatabaseModule {
 
   @Provides
   fun provideMaintenanceDao(db: AppCasaDatabase) = db.maintenanceDao()
+
+  @Provides
+  fun provideRecompensaDao(db: AppCasaDatabase) = db.recompensaDao()
 }

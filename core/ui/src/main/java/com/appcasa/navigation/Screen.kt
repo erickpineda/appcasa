@@ -2,14 +2,10 @@ package com.appcasa.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
-
 import com.appcasa.core.ui.R
 
 sealed class Screen(val route: String) {
@@ -60,6 +56,11 @@ sealed class Screen(val route: String) {
   data object FeedingCalculator : Screen("feeding_calculator")
   data object SmartSafe      : Screen("smart_safe")
   data object HomeMaintenance : Screen("home_maintenance")
+  data object MaintenanceDetail : Screen("maintenance/{id}") {
+    fun createRoute(id: Long) = "maintenance/$id"
+  }
+  data object FinanceStats    : Screen("finance_stats")
+  data object RewardStore     : Screen("reward_store")
 }
 
 data class BottomNavItem(

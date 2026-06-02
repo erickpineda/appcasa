@@ -55,6 +55,10 @@ dependencies {
     // Biometric
     implementation(libs.androidx.biometric)
 
+    // ML Kit
+    implementation(libs.mlkit.barcode.scanning)
+    implementation(libs.mlkit.text.recognition)
+
     // Módulos Core
     implementation(project(":core:ui"))
     implementation(project(":core:domain"))

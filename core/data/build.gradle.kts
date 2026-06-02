@@ -40,6 +40,9 @@ dependencies {
     // WorkManager
     implementation(libs.workmanager.ktx)
 
+    // Location
+    implementation(libs.google.play.location)
+
     // ML Kit
     implementation(libs.mlkit.barcode.scanning)
     implementation(libs.mlkit.text.recognition)
