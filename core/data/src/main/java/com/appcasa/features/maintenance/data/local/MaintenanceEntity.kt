@@ -49,5 +49,8 @@ data class MaintenanceEntity(
     val coste: Double? = null,
     
     @ColumnInfo(name = "fotos_json")
-    val fotosJson: String? = null // Lista de URIs en formato JSON
+    val fotosJson: String? = null, // Lista de URIs en formato JSON
+
+    @ColumnInfo(name = "archived")
+    val archived: Boolean = false
 )

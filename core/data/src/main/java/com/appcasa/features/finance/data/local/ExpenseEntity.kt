@@ -50,5 +50,8 @@ data class ExpenseEntity(
     val fotoUri: String? = null,
 
     @ColumnInfo(name = "created_at")
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "archived")
+    val archived: Boolean = false
 )

@@ -10,8 +10,23 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TareaDao {
-    @Query("SELECT * FROM tareas WHERE hogar_id = :hogarId ORDER BY prioridad DESC, fecha_limite ASC")
+    @Query("SELECT * FROM tareas WHERE hogar_id = :hogarId AND archived = 0 ORDER BY prioridad DESC, fecha_limite ASC")
     fun getTareasByHogar(hogarId: Long): Flow<List<TareaEntity>>
+
+    @Query("SELECT * FROM tareas WHERE hogar_id = :hogarId AND archived = 0 ORDER BY prioridad DESC, fecha_limite ASC LIMIT :limit OFFSET :offset")
+    fun getTareasPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<TareaEntity>>
+
+    @Query("SELECT * FROM tareas WHERE hogar_id = :hogarId AND archived = 1 ORDER BY completado_en DESC LIMIT :limit OFFSET :offset")
+    fun getArchivedTareasPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<TareaEntity>>
+
+    @Query("UPDATE tareas SET archived = 0 WHERE id = :id")
+    suspend fun unarchiveTarea(id: Long)
+
+    @Query("UPDATE tareas SET archived = 1 WHERE hogar_id = :hogarId AND estado = 'COMPLETADA' AND completado_en < :threshold")
+    suspend fun archiveOldCompletedTasks(hogarId: Long, threshold: Long)
+
+    @Query("DELETE FROM tareas WHERE hogar_id = :hogarId AND archived = 1")
+    suspend fun deleteAllArchivedTasks(hogarId: Long)
 
     @Query("SELECT * FROM tareas WHERE id = :id")
     suspend fun getTareaById(id: Long): TareaEntity?

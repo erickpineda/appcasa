@@ -2,6 +2,7 @@ package com.appcasa.features.tasks.presentation.screen
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -28,9 +29,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,7 +54,9 @@ import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
+import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.CelebrationOverlay
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.tasks.R
@@ -69,25 +74,52 @@ fun TasksScreen(
   val showCelebration by viewModel.showCelebration.collectAsState()
   val gainedXP by viewModel.gainedXP.collectAsState()
   val subTaskCounts by viewModel.subTaskCounts.collectAsState()
+  var toastMessage by remember { mutableStateOf<String?>(null) }
+  var taskToArchive by remember { mutableStateOf<TareaEntity?>(null) }
 
-  if (showCelebration) {
-    CelebrationOverlay(
-        xp = gainedXP,
-        onDismiss = { viewModel.dismissCelebration() }
-    )
+  LaunchedEffect(Unit) {
+    viewModel.toastEvent.collect { message ->
+        toastMessage = message
+    }
   }
 
-  PullToRefreshWrapper {
-    TasksContent(
-      tasks = tasks,
-      isCompact = isCompact,
-      subTaskCounts = subTaskCounts,
-      onAddTask = { navController.navigate(Screen.AddTask.route) },
-      onToggleTask = { viewModel.toggleTaskCompletion(it) },
-      onDeleteTask = { viewModel.deleteTask(it) },
-      onTaskClick = { navController.navigate(Screen.TaskDetail.createRoute(it.id)) },
-      onUpdateTask = { tarea, nuevoTitulo -> viewModel.updateTask(tarea, nuevoTitulo) }
-    )
+  AppCasaConfirmDialog(
+    show = taskToArchive != null,
+    title = stringResource(R.string.task_delete),
+    text = "Se moverá esta tarea al Cajón de Archivo. Podrás recuperarla desde allí si la necesitas.",
+    onConfirm = {
+        taskToArchive?.let { viewModel.archiveTask(it) }
+        taskToArchive = null
+    },
+    onDismiss = { taskToArchive = null }
+  )
+
+  Box(modifier = Modifier.fillMaxSize()) {
+      PullToRefreshWrapper {
+        TasksContent(
+          tasks = tasks,
+          isCompact = isCompact,
+          subTaskCounts = subTaskCounts,
+          onAddTask = { navController.navigate(Screen.AddTask.route) },
+          onToggleTask = { viewModel.toggleTaskCompletion(it) },
+          onDeleteTask = { taskToArchive = it },
+          onTaskClick = { navController.navigate(Screen.TaskDetail.createRoute(it.id)) },
+          onUpdateTask = { tarea, nuevoTitulo -> viewModel.updateTask(tarea, nuevoTitulo) },
+          onLoadMore = { viewModel.loadMoreActive() }
+        )
+      }
+
+      AppCasaSutilToast(
+          message = toastMessage,
+          onDismiss = { toastMessage = null }
+      )
+
+      if (showCelebration) {
+        CelebrationOverlay(
+            xp = gainedXP,
+            onDismiss = { viewModel.dismissCelebration() }
+        )
+      }
   }
 }
 
@@ -101,7 +133,8 @@ fun TasksContent(
   onToggleTask: (TareaEntity) -> Unit,
   onDeleteTask: (TareaEntity) -> Unit,
   onTaskClick: (TareaEntity) -> Unit,
-  onUpdateTask: (TareaEntity, String) -> Unit
+  onUpdateTask: (TareaEntity, String) -> Unit,
+  onLoadMore: () -> Unit
 ) {
   Scaffold(
     topBar = {
@@ -174,6 +207,17 @@ fun TasksContent(
             onUpdate = { onUpdateTask(tarea, it) },
             subTaskInfo = subTaskCounts[tarea.id] ?: (0 to 0)
           )
+        }
+      }
+
+      if (tasks.isNotEmpty()) {
+        item {
+          TextButton(
+            onClick = onLoadMore,
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Text("Cargar más tareas antiguas...")
+          }
         }
       }
     }

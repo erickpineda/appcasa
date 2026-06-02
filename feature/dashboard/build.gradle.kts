@@ -63,4 +63,8 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
+
+    // Features para el Hub de Gestión
+    implementation(project(":feature:tasks"))
+    implementation(project(":feature:finance"))
 }

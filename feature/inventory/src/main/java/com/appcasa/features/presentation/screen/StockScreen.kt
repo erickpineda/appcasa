@@ -51,6 +51,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,7 +68,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
+import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.inventory.R
 import com.appcasa.features.inventory.data.local.StockEntity
@@ -88,7 +92,26 @@ fun StockScreen(
   var showAddDialog by remember { mutableStateOf(false) }
   var editingItem by remember { mutableStateOf<StockEntity?>(null) }
   var itemToAddToList by remember { mutableStateOf<StockEntity?>(null) }
+  var itemToDelete by remember { mutableStateOf<StockEntity?>(null) }
   val context = LocalContext.current
+  var toastMessage by remember { mutableStateOf<String?>(null) }
+
+  LaunchedEffect(Unit) {
+    viewModel.toastEvent.collect { message ->
+        toastMessage = message
+    }
+  }
+
+  AppCasaConfirmDialog(
+    show = itemToDelete != null,
+    title = "Eliminar producto",
+    text = "¿Estás seguro de que quieres eliminar este producto del inventario?",
+    onConfirm = {
+        itemToDelete?.let { viewModel.deleteItem(it) }
+        itemToDelete = null
+    },
+    onDismiss = { itemToDelete = null }
+  )
 
   val barcodeLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.GetContent()
@@ -144,71 +167,87 @@ fun StockScreen(
     )
   }
 
-  PullToRefreshWrapper {
-    Scaffold(
-      topBar = {
-        TopAppBar(
-          title = { Text(stringResource(R.string.inventory_title)) },
-          navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
-              Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
+  Box(modifier = Modifier.fillMaxSize()) {
+      PullToRefreshWrapper {
+        Scaffold(
+          topBar = {
+            TopAppBar(
+              title = { Text(stringResource(R.string.inventory_title)) },
+              navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                  Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
+                }
+              },
+              colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                titleContentColor = MaterialTheme.colorScheme.onPrimary
+              ),
+              actions = {
+                  IconButton(onClick = { barcodeLauncher.launch("image/*") }) {
+                      Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.cd_scan))
+                  }
+              }
+            )
+          },
+          floatingActionButton = {
+            FloatingActionButton(onClick = { showAddDialog = true }) {
+              Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_item))
             }
           },
-          colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            titleContentColor = MaterialTheme.colorScheme.onPrimary
-          ),
-          actions = {
-              IconButton(onClick = { barcodeLauncher.launch("image/*") }) {
-                  Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.cd_scan))
+          contentWindowInsets = WindowInsets(0, 0, 0, 0)
+        ) { padding ->
+          LazyColumn(
+            modifier = Modifier
+              .fillMaxSize()
+              .padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(if (isCompact) 4.dp else 12.dp)
+          ) {
+            if (stockItems.isEmpty()) {
+              item {
+                AppCasaEmptyState(
+                  title = stringResource(R.string.inventory_empty_title),
+                  description = stringResource(R.string.inventory_empty_description),
+                  icon = Icons.Default.Inventory,
+                  actionText = stringResource(R.string.inventory_add_action),
+                  onActionClick = { showAddDialog = true },
+                  modifier = Modifier.fillParentMaxSize()
+                )
               }
+            } else {
+              items(stockItems) { item ->
+                StockItemCard(
+                  item = item,
+                  isCompact = isCompact,
+                  onAdd = { viewModel.updateQuantity(item, 1.0) },
+                  onRemove = { viewModel.updateQuantity(item, -1.0) },
+                  onEdit = { editingItem = item },
+                  onDelete = { itemToDelete = item },
+                  onAddToList = { itemToAddToList = item }
+                )
+              }
+    
+              item {
+                TextButton(
+                  onClick = { viewModel.loadMore() }, 
+                  modifier = Modifier.fillMaxWidth()
+                ) {
+                  Text("Cargar más inventario antiguo...")
+                }
+              }
+            }
+            
+            item {
+                Spacer(Modifier.imePadding())
+            }
           }
-        )
-      },
-      floatingActionButton = {
-        FloatingActionButton(onClick = { showAddDialog = true }) {
-          Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_item))
-        }
-      },
-      contentWindowInsets = WindowInsets(0, 0, 0, 0)
-    ) { padding ->
-      LazyColumn(
-        modifier = Modifier
-          .fillMaxSize()
-          .padding(padding),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(if (isCompact) 4.dp else 12.dp)
-      ) {
-        if (stockItems.isEmpty()) {
-          item {
-            AppCasaEmptyState(
-              title = stringResource(R.string.inventory_empty_title),
-              description = stringResource(R.string.inventory_empty_description),
-              icon = Icons.Default.Inventory,
-              actionText = stringResource(R.string.inventory_add_action),
-              onActionClick = { showAddDialog = true },
-              modifier = Modifier.fillParentMaxSize()
-            )
-          }
-        } else {
-          items(stockItems) { item ->
-            StockItemCard(
-              item = item,
-              isCompact = isCompact,
-              onAdd = { viewModel.updateQuantity(item, 1.0) },
-              onRemove = { viewModel.updateQuantity(item, -1.0) },
-              onEdit = { editingItem = item },
-              onDelete = { viewModel.deleteItem(item) },
-              onAddToList = { itemToAddToList = item }
-            )
-          }
-        }
-        
-        item {
-            Spacer(Modifier.imePadding())
         }
       }
-    }
+
+      AppCasaSutilToast(
+          message = toastMessage,
+          onDismiss = { toastMessage = null }
+      )
   }
 }
 
@@ -399,7 +438,7 @@ fun StockItemCard(
 ) {
   val isLowStock = item.cantidadActual <= item.cantidadMinima
   
-  com.appcasa.core.ui.components.AppCasaCard(
+  AppCasaCard(
     useGlassmorphism = true,
     modifier = Modifier.fillMaxWidth(),
     containerColor = if (isLowStock) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f) else null

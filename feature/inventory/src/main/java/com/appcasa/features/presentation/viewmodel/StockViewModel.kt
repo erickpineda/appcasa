@@ -2,21 +2,23 @@ package com.appcasa.features.inventory.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.features.inventory.data.local.StockDao
 import com.appcasa.features.inventory.data.local.StockEntity
 import com.appcasa.features.lists.data.local.ListaDao
 import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.lists.data.local.ListaItemEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
-import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -37,6 +39,15 @@ class StockViewModel @Inject constructor(
 
   private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
+  private val _activePage = MutableStateFlow(1)
+  val activePage = _activePage.asStateFlow()
+
+  private val _isLoading = MutableStateFlow(false)
+  val isLoading = _isLoading.asStateFlow()
+
+  private val _toastEvent = MutableSharedFlow<String>(replay = 0)
+  val toastEvent = _toastEvent.asSharedFlow()
+
   fun scanBarcode(image: InputImage) {
     val scanner = BarcodeScanning.getClient()
     scanner.process(image)
@@ -51,8 +62,13 @@ class StockViewModel @Inject constructor(
   fun clearBarcode() { _barcodeResult.value = null }
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val stockItems: StateFlow<List<StockEntity>> = currentHouseholdProvider.householdId
-    .flatMapLatest { id -> stockDao.getStockByHogar(id) }
+  val stockItems: StateFlow<List<StockEntity>> = combine(
+    currentHouseholdProvider.householdId,
+    _activePage
+  ) { id, page -> id to page }
+    .flatMapLatest { (id, page) -> 
+        stockDao.getStockPaged(id, limit = page * 20, offset = 0)
+    }
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
@@ -61,7 +77,7 @@ class StockViewModel @Inject constructor(
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val availableLists: StateFlow<List<ListaEntity>> = currentHouseholdProvider.householdId
-    .flatMapLatest { id -> listaDao.getListasByHogar(id) }
+    .flatMapLatest { id -> listaDao.getListasPaged(id, limit = 50, offset = 0) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -93,7 +109,7 @@ class StockViewModel @Inject constructor(
       val updatedItem = item.copy(cantidadActual = newQuantity, updatedAt = System.currentTimeMillis())
       stockDao.updateItem(updatedItem)
       
-      // Lógica de reabastecimiento automático (usa la lista por defecto)
+      // Lógica de reabastecimiento automático
       if (updatedItem.autoComprar && updatedItem.cantidadActual <= updatedItem.cantidadMinima) {
         val missing = (updatedItem.cantidadMinima - updatedItem.cantidadActual).coerceAtLeast(1.0)
         autoAddToPreferredList(updatedItem, missing)
@@ -105,7 +121,7 @@ class StockViewModel @Inject constructor(
     val configs = configuracionDao.getConfiguracion(householdId).first()
     val preferredListId = configs.find { it.clave == "lista_compra_id" }?.valor?.toLongOrNull()
     val listId = preferredListId ?: run {
-      val listList = listaDao.getListasByHogar(householdId).first()
+      val listList = listaDao.getListasPaged(householdId, 50, 0).first()
       listList.find { it.tipo == com.appcasa.core.domain.model.TipoLista.COMPRA.name }?.id
     }
     if (listId != null) {
@@ -126,7 +142,6 @@ class StockViewModel @Inject constructor(
       val existingItem = itemsInList.find { it.texto == targetText && !it.completado }
 
       if (existingItem != null) {
-        // Extraer cantidad numérica actual y sumar
         val currentQty = existingItem.cantidad?.split(" ")?.get(0)?.toDoubleOrNull() ?: 0.0
         val totalQty = currentQty + delta
         val newQtyStr = "${if (totalQty % 1 == 0.0) totalQty.toInt() else totalQty} ${item.unidad}"
@@ -149,6 +164,21 @@ class StockViewModel @Inject constructor(
   fun deleteItem(item: StockEntity) {
     viewModelScope.launch {
       stockDao.deleteItem(item)
+    }
+  }
+
+  fun loadMore() {
+    if (_isLoading.value) return
+    val currentCount = stockItems.value.size
+    _activePage.value += 1
+    viewModelScope.launch {
+        _isLoading.value = true
+        kotlinx.coroutines.delay(600)
+        if (stockItems.value.size <= currentCount) {
+            _toastEvent.emit("No hay más inventario para cargar")
+            _activePage.value -= 1
+        }
+        _isLoading.value = false
     }
   }
 }

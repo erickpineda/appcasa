@@ -13,11 +13,15 @@ import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.features.tasks.data.local.TareaEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -41,12 +45,41 @@ class TasksViewModel @Inject constructor(
 
   private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
-  val tasks: StateFlow<List<TareaEntity>> = tareaDao.getTareasByHogar(householdId)
+  private val _activePage = MutableStateFlow(1)
+  val activePage = _activePage.asStateFlow()
+
+  private val _isLoading = MutableStateFlow(false)
+  val isLoading = _isLoading.asStateFlow()
+
+  private val _toastEvent = MutableSharedFlow<String>(replay = 0)
+  val toastEvent = _toastEvent.asSharedFlow()
+
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val tasks: StateFlow<List<TareaEntity>> = combine(
+    currentHouseholdProvider.householdId,
+    _activePage
+  ) { id, page -> id to page }
+    .flatMapLatest { (id, page) -> 
+        tareaDao.getTareasPaged(id, limit = page * 20, offset = 0)
+    }
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
       initialValue = emptyList()
     )
+
+  private val _archivedPage = MutableStateFlow(1)
+  val archivedPage = _archivedPage.asStateFlow()
+
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val archivedTasks: StateFlow<List<TareaEntity>> = combine(
+    currentHouseholdProvider.householdId,
+    _archivedPage
+  ) { id, page -> id to page }
+    .flatMapLatest { (id, page) -> 
+        tareaDao.getArchivedTareasPaged(id, limit = page * 20, offset = 0) 
+    }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   val isCompactView: StateFlow<Boolean> = configuracionDao.getConfiguracion(householdId)
     .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
@@ -184,6 +217,55 @@ class TasksViewModel @Inject constructor(
     }
   }
 
+  fun archiveTask(tarea: TareaEntity) {
+    viewModelScope.launch {
+      tareaDao.updateTarea(tarea.copy(archived = true))
+      reminderScheduler.cancelReminder((tarea.id + 20000).toInt())
+    }
+  }
+
+  fun unarchiveTask(tareaId: Long) {
+    viewModelScope.launch {
+      tareaDao.unarchiveTarea(tareaId)
+    }
+  }
+
+  fun loadMoreActive() {
+    if (_isLoading.value) return
+    val currentCount = tasks.value.size
+    _activePage.value += 1
+    viewModelScope.launch {
+        _isLoading.value = true
+        kotlinx.coroutines.delay(600)
+        if (tasks.value.size <= currentCount) {
+            _toastEvent.emit("No hay más tareas para cargar")
+            _activePage.value -= 1 // Revertimos para no seguir incrementando en balde
+        }
+        _isLoading.value = false
+    }
+  }
+
+  fun loadMoreArchived() {
+    if (_isLoading.value) return
+    val currentCount = archivedTasks.value.size
+    _archivedPage.value += 1
+    viewModelScope.launch {
+        _isLoading.value = true
+        kotlinx.coroutines.delay(600)
+        if (archivedTasks.value.size <= currentCount) {
+            _toastEvent.emit("No hay más registros en el archivo")
+            _archivedPage.value -= 1
+        }
+        _isLoading.value = false
+    }
+  }
+
+  fun clearAllArchived() {
+    viewModelScope.launch {
+      tareaDao.deleteAllArchivedTasks(householdId)
+    }
+  }
+
   fun addTask(titulo: String, prioridad: String = "MEDIA") {
     viewModelScope.launch {
       tareaDao.insertTarea(
@@ -199,6 +281,13 @@ class TasksViewModel @Inject constructor(
   fun updateTask(tarea: TareaEntity, nuevoTitulo: String) {
     viewModelScope.launch {
       tareaDao.insertTarea(tarea.copy(titulo = nuevoTitulo))
+    }
+  }
+
+  fun archiveOldTasks() {
+    viewModelScope.launch {
+      val threshold = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000) // 30 días
+      tareaDao.archiveOldCompletedTasks(householdId, threshold)
     }
   }
 }

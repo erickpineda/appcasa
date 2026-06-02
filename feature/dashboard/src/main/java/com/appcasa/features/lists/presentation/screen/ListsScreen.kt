@@ -39,6 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,14 +50,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.TipoLista
+import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
+import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.PullToRefreshWrapper
-import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.lists.presentation.viewmodel.ListsViewModel
@@ -71,6 +73,25 @@ fun ListsScreen(
   val lists by viewModel.lists.collectAsState()
   val isCompact by viewModel.isCompactView.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
+  var toastMessage by remember { mutableStateOf<String?>(null) }
+  var listToArchive by remember { mutableStateOf<ListaEntity?>(null) }
+
+  LaunchedEffect(Unit) {
+    viewModel.toastEvent.collect { message ->
+        toastMessage = message
+    }
+  }
+
+  AppCasaConfirmDialog(
+    show = listToArchive != null,
+    title = stringResource(R.string.cd_delete),
+    text = "Se moverá esta lista al Cajón de Archivo. Podrás recuperarla desde allí si la necesitas.",
+    onConfirm = {
+        listToArchive?.let { viewModel.archiveList(it) }
+        listToArchive = null
+    },
+    onDismiss = { listToArchive = null }
+  )
 
   if (showAddDialog) {
     AddListDialog(
@@ -82,17 +103,25 @@ fun ListsScreen(
     )
   }
 
-  PullToRefreshWrapper {
-    ListsContent(
-      lists = lists,
-      isCompact = isCompact,
-      onListClick = { listId ->
-        navController.navigate(Screen.ListDetail.createRoute(listId))
-      },
-      onDeleteList = { viewModel.deleteList(it) },
-      onAddClick = { showAddDialog = true },
-      onUpdateList = { lista, nuevoNombre -> viewModel.updateList(lista, nuevoNombre) }
-    )
+  Box(modifier = Modifier.fillMaxSize()) {
+      PullToRefreshWrapper {
+        ListsContent(
+          lists = lists,
+          isCompact = isCompact,
+          onListClick = { listId ->
+            navController.navigate(Screen.ListDetail.createRoute(listId))
+          },
+          onDeleteList = { listToArchive = it },
+          onAddClick = { showAddDialog = true },
+          onUpdateList = { lista, nuevoNombre -> viewModel.updateList(lista, nuevoNombre) },
+          onLoadMore = { viewModel.loadMoreActive() }
+        )
+      }
+
+      AppCasaSutilToast(
+          message = toastMessage,
+          onDismiss = { toastMessage = null }
+      )
   }
 }
 
@@ -104,17 +133,13 @@ fun ListsContent(
   onListClick: (Long) -> Unit,
   onDeleteList: (ListaEntity) -> Unit,
   onAddClick: () -> Unit,
-  onUpdateList: (ListaEntity, String) -> Unit
+  onUpdateList: (ListaEntity, String) -> Unit,
+  onLoadMore: () -> Unit
 ) {
   Scaffold(
     topBar = {
       TopAppBar(
         title = { Text(stringResource(R.string.lists_title)) },
-        navigationIcon = {
-          IconButton(onClick = { /* Ir atrás si fuera necesario, pero este suele ser un Hub */ }) {
-            // Si quieres navegación atrás, añádela aquí. Generalmente en Hubs no hay flecha si es pestaña principal.
-          }
-        },
         colors = TopAppBarDefaults.topAppBarColors(
           containerColor = MaterialTheme.colorScheme.primary,
           titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -138,10 +163,10 @@ fun ListsContent(
       if (lists.isEmpty()) {
         item {
           AppCasaEmptyState(
-            title = stringResource(R.string.dashboard_no_lists_title), // Adding this
-            description = stringResource(R.string.dashboard_no_lists_desc), // Adding this
+            title = stringResource(R.string.dashboard_no_lists_title),
+            description = stringResource(R.string.dashboard_no_lists_desc),
             icon = Icons.AutoMirrored.Filled.List,
-            actionText = stringResource(R.string.dashboard_btn_create_list), // Adding this
+            actionText = stringResource(R.string.dashboard_btn_create_list),
             onActionClick = onAddClick,
             modifier = Modifier.fillParentMaxSize()
           )
@@ -155,6 +180,15 @@ fun ListsContent(
             onDelete = { onDeleteList(lista) },
             onUpdate = { onUpdateList(lista, it) }
           )
+        }
+        
+        item {
+          TextButton(
+            onClick = onLoadMore, 
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Text("Cargar más listas antiguas...")
+          }
         }
       }
     }
@@ -181,7 +215,7 @@ fun CompactListCard(
     else -> Icons.AutoMirrored.Filled.List
   }
 
-  com.appcasa.core.ui.components.AppCasaCard(
+  AppCasaCard(
     useGlassmorphism = true,
     modifier = Modifier.fillMaxWidth(),
     onClick = if (isEditing) null else onClick
@@ -305,23 +339,4 @@ fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
       TextButton(onClick = onDismiss) { Text(stringResource(R.string.lists_btn_cancel)) }
     }
   )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
-@Composable
-fun ListsPreview() {
-  AppCasaTheme {
-    ListsContent(
-      lists = listOf(
-        ListaEntity(id = 1, hogarId = 1, nombre = "Compra Mercadona", tipo = TipoLista.COMPRA.name),
-        ListaEntity(id = 2, hogarId = 1, nombre = "Botiquín Verano", tipo = TipoLista.FARMACIA.name)
-      ),
-      isCompact = false,
-      onListClick = {},
-      onDeleteList = {},
-      onAddClick = {},
-      onUpdateList = { _, _ -> }
-    )
-  }
 }

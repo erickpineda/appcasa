@@ -47,6 +47,7 @@ import com.appcasa.features.inventory.presentation.screen.StockScreen
 import com.appcasa.features.lists.presentation.screen.ListDetailScreen
 import com.appcasa.features.lists.presentation.screen.ListsScreen
 import com.appcasa.features.pets.presentation.screen.PetDetailScreen
+import com.appcasa.features.presentation.screen.ArchiveScreen
 import com.appcasa.features.presentation.screen.DashboardScreen
 import com.appcasa.features.presentation.screen.FamilyHubScreen
 import com.appcasa.features.presentation.screen.HomeMaintenanceScreen
@@ -252,6 +253,7 @@ fun AppNavigation() {
       }
       composable(Screen.FinanceStats.route) { FinanceStatsScreen(navController = navController) }
       composable(Screen.RewardStore.route) { RewardStoreScreen(navController = navController) }
+      composable(Screen.Archive.route) { ArchiveScreen(navController = navController) }
     }
   }
 }

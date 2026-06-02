@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DocumentScanner
@@ -53,6 +55,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,6 +78,7 @@ import coil3.compose.AsyncImage
 import com.appcasa.core.data.utils.FileUtils
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
+import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.finance.R
 import com.appcasa.features.finance.data.local.ExpenseEntity
@@ -97,15 +101,20 @@ fun ExpenseScreen(
   var editingExpense by remember { mutableStateOf<ExpenseEntity?>(null) }
   var expenseToDelete by remember { mutableStateOf<ExpenseEntity?>(null) }
   val context = LocalContext.current
-  val shareSummaryTitle = stringResource(R.string.finance_share_summary_title)
-  val shareTotalLabel = stringResource(R.string.finance_share_total_label)
+  var toastMessage by remember { mutableStateOf<String?>(null) }
+
+  LaunchedEffect(Unit) {
+    viewModel.toastEvent.collect { message ->
+        toastMessage = message
+    }
+  }
 
   AppCasaConfirmDialog(
     show = expenseToDelete != null,
     title = stringResource(R.string.finance_delete_title),
     text = stringResource(R.string.finance_delete_confirm, expenseToDelete?.concepto ?: ""),
     onConfirm = {
-        expenseToDelete?.let { viewModel.deleteExpense(it) }
+        expenseToDelete?.let { viewModel.archiveExpense(it) }
         expenseToDelete = null
     },
     onDismiss = { expenseToDelete = null }
@@ -160,89 +169,107 @@ fun ExpenseScreen(
     )
   }
 
-  PullToRefreshWrapper {
-    Scaffold(
-      topBar = {
-        TopAppBar(
-          title = { Text(stringResource(R.string.finance_title)) },
-          navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
-              Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
+  Box(modifier = Modifier.fillMaxSize()) {
+      PullToRefreshWrapper {
+        Scaffold(
+          topBar = {
+            TopAppBar(
+              title = { Text(stringResource(R.string.finance_title)) },
+              navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                  Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
+                }
+              },
+              colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+              ),
+              actions = {
+                IconButton(onClick = { navController.navigate(com.appcasa.navigation.Screen.FinanceStats.route) }) {
+                    Icon(Icons.Default.Assessment, contentDescription = "Estadísticas")
+                }
+                IconButton(onClick = { galleryLauncher.launch("image/*") }) {
+                    Icon(Icons.Default.DocumentScanner, contentDescription = stringResource(R.string.cd_scan_ticket))
+                }
+                if (expenses.isNotEmpty()) {
+                  val shareSummaryTitle = stringResource(R.string.finance_share_summary_title)
+                  val shareTotalLabel = stringResource(R.string.finance_share_total_label)
+                  IconButton(onClick = {
+                    val total = expenses.sumOf { it.importe }
+                    val shareText = shareSummaryTitle + "\n" + 
+                      expenses.joinToString("\n") { "- ${it.concepto}: ${String.format("%.2f", it.importe)} $currency" } +
+                      String.format(shareTotalLabel, String.format("%.2f", total), currency)
+                    
+                    val sendIntent: Intent = Intent().apply {
+                      action = Intent.ACTION_SEND
+                      putExtra(Intent.EXTRA_TEXT, shareText)
+                      type = "text/plain"
+                    }
+                    context.startActivity(Intent.createChooser(sendIntent, null))
+                  }) {
+                    Icon(Icons.Default.Share, contentDescription = stringResource(R.string.cd_share))
+                  }
+                }
+              }
+            )
+          },
+          floatingActionButton = {
+            FloatingActionButton(onClick = { showAddDialog = true }) {
+              Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_new_expense))
             }
           },
-          colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            titleContentColor = MaterialTheme.colorScheme.onPrimary,
-            actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-          ),
-          actions = {
-            IconButton(onClick = { navController.navigate(com.appcasa.navigation.Screen.FinanceStats.route) }) {
-                Icon(Icons.Default.Payments, contentDescription = "Estadísticas")
-            }
-            IconButton(onClick = { galleryLauncher.launch("image/*") }) {
-                Icon(Icons.Default.DocumentScanner, contentDescription = stringResource(R.string.cd_scan_ticket))
-            }
-            if (expenses.isNotEmpty()) {
-              IconButton(onClick = {
-                val total = expenses.sumOf { it.importe }
-                val shareText = shareSummaryTitle + "\n" + 
-                  expenses.joinToString("\n") { "- ${it.concepto}: ${String.format("%.2f", it.importe)} $currency" } +
-                  String.format(shareTotalLabel, String.format("%.2f", total), currency)
-                
-                val sendIntent: Intent = Intent().apply {
-                  action = Intent.ACTION_SEND
-                  putExtra(Intent.EXTRA_TEXT, shareText)
-                  type = "text/plain"
+          contentWindowInsets = WindowInsets(0, 0, 0, 0)
+        ) { padding ->
+          LazyColumn(
+            modifier = Modifier
+              .fillMaxSize()
+              .padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            if (expenses.isEmpty()) {
+              item {
+                AppCasaEmptyState(
+                  title = stringResource(R.string.finance_empty_title),
+                  description = stringResource(R.string.finance_empty_description),
+                  icon = Icons.Default.ReceiptLong,
+                  actionText = stringResource(R.string.finance_add_action),
+                  onActionClick = { showAddDialog = true },
+                  modifier = Modifier.fillParentMaxSize()
+                )
+              }
+            } else {
+              items(expenses) { expense ->
+                ExpenseCard(
+                  expense = expense,
+                  currency = currency,
+                  onEdit = { editingExpense = expense },
+                  onDelete = { expenseToDelete = expense }
+                )
+              }
+    
+              item {
+                TextButton(
+                    onClick = { viewModel.loadMoreActive() }, 
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Cargar más gastos antiguos...")
                 }
-                context.startActivity(Intent.createChooser(sendIntent, null))
-              }) {
-                Icon(Icons.Default.Share, contentDescription = stringResource(R.string.cd_share))
               }
             }
+            
+            item {
+                Spacer(Modifier.imePadding())
+            }
           }
-        )
-      },
-      floatingActionButton = {
-        FloatingActionButton(onClick = { showAddDialog = true }) {
-          Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_new_expense))
-        }
-      },
-      contentWindowInsets = WindowInsets(0, 0, 0, 0)
-    ) { padding ->
-      LazyColumn(
-        modifier = Modifier
-          .fillMaxSize()
-          .padding(padding),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-      ) {
-        if (expenses.isEmpty()) {
-          item {
-            AppCasaEmptyState(
-              title = stringResource(R.string.finance_empty_title),
-              description = stringResource(R.string.finance_empty_description),
-              icon = Icons.Default.ReceiptLong,
-              actionText = stringResource(R.string.finance_add_action),
-              onActionClick = { showAddDialog = true },
-              modifier = Modifier.fillParentMaxSize()
-            )
-          }
-        } else {
-          items(expenses) { expense ->
-            ExpenseCard(
-              expense = expense,
-              currency = currency,
-              onEdit = { editingExpense = expense },
-              onDelete = { expenseToDelete = expense }
-            )
-          }
-        }
-        
-        item {
-            Spacer(Modifier.imePadding())
         }
       }
-    }
+
+      AppCasaSutilToast(
+          message = toastMessage,
+          onDismiss = { toastMessage = null }
+      )
   }
 }
 
@@ -341,7 +368,6 @@ fun ExpenseActionDialog(
     title = { Text(stringResource(if (item == null) R.string.finance_action_add_title else R.string.finance_action_edit_title)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        // ... (ocr info unchanged)
         if (initialImporte.isNotEmpty()) {
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer,

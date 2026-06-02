@@ -138,6 +138,18 @@ object Migrations {
   }
 
   /**
+   * Migración para añadir soporte de archivo a Tareas, Listas, Gastos y Mantenimiento (Optimización de rendimiento).
+   */
+  val MIGRATION_16_17 = object : Migration(16, 17) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE tareas ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("ALTER TABLE listas ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("ALTER TABLE gastos ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("ALTER TABLE mantenimiento_hogar ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+    }
+  }
+
+  /**
    * Lista de todas las migraciones registradas.
    */
   fun getAll(): Array<Migration> {
@@ -149,7 +161,8 @@ object Migrations {
       MIGRATION_12_13,
       MIGRATION_13_14,
       MIGRATION_14_15,
-      MIGRATION_15_16
+      MIGRATION_15_16,
+      MIGRATION_16_17
     )
   }
 }

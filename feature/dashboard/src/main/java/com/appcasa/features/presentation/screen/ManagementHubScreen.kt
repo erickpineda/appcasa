@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.HomeRepairService
 import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -105,6 +106,14 @@ fun ManagementHubScreen(
             icon = Icons.Default.CardGiftcard,
             color = MaterialTheme.colorScheme.tertiary,
             onClick = { navController.navigate(Screen.RewardStore.route) }
+          )
+
+          HubCard(
+            title = "Cajón de Archivo",
+            subtitle = "Consulta registros antiguos y optimiza",
+            icon = Icons.Default.Inventory2,
+            color = MaterialTheme.colorScheme.outline,
+            onClick = { navController.navigate(Screen.Archive.route) }
           )
         }
       }

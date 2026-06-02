@@ -61,6 +61,7 @@ sealed class Screen(val route: String) {
   }
   data object FinanceStats    : Screen("finance_stats")
   data object RewardStore     : Screen("reward_store")
+  data object Archive         : Screen("archive")
 }
 
 data class BottomNavItem(

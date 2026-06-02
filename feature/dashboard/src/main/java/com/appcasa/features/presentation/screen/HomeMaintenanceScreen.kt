@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -48,6 +49,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +66,7 @@ import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
+import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.maintenance.data.local.MaintenanceEntity
@@ -85,6 +88,13 @@ fun HomeMaintenanceScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var eventToDelete by remember { mutableStateOf<MaintenanceEntity?>(null) }
     val context = LocalContext.current
+    var toastMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.toastEvent.collect { message ->
+            toastMessage = message
+        }
+    }
 
     val qrLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -108,7 +118,7 @@ fun HomeMaintenanceScreen(
         title = stringResource(R.string.maintenance_delete_title),
         text = stringResource(R.string.maintenance_delete_confirm, eventToDelete?.titulo ?: ""),
         onConfirm = {
-            eventToDelete?.let { viewModel.deleteEvent(it) }
+            eventToDelete?.let { viewModel.archiveEvent(it) }
             eventToDelete = null
         },
         onDismiss = { eventToDelete = null }
@@ -124,66 +134,82 @@ fun HomeMaintenanceScreen(
         )
     }
 
-    PullToRefreshWrapper {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(R.string.maintenance_title)) },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+    Box(modifier = Modifier.fillMaxSize()) {
+        PullToRefreshWrapper {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text(stringResource(R.string.maintenance_title)) },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        actions = {
+                            IconButton(onClick = { qrLauncher.launch("image/*") }) {
+                                Icon(Icons.Default.QrCodeScanner, contentDescription = null)
+                            }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    actions = {
-                        IconButton(onClick = { qrLauncher.launch("image/*") }) {
-                            Icon(Icons.Default.QrCodeScanner, contentDescription = null)
+                    )
+                },
+                floatingActionButton = {
+                    FloatingActionButton(onClick = { showAddDialog = true }) {
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.maintenance_new_title))
+                    }
+                },
+                contentWindowInsets = WindowInsets(0, 0, 0, 0)
+            ) { padding ->
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize()
+                        .imePadding(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (events.isEmpty()) {
+                        item {
+                            AppCasaEmptyState(
+                                title = stringResource(R.string.maintenance_empty_title),
+                                description = stringResource(R.string.maintenance_empty_desc),
+                                icon = Icons.Default.Build,
+                                actionText = stringResource(R.string.maintenance_btn_add_first),
+                                onActionClick = { showAddDialog = true },
+                                modifier = Modifier.fillParentMaxSize()
+                            )
                         }
                     }
-                )
-            },
-            floatingActionButton = {
-                FloatingActionButton(onClick = { showAddDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.maintenance_new_title))
-                }
-            },
-            contentWindowInsets = WindowInsets(0, 0, 0, 0)
-        ) { padding ->
-            LazyColumn(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize()
-                    .imePadding(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                if (events.isEmpty()) {
-                    item {
-                        AppCasaEmptyState(
-                            title = stringResource(R.string.maintenance_empty_title),
-                            description = stringResource(R.string.maintenance_empty_desc),
-                            icon = Icons.Default.Build,
-                            actionText = stringResource(R.string.maintenance_btn_add_first),
-                            onActionClick = { showAddDialog = true },
-                            modifier = Modifier.fillParentMaxSize()
-                        )
-                    }
-                }
-                else {
-                    items(events) { event ->
-                        MaintenanceCard(
-                            event = event,
-                            onDelete = { eventToDelete = event },
-                            onClick = { navController.navigate(Screen.MaintenanceDetail.createRoute(event.id)) }
-                        )
+                    else {
+                        items(events) { event ->
+                            MaintenanceCard(
+                                event = event,
+                                onDelete = { eventToDelete = event },
+                                onClick = { navController.navigate(Screen.MaintenanceDetail.createRoute(event.id)) }
+                            )
+                        }
+    
+                        item {
+                            TextButton(
+                                onClick = { viewModel.loadMoreActive() }, 
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Cargar más registros antiguos...")
+                            }
+                        }
                     }
                 }
             }
         }
+        
+        AppCasaSutilToast(
+            message = toastMessage,
+            onDismiss = { toastMessage = null }
+        )
     }
 }
 
