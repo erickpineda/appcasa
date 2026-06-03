@@ -99,13 +99,13 @@ import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.presentation.viewmodel.DashboardViewModel
 import com.appcasa.navigation.Screen
 import kotlin.random.Random
-import com.appcasa.core.ui.R as CoreR
 
 @Composable
 fun DashboardScreen(
   navController: NavController,
   viewModel: DashboardViewModel = hiltViewModel()
 ) {
+  val currentUser by viewModel.currentUser.collectAsState()
   val petData by viewModel.petData.collectAsState()
   val pendingTasks by viewModel.pendingTasksCount.collectAsState()
   val nextEventData by viewModel.nextEventData.collectAsState()
@@ -119,9 +119,12 @@ fun DashboardScreen(
   val dashboardOrder by viewModel.dashboardOrder.collectAsState()
   val familyMembers by viewModel.familyMembers.collectAsState()
 
+  if (currentUser == null) return
+
   AppCasaMeshBackground {
     PullToRefreshWrapper {
       DashboardContent(
+        userName = currentUser?.nombre ?: "",
         petCount = petData.first,
         petSummary = petData.second,
         pendingTasks = pendingTasks,
@@ -203,6 +206,7 @@ fun DashboardScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardContent(
+  userName: String,
   petCount: String,
   petSummary: String,
   pendingTasks: String,
@@ -312,7 +316,7 @@ fun DashboardContent(
           title = {
             Column {
               Text(
-                text = stringResource(CoreR.string.app_name),
+                text = "¡Hola, $userName!",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary
@@ -778,6 +782,7 @@ private fun QuickActionCard(
 fun DashboardPreview() {
   AppCasaTheme {
     DashboardContent(
+      userName = "Juan",
       petCount = "7",
       petSummary = "2 perros · 4 gatos · 1 tortuga",
       pendingTasks = "3",

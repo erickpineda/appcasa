@@ -31,7 +31,9 @@ import com.appcasa.features.settings.data.local.HogarEntity
     Index("hogar_id"),
     Index("categoria_id"),
     Index("estado"),
-    Index("fecha_limite")
+    Index("fecha_limite"),
+    Index("created_by_id"),
+    Index("sync_id")
   ]
 )
 data class TareaEntity(
@@ -85,7 +87,7 @@ data class TareaEntity(
   @ColumnInfo(name = "anticipacion_mins")
   val anticipacionMins: Int = 0,
 
-  @ColumnInfo(name = "sync_id", index = true)
+  @ColumnInfo(name = "sync_id")
   val syncId: String? = null,
 
   @ColumnInfo(name = "created_at")
@@ -96,6 +98,9 @@ data class TareaEntity(
 
   @ColumnInfo(name = "puntos_otorgados")
   val puntosOtorgados: Boolean = false,
+
+  @ColumnInfo(name = "created_by_id")
+  val createdById: Long? = null,
 
   @ColumnInfo(name = "archived")
   val archived: Boolean = false

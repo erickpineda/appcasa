@@ -18,7 +18,8 @@ import com.appcasa.features.settings.data.local.HogarEntity
   )],
   indices = [
     Index("hogar_id"),
-    Index("tipo")
+    Index("tipo"),
+    Index("sync_id")
   ]
 )
 data class ListaEntity(
@@ -39,7 +40,7 @@ data class ListaEntity(
   @ColumnInfo(name = "completada")
   val completada: Boolean = false,
 
-  @ColumnInfo(name = "sync_id", index = true)
+  @ColumnInfo(name = "sync_id")
   val syncId: String? = null,
 
   @ColumnInfo(name = "created_at")

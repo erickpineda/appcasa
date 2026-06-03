@@ -150,6 +150,66 @@ object Migrations {
   }
 
   /**
+   * Migración para añadir soporte multiusuario: código de hogar y auth_id.
+   */
+  val MIGRATION_17_18 = object : Migration(17, 18) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE hogares ADD COLUMN codigo_hogar TEXT")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_hogares_codigo_hogar ON hogares (codigo_hogar)")
+      db.execSQL("ALTER TABLE usuarios ADD COLUMN auth_id TEXT")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_usuarios_auth_id ON usuarios (auth_id)")
+    }
+  }
+
+  /**
+   * Migración para añadir atribución de autoría a tareas y gastos.
+   */
+  val MIGRATION_18_19 = object : Migration(18, 19) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE tareas ADD COLUMN created_by_id INTEGER")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_tareas_created_by_id ON tareas (created_by_id)")
+      db.execSQL("ALTER TABLE gastos ADD COLUMN created_by_id INTEGER")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_gastos_created_by_id ON gastos (created_by_id)")
+    }
+  }
+
+  /**
+   * Migración para añadir sync_id a las entidades restantes para sincronización total.
+   */
+  val MIGRATION_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE stock ADD COLUMN sync_id TEXT")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_stock_sync_id ON stock (sync_id)")
+      
+      db.execSQL("ALTER TABLE mantenimiento_hogar ADD COLUMN sync_id TEXT")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_mantenimiento_hogar_sync_id ON mantenimiento_hogar (sync_id)")
+      
+      db.execSQL("ALTER TABLE post_its ADD COLUMN sync_id TEXT")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_post_its_sync_id ON post_its (sync_id)")
+      
+      db.execSQL("ALTER TABLE recompensas ADD COLUMN sync_id TEXT")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_recompensas_sync_id ON recompensas (sync_id)")
+      
+      db.execSQL("ALTER TABLE documentos ADD COLUMN sync_id TEXT")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_documentos_sync_id ON documentos (sync_id)")
+
+      db.execSQL("ALTER TABLE gastos ADD COLUMN sync_id TEXT")
+      db.execSQL("CREATE INDEX IF NOT EXISTS index_gastos_sync_id ON gastos (sync_id)")
+    }
+  }
+
+  /**
+   * Migración para añadir is_active a usuarios para permitir multisesión local.
+   */
+  val MIGRATION_20_21 = object : Migration(20, 21) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE usuarios ADD COLUMN is_active INTEGER NOT NULL DEFAULT 0")
+      // Marcamos al primer usuario como activo para no romper sesiones existentes
+      db.execSQL("UPDATE usuarios SET is_active = 1 WHERE id = (SELECT id FROM usuarios LIMIT 1)")
+    }
+  }
+
+  /**
    * Lista de todas las migraciones registradas.
    */
   fun getAll(): Array<Migration> {
@@ -162,7 +222,11 @@ object Migrations {
       MIGRATION_13_14,
       MIGRATION_14_15,
       MIGRATION_15_16,
-      MIGRATION_16_17
+      MIGRATION_16_17,
+      MIGRATION_17_18,
+      MIGRATION_18_19,
+      MIGRATION_19_20,
+      MIGRATION_20_21
     )
   }
 }

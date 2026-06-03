@@ -18,7 +18,8 @@ import com.appcasa.features.settings.data.local.HogarEntity
         )
     ],
     indices = [
-        Index("hogar_id")
+        Index("hogar_id"),
+        Index("sync_id")
     ]
 )
 data class PostItEntity(
@@ -33,6 +34,9 @@ data class PostItEntity(
     
     @ColumnInfo(name = "color_hex")
     val colorHex: String = "#FFF9C4", // Amarillo post-it por defecto
+    
+    @ColumnInfo(name = "sync_id")
+    val syncId: String? = null,
     
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis()

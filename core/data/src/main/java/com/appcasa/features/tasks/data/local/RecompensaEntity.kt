@@ -18,7 +18,8 @@ import com.appcasa.features.settings.data.local.HogarEntity
         )
     ],
     indices = [
-        Index("hogar_id")
+        Index("hogar_id"),
+        Index("sync_id")
     ]
 )
 data class RecompensaEntity(
@@ -30,5 +31,8 @@ data class RecompensaEntity(
     val descripcion: String? = null,
     @ColumnInfo(name = "coste_puntos")
     val costePuntos: Int,
-    val icono: String = "card_giftcard" // Nombre del icono de Material
+    val icono: String = "card_giftcard", // Nombre del icono de Material
+    
+    @ColumnInfo(name = "sync_id")
+    val syncId: String? = null
 )

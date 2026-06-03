@@ -23,7 +23,9 @@ import com.appcasa.features.settings.data.local.HogarEntity
     ],
     indices = [
         Index("hogar_id"),
-        Index("fecha")
+        Index("fecha"),
+        Index("created_by_id"),
+        Index("sync_id")
     ]
 )
 data class ExpenseEntity(
@@ -51,6 +53,12 @@ data class ExpenseEntity(
 
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "created_by_id")
+    val createdById: Long? = null,
+
+    @ColumnInfo(name = "sync_id")
+    val syncId: String? = null,
 
     @ColumnInfo(name = "archived")
     val archived: Boolean = false

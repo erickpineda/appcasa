@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -124,13 +125,16 @@ class FinanceViewModel @Inject constructor(
 
   fun addExpense(concepto: String, importe: Double, categoria: String, fotoUri: String? = null) {
     viewModelScope.launch {
+      val currentUser = configuracionDao.getUsuarioActual().first()
+      
       expenseDao.insertExpense(
         ExpenseEntity(
           hogarId = householdId,
           concepto = concepto,
           importe = importe,
           categoria = categoria,
-          fotoUri = fotoUri
+          fotoUri = fotoUri,
+          createdById = currentUser?.id
         )
       )
     }

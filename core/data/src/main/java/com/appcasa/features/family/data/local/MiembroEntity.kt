@@ -25,7 +25,8 @@ import com.appcasa.features.settings.data.local.HogarEntity
   indices = [
     Index("hogar_id"),
     Index("tipo"),
-    Index("nombre")
+    Index("nombre"),
+    Index("sync_id")
   ]
 )
 data class MiembroEntity(
@@ -71,7 +72,7 @@ data class MiembroEntity(
   @ColumnInfo(name = "estado")
   val estado: String = EstadoGeneral.ACTIVO.name,
 
-  @ColumnInfo(name = "sync_id", index = true)
+  @ColumnInfo(name = "sync_id")
   val syncId: String? = null,
 
   @ColumnInfo(name = "created_at")

@@ -18,7 +18,9 @@ import com.appcasa.core.domain.model.RolHogar
   )],
   indices = [
     Index("hogar_id"),
-    Index("email", unique = true)
+    Index("email", unique = true),
+    Index("auth_id"),
+    Index("sync_id")
   ]
 )
 data class UsuarioEntity(
@@ -38,14 +40,21 @@ data class UsuarioEntity(
   @ColumnInfo(name = "avatar_url")
   val avatarUrl: String? = null,
 
+  // ID único del proveedor de autenticación (Firebase/Supabase)
+  @ColumnInfo(name = "auth_id")
+  val authId: String? = null,
+
   @ColumnInfo(name = "rol")
   val rol: String = RolHogar.COLABORADOR.name,
 
   @ColumnInfo(name = "estado")
   val estado: String = EstadoGeneral.ACTIVO.name,
 
-  @ColumnInfo(name = "sync_id", index = true)
+  @ColumnInfo(name = "sync_id")
   val syncId: String? = null,
+
+  @ColumnInfo(name = "is_active")
+  val isActive: Boolean = false,
 
   @ColumnInfo(name = "created_at")
   val createdAt: Long = System.currentTimeMillis(),

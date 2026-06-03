@@ -19,7 +19,8 @@ import com.appcasa.features.settings.data.local.HogarEntity
   indices = [
     Index("hogar_id"),
     Index("fecha"),
-    Index("tipo")
+    Index("tipo"),
+    Index("sync_id")
   ]
 )
 data class EventoEntity(
@@ -57,7 +58,7 @@ data class EventoEntity(
   @ColumnInfo(name = "repeticion_anual")
   val repeticionAnual: Boolean = false,
 
-  @ColumnInfo(name = "sync_id", index = true)
+  @ColumnInfo(name = "sync_id")
   val syncId: String? = null,
 
   @ColumnInfo(name = "created_at")

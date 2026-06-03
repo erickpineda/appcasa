@@ -9,6 +9,7 @@ import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.scheduler.ReminderScheduler
 import com.appcasa.features.family.data.local.MiembroDao
+import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
 import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.tasks.data.local.TareaDao
@@ -89,6 +90,9 @@ class TasksViewModel @Inject constructor(
   val subTaskCounts: StateFlow<Map<Long, Pair<Int, Int>>> = tareaDao.getAllCheckItemsCounts(householdId)
     .map { list -> list.associate { it.taskId to (it.total to it.completed) } }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+  val familyMembers: StateFlow<List<MiembroEntity>> = miembroDao.getMiembrosByHogar(householdId)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   fun toggleTaskCompletion(tarea: TareaEntity) {
     viewModelScope.launch {

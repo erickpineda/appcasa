@@ -4,6 +4,7 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.hilt)
   alias(libs.plugins.ksp)
+  // alias(libs.plugins.google.services) // Requiere el archivo google-services.json en la carpeta /app
 }
 
 android {
@@ -94,6 +95,12 @@ dependencies {
 
   // ─── Coroutines ───────────────────────────────────────
   implementation(libs.coroutines.android)
+
+  // ─── Firebase ─────────────────────────────────────────
+  implementation(platform(libs.firebase.bom))
+  implementation(libs.firebase.auth)
+  implementation(libs.firebase.firestore)
+  implementation(libs.firebase.messaging)
 
   // ─── Módulos Locales ──────────────────────────────────
   implementation(project(":core:ui"))

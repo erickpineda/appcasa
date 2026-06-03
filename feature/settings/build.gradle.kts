@@ -45,6 +45,7 @@ dependencies {
 
     // Navigation
     implementation(libs.navigation.compose)
+    implementation(libs.coil.compose)
 
     // Hilt
     implementation(libs.hilt.android)

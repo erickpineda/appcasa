@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -25,12 +26,15 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -53,7 +57,8 @@ import com.appcasa.features.presentation.screen.FamilyHubScreen
 import com.appcasa.features.presentation.screen.HomeMaintenanceScreen
 import com.appcasa.features.presentation.screen.MaintenanceDetailScreen
 import com.appcasa.features.presentation.screen.ManagementHubScreen
-import com.appcasa.features.settings.presentation.screen.SettingsScreen
+import com.appcasa.features.presentation.screen.SettingsScreen
+import com.appcasa.features.settings.presentation.screen.HouseSetupScreen
 import com.appcasa.features.tasks.presentation.screen.AddTaskScreen
 import com.appcasa.features.tasks.presentation.screen.RewardStoreScreen
 import com.appcasa.features.tasks.presentation.screen.TaskDetailScreen
@@ -71,19 +76,42 @@ import com.appcasa.features.utilities.presentation.screen.SmartSafeScreen
 import com.appcasa.features.utilities.presentation.screen.UtilitiesScreen
 import com.appcasa.features.utilities.presentation.screen.VehicleManagementScreen
 import com.appcasa.features.utilities.presentation.screen.WifiQRScreen
+import com.appcasa.presentation.viewmodel.GlobalViewModel
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+  globalViewModel: GlobalViewModel = hiltViewModel()
+) {
   val navController = rememberNavController()
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentDestination = navBackStackEntry?.destination
   
+  val isHouseholdSetup by globalViewModel.isHouseholdSetup.collectAsState()
   val isKeyboardVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() > 0.dp
+
+  LaunchedEffect(isHouseholdSetup) {
+      if (isHouseholdSetup == false) {
+          navController.navigate(Screen.HouseSetup.route) {
+              // Limpiamos el stack pero permitimos que HouseSetup sea la raíz
+              popUpTo(navController.graph.startDestinationId) { inclusive = true }
+          }
+      }
+  }
+
+  if (isHouseholdSetup == null) {
+      // Pantalla de carga mientras determinamos el estado del hogar
+      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          CircularProgressIndicator()
+      }
+      return
+  }
+
+  val showBottomBar = currentDestination?.route !in listOf(Screen.HouseSetup.route, Screen.Auth.route) && isHouseholdSetup == true
 
   Scaffold(
     bottomBar = {
       AnimatedVisibility(
-        visible = !isKeyboardVisible,
+        visible = !isKeyboardVisible && showBottomBar,
         enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
         exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
       ) {
@@ -166,16 +194,19 @@ fun AppNavigation() {
   ) { innerPadding ->
     NavHost(
       navController = navController,
-      startDestination = Screen.Dashboard.route,
+      startDestination = if (isHouseholdSetup == false) Screen.HouseSetup.route else Screen.Dashboard.route,
       modifier = Modifier
         .fillMaxSize()
-        .padding(bottom = if (isKeyboardVisible) 0.dp else innerPadding.calculateBottomPadding())
+        .padding(bottom = if (isKeyboardVisible || !showBottomBar) 0.dp else innerPadding.calculateBottomPadding())
         .padding(top = innerPadding.calculateTopPadding()),
       enterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f, animationSpec = tween(300)) },
       exitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 1.05f, animationSpec = tween(200)) },
       popEnterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 1.05f, animationSpec = tween(300)) },
       popExitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 0.95f, animationSpec = tween(200)) }
     ) {
+      composable(Screen.HouseSetup.route) { HouseSetupScreen(navController = navController) }
+      composable(Screen.Auth.route) { /* TODO */ }
+
       composable(Screen.Dashboard.route) {
         DashboardScreen(navController = navController)
       }

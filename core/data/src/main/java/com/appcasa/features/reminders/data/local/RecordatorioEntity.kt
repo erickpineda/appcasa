@@ -19,7 +19,8 @@ import com.appcasa.features.settings.data.local.HogarEntity
   indices = [
     Index("hogar_id"),
     Index("fecha_hora"),
-    Index("activo")
+    Index("activo"),
+    Index("sync_id")
   ]
 )
 data class RecordatorioEntity(
@@ -62,7 +63,7 @@ data class RecordatorioEntity(
   @ColumnInfo(name = "activo")
   val activo: Boolean = true,
 
-  @ColumnInfo(name = "sync_id", index = true)
+  @ColumnInfo(name = "sync_id")
   val syncId: String? = null,
 
   @ColumnInfo(name = "created_at")

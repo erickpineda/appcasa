@@ -74,12 +74,15 @@ fun TasksScreen(
   viewModel: TasksViewModel = hiltViewModel()
 ) {
   val tasks by viewModel.tasks.collectAsState()
+  val members by viewModel.familyMembers.collectAsState()
   val isCompact by viewModel.isCompactView.collectAsState()
   val showCelebration by viewModel.showCelebration.collectAsState()
   val gainedXP by viewModel.gainedXP.collectAsState()
   val subTaskCounts by viewModel.subTaskCounts.collectAsState()
   var toastMessage by remember { mutableStateOf<String?>(null) }
   var taskToArchive by remember { mutableStateOf<TareaEntity?>(null) }
+  
+  val memberMap = remember(members) { members.associate { it.id to it.nombre } }
 
   LaunchedEffect(Unit) {
     viewModel.toastEvent.collect { message ->
@@ -104,6 +107,7 @@ fun TasksScreen(
           tasks = tasks,
           isCompact = isCompact,
           subTaskCounts = subTaskCounts,
+          memberMap = memberMap,
           onAddTask = { navController.navigate(Screen.AddTask.route) },
           onToggleTask = { viewModel.toggleTaskCompletion(it) },
           onDeleteTask = { taskToArchive = it },
@@ -133,6 +137,7 @@ fun TasksContent(
   tasks: List<TareaEntity>,
   isCompact: Boolean,
   subTaskCounts: Map<Long, Pair<Int, Int>>,
+  memberMap: Map<Long, String>,
   onAddTask: () -> Unit,
   onToggleTask: (TareaEntity) -> Unit,
   onDeleteTask: (TareaEntity) -> Unit,
@@ -191,7 +196,8 @@ fun TasksContent(
             onDelete = { onDeleteTask(tarea) },
             onClick = { onTaskClick(tarea) },
             onUpdate = { onUpdateTask(tarea, it) },
-            subTaskInfo = subTaskCounts[tarea.id] ?: (0 to 0)
+            subTaskInfo = subTaskCounts[tarea.id] ?: (0 to 0),
+            creatorName = tarea.createdById?.let { memberMap[it] }
           )
         }
       }
@@ -209,7 +215,8 @@ fun TasksContent(
             onDelete = { onDeleteTask(tarea) },
             onClick = { onTaskClick(tarea) },
             onUpdate = { onUpdateTask(tarea, it) },
-            subTaskInfo = subTaskCounts[tarea.id] ?: (0 to 0)
+            subTaskInfo = subTaskCounts[tarea.id] ?: (0 to 0),
+            creatorName = tarea.createdById?.let { memberMap[it] }
           )
         }
       }
@@ -236,7 +243,8 @@ fun TaskItem(
   onDelete: () -> Unit,
   onClick: () -> Unit,
   onUpdate: (String) -> Unit,
-  subTaskInfo: Pair<Int, Int> = 0 to 0
+  subTaskInfo: Pair<Int, Int> = 0 to 0,
+  creatorName: String? = null
 ) {
   val isCompleted = tarea.estado == EstadoTarea.COMPLETADA.name
   var isEditing by remember { mutableStateOf(false) }
@@ -326,6 +334,14 @@ fun TaskItem(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+
+                if (creatorName != null && !isCompact) {
+                  Text(
+                    text = " • $creatorName",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                  )
                 }
             }
           }

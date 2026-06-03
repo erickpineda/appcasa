@@ -20,7 +20,8 @@ import com.appcasa.features.settings.data.local.HogarEntity
     indices = [
         Index("hogar_id"),
         Index("fecha_realizacion"),
-        Index("proxima_revision")
+        Index("proxima_revision"),
+        Index("sync_id")
     ]
 )
 data class MaintenanceEntity(
@@ -50,6 +51,9 @@ data class MaintenanceEntity(
     
     @ColumnInfo(name = "fotos_json")
     val fotosJson: String? = null, // Lista de URIs en formato JSON
+
+    @ColumnInfo(name = "sync_id")
+    val syncId: String? = null,
 
     @ColumnInfo(name = "archived")
     val archived: Boolean = false

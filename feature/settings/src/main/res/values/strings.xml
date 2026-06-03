@@ -20,6 +20,8 @@
     <string name="settings_dark_mode_subtitle">Cambiar el tema de la aplicación</string>
     <string name="settings_notifications_title">Notificaciones</string>
     <string name="settings_notifications_subtitle">Recibir avisos de tareas y eventos</string>
+    <string name="settings_partner_notifications_title">Notificaciones de Pareja</string>
+    <string name="settings_partner_notifications_subtitle">Avisar cuando mi pareja haga cambios</string>
     <string name="settings_compact_view_title">Vista Compacta</string>
     <string name="settings_compact_view_subtitle">Mostrar listas con menos espacio</string>
     <string name="settings_currency_title">Moneda Local</string>
@@ -41,4 +43,22 @@
     <string name="settings_btn_cancel">Cancelar</string>
     <string name="settings_btn_close">Cerrar</string>
     <string name="settings_list_not_selected">No seleccionada</string>
+
+    <!-- House Setup Screen -->
+    <string name="setup_welcome_title">Bienvenido a AppCasa</string>
+    <string name="setup_welcome_desc">La aplicación para gestionar tu hogar en pareja de forma colaborativa y divertida.</string>
+    <string name="setup_btn_create_house">Crear un Nuevo Hogar</string>
+    <string name="setup_btn_join_house">Unirme a un Hogar</string>
+    <string name="setup_join_title">Unirse con Código</string>
+    <string name="setup_join_desc">Introduce el código que te ha facilitado tu pareja (ej: CASA-7X2W).</string>
+    <string name="setup_label_code">Código de Invitación</string>
+    <string name="setup_btn_join">Vincular mi cuenta</string>
+    <string name="setup_create_title">Nombre de tu Hogar</string>
+    <string name="setup_create_desc">Este nombre será visible para todos los miembros de la casa.</string>
+    <string name="setup_label_house_name">Ej: Villa Alegría, Nuestra Casa…</string>
+    <string name="setup_btn_finish">Empezar a colaborar</string>
+    <string name="setup_error_invalid_code">Código no válido o no encontrado.</string>
+    <string name="setup_success_linked">¡Hogar vinculado con éxito!</string>
+    <string name="settings_profile_change_photo">Cambiar foto de perfil</string>
+    <string name="settings_profile_name_hint">¿Cómo te llamas?</string>
 </resources>

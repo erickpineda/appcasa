@@ -88,6 +88,9 @@ class DashboardViewModel @Inject constructor(
     .flatMapLatest { id -> miembroDao.getMiembrosByHogar(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+  val currentUser: StateFlow<UsuarioEntity?> = configuracionDao.getUsuarioActual()
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
   val petData: StateFlow<Pair<String, String>> = familyMembers
     .map { miembros ->
         val mascotas = miembros.filter { it.tipo != TipoMiembro.PERSONA.name }

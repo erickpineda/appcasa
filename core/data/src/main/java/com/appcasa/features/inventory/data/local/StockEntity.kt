@@ -24,7 +24,8 @@ import com.appcasa.features.settings.data.local.HogarEntity
     indices = [
         Index("hogar_id"),
         Index("categoria"),
-        Index("nombre")
+        Index("nombre"),
+        Index("sync_id")
     ]
 )
 data class StockEntity(
@@ -52,6 +53,9 @@ data class StockEntity(
 
     @ColumnInfo(name = "auto_comprar")
     val autoComprar: Boolean = true,
+
+    @ColumnInfo(name = "sync_id")
+    val syncId: String? = null,
 
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long = System.currentTimeMillis()

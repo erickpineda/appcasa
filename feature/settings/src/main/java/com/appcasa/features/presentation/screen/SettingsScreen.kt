@@ -1,5 +1,8 @@
-package com.appcasa.features.settings.presentation.screen
+package com.appcasa.features.presentation.screen
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,19 +15,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Compress
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Warning
@@ -33,6 +41,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +61,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -59,9 +72,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
+import com.appcasa.core.data.utils.FileUtils
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.theme.AppCasaTheme
+import com.appcasa.core.ui.utils.QRUtils
 import com.appcasa.feature.settings.R
 import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.presentation.viewmodel.DashboardViewModel
@@ -80,6 +96,16 @@ fun SettingsScreen(
   val configs by settingsViewModel.configuraciones.collectAsState()
   val listas by settingsViewModel.todasLasListas.collectAsState()
   
+  val context = LocalContext.current
+  val imagePickerLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.GetContent()
+  ) { uri ->
+    uri?.let {
+      val localPath = FileUtils.saveImageLocally(context, it.toString())
+      settingsViewModel.updateUsuario(usuario?.nombre ?: "", localPath)
+    }
+  }
+
   var seedStatus by remember { mutableStateOf<String?>(null) }
   var showSeedConfirm by remember { mutableStateOf(false) }
 
@@ -128,13 +154,17 @@ fun SettingsScreen(
     SettingsContent(
       modifier = Modifier.weight(1f),
       userName = usuario?.nombre ?: "Usuario",
+      userAvatar = usuario?.avatarUrl,
       householdName = hogar?.nombre ?: "Mi Hogar",
+      householdCode = hogar?.codigoHogar ?: "---",
       configs = configs,
       listas = listas,
       onUpdateName = { settingsViewModel.updateUsuario(it) },
+      onUpdateAvatar = { imagePickerLauncher.launch("image/*") },
       onUpdateHouseholdName = { settingsViewModel.updateHogar(it) },
       onUpdateConfig = { clave, valor -> settingsViewModel.updateConfig(clave, valor) },
-      onSeedData = { showSeedConfirm = true }
+      onSeedData = { showSeedConfirm = true },
+      onLogout = { settingsViewModel.logout() }
     )
   }
 }
@@ -143,13 +173,17 @@ fun SettingsScreen(
 fun SettingsContent(
   modifier: Modifier = Modifier,
   userName: String,
+  userAvatar: String?,
   householdName: String,
+  householdCode: String,
   configs: Map<String, String>,
   listas: List<ListaEntity>,
   onUpdateName: (String) -> Unit,
+  onUpdateAvatar: () -> Unit,
   onUpdateHouseholdName: (String) -> Unit,
   onUpdateConfig: (String, String) -> Unit,
-  onSeedData: () -> Unit
+  onSeedData: () -> Unit,
+  onLogout: () -> Unit
 ) {
   val darkMode = configs["tema_oscuro"] == "true"
   val notificationsEnabled = configs["notif_activas"] != "false"
@@ -205,14 +239,47 @@ fun SettingsContent(
     verticalArrangement = Arrangement.spacedBy(8.dp)
   ) {
     item { SettingsSectionHeader(stringResource(R.string.settings_section_profile)) }
+    
+    // User Profile Item
     item {
-      SettingsItem(
-        icon = Icons.Default.Person,
-        title = stringResource(R.string.settings_user_name_title),
-        subtitle = userName,
-        onClick = { showNameDialog = true }
-      )
+      AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
+        Row(
+          modifier = Modifier.padding(16.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+          Box(
+            modifier = Modifier
+              .size(64.dp)
+              .clip(CircleShape)
+              .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+              .clickable { onUpdateAvatar() },
+            contentAlignment = Alignment.Center
+          ) {
+            if (userAvatar != null) {
+              AsyncImage(
+                model = userAvatar,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+              )
+            } else {
+              Icon(Icons.Default.Person, null, modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
+            }
+          }
+          
+          Column(modifier = Modifier.weight(1f).clickable { showNameDialog = true }) {
+            Text(userName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.settings_user_name_title), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+          }
+          
+          IconButton(onClick = { onUpdateAvatar() }) {
+            Icon(Icons.Default.PhotoCamera, contentDescription = stringResource(R.string.settings_profile_change_photo), modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+          }
+        }
+      }
     }
+
     item {
       SettingsItem(
         icon = Icons.Default.Home,
@@ -220,6 +287,31 @@ fun SettingsContent(
         subtitle = householdName,
         onClick = { showHogarDialog = true }
       )
+    }
+    
+    item {
+      AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
+        Row(
+          modifier = Modifier.padding(16.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+          Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.setup_label_code), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+            Text(householdCode, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
+            Text(stringResource(R.string.setup_join_desc), style = MaterialTheme.typography.bodySmall)
+          }
+          
+          val qr = remember(householdCode) { QRUtils.generateQRCode(householdCode, 200) }
+          qr?.let {
+            androidx.compose.foundation.Image(
+              bitmap = it.asImageBitmap(),
+              contentDescription = "House Code QR",
+              modifier = Modifier.size(80.dp)
+            )
+          }
+        }
+      }
     }
 
     item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
@@ -241,6 +333,17 @@ fun SettingsContent(
         subtitle = stringResource(R.string.settings_notifications_subtitle),
         checked = notificationsEnabled,
         onCheckedChange = { onUpdateConfig("notif_activas", it.toString()) }
+      )
+    }
+
+    val partnerNotifsEnabled = configs["notif_pareja"] != "false"
+    item {
+      SettingsToggleItem(
+        icon = Icons.Default.Groups,
+        title = stringResource(R.string.settings_partner_notifications_title),
+        subtitle = stringResource(R.string.settings_partner_notifications_subtitle),
+        checked = partnerNotifsEnabled,
+        onCheckedChange = { onUpdateConfig("notif_pareja", it.toString()) }
       )
     }
     item {
@@ -291,6 +394,15 @@ fun SettingsContent(
         title = stringResource(R.string.settings_seed_data_title),
         subtitle = stringResource(R.string.settings_seed_data_subtitle),
         onClick = onSeedData
+      )
+    }
+
+    item {
+      SettingsItem(
+        icon = Icons.AutoMirrored.Filled.Logout,
+        title = "Cerrar Sesión",
+        subtitle = "Salir de este perfil y volver a la configuración",
+        onClick = onLogout
       )
     }
     
@@ -469,13 +581,17 @@ fun SettingsPreview() {
   AppCasaTheme {
     SettingsContent(
       userName = "Juan",
+      userAvatar = null,
       householdName = "Villa Casa",
+      householdCode = "CASA-1234",
       configs = emptyMap(),
       listas = emptyList(),
       onUpdateName = {},
+      onUpdateAvatar = {},
       onUpdateHouseholdName = {},
       onUpdateConfig = { _, _ -> },
-      onSeedData = {}
+      onSeedData = {},
+      onLogout = {}
     )
   }
 }

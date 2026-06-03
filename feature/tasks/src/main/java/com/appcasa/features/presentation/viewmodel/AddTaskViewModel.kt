@@ -16,6 +16,7 @@ import com.appcasa.features.tasks.data.local.TareaEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,6 +51,8 @@ class AddTaskViewModel @Inject constructor(
     tipoContenido: TipoContenidoTarea = TipoContenidoTarea.LISTA
   ) {
     viewModelScope.launch {
+      val currentUser = configuracionDao.getUsuarioActual().first()
+
       val tareaId = tareaDao.insertTarea(
         TareaEntity(
           hogarId = householdId,
@@ -60,7 +63,8 @@ class AddTaskViewModel @Inject constructor(
           fotoUri = fotoUri,
           fechaLimite = fechaLimite,
           periodicidad = periodicidad.name,
-          anticipacionMins = anticipacionMins
+          anticipacionMins = anticipacionMins,
+          createdById = currentUser?.id
         )
       )
       

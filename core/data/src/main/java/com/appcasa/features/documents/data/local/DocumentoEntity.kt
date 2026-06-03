@@ -19,7 +19,8 @@ import com.appcasa.features.settings.data.local.HogarEntity
   ],
   indices = [
     Index("hogar_id"),
-    Index("categoria")
+    Index("categoria"),
+    Index("sync_id")
   ]
 )
 data class DocumentoEntity(
@@ -43,6 +44,9 @@ data class DocumentoEntity(
 
   @ColumnInfo(name = "url_nube")
   val urlNube: String? = null,
+
+  @ColumnInfo(name = "sync_id")
+  val syncId: String? = null,
 
   @ColumnInfo(name = "sincronizado")
   val sincronizado: Boolean = false,

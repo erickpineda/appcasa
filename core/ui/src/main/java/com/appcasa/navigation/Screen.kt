@@ -10,6 +10,10 @@ import com.appcasa.core.ui.R
 
 sealed class Screen(val route: String) {
 
+  // ─── Flujo de Bienvenida y Colaboración ────────────
+  data object Auth       : Screen("auth")
+  data object HouseSetup : Screen("house_setup")
+
   // ─── Destinos del menú inferior (Los 4 Pilares) ─────
   data object Dashboard  : Screen("dashboard")
   data object Management : Screen("management") // Fusión Tareas + Listas
