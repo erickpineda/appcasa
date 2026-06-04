@@ -199,7 +199,7 @@ private fun HouseSetupContent(
                     SetupStep.WELCOME -> WelcomeStep(
                         onCreateClick = { onStepChange(SetupStep.CREATE) },
                         onJoinClick = { onStepChange(SetupStep.JOIN) },
-                        onLoginClick = { onStepChange(SetupStep.SELECT_PROFILE) },
+                        onLoginClick = if (existingHousehold != null) { { onStepChange(SetupStep.SELECT_PROFILE) } } else null,
                         householdName = existingHousehold?.nombre
                     )
                     SetupStep.CREATE -> CreateStep(
@@ -232,7 +232,10 @@ private fun HouseSetupContent(
                         members = householdMembers,
                         onMemberClick = onSelectMember,
                         onAddProfileClick = { onStepChange(SetupStep.ADD_PROFILE) },
-                        onResetAll = onResetAll
+                        onResetAll = {
+                            onResetAll()
+                            onStepChange(SetupStep.WELCOME)
+                        }
                     )
                     SetupStep.ADD_PROFILE -> AddProfileStep(
                         userName = inputUserName,
