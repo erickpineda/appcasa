@@ -2,7 +2,10 @@ package com.appcasa.features.settings.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.model.RolHogar
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
+import com.appcasa.core.ui.utils.HouseCodeUtils
+import com.appcasa.features.family.data.local.MiembroDao
 import com.appcasa.features.lists.data.local.ListaDao
 import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
@@ -16,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,6 +28,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val configuracionDao: ConfiguracionDao,
     private val listaDao: ListaDao,
+    private val miembroDao: MiembroDao,
     private val householdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
@@ -32,6 +37,9 @@ class SettingsViewModel @Inject constructor(
 
     val usuarioActual: StateFlow<UsuarioEntity?> = configuracionDao.getUsuarioActual()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val isAdmin: StateFlow<Boolean> = usuarioActual.map { it?.rol == RolHogar.ADMIN.name }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val todasLasListas: StateFlow<List<ListaEntity>> = hogarActual.flatMapLatest { hogar ->
@@ -69,12 +77,36 @@ class SettingsViewModel @Inject constructor(
     fun updateUsuario(nombre: String, avatarUrl: String? = null) {
         viewModelScope.launch {
             val usuario = usuarioActual.value ?: return@launch
+            
+            // 1. Actualizar Usuario (Perfil)
             configuracionDao.insertUsuario(
                 usuario.copy(
                     nombre = nombre,
                     avatarUrl = avatarUrl ?: usuario.avatarUrl
                 )
             )
+
+            // 2. Sincronizar con Miembro si existe el vínculo
+            usuario.miembroId?.let { id ->
+                val miembro = miembroDao.getMiembroById(id)
+                miembro?.let {
+                    miembroDao.updateMiembro(it.copy(
+                        nombre = nombre,
+                        fotoUri = avatarUrl ?: it.fotoUri
+                    ))
+                }
+            }
+        }
+    }
+
+    fun regenerateHouseCode() {
+        viewModelScope.launch {
+            val hogar = hogarActual.value ?: return@launch
+            if (isAdmin.value) {
+                val newCode = HouseCodeUtils.generateHouseCode()
+                configuracionDao.updateCodigoHogar(hogar.id, newCode)
+                // TODO: Enviar notificación a otros miembros vía Firebase/WorkManager
+            }
         }
     }
 

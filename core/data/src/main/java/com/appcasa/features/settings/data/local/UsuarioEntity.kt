@@ -53,6 +53,9 @@ data class UsuarioEntity(
   @ColumnInfo(name = "sync_id")
   val syncId: String? = null,
 
+  @ColumnInfo(name = "miembro_id")
+  val miembroId: Long? = null,
+
   @ColumnInfo(name = "is_active")
   val isActive: Boolean = false,
 

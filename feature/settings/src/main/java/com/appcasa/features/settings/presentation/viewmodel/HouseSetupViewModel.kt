@@ -53,7 +53,7 @@ class HouseSetupViewModel @Inject constructor(
             val hogarId = configuracionDao.insertHogar(hogar)
             
             // 2. Crear Miembro (para XP y Ranking)
-            miembroDao.insertMiembro(
+            val miembroId = miembroDao.insertMiembro(
                 MiembroEntity(
                     hogarId = hogarId,
                     nombre = userName,
@@ -67,6 +67,7 @@ class HouseSetupViewModel @Inject constructor(
             configuracionDao.insertUsuario(
                 UsuarioEntity(
                     hogarId = hogarId,
+                    miembroId = miembroId,
                     nombre = userName,
                     email = "usuario@appcasa.local",
                     rol = RolHogar.ADMIN.name,
@@ -83,12 +84,25 @@ class HouseSetupViewModel @Inject constructor(
     fun joinHousehold(code: String, userName: String, photoUri: String?) {
         viewModelScope.launch {
             // TODO: Integración real con la nube para descargar datos del hogar usando 'code'
-            val dummyHogarId = existingHousehold.value?.id ?: 1L
+            val existing = existingHousehold.value
+            val hogarId = existing?.id ?: 1L
             
+            // 1. Crear Miembro
+            val miembroId = miembroDao.insertMiembro(
+                MiembroEntity(
+                    hogarId = hogarId,
+                    nombre = userName,
+                    tipo = TipoMiembro.PERSONA.name,
+                    fotoUri = photoUri
+                )
+            )
+
+            // 2. Crear Usuario
             configuracionDao.deactivateAllUsers()
             configuracionDao.insertUsuario(
                 UsuarioEntity(
-                    hogarId = dummyHogarId,
+                    hogarId = hogarId,
+                    miembroId = miembroId,
                     nombre = userName,
                     email = "colaborador@appcasa.local",
                     rol = RolHogar.COLABORADOR.name,
@@ -96,17 +110,8 @@ class HouseSetupViewModel @Inject constructor(
                     isActive = true
                 )
             )
-            
-            miembroDao.insertMiembro(
-                MiembroEntity(
-                    hogarId = dummyHogarId,
-                    nombre = userName,
-                    tipo = TipoMiembro.PERSONA.name,
-                    fotoUri = photoUri
-                )
-            )
 
-            householdProvider.setHouseholdId(dummyHogarId)
+            householdProvider.setHouseholdId(hogarId)
             _setupEvent.emit(SetupResult.Success)
         }
     }
@@ -117,9 +122,10 @@ class HouseSetupViewModel @Inject constructor(
             configuracionDao.insertUsuario(
                 UsuarioEntity(
                     hogarId = member.hogarId,
+                    miembroId = member.id,
                     nombre = member.nombre,
                     email = "usuario@appcasa.local",
-                    rol = RolHogar.COLABORADOR.name,
+                    rol = RolHogar.COLABORADOR.name, // Por defecto colaborador al seleccionar
                     avatarUrl = member.fotoUri,
                     isActive = true
                 )

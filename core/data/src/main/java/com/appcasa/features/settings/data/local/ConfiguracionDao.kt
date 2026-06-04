@@ -29,6 +29,9 @@ interface ConfiguracionDao {
     @Query("UPDATE usuarios SET is_active = 1 WHERE id = :userId")
     suspend fun activateUser(userId: Long)
 
+    @Query("UPDATE hogares SET codigo_hogar = :newCode WHERE id = :hogarId")
+    suspend fun updateCodigoHogar(hogarId: Long, newCode: String)
+
     @Query("SELECT * FROM configuracion WHERE hogar_id = :hogarId")
     fun getConfiguracion(hogarId: Long): Flow<List<ConfiguracionEntity>>
 

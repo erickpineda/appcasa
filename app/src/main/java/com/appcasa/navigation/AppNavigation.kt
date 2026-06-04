@@ -26,7 +26,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,6 +38,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.appcasa.features.calendar.presentation.screen.CalendarScreen
 import com.appcasa.features.family.presentation.screen.AddMemberScreen
@@ -89,18 +89,11 @@ fun AppNavigation(
   val isHouseholdSetup by globalViewModel.isHouseholdSetup.collectAsState()
   val isKeyboardVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() > 0.dp
 
-  LaunchedEffect(isHouseholdSetup) {
-      if (isHouseholdSetup == false) {
-          navController.navigate(Screen.HouseSetup.route) {
-              // Limpiamos el stack pero permitimos que HouseSetup sea la raíz
-              popUpTo(navController.graph.startDestinationId) { inclusive = true }
-          }
-      }
-  }
-
   if (isHouseholdSetup == null) {
-      // Pantalla de carga mientras determinamos el estado del hogar
-      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+      Box(
+          modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), 
+          contentAlignment = Alignment.Center
+      ) {
           CircularProgressIndicator()
       }
       return
@@ -110,86 +103,12 @@ fun AppNavigation(
 
   Scaffold(
     bottomBar = {
-      AnimatedVisibility(
-        visible = !isKeyboardVisible && showBottomBar,
-        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
-      ) {
-        NavigationBar(
-            containerColor = MaterialTheme.colorScheme.surface,
-            tonalElevation = 8.dp
-        ) {
-          bottomNavItems.forEach { item ->
-            // ... (existing selection logic)
-            val isManagementTab = item.screen == Screen.Management && currentDestination?.route in listOf(
-              Screen.Management.route, Screen.Tasks.route, Screen.Lists.route, 
-              Screen.ListDetail.route, Screen.Inventory.route, Screen.AddTask.route, Screen.TaskDetail.route,
-              Screen.HomeMaintenance.route
-            )
-            val isFamilyTab = item.screen == Screen.FamilyHub && currentDestination?.route in listOf(
-              Screen.FamilyHub.route, Screen.Family.route, Screen.Calendar.route, 
-              Screen.PetDetail.route, Screen.MemberDetail.route, Screen.EditMember.route, Screen.AddMember.route
-            )
-            val isUtilitiesTab = item.screen == Screen.Utilities && currentDestination?.route in listOf(
-              Screen.Utilities.route, Screen.DosageCalculator.route, Screen.BMICalculator.route, 
-              Screen.MortgageCalculator.route, Screen.AgeCalculator.route, Screen.ConsumptionCalculator.route, 
-              Screen.SavingsCalculator.route, Screen.Expenses.route, Screen.VehicleManager.route,
-              Screen.SmartSafe.route, Screen.PhotoToPdf.route
-            )
-            val isDashboardTab = item.screen == Screen.Dashboard && currentDestination?.route == Screen.Dashboard.route
-
-            val selected = isDashboardTab || isManagementTab || isFamilyTab || isUtilitiesTab
-            val label = stringResource(item.labelRes)
-
-            NavigationBarItem(
-              selected = selected,
-              onClick = {
-                // ... (existing click logic)
-                val isAtHub = currentDestination?.route == item.screen.route
-                if (isAtHub) {
-                  // Ya estamos en la raíz de la pestaña, no hacemos nada
-                } else if (selected) {
-                  // Estamos en una sub-pantalla de esta sección, intentamos volver a su Hub
-                  val popped = navController.popBackStack(item.screen.route, inclusive = false)
-                  if (!popped) {
-                    // Si no estaba en el stack (ej: navegación directa), forzamos ir al Hub
-                    navController.navigate(item.screen.route) {
-                      popUpTo(navController.graph.findStartDestination().id) { saveState = false }
-                      launchSingleTop = true
-                      restoreState = false
-                    }
-                  }
-                } else {
-                  // Vamos a una pestaña diferente: siempre a su pantalla principal (Hub)
-                  navController.navigate(item.screen.route) {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                      saveState = false
-                    }
-                    launchSingleTop = true
-                    restoreState = false // Esto evita que se restaure la sub-pantalla anterior
-                  }
-                }
-              },
-              icon = {
-                  Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                      Icon(item.icon, contentDescription = label)
-                      AnimatedVisibility(visible = selected) {
-                          Box(
-                              modifier = Modifier
-                                  .padding(top = 4.dp)
-                                  .size(4.dp)
-                                  .clip(CircleShape)
-                                  .background(MaterialTheme.colorScheme.primary)
-                          )
-                      }
-                  }
-              },
-              label = { if (selected) Text(label) },
-              alwaysShowLabel = false
-            )
-          }
-        }
-      }
+      AppBottomBar(
+        navController = navController,
+        currentDestination = currentDestination,
+        showBottomBar = showBottomBar,
+        isKeyboardVisible = isKeyboardVisible
+      )
     }
   ) { innerPadding ->
     NavHost(
@@ -199,7 +118,16 @@ fun AppNavigation(
         .fillMaxSize()
         .padding(bottom = if (isKeyboardVisible || !showBottomBar) 0.dp else innerPadding.calculateBottomPadding())
         .padding(top = innerPadding.calculateTopPadding()),
-      enterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f, animationSpec = tween(300)) },
+      enterTransition = { 
+        if (targetState.destination.route == Screen.Dashboard.route || 
+            targetState.destination.route == Screen.Management.route ||
+            targetState.destination.route == Screen.FamilyHub.route ||
+            targetState.destination.route == Screen.Utilities.route) {
+          fadeIn(animationSpec = tween(400))
+        } else {
+          fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f, animationSpec = tween(300)) 
+        }
+      },
       exitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 1.05f, animationSpec = tween(200)) },
       popEnterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 1.05f, animationSpec = tween(300)) },
       popExitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 0.95f, animationSpec = tween(200)) }
@@ -207,84 +135,166 @@ fun AppNavigation(
       composable(Screen.HouseSetup.route) { HouseSetupScreen(navController = navController) }
       composable(Screen.Auth.route) { /* TODO */ }
 
-      composable(Screen.Dashboard.route) {
-        DashboardScreen(navController = navController)
-      }
-      composable(Screen.Management.route) {
-        ManagementHubScreen(navController = navController)
-      }
-      composable(Screen.FamilyHub.route) {
-        FamilyHubScreen(navController = navController)
-      }
-      composable(Screen.Utilities.route) {
-        UtilitiesScreen(navController = navController)
-      }
-      composable(Screen.Settings.route) {
-        SettingsScreen(navController = navController, innerPadding = innerPadding)
-      }
-      
-      composable(Screen.Tasks.route) { TasksScreen(navController = navController) }
-      composable(Screen.Calendar.route) { CalendarScreen(navController = navController) }
-      composable(Screen.Family.route) { FamilyScreen(navController = navController) }
-      composable(Screen.Lists.route) { ListsScreen(navController = navController) }
-      
-      composable(
-        route = Screen.PetDetail.route,
-        arguments = listOf(androidx.navigation.navArgument("petId") { type = androidx.navigation.NavType.LongType })
-      ) { PetDetailScreen(navController = navController) }
+      composable(Screen.Dashboard.route) { DashboardScreen(navController = navController) }
 
-      composable(
-        route = Screen.TaskDetail.route,
-        arguments = listOf(androidx.navigation.navArgument("taskId") { type = androidx.navigation.NavType.LongType })
-      ) { TaskDetailScreen(navController = navController) }
+      // --- Gestión (Management) ---
+      navigation(
+        startDestination = Screen.Management.route,
+        route = "management_graph"
+      ) {
+        composable(Screen.Management.route) { ManagementHubScreen(navController = navController) }
+        composable(Screen.Tasks.route) { TasksScreen(navController = navController) }
+        composable(Screen.Lists.route) { ListsScreen(navController = navController) }
+        composable(Screen.Inventory.route) { StockScreen(navController = navController) }
+        composable(Screen.AddTask.route) { AddTaskScreen(navController = navController) }
+        composable(Screen.HomeMaintenance.route) { HomeMaintenanceScreen(navController = navController) }
+        
+        composable(
+          route = Screen.TaskDetail.route,
+          arguments = listOf(androidx.navigation.navArgument("taskId") { type = androidx.navigation.NavType.LongType })
+        ) { TaskDetailScreen(navController = navController) }
 
-      composable(
-        route = Screen.MemberDetail.route,
-        arguments = listOf(androidx.navigation.navArgument("memberId") { type = androidx.navigation.NavType.LongType })
-      ) { backStackEntry ->
-        val memberId = backStackEntry.arguments?.getLong("memberId") ?: 0L
-        MemberDetailScreen(navController = navController, memberId = memberId)
+        composable(
+          route = Screen.ListDetail.route,
+          arguments = listOf(androidx.navigation.navArgument("listId") { type = androidx.navigation.NavType.LongType })
+        ) { ListDetailScreen(navController = navController) }
+
+        composable(
+          route = Screen.MaintenanceDetail.route,
+          arguments = listOf(androidx.navigation.navArgument("id") { type = androidx.navigation.NavType.LongType })
+        ) { backStackEntry ->
+          val id = backStackEntry.arguments?.getLong("id") ?: 0L
+          MaintenanceDetailScreen(id = id, navController = navController)
+        }
       }
 
-      composable(Screen.AddMember.route) { AddMemberScreen(navController = navController) }
-      
-      composable(
-        route = Screen.EditMember.route,
-        arguments = listOf(androidx.navigation.navArgument("memberId") { type = androidx.navigation.NavType.LongType })
-      ) { EditMemberScreen(navController = navController) }
+      // --- Familia (Family) ---
+      navigation(
+        startDestination = Screen.FamilyHub.route,
+        route = "family_graph"
+      ) {
+        composable(Screen.FamilyHub.route) { FamilyHubScreen(navController = navController) }
+        composable(Screen.Family.route) { FamilyScreen(navController = navController) }
+        composable(Screen.Calendar.route) { CalendarScreen(navController = navController) }
+        composable(Screen.AddMember.route) { AddMemberScreen(navController = navController) }
+        
+        composable(
+          route = Screen.PetDetail.route,
+          arguments = listOf(androidx.navigation.navArgument("petId") { type = androidx.navigation.NavType.LongType })
+        ) { PetDetailScreen(navController = navController) }
 
-      composable(Screen.AddTask.route) { AddTaskScreen(navController = navController) }
+        composable(
+          route = Screen.MemberDetail.route,
+          arguments = listOf(androidx.navigation.navArgument("memberId") { type = androidx.navigation.NavType.LongType })
+        ) { backStackEntry ->
+          val memberId = backStackEntry.arguments?.getLong("memberId") ?: 0L
+          MemberDetailScreen(navController = navController, memberId = memberId)
+        }
 
-      composable(
-        route = Screen.ListDetail.route,
-        arguments = listOf(androidx.navigation.navArgument("listId") { type = androidx.navigation.NavType.LongType })
-      ) { ListDetailScreen(navController = navController) }
-
-      composable(Screen.DosageCalculator.route) { DosageCalculatorScreen(navController = navController) }
-      composable(Screen.BMICalculator.route) { BMICalculatorScreen(navController = navController) }
-      composable(Screen.MortgageCalculator.route) { MortgageCalculatorScreen(navController = navController) }
-      composable(Screen.AgeCalculator.route) { AgeCalculatorScreen(navController = navController) }
-      composable(Screen.ConsumptionCalculator.route) { ConsumptionCalculatorScreen(navController = navController) }
-      composable(Screen.SavingsCalculator.route) { SavingsCalculatorScreen(navController = navController) }
-      composable(Screen.VehicleManager.route) { VehicleManagementScreen(navController = navController) }
-      composable(Screen.Inventory.route) { StockScreen(navController = navController) }
-      composable(Screen.Expenses.route) { ExpenseScreen(navController = navController) }
-      composable(Screen.PhotoToPdf.route) { PhotoToPdfScreen(navController = navController) }
-      composable(Screen.WifiQR.route) { WifiQRScreen(navController = navController) }
-      composable(Screen.CocinaConverter.route) { CocinaConverterScreen(navController = navController) }
-      composable(Screen.FeedingCalculator.route) { FeedingCalculatorScreen(navController = navController) }
-      composable(Screen.SmartSafe.route) { SmartSafeScreen(navController = navController) }
-      composable(Screen.HomeMaintenance.route) { HomeMaintenanceScreen(navController = navController) }
-      composable(
-        route = Screen.MaintenanceDetail.route,
-        arguments = listOf(androidx.navigation.navArgument("id") { type = androidx.navigation.NavType.LongType })
-      ) { backStackEntry ->
-        val id = backStackEntry.arguments?.getLong("id") ?: 0L
-        MaintenanceDetailScreen(id = id, navController = navController)
+        composable(
+          route = Screen.EditMember.route,
+          arguments = listOf(androidx.navigation.navArgument("memberId") { type = androidx.navigation.NavType.LongType })
+        ) { EditMemberScreen(navController = navController) }
       }
-      composable(Screen.FinanceStats.route) { FinanceStatsScreen(navController = navController) }
+
+      // --- Utilidades (Utilities) ---
+      navigation(
+        startDestination = Screen.Utilities.route,
+        route = "utilities_graph"
+      ) {
+        composable(Screen.Utilities.route) { UtilitiesScreen(navController = navController) }
+        composable(Screen.DosageCalculator.route) { DosageCalculatorScreen(navController = navController) }
+        composable(Screen.BMICalculator.route) { BMICalculatorScreen(navController = navController) }
+        composable(Screen.MortgageCalculator.route) { MortgageCalculatorScreen(navController = navController) }
+        composable(Screen.AgeCalculator.route) { AgeCalculatorScreen(navController = navController) }
+        composable(Screen.ConsumptionCalculator.route) { ConsumptionCalculatorScreen(navController = navController) }
+        composable(Screen.SavingsCalculator.route) { SavingsCalculatorScreen(navController = navController) }
+        composable(Screen.VehicleManager.route) { VehicleManagementScreen(navController = navController) }
+        composable(Screen.Expenses.route) { ExpenseScreen(navController = navController) }
+        composable(Screen.PhotoToPdf.route) { PhotoToPdfScreen(navController = navController) }
+        composable(Screen.WifiQR.route) { WifiQRScreen(navController = navController) }
+        composable(Screen.CocinaConverter.route) { CocinaConverterScreen(navController = navController) }
+        composable(Screen.FeedingCalculator.route) { FeedingCalculatorScreen(navController = navController) }
+        composable(Screen.SmartSafe.route) { SmartSafeScreen(navController = navController) }
+        composable(Screen.FinanceStats.route) { FinanceStatsScreen(navController = navController) }
+      }
+
+      composable(Screen.Settings.route) { SettingsScreen(navController = navController, innerPadding = innerPadding) }
       composable(Screen.RewardStore.route) { RewardStoreScreen(navController = navController) }
       composable(Screen.Archive.route) { ArchiveScreen(navController = navController) }
+    }
+  }
+}
+
+@Composable
+private fun AppBottomBar(
+  navController: androidx.navigation.NavHostController,
+  currentDestination: androidx.navigation.NavDestination?,
+  showBottomBar: Boolean,
+  isKeyboardVisible: Boolean
+) {
+  AnimatedVisibility(
+    visible = !isKeyboardVisible && showBottomBar,
+    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+  ) {
+    NavigationBar(
+      containerColor = MaterialTheme.colorScheme.surface,
+      tonalElevation = 8.dp
+    ) {
+      bottomNavItems.forEach { item ->
+        val selected = when (item.screen) {
+          Screen.Dashboard -> currentDestination?.route == Screen.Dashboard.route
+          Screen.Management -> currentDestination?.route in Screen.managementTabRoutes
+          Screen.FamilyHub -> currentDestination?.route in Screen.familyTabRoutes
+          Screen.Utilities -> currentDestination?.route in Screen.utilitiesTabRoutes
+          else -> false
+        }
+        
+        val label = stringResource(item.labelRes)
+
+        NavigationBarItem(
+          selected = selected,
+          onClick = {
+            val isAtHub = currentDestination?.route == item.screen.route
+            if (!isAtHub) {
+              if (selected) {
+                val popped = navController.popBackStack(item.screen.route, inclusive = false)
+                if (!popped) {
+                  navController.navigate(item.screen.route) {
+                    popUpTo(navController.graph.findStartDestination().id) { saveState = false }
+                    launchSingleTop = true
+                  }
+                }
+              } else {
+                navController.navigate(item.screen.route) {
+                  popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = false
+                  }
+                  launchSingleTop = true
+                  restoreState = false
+                }
+              }
+            }
+          },
+          icon = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+              Icon(item.icon, contentDescription = label)
+              AnimatedVisibility(visible = selected) {
+                Box(
+                  modifier = Modifier
+                    .padding(top = 4.dp)
+                    .size(4.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+                )
+              }
+            }
+          },
+          label = { if (selected) Text(label) },
+          alwaysShowLabel = false
+        )
+      }
     }
   }
 }

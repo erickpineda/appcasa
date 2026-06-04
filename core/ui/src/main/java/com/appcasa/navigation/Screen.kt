@@ -66,6 +66,24 @@ sealed class Screen(val route: String) {
   data object FinanceStats    : Screen("finance_stats")
   data object RewardStore     : Screen("reward_store")
   data object Archive         : Screen("archive")
+
+  companion object {
+    val managementTabRoutes = listOf(
+      Management.route, Tasks.route, Lists.route, ListDetail.route, 
+      Inventory.route, AddTask.route, TaskDetail.route, HomeMaintenance.route, MaintenanceDetail.route
+    )
+    val familyTabRoutes = listOf(
+      FamilyHub.route, Family.route, Calendar.route, PetDetail.route, 
+      MemberDetail.route, EditMember.route, AddMember.route
+    )
+    val utilitiesTabRoutes = listOf(
+      Utilities.route, DosageCalculator.route, BMICalculator.route, 
+      MortgageCalculator.route, AgeCalculator.route, ConsumptionCalculator.route, 
+      SavingsCalculator.route, Expenses.route, VehicleManager.route, SmartSafe.route, 
+      PhotoToPdf.route, WifiQR.route, CocinaConverter.route, FeedingCalculator.route,
+      FinanceStats.route
+    )
+  }
 }
 
 data class BottomNavItem(

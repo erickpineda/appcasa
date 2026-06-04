@@ -210,6 +210,15 @@ object Migrations {
   }
 
   /**
+   * Migración para añadir miembro_id a usuarios para vincular Perfil con Miembro de familia.
+   */
+  val MIGRATION_21_22 = object : Migration(21, 22) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE usuarios ADD COLUMN miembro_id INTEGER")
+    }
+  }
+
+  /**
    * Lista de todas las migraciones registradas.
    */
   fun getAll(): Array<Migration> {
@@ -226,7 +235,8 @@ object Migrations {
       MIGRATION_17_18,
       MIGRATION_18_19,
       MIGRATION_19_20,
-      MIGRATION_20_21
+      MIGRATION_20_21,
+      MIGRATION_21_22
     )
   }
 }

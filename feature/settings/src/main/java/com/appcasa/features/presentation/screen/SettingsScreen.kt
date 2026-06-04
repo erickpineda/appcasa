@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Compress
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Groups
@@ -33,9 +32,9 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,7 +46,6 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -75,12 +73,10 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.data.utils.FileUtils
 import com.appcasa.core.ui.components.AppCasaCard
-import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.core.ui.utils.QRUtils
 import com.appcasa.feature.settings.R
 import com.appcasa.features.lists.data.local.ListaEntity
-import com.appcasa.features.presentation.viewmodel.DashboardViewModel
 import com.appcasa.features.settings.presentation.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,15 +84,16 @@ import com.appcasa.features.settings.presentation.viewmodel.SettingsViewModel
 fun SettingsScreen(
   navController: NavController,
   innerPadding: PaddingValues,
-  dashboardViewModel: DashboardViewModel = hiltViewModel(),
   settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
+  val context = LocalContext.current
   val usuario by settingsViewModel.usuarioActual.collectAsState()
   val hogar by settingsViewModel.hogarActual.collectAsState()
   val configs by settingsViewModel.configuraciones.collectAsState()
   val listas by settingsViewModel.todasLasListas.collectAsState()
   
-  val context = LocalContext.current
+  val isAdmin by settingsViewModel.isAdmin.collectAsState()
+  
   val imagePickerLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.GetContent()
   ) { uri ->
@@ -105,25 +102,6 @@ fun SettingsScreen(
       settingsViewModel.updateUsuario(usuario?.nombre ?: "", localPath)
     }
   }
-
-  var seedStatus by remember { mutableStateOf<String?>(null) }
-  var showSeedConfirm by remember { mutableStateOf(false) }
-
-  val seedSuccessMessage = stringResource(R.string.settings_seed_success)
-
-  AppCasaConfirmDialog(
-    show = showSeedConfirm,
-    title = stringResource(R.string.settings_seed_confirm_title),
-    text = stringResource(R.string.settings_seed_confirm_text),
-    confirmText = stringResource(R.string.settings_seed_confirm_btn),
-    icon = Icons.Default.Warning,
-    onConfirm = {
-        dashboardViewModel.seedRealData(hogar?.id ?: 1L)
-        seedStatus = seedSuccessMessage
-        showSeedConfirm = false
-    },
-    onDismiss = { showSeedConfirm = false }
-  )
 
   Column(modifier = Modifier.fillMaxSize()) {
     TopAppBar(
@@ -134,23 +112,6 @@ fun SettingsScreen(
       )
     )
     
-    if (seedStatus != null) {
-      Surface(
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        Row(
-          modifier = Modifier.padding(8.dp),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.Center
-        ) {
-          Text(seedStatus!!, style = MaterialTheme.typography.bodySmall)
-          Spacer(Modifier.width(8.dp))
-          TextButton(onClick = { seedStatus = null }) { Text(stringResource(R.string.settings_ok)) }
-        }
-      }
-    }
-
     SettingsContent(
       modifier = Modifier.weight(1f),
       userName = usuario?.nombre ?: "Usuario",
@@ -159,11 +120,12 @@ fun SettingsScreen(
       householdCode = hogar?.codigoHogar ?: "---",
       configs = configs,
       listas = listas,
+      isAdmin = isAdmin,
       onUpdateName = { settingsViewModel.updateUsuario(it) },
       onUpdateAvatar = { imagePickerLauncher.launch("image/*") },
       onUpdateHouseholdName = { settingsViewModel.updateHogar(it) },
       onUpdateConfig = { clave, valor -> settingsViewModel.updateConfig(clave, valor) },
-      onSeedData = { showSeedConfirm = true },
+      onRegenerateCode = { settingsViewModel.regenerateHouseCode() },
       onLogout = { settingsViewModel.logout() }
     )
   }
@@ -178,11 +140,12 @@ fun SettingsContent(
   householdCode: String,
   configs: Map<String, String>,
   listas: List<ListaEntity>,
+  isAdmin: Boolean,
   onUpdateName: (String) -> Unit,
   onUpdateAvatar: () -> Unit,
   onUpdateHouseholdName: (String) -> Unit,
   onUpdateConfig: (String, String) -> Unit,
-  onSeedData: () -> Unit,
+  onRegenerateCode: () -> Unit,
   onLogout: () -> Unit
 ) {
   val darkMode = configs["tema_oscuro"] == "true"
@@ -285,7 +248,7 @@ fun SettingsContent(
         icon = Icons.Default.Home,
         title = stringResource(R.string.settings_household_name_title),
         subtitle = householdName,
-        onClick = { showHogarDialog = true }
+        onClick = { if (isAdmin) showHogarDialog = true }
       )
     }
     
@@ -298,7 +261,16 @@ fun SettingsContent(
         ) {
           Column(modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.setup_label_code), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-            Text(householdCode, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(householdCode, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
+                if (isAdmin) {
+                    IconButton(onClick = {
+                        onRegenerateCode()
+                    }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Regenerar código", tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
             Text(stringResource(R.string.setup_join_desc), style = MaterialTheme.typography.bodySmall)
           }
           
@@ -390,12 +362,15 @@ fun SettingsContent(
 
     item {
       SettingsItem(
-        icon = Icons.Default.CloudUpload,
-        title = stringResource(R.string.settings_seed_data_title),
-        subtitle = stringResource(R.string.settings_seed_data_subtitle),
-        onClick = onSeedData
+        icon = Icons.Default.Info,
+        title = stringResource(R.string.settings_about_title),
+        subtitle = stringResource(R.string.settings_about_subtitle),
+        onClick = {}
       )
     }
+
+    item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
+    item { SettingsSectionHeader("Cuenta") }
 
     item {
       SettingsItem(
@@ -403,15 +378,6 @@ fun SettingsContent(
         title = "Cerrar Sesión",
         subtitle = "Salir de este perfil y volver a la configuración",
         onClick = onLogout
-      )
-    }
-    
-    item {
-      SettingsItem(
-        icon = Icons.Default.Info,
-        title = stringResource(R.string.settings_about_title),
-        subtitle = stringResource(R.string.settings_about_subtitle),
-        onClick = {}
       )
     }
     
@@ -586,11 +552,12 @@ fun SettingsPreview() {
       householdCode = "CASA-1234",
       configs = emptyMap(),
       listas = emptyList(),
+      isAdmin = true,
       onUpdateName = {},
       onUpdateAvatar = {},
       onUpdateHouseholdName = {},
       onUpdateConfig = { _, _ -> },
-      onSeedData = {},
+      onRegenerateCode = {},
       onLogout = {}
     )
   }

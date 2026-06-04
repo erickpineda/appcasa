@@ -223,7 +223,7 @@ fun DashboardContent(
   onAddPostIt: (String) -> Unit,
   onEditPostIt: (PostItEntity, String) -> Unit,
   onDeletePostIt: (PostItEntity) -> Unit,
-  onUpdateMood: (Long, String) -> Unit,
+  onUpdateMood: (Long, String?) -> Unit,
   onReorder: (List<String>) -> Unit,
   onResultClick: (SearchItem) -> Unit,
   onNavigateToTasks: () -> Unit,
@@ -559,7 +559,7 @@ fun DashboardContent(
 }
 
 @Composable
-fun MoodAvatar(member: MiembroEntity, onMoodClick: (String) -> Unit) {
+fun MoodAvatar(member: MiembroEntity, onMoodClick: (String?) -> Unit) {
     var showMoodPicker by remember { mutableStateOf(false) }
     val emojis = listOf("😊", "😎", "😴", "🤔", "🤒", "😤", "😇")
 
@@ -580,14 +580,16 @@ fun MoodAvatar(member: MiembroEntity, onMoodClick: (String) -> Unit) {
                     Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.padding(12.dp))
                 }
             }
-            Surface(
-                modifier = Modifier.size(24.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 2.dp
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(member.estadoAnimo ?: "💬", style = MaterialTheme.typography.labelSmall)
+            if (member.estadoAnimo != null) {
+                Surface(
+                    modifier = Modifier.size(24.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 2.dp
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(member.estadoAnimo ?: "", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
         }
@@ -599,7 +601,22 @@ fun MoodAvatar(member: MiembroEntity, onMoodClick: (String) -> Unit) {
             onDismissRequest = { showMoodPicker = false },
             title = { Text(stringResource(R.string.dashboard_mood_question, member.nombre)) },
             text = {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Option to clear mood
+                    Surface(
+                        modifier = Modifier.size(40.dp).clip(CircleShape).clickable { 
+                            onMoodClick(null)
+                            showMoodPicker = false
+                        },
+                        color = MaterialTheme.colorScheme.errorContainer
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Quitar estado", modifier = Modifier.padding(8.dp), tint = MaterialTheme.colorScheme.error)
+                    }
+
                     emojis.forEach { emoji ->
                         Text(
                             emoji, 

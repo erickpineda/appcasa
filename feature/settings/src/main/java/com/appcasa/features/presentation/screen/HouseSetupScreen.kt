@@ -1,8 +1,15 @@
 package com.appcasa.features.settings.presentation.screen
 
+import android.Manifest
+import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,6 +21,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +33,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -32,6 +41,7 @@ import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.AlertDialog
@@ -61,6 +71,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -73,6 +85,10 @@ import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.settings.data.local.HogarEntity
 import com.appcasa.features.settings.presentation.viewmodel.HouseSetupViewModel
 import com.appcasa.navigation.Screen
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.common.InputImage
+import java.util.concurrent.Executors
+import androidx.camera.core.Preview as CameraPreview
 
 @Composable
 fun HouseSetupScreen(
@@ -82,9 +98,13 @@ fun HouseSetupScreen(
     val existingHousehold by viewModel.existingHousehold.collectAsState()
     val householdMembers by viewModel.householdMembers.collectAsState()
 
-    var step by remember { mutableStateOf(SetupStep.WELCOME) }
+    // Determinamos el paso inicial de forma instantánea para evitar parpadeos
+    val initialStep = remember(existingHousehold) {
+        if (existingHousehold != null) SetupStep.SELECT_PROFILE else SetupStep.WELCOME
+    }
+    var step by remember { mutableStateOf(initialStep) }
     
-    // Si ya hay un hogar configurado (vienes de cerrar sesión), saltamos directo a la selección de perfil
+    // Sincronizar el paso si el hogar se carga tarde
     LaunchedEffect(existingHousehold) {
         if (existingHousehold != null && step == SetupStep.WELCOME) {
             step = SetupStep.SELECT_PROFILE
@@ -147,6 +167,7 @@ private fun HouseSetupContent(
     var inputUserName by remember { mutableStateOf("") }
     var inputCode by remember { mutableStateOf("") }
     var userPhotoUri by remember { mutableStateOf<String?>(null) }
+    var showScanner by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -197,6 +218,7 @@ private fun HouseSetupContent(
                         onCodeChange = { inputCode = it },
                         onUserNameChange = { inputUserName = it },
                         onPhotoClick = { imagePickerLauncher.launch("image/*") },
+                        onScanClick = { showScanner = true },
                         onBack = { 
                             onStepChange(if (existingHousehold != null) SetupStep.SELECT_PROFILE else SetupStep.WELCOME) 
                         },
@@ -223,8 +245,97 @@ private fun HouseSetupContent(
                     )
                 }
             }
+            
+            if (showScanner) {
+                QRScannerDialog(
+                    onCodeScanned = { 
+                        inputCode = it
+                        showScanner = false 
+                    },
+                    onDismiss = { showScanner = false }
+                )
+            }
         }
     }
+}
+
+@Composable
+fun QRScannerDialog(onCodeScanned: (String) -> Unit, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    
+    var hasPermission by remember { 
+        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) 
+    }
+    
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        hasPermission = granted
+    }
+
+    LaunchedEffect(Unit) {
+        if (!hasPermission) launcher.launch(Manifest.permission.CAMERA)
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Escanear Código de Casa") },
+        text = {
+            if (hasPermission) {
+                Box(modifier = Modifier.size(280.dp).clip(RoundedCornerShape(16.dp))) {
+                    AndroidView(
+                        factory = { ctx ->
+                            val previewView = PreviewView(ctx)
+                            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+                            
+                            cameraProviderFuture.addListener({
+                                val cameraProvider = cameraProviderFuture.get()
+                                val preview = CameraPreview.Builder().build().also {
+                                    it.setSurfaceProvider(previewView.surfaceProvider)
+                                }
+                                
+                                val scanner = BarcodeScanning.getClient()
+                                val imageAnalysis = ImageAnalysis.Builder()
+                                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                                    .build()
+                                
+                                imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                                    @OptIn(ExperimentalGetImage::class)
+                                    val mediaImage = imageProxy.image
+                                    if (mediaImage != null) {
+                                        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+                                        scanner.process(image)
+                                            .addOnSuccessListener { barcodes ->
+                                                for (barcode in barcodes) {
+                                                    barcode.rawValue?.let { code ->
+                                                        if (code.startsWith("CASA-")) {
+                                                            onCodeScanned(code)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            .addOnCompleteListener { imageProxy.close() }
+                                    }
+                                }
+
+                                try {
+                                    cameraProvider.unbindAll()
+                                    cameraProvider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageAnalysis)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }, ContextCompat.getMainExecutor(ctx))
+                            previewView
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            } else {
+                Text("Se requiere permiso de cámara para escanear el QR.")
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
 }
 
 @Composable
@@ -431,6 +542,7 @@ private fun JoinStep(
     onCodeChange: (String) -> Unit, 
     onUserNameChange: (String) -> Unit,
     onPhotoClick: () -> Unit,
+    onScanClick: () -> Unit,
     onBack: () -> Unit, 
     onConfirm: () -> Unit
 ) {
@@ -439,27 +551,45 @@ private fun JoinStep(
         Text(stringResource(R.string.setup_join_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         Spacer(Modifier.height(24.dp))
         
-        // Avatar Selection
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .clip(CircleShape)
-                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                .clickable { onPhotoClick() },
-            contentAlignment = Alignment.Center
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (photoUri != null) {
-                AsyncImage(
-                    model = photoUri,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.AddAPhoto, null, tint = MaterialTheme.colorScheme.primary)
-                    Text("Tu Foto", style = MaterialTheme.typography.labelSmall)
+            // Avatar Selection
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                    .clickable { onPhotoClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                if (photoUri != null) {
+                    AsyncImage(
+                        model = photoUri,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.AddAPhoto, null, tint = MaterialTheme.colorScheme.primary)
+                        Text("Tu Foto", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
+            }
+            
+            Spacer(Modifier.width(24.dp))
+            
+            // QR Scanner Placeholder Button
+            OutlinedButton(
+                onClick = onScanClick,
+                shape = CircleShape,
+                modifier = Modifier.size(64.dp),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Icon(Icons.Default.QrCodeScanner, contentDescription = "Escanear QR")
             }
         }
 
