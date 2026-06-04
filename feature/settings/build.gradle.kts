@@ -8,10 +8,10 @@ plugins {
 
 android {
     namespace = "com.appcasa.feature.settings"
-    compileSdk = 34
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = 26
+        minSdk = libs.versions.minSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -53,9 +53,9 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
 
     // CameraX
-    implementation("androidx.camera:camera-camera2:1.3.1")
-    implementation("androidx.camera:camera-lifecycle:1.3.1")
-    implementation("androidx.camera:camera-view:1.3.1")
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
     
     // ML Kit Barcode
     implementation(libs.mlkit.barcode.scanning)

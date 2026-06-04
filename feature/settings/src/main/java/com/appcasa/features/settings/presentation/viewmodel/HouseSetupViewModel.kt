@@ -52,17 +52,18 @@ class HouseSetupViewModel @Inject constructor(
             )
             val hogarId = configuracionDao.insertHogar(hogar)
             
-            // 2. Crear Miembro (para XP y Ranking)
+            // 2. Crear Miembro con Rol ADMIN
             val miembroId = miembroDao.insertMiembro(
                 MiembroEntity(
                     hogarId = hogarId,
                     nombre = userName,
                     tipo = TipoMiembro.PERSONA.name,
+                    rol = RolHogar.ADMIN.name,
                     fotoUri = photoUri
                 )
             )
 
-            // 3. Crear Usuario (Perfil de la app) y activarlo
+            // 3. Crear Usuario y activarlo
             configuracionDao.deactivateAllUsers()
             configuracionDao.insertUsuario(
                 UsuarioEntity(
@@ -83,16 +84,16 @@ class HouseSetupViewModel @Inject constructor(
 
     fun joinHousehold(code: String, userName: String, photoUri: String?) {
         viewModelScope.launch {
-            // TODO: Integración real con la nube para descargar datos del hogar usando 'code'
             val existing = existingHousehold.value
             val hogarId = existing?.id ?: 1L
             
-            // 1. Crear Miembro
+            // 1. Crear Miembro con Rol COLABORADOR
             val miembroId = miembroDao.insertMiembro(
                 MiembroEntity(
                     hogarId = hogarId,
                     nombre = userName,
                     tipo = TipoMiembro.PERSONA.name,
+                    rol = RolHogar.COLABORADOR.name,
                     fotoUri = photoUri
                 )
             )
@@ -125,7 +126,7 @@ class HouseSetupViewModel @Inject constructor(
                     miembroId = member.id,
                     nombre = member.nombre,
                     email = "usuario@appcasa.local",
-                    rol = RolHogar.COLABORADOR.name, // Por defecto colaborador al seleccionar
+                    rol = member.rol, // ¡IMPORTANTE! Recuperar el rol real del miembro
                     avatarUrl = member.fotoUri,
                     isActive = true
                 )

@@ -219,6 +219,17 @@ object Migrations {
   }
 
   /**
+   * Migración para añadir rol a miembros para persistir permisos en el selector de perfiles.
+   */
+  val MIGRATION_22_23 = object : Migration(22, 23) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE miembros ADD COLUMN rol TEXT NOT NULL DEFAULT 'COLABORADOR'")
+      // Marcamos al primer miembro como ADMIN para mantener la lógica de creador
+      db.execSQL("UPDATE miembros SET rol = 'ADMIN' WHERE id = (SELECT id FROM miembros ORDER BY id ASC LIMIT 1)")
+    }
+  }
+
+  /**
    * Lista de todas las migraciones registradas.
    */
   fun getAll(): Array<Migration> {
@@ -236,7 +247,8 @@ object Migrations {
       MIGRATION_18_19,
       MIGRATION_19_20,
       MIGRATION_20_21,
-      MIGRATION_21_22
+      MIGRATION_21_22,
+      MIGRATION_22_23
     )
   }
 }

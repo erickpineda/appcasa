@@ -72,6 +72,9 @@ data class MiembroEntity(
   @ColumnInfo(name = "estado")
   val estado: String = EstadoGeneral.ACTIVO.name,
 
+  @ColumnInfo(name = "rol")
+  val rol: String = com.appcasa.core.domain.model.RolHogar.COLABORADOR.name,
+
   @ColumnInfo(name = "sync_id")
   val syncId: String? = null,
 

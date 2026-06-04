@@ -98,21 +98,19 @@ fun HouseSetupScreen(
     val existingHousehold by viewModel.existingHousehold.collectAsState()
     val householdMembers by viewModel.householdMembers.collectAsState()
 
-    // Determinamos el paso inicial de forma instantánea para evitar parpadeos
-    val initialStep = remember(existingHousehold) {
-        if (existingHousehold != null) SetupStep.SELECT_PROFILE else SetupStep.WELCOME
-    }
-    var step by remember { mutableStateOf(initialStep) }
+    // Usamos un estado de "Cargando" interno para evitar mostrar Bienvenido antes de saber si hay hogar
+    var isInitializing by remember { mutableStateOf(true) }
+    var step by remember { mutableStateOf(SetupStep.WELCOME) }
     
-    // Sincronizar el paso si el hogar se carga tarde
     LaunchedEffect(existingHousehold) {
-        if (existingHousehold != null && step == SetupStep.WELCOME) {
+        if (existingHousehold != null) {
             step = SetupStep.SELECT_PROFILE
         }
+        isInitializing = false
     }
     
     // Manejo inteligente del botón Atrás del sistema
-    BackHandler(enabled = true) {
+    BackHandler(enabled = !isInitializing) {
         when (step) {
             SetupStep.CREATE, SetupStep.JOIN, SetupStep.ADD_PROFILE -> {
                 step = if (existingHousehold != null) SetupStep.SELECT_PROFILE else SetupStep.WELCOME
@@ -137,19 +135,24 @@ fun HouseSetupScreen(
         }
     }
 
-    HouseSetupContent(
-        step = step,
-        onStepChange = { step = it },
-        existingHousehold = existingHousehold,
-        householdMembers = householdMembers,
-        onCreateHousehold = viewModel::createHousehold,
-        onJoinHousehold = viewModel::joinHousehold,
-        onSelectMember = viewModel::selectMember,
-        onResetAll = { 
-            viewModel.resetHousehold()
-            step = SetupStep.WELCOME 
-        }
-    )
+    if (isInitializing) {
+        // Pantalla vacía con fondo de malla para un arranque suave
+        AppCasaMeshBackground { }
+    } else {
+        HouseSetupContent(
+            step = step,
+            onStepChange = { step = it },
+            existingHousehold = existingHousehold,
+            householdMembers = householdMembers,
+            onCreateHousehold = viewModel::createHousehold,
+            onJoinHousehold = viewModel::joinHousehold,
+            onSelectMember = viewModel::selectMember,
+            onResetAll = { 
+                viewModel.resetHousehold()
+                step = SetupStep.WELCOME 
+            }
+        )
+    }
 }
 
 @Composable
