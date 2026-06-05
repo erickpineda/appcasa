@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class GetCurrentHouseholdUseCase @Inject constructor(
-    private val repository: HouseholdRepository
+    private val repository: HouseholdRepository,
 ) {
     operator fun invoke(): Flow<Household?> {
         return repository.getHogarActual()
@@ -35,10 +35,12 @@ class UpdateUserUseCase @Inject constructor(
         user.miembroId?.let { id ->
             val member = familyRepository.getMemberById(id)
             member?.let {
-                familyRepository.updateMember(it.copy(
-                    nombre = nombre,
-                    fotoUri = avatarUrl ?: it.fotoUri
-                ))
+                familyRepository.updateMember(
+                    it.copy(
+                        nombre = nombre,
+                        fotoUri = avatarUrl ?: it.fotoUri
+                    )
+                )
             }
         }
     }
@@ -87,13 +89,13 @@ class CreateHouseholdUseCase @Inject constructor(
             )
         )
 
-        userRepository.deleteUsers()
+        userRepository.deactivateAllUsers()
         userRepository.insertUser(
             User(
                 hogarId = hogarId,
                 miembroId = miembroId,
                 nombre = userName,
-                email = "usuario@appcasa.local",
+                email = "admin_${System.currentTimeMillis()}@appcasa.local",
                 rol = RolHogar.ADMIN,
                 avatarUrl = photoUri,
                 isActive = true
@@ -124,13 +126,13 @@ class JoinHouseholdUseCase @Inject constructor(
             )
         )
 
-        userRepository.deleteUsers()
+        userRepository.deactivateAllUsers()
         userRepository.insertUser(
             User(
                 hogarId = hogarId,
                 miembroId = miembroId,
                 nombre = userName,
-                email = "colaborador@appcasa.local",
+                email = "colab_${System.currentTimeMillis()}@appcasa.local",
                 rol = RolHogar.COLABORADOR,
                 avatarUrl = photoUri,
                 isActive = true
@@ -147,13 +149,13 @@ class SelectMemberUseCase @Inject constructor(
     private val householdProvider: CurrentHouseholdProvider
 ) {
     suspend operator fun invoke(member: FamilyMember) {
-        userRepository.deleteUsers()
+        userRepository.deactivateAllUsers()
         userRepository.insertUser(
             User(
                 hogarId = member.hogarId,
                 miembroId = member.id,
                 nombre = member.nombre,
-                email = "usuario@appcasa.local",
+                email = "user_${member.id}@appcasa.local",
                 rol = member.rol,
                 avatarUrl = member.fotoUri,
                 isActive = true
