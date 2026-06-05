@@ -97,22 +97,19 @@ fun HouseSetupScreen(
 ) {
     val existingHousehold by viewModel.existingHousehold.collectAsState()
     val householdMembers by viewModel.householdMembers.collectAsState()
+    val isCheckingDb by viewModel.isCheckingDb.collectAsState()
 
-    // Usamos un estado de "Cargando" interno para evitar mostrar Bienvenido antes de saber si hay hogar
-    var isInitializing by remember { mutableStateOf(true) }
-    var step by remember { mutableStateOf(SetupStep.WELCOME) }
+    var step by remember { mutableStateOf<SetupStep?>(null) }
     
-    LaunchedEffect(existingHousehold) {
-        if (existingHousehold != null) {
-            step = SetupStep.SELECT_PROFILE
-        } else {
-            step = SetupStep.WELCOME
+    // Decidir el paso inicial solo cuando recibamos el primer valor real de la DB
+    LaunchedEffect(isCheckingDb, existingHousehold) {
+        if (!isCheckingDb && step == null) {
+            step = if (existingHousehold != null) SetupStep.SELECT_PROFILE else SetupStep.WELCOME
         }
-        isInitializing = false
     }
     
     // Manejo inteligente del botón Atrás del sistema
-    BackHandler(enabled = !isInitializing) {
+    BackHandler(enabled = step != null) {
         when (step) {
             SetupStep.CREATE, SetupStep.JOIN, SetupStep.ADD_PROFILE -> {
                 step = if (existingHousehold != null) SetupStep.SELECT_PROFILE else SetupStep.WELCOME
@@ -121,9 +118,9 @@ fun HouseSetupScreen(
                 step = SetupStep.WELCOME
             }
             SetupStep.WELCOME -> {
-                // Desde la pantalla raíz siempre salimos de la app
                 navController.popBackStack()
             }
+            null -> {}
         }
     }
 
@@ -137,12 +134,12 @@ fun HouseSetupScreen(
         }
     }
 
-    if (isInitializing) {
-        // Pantalla vacía con fondo de malla para un arranque suave
+    if (step == null) {
+        // Pantalla vacía con fondo de malla para un arranque suave sin parpadeos
         AppCasaMeshBackground { }
     } else {
         HouseSetupContent(
-            step = step,
+            step = step!!,
             onStepChange = { step = it },
             existingHousehold = existingHousehold,
             householdMembers = householdMembers,

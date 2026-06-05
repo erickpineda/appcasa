@@ -2,15 +2,22 @@ package com.appcasa.features.settings.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.core.domain.model.*
+import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.usecase.GetFamilyMembersUseCase
-import com.appcasa.features.settings.domain.usecase.*
+import com.appcasa.features.settings.domain.usecase.CreateHouseholdUseCase
+import com.appcasa.features.settings.domain.usecase.GetCurrentHouseholdUseCase
+import com.appcasa.features.settings.domain.usecase.JoinHouseholdUseCase
+import com.appcasa.features.settings.domain.usecase.ResetHouseholdUseCase
+import com.appcasa.features.settings.domain.usecase.SelectMemberUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,7 +35,11 @@ class HouseSetupViewModel @Inject constructor(
     private val _setupEvent = MutableSharedFlow<SetupResult>(replay = 0)
     val setupEvent = _setupEvent.asSharedFlow()
 
+    private val _isCheckingDb = MutableStateFlow(true)
+    val isCheckingDb = _isCheckingDb.asStateFlow()
+
     val existingHousehold = getCurrentHouseholdUseCase()
+        .onEach { _isCheckingDb.value = false }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)

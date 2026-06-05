@@ -1,13 +1,28 @@
 package com.appcasa.features.presentation.screen
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -18,9 +33,48 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AddCircleOutline
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DashboardCustomize
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,7 +82,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,9 +89,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
-import com.appcasa.core.domain.model.*
+import com.appcasa.core.domain.model.FamilyMember
+import com.appcasa.core.domain.model.PostIt
+import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.domain.model.User
 import com.appcasa.core.ui.components.AppCasaCard
-import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.utils.Constants
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.dashboard.presentation.model.SearchItem
@@ -401,28 +456,38 @@ fun MoodAvatar(member: FamilyMember, onMoodClick: () -> Unit) {
 
 @Composable
 fun QuickActionsRow(navController: NavController, actions: List<String>, onAddPostIt: () -> Unit) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp)) {
         Text(
-            text = stringResource(R.string.quick_utilities),
+            text = "Accesos Rápidos",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 12.dp)
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            actions.take(4).forEach { actionCode ->
-                when (actionCode) {
-                    "CALC_DOSIS" -> QuickActionButton(Icons.AutoMirrored.Filled.NoteAdd, stringResource(R.string.action_dosage), onClick = { navController.navigate(Screen.DosageCalculator.route) })
-                    "UTIL_PDF" -> QuickActionButton(Icons.Default.PictureAsPdf, stringResource(R.string.action_pdf), onClick = { navController.navigate(Screen.PhotoToPdf.route) })
-                    "UTIL_SAFE" -> QuickActionButton(Icons.Default.Lock, stringResource(R.string.action_safe), onClick = { navController.navigate(Screen.SmartSafe.route) })
-                    "LISTS" -> QuickActionButton(Icons.AutoMirrored.Filled.List, stringResource(R.string.action_shopping), onClick = { navController.navigate(Screen.Lists.route) })
-                    "POSTIT" -> QuickActionButton(Icons.Default.EditNote, "Post-it", onClick = onAddPostIt)
-                    "CALC_IMC" -> QuickActionButton(Icons.Default.MonitorWeight, "IMC", onClick = { navController.navigate(Screen.BMICalculator.route) })
-                    "EXPENSES" -> QuickActionButton(Icons.Default.Payments, "Gasto", onClick = { navController.navigate(Screen.Expenses.route) })
+            actions.forEach { actionCode ->
+                val (icon, label, route) = when (actionCode) {
+                    "CALC_DOSIS" -> Triple(Icons.AutoMirrored.Filled.NoteAdd, "Dosis", Screen.DosageCalculator.route)
+                    "UTIL_PDF" -> Triple(Icons.Default.PictureAsPdf, "PDF", Screen.PhotoToPdf.route)
+                    "UTIL_SAFE" -> Triple(Icons.Default.Lock, "Safe", Screen.SmartSafe.route)
+                    "LISTS" -> Triple(Icons.AutoMirrored.Filled.List, "Listas", Screen.Lists.route)
+                    "POSTIT" -> Triple(Icons.Default.EditNote, "Post-it", null)
+                    "CALC_IMC" -> Triple(Icons.Default.MonitorWeight, "IMC", Screen.BMICalculator.route)
+                    "EXPENSES" -> Triple(Icons.Default.Payments, "Gasto", Screen.Expenses.route)
+                    else -> Triple(Icons.Default.Apps, "Extra", Screen.Utilities.route)
                 }
+                
+                QuickActionButton(
+                    icon = icon, 
+                    label = label, 
+                    onClick = { 
+                        if (actionCode == "POSTIT") onAddPostIt() 
+                        else if (route != null) navController.navigate(route) 
+                    }
+                )
             }
         }
     }
