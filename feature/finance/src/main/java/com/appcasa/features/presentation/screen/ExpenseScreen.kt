@@ -85,7 +85,7 @@ import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.finance.R
-import com.appcasa.features.finance.data.local.ExpenseEntity
+import com.appcasa.core.domain.model.Expense
 import com.appcasa.features.finance.presentation.viewmodel.FinanceViewModel
 import com.appcasa.navigation.Screen
 import kotlinx.coroutines.delay
@@ -104,8 +104,8 @@ fun ExpenseScreen(
   val ocrResult by viewModel.ocrResult.collectAsState()
   val ocrStore by viewModel.ocrStore.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
-  var editingExpense by remember { mutableStateOf<ExpenseEntity?>(null) }
-  var expenseToDelete by remember { mutableStateOf<ExpenseEntity?>(null) }
+  var editingExpense by remember { mutableStateOf<Expense?>(null) }
+  var expenseToDelete by remember { mutableStateOf<Expense?>(null) }
   val context = LocalContext.current
   var toastMessage by remember { mutableStateOf<String?>(null) }
 
@@ -280,7 +280,7 @@ fun ExpenseScreen(
 }
 
 @Composable
-fun ExpenseCard(expense: ExpenseEntity, currency: String, onEdit: () -> Unit, onDelete: () -> Unit) {
+fun ExpenseCard(expense: Expense, currency: String, onEdit: () -> Unit, onDelete: () -> Unit) {
   var showImagePreview by remember { mutableStateOf(false) }
 
   if (showImagePreview && expense.fotoUri != null) {
@@ -343,7 +343,7 @@ fun ExpenseCard(expense: ExpenseEntity, currency: String, onEdit: () -> Unit, on
 
 @Composable
 fun ExpenseActionDialog(
-  item: ExpenseEntity? = null,
+  item: Expense? = null,
   currency: String,
   initialImporte: String = "",
   initialConcepto: String = "",

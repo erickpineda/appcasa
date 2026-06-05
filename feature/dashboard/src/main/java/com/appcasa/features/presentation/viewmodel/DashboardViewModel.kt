@@ -8,25 +8,21 @@ import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Task
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.core.domain.model.EstadoTarea
-import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.utils.Constants
-import com.appcasa.features.calendar.data.local.EventoDao
-import com.appcasa.features.dashboard.data.local.DashboardConfigEntity
-import com.appcasa.features.dashboard.data.local.DashboardDao
-import com.appcasa.features.dashboard.data.local.PostItEntity
+import com.appcasa.core.domain.usecase.GetConfigurationUseCase
+import com.appcasa.core.domain.usecase.UpdateConfigurationUseCase
+import com.appcasa.core.domain.usecase.GetCurrentUserUseCase
+import com.appcasa.core.domain.usecase.GetFamilyMembersUseCase
+import com.appcasa.core.domain.usecase.GetMemberByIdUseCase
+import com.appcasa.core.domain.usecase.UpdateMemberUseCase
+import com.appcasa.core.domain.usecase.GetActiveTasksUseCase
+import com.appcasa.core.domain.usecase.GetLowStockItemsUseCase
+import com.appcasa.core.domain.usecase.GetTotalMonthlyExpenseUseCase
+import com.appcasa.features.dashboard.domain.usecase.*
 import com.appcasa.features.dashboard.presentation.model.SearchItem
 import com.appcasa.features.dashboard.presentation.model.SearchType
-import com.appcasa.features.family.data.local.MiembroDao
-import com.appcasa.features.family.data.local.MiembroEntity
-import com.appcasa.features.finance.data.local.ExpenseDao
-import com.appcasa.features.inventory.data.local.StockDao
-import com.appcasa.features.lists.data.local.ListaDao
-import com.appcasa.features.reminders.data.local.RecordatorioDao
-import com.appcasa.features.settings.data.local.ConfiguracionDao
-import com.appcasa.features.settings.data.local.UsuarioEntity
-import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,31 +32,36 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-  configuracionDao: ConfiguracionDao,
-  private val miembroDao: MiembroDao,
-  private val tareaDao: TareaDao,
-  private val eventoDao: EventoDao,
-  private val recordatorioDao: RecordatorioDao,
-  private val listaDao: ListaDao,
-  private val stockDao: StockDao,
-  private val expenseDao: ExpenseDao,
-  private val dashboardDao: DashboardDao,
+  private val getPostItsUseCase: GetPostItsUseCase,
+  private val addPostItUseCase: AddPostItUseCase,
+  private val updatePostItUseCase: UpdatePostItUseCase,
+  private val deletePostItUseCase: DeletePostItUseCase,
+  private val getDashboardConfigUseCase: GetDashboardConfigUseCase,
+  private val updateDashboardOrderUseCase: UpdateDashboardOrderUseCase,
+  private val searchUseCase: SearchUseCase,
+  private val getNextEventUseCase: GetNextEventUseCase,
+  private val getActiveTasksUseCase: GetActiveTasksUseCase,
+  private val getLowStockItemsUseCase: GetLowStockItemsUseCase,
+  private val getTotalMonthlyExpenseUseCase: GetTotalMonthlyExpenseUseCase,
+  private val getFamilyMembersUseCase: GetFamilyMembersUseCase,
+  private val getMemberByIdUseCase: GetMemberByIdUseCase,
+  private val updateMemberUseCase: UpdateMemberUseCase,
+  private val getCurrentUserUseCase: GetCurrentUserUseCase,
+  private val getConfigurationUseCase: GetConfigurationUseCase,
+  private val updateConfigurationUseCase: UpdateConfigurationUseCase,
   private val currentHouseholdProvider: CurrentHouseholdProvider,
 ) : ViewModel() {
 
-  private val _postIts = MutableStateFlow<List<PostItEntity>>(emptyList())
+  private val _postIts = MutableStateFlow<List<PostIt>>(emptyList())
   val postIts = _postIts.asStateFlow()
 
   private val _dashboardOrder = MutableStateFlow(listOf(
@@ -72,22 +73,25 @@ class DashboardViewModel @Inject constructor(
   ))
   val dashboardOrder = _dashboardOrder.asStateFlow()
 
+  private val _quickActions = MutableStateFlow(listOf("CALC_DOSIS", "UTIL_PDF", "UTIL_SAFE", "LISTS"))
+  val quickActions = _quickActions.asStateFlow()
+
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val familyMembers: StateFlow<List<MiembroEntity>> = currentHouseholdProvider.householdId
-    .flatMapLatest { id -> miembroDao.getMiembrosByHogar(id) }
+  val familyMembers: StateFlow<List<FamilyMember>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> getFamilyMembersUseCase(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-  val currentUser: StateFlow<UsuarioEntity?> = configuracionDao.getUsuarioActual()
+  val currentUser: StateFlow<User?> = getCurrentUserUseCase()
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
   val petData: StateFlow<Pair<String, String>> = familyMembers
     .map { miembros ->
-        val mascotas = miembros.filter { it.tipo != TipoMiembro.PERSONA.name }
+        val mascotas = miembros.filter { it.tipo != TipoMiembro.PERSONA }
         val count = mascotas.size.toString()
         val summaryList = mutableListOf<String>()
-        val perros = mascotas.count { it.tipo == TipoMiembro.PERRO.name }
-        val gatos = mascotas.count { it.tipo == TipoMiembro.GATO.name }
-        val tortugas = mascotas.count { it.tipo == TipoMiembro.TORTUGA.name }
+        val perros = mascotas.count { it.tipo == TipoMiembro.PERRO }
+        val gatos = mascotas.count { it.tipo == TipoMiembro.GATO }
+        val tortugas = mascotas.count { it.tipo == TipoMiembro.TORTUGA }
         if (perros > 0) summaryList.add("$perros perro${if (perros > 1) "s" else ""}")
         if (gatos > 0) summaryList.add("$gatos gato${if (gatos > 1) "s" else ""}")
         if (tortugas > 0) summaryList.add("$tortugas tortuga${if (tortugas > 1) "s" else ""}")
@@ -98,51 +102,25 @@ class DashboardViewModel @Inject constructor(
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val pendingTasksCount: StateFlow<String> = currentHouseholdProvider.householdId
-    .flatMapLatest { id -> tareaDao.getTareasByHogar(id) }
-    .map { tareas -> tareas.count { it.estado != EstadoTarea.COMPLETADA.name }.toString() }
+    .flatMapLatest { id -> getActiveTasksUseCase(id, 1) }
+    .map { tareas -> tareas.count { it.estado != EstadoTarea.COMPLETADA }.toString() }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "0")
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val monthlyExpense: StateFlow<String> = currentHouseholdProvider.householdId
-    .flatMapLatest { id -> expenseDao.getTotalMonthlyExpense(id, getStartOfMonth()) }
+    .flatMapLatest { id -> getTotalMonthlyExpenseUseCase(id) }
     .map { total -> String.format(Locale.getDefault(), "%.2f €", total ?: 0.0) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "0.00 €")
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val lowStockCount: StateFlow<Int> = currentHouseholdProvider.householdId
-    .flatMapLatest { id -> stockDao.getLowStockItems(id) }
+    .flatMapLatest { id -> getLowStockItemsUseCase(id) }
     .map { it.size }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val nextEventData: StateFlow<Pair<String, String>> = currentHouseholdProvider.householdId
-    .flatMapLatest { id ->
-        combine(
-            eventoDao.getEventosByHogar(id), 
-            recordatorioDao.getRecordatoriosByHogar(id),
-            tareaDao.getTareasByHogar(id),
-            miembroDao.getMiembrosByHogar(id)
-        ) { eventos, recordatorios, tareas, miembros ->
-            val birthdays = miembros.filter { it.fechaNacimiento != null }.map { 
-              "Cumpleaños: ${it.nombre} 🎂" to calculateBirthdayOccurrence(it.fechaNacimiento!!)
-            }
-            
-            (eventos.map { it.titulo to it.fecha } + 
-             recordatorios.map { it.titulo to it.fechaHora } +
-             tareas.filter { it.fechaLimite != null && it.estado != EstadoTarea.COMPLETADA.name }.map { it.titulo to it.fechaLimite!! } +
-             birthdays)
-              .filter { it.second >= System.currentTimeMillis() }
-              .sortedBy { it.second }
-              .firstOrNull()
-        }
-    }
-    .map { proximo ->
-        if (proximo != null) {
-            proximo.first to formatDate(proximo.second)
-        } else {
-            "Sin eventos próximos" to ""
-        }
-    }
+    .flatMapLatest { id -> getNextEventUseCase(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "No hay eventos" to "")
 
   private val _searchQuery = MutableStateFlow("")
@@ -162,14 +140,21 @@ class DashboardViewModel @Inject constructor(
 
   private fun observeDashboardExtras(id: Long) {
     viewModelScope.launch {
-      dashboardDao.getPostIts(id).collect { _postIts.value = it }
+      getPostItsUseCase(id).collect { _postIts.value = it }
     }
     viewModelScope.launch {
-      dashboardDao.getConfig(id).collect { config ->
+      getDashboardConfigUseCase(id).collect { config ->
         config?.ordenModulos?.let {
           _dashboardOrder.value = it.split(",")
         }
       }
+    }
+    viewModelScope.launch {
+        getConfigurationUseCase(id).collect { configs ->
+            configs.find { it.clave == "DASHBOARD_QUICK_ACTIONS" }?.valor?.let {
+                _quickActions.value = it.split(",")
+            }
+        }
     }
   }
 
@@ -177,28 +162,42 @@ class DashboardViewModel @Inject constructor(
     val id = currentHouseholdProvider.getCurrentHouseholdId()
     _dashboardOrder.value = newOrder
     viewModelScope.launch {
-      dashboardDao.saveConfig(DashboardConfigEntity(id, newOrder.joinToString(",")))
+      updateDashboardOrderUseCase(id, newOrder)
     }
+  }
+
+  fun updateQuickActions(newActions: List<String>) {
+      val id = currentHouseholdProvider.getCurrentHouseholdId()
+      _quickActions.value = newActions
+      viewModelScope.launch {
+          updateConfigurationUseCase(id, "DASHBOARD_QUICK_ACTIONS", newActions.joinToString(","))
+      }
   }
 
   fun addPostIt(contenido: String, color: String = "#FFF9C4") {
     val id = currentHouseholdProvider.getCurrentHouseholdId()
     viewModelScope.launch {
-      dashboardDao.insertPostIt(PostItEntity(hogarId = id, contenido = contenido, colorHex = color))
+      addPostItUseCase(id, contenido, color)
     }
   }
 
-  fun deletePostIt(postIt: PostItEntity) {
+  fun updatePostIt(postIt: PostIt, nuevoContenido: String) {
+      viewModelScope.launch {
+          updatePostItUseCase(postIt.copy(contenido = nuevoContenido))
+      }
+  }
+
+  fun deletePostIt(postIt: PostIt) {
     viewModelScope.launch {
-      dashboardDao.deletePostIt(postIt)
+      deletePostItUseCase(postIt)
     }
   }
 
   fun updateMemberMood(miembroId: Long, emoji: String?) {
     viewModelScope.launch {
-        val miembro = miembroDao.getMiembroById(miembroId)
+        val miembro = getMemberByIdUseCase(miembroId)
         miembro?.let {
-            miembroDao.updateMiembro(it.copy(
+            updateMemberUseCase(it.copy(
                 estadoAnimo = emoji,
                 estadoAnimoUpdatedAt = if (emoji != null) System.currentTimeMillis() else null
             ))
@@ -218,82 +217,13 @@ class DashboardViewModel @Inject constructor(
           if (query.isBlank()) {
             _searchResults.value = emptyList()
           } else {
-            performSearch(query, id)
+            _searchResults.value = searchUseCase(id, query)
           }
         }
     }
   }
 
-  private suspend fun performSearch(query: String, id: Long) {
-    val tasks = tareaDao.getTareasByHogar(id).first()
-    val lists = listaDao.getListasByHogar(id).first()
-    val members = miembroDao.getMiembrosByHogar(id).first()
-    val stock = stockDao.getStockByHogar(id).first()
-
-    val results = mutableListOf<SearchItem>()
-
-    results.addAll(
-      tasks.filter { it.titulo.contains(query, ignoreCase = true) }
-        .map { SearchItem(it.id, it.titulo, SearchType.TASK, Icons.Default.Task, Screen.TaskDetail.createRoute(it.id)) }
-    )
-    results.addAll(
-      lists.filter { it.nombre.contains(query, ignoreCase = true) }
-        .map { SearchItem(it.id, it.nombre, SearchType.LIST, Icons.AutoMirrored.Filled.List, Screen.ListDetail.createRoute(it.id)) }
-    )
-    results.addAll(
-      members.filter { it.nombre.contains(query, ignoreCase = true) }
-        .map { 
-          val route = if (it.tipo == TipoMiembro.PERSONA.name) Screen.MemberDetail.createRoute(it.id) else Screen.PetDetail.createRoute(it.id)
-          SearchItem(it.id, it.nombre, SearchType.MEMBER, if (it.tipo == TipoMiembro.PERSONA.name) Icons.Default.Person else Icons.Default.Pets, route) 
-        }
-    )
-    results.addAll(
-      stock.filter { it.nombre.contains(query, ignoreCase = true) }
-        .map { SearchItem(it.id, it.nombre, SearchType.STOCK, Icons.Default.Inventory, Screen.Inventory.route) }
-    )
-
-    _searchResults.value = results
-  }
-
   fun onSearchQueryChange(query: String) {
     _searchQuery.value = query
-  }
-
-  private fun calculateBirthdayOccurrence(birthDateMillis: Long): Long {
-    val birthDate = Calendar.getInstance().apply { timeInMillis = birthDateMillis }
-    val today = Calendar.getInstance()
-    
-    val occurrence = Calendar.getInstance().apply {
-      set(Calendar.YEAR, today.get(Calendar.YEAR))
-      set(Calendar.MONTH, birthDate.get(Calendar.MONTH))
-      set(Calendar.DAY_OF_MONTH, birthDate.get(Calendar.DAY_OF_MONTH))
-      set(Calendar.HOUR_OF_DAY, 0)
-      set(Calendar.MINUTE, 0)
-      set(Calendar.SECOND, 0)
-      set(Calendar.MILLISECOND, 0)
-    }
-    return occurrence.timeInMillis
-  }
-
-  private fun formatDate(timestamp: Long): String {
-    val date = java.util.Date(timestamp)
-    val cal = Calendar.getInstance().apply { time = date }
-    val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-      "d 'de' MMMM '(Todo el día)'"
-    } else {
-      "d 'de' MMMM HH:mm"
-    }
-    val sdf = SimpleDateFormat(format, Locale("es", "ES"))
-    return sdf.format(date)
-  }
-
-  private fun getStartOfMonth(): Long {
-    val cal = Calendar.getInstance()
-    cal.set(Calendar.DAY_OF_MONTH, 1)
-    cal.set(Calendar.HOUR_OF_DAY, 0)
-    cal.set(Calendar.MINUTE, 0)
-    cal.set(Calendar.SECOND, 0)
-    cal.set(Calendar.MILLISECOND, 0)
-    return cal.timeInMillis
   }
 }

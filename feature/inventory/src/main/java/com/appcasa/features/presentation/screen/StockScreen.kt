@@ -71,6 +71,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.domain.model.Lista
+import com.appcasa.core.domain.model.StockItem
 import com.appcasa.core.domain.model.TipoLista
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
@@ -78,9 +80,7 @@ import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.inventory.R
-import com.appcasa.features.inventory.data.local.StockEntity
 import com.appcasa.features.inventory.presentation.viewmodel.StockViewModel
-import com.appcasa.features.lists.data.local.ListaEntity
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.delay
 import com.appcasa.core.ui.R as CoreR
@@ -97,9 +97,9 @@ fun StockScreen(
   val barcodeResult by viewModel.barcodeResult.collectAsState()
   
   var showAddDialog by remember { mutableStateOf(false) }
-  var editingItem by remember { mutableStateOf<StockEntity?>(null) }
-  var itemToAddToList by remember { mutableStateOf<StockEntity?>(null) }
-  var itemToDelete by remember { mutableStateOf<StockEntity?>(null) }
+  var editingItem by remember { mutableStateOf<StockItem?>(null) }
+  var itemToAddToList by remember { mutableStateOf<StockItem?>(null) }
+  var itemToDelete by remember { mutableStateOf<StockItem?>(null) }
   val context = LocalContext.current
   var toastMessage by remember { mutableStateOf<String?>(null) }
 
@@ -260,14 +260,14 @@ fun StockScreen(
 
 @Composable
 fun AddToListDialog(
-  item: StockEntity,
-  lists: List<ListaEntity>,
+  item: StockItem,
+  lists: List<Lista>,
   onDismiss: () -> Unit,
   onConfirm: (Long, Double) -> Unit
 ) {
   val initialMissing = (item.cantidadMinima - item.cantidadActual).coerceAtLeast(1.0)
   var quantity by remember { mutableStateOf(initialMissing.toString()) }
-  var selectedListId by remember { mutableStateOf<Long?>(lists.find { it.tipo == TipoLista.COMPRA.name }?.id ?: lists.firstOrNull()?.id) }
+  var selectedListId by remember { mutableStateOf<Long?>(lists.find { it.tipo == TipoLista.COMPRA }?.id ?: lists.firstOrNull()?.id) }
   var expanded by remember { mutableStateOf(false) }
 
   AlertDialog(
@@ -334,7 +334,7 @@ fun AddToListDialog(
 
 @Composable
 fun StockActionDialog(
-  item: StockEntity? = null,
+  item: StockItem? = null,
   initialBarcode: String = "",
   onDismiss: () -> Unit,
   onConfirm: (String, String, Double, Double, String) -> Unit
@@ -444,7 +444,7 @@ fun StockActionDialog(
 
 @Composable
 fun StockItemCard(
-  item: StockEntity,
+  item: StockItem,
   isCompact: Boolean,
   onAdd: () -> Unit,
   onRemove: () -> Unit,

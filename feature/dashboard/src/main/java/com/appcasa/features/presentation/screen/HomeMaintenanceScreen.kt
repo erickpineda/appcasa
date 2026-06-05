@@ -66,13 +66,13 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.domain.model.MaintenanceEvent
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.dashboard.R
-import com.appcasa.features.maintenance.data.local.MaintenanceEntity
 import com.appcasa.features.presentation.viewmodel.HomeMaintenanceViewModel
 import com.appcasa.navigation.Screen
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -90,7 +90,7 @@ fun HomeMaintenanceScreen(
 ) {
     val events by viewModel.events.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
-    var eventToDelete by remember { mutableStateOf<MaintenanceEntity?>(null) }
+    var eventToDelete by remember { mutableStateOf<MaintenanceEvent?>(null) }
     val context = LocalContext.current
     var toastMessage by remember { mutableStateOf<String?>(null) }
 
@@ -219,7 +219,7 @@ fun HomeMaintenanceScreen(
 
 @Composable
 fun MaintenanceCard(
-    event: MaintenanceEntity,
+    event: MaintenanceEvent,
     onDelete: () -> Unit,
     onClick: () -> Unit
 ) {

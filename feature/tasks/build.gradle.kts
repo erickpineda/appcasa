@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.appcasa.feature.tasks"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 26
@@ -52,7 +52,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
-    // Módulos Core
+    // Mï¿½dulos Core
     implementation(project(":core:ui"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))

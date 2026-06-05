@@ -1,0 +1,175 @@
+package com.appcasa.features.settings.domain.usecase
+
+import com.appcasa.core.domain.model.*
+import com.appcasa.core.domain.repository.*
+import com.appcasa.core.domain.providers.CurrentHouseholdProvider
+import com.appcasa.core.ui.utils.HouseCodeUtils
+import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
+
+class GetCurrentHouseholdUseCase @Inject constructor(
+    private val repository: HouseholdRepository
+) {
+    operator fun invoke(): Flow<Household?> {
+        return repository.getHogarActual()
+    }
+}
+
+class UpdateUserUseCase @Inject constructor(
+    private val userRepository: UserRepository,
+    private val familyRepository: FamilyRepository
+) {
+    suspend operator fun invoke(user: User, nombre: String, avatarUrl: String? = null) {
+        val updatedUser = user.copy(
+            nombre = nombre,
+            avatarUrl = avatarUrl ?: user.avatarUrl
+        )
+        userRepository.insertUser(updatedUser)
+
+        user.miembroId?.let { id ->
+            val member = familyRepository.getMemberById(id)
+            member?.let {
+                familyRepository.updateMember(it.copy(
+                    nombre = nombre,
+                    fotoUri = avatarUrl ?: it.fotoUri
+                ))
+            }
+        }
+    }
+}
+
+class RegenerateHouseCodeUseCase @Inject constructor(
+    private val repository: HouseholdRepository
+) {
+    suspend operator fun invoke(hogarId: Long) {
+        val newCode = HouseCodeUtils.generateHouseCode()
+        repository.updateCodigoHogar(hogarId, newCode)
+    }
+}
+
+class UpdateHouseholdUseCase @Inject constructor(
+    private val repository: HouseholdRepository
+) {
+    suspend operator fun invoke(hogar: Household, nombre: String) {
+        repository.insertHogar(hogar.copy(nombre = nombre))
+    }
+}
+
+class CreateHouseholdUseCase @Inject constructor(
+    private val householdRepository: HouseholdRepository,
+    private val userRepository: UserRepository,
+    private val familyRepository: FamilyRepository,
+    private val householdProvider: CurrentHouseholdProvider
+) {
+    suspend operator fun invoke(houseName: String, userName: String, photoUri: String?) {
+        val code = HouseCodeUtils.generateHouseCode()
+        
+        val hogarId = householdRepository.insertHogar(
+            Household(
+                nombre = houseName,
+                codigoHogar = code
+            )
+        )
+        
+        val miembroId = familyRepository.insertMember(
+            FamilyMember(
+                hogarId = hogarId,
+                nombre = userName,
+                tipo = TipoMiembro.PERSONA,
+                rol = RolHogar.ADMIN,
+                fotoUri = photoUri
+            )
+        )
+
+        userRepository.deleteUsers()
+        userRepository.insertUser(
+            User(
+                hogarId = hogarId,
+                miembroId = miembroId,
+                nombre = userName,
+                email = "usuario@appcasa.local",
+                rol = RolHogar.ADMIN,
+                avatarUrl = photoUri,
+                isActive = true
+            )
+        )
+
+        householdProvider.setHouseholdId(hogarId)
+    }
+}
+
+class JoinHouseholdUseCase @Inject constructor(
+    private val userRepository: UserRepository,
+    private val familyRepository: FamilyRepository,
+    private val householdProvider: CurrentHouseholdProvider
+) {
+    suspend operator fun invoke(hogarId: Long, userName: String, photoUri: String?) {
+        val miembroId = familyRepository.insertMember(
+            FamilyMember(
+                hogarId = hogarId,
+                nombre = userName,
+                tipo = TipoMiembro.PERSONA,
+                rol = RolHogar.COLABORADOR,
+                fotoUri = photoUri
+            )
+        )
+
+        userRepository.deleteUsers()
+        userRepository.insertUser(
+            User(
+                hogarId = hogarId,
+                miembroId = miembroId,
+                nombre = userName,
+                email = "colaborador@appcasa.local",
+                rol = RolHogar.COLABORADOR,
+                avatarUrl = photoUri,
+                isActive = true
+            )
+        )
+
+        householdProvider.setHouseholdId(hogarId)
+    }
+}
+
+class SelectMemberUseCase @Inject constructor(
+    private val userRepository: UserRepository,
+    private val householdProvider: CurrentHouseholdProvider
+) {
+    suspend operator fun invoke(member: FamilyMember) {
+        userRepository.deleteUsers()
+        userRepository.insertUser(
+            User(
+                hogarId = member.hogarId,
+                miembroId = member.id,
+                nombre = member.nombre,
+                email = "usuario@appcasa.local",
+                rol = member.rol,
+                avatarUrl = member.fotoUri,
+                isActive = true
+            )
+        )
+        householdProvider.setHouseholdId(member.hogarId)
+    }
+}
+
+class ResetHouseholdUseCase @Inject constructor(
+    private val householdRepository: HouseholdRepository,
+    private val userRepository: UserRepository,
+    private val householdProvider: CurrentHouseholdProvider
+) {
+    suspend operator fun invoke() {
+        householdRepository.deleteAllHogares()
+        userRepository.deleteUsers()
+        householdProvider.setHouseholdId(0L)
+    }
+}
+
+class LogoutUseCase @Inject constructor(
+    private val userRepository: UserRepository,
+    private val householdProvider: CurrentHouseholdProvider
+) {
+    suspend operator fun invoke() {
+        userRepository.deleteUsers()
+        householdProvider.setHouseholdId(0L)
+    }
+}

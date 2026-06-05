@@ -44,10 +44,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.domain.model.Reward
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.feature.tasks.R
-import com.appcasa.features.tasks.data.local.RecompensaEntity
 import com.appcasa.features.tasks.presentation.viewmodel.RewardStoreViewModel
 import com.appcasa.core.ui.R as CoreR
 
@@ -135,7 +135,7 @@ fun RewardStoreScreen(
                 } else {
                     items(rewards) { reward ->
                         val currentMember = members.find { it.id == selectedMemberId }
-                        val canAfford = (currentMember?.puntos ?: 0) >= reward.costePuntos
+                        val canAfford = (currentMember?.puntos ?: 0) >= reward.costoPuntos
                         
                         RewardCard(
                             reward = reward,
@@ -152,7 +152,7 @@ fun RewardStoreScreen(
 
 @Composable
 fun RewardCard(
-    reward: RecompensaEntity,
+    reward: Reward,
     canAfford: Boolean,
     onRedeem: () -> Unit,
     onDelete: () -> Unit
@@ -164,7 +164,7 @@ fun RewardCard(
             leadingContent = { Icon(Icons.Default.CardGiftcard, null, tint = MaterialTheme.colorScheme.primary) },
             trailingContent = {
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("${reward.costePuntos} XP", color = if (canAfford) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black)
+                    Text("${reward.costoPuntos} XP", color = if (canAfford) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black)
                     Button(
                         onClick = onRedeem,
                         enabled = canAfford,

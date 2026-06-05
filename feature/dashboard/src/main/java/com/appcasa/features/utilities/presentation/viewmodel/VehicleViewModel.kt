@@ -2,12 +2,13 @@ package com.appcasa.features.utilities.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.features.settings.data.local.ConfiguracionDao
-import com.appcasa.features.settings.data.local.ConfiguracionEntity
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
+import com.appcasa.core.domain.usecase.GetConfigurationUseCase
+import com.appcasa.core.domain.usecase.UpdateConfigurationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -15,14 +16,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VehicleViewModel @Inject constructor(
-  private val configuracionDao: ConfiguracionDao,
+  private val getConfigurationUseCase: GetConfigurationUseCase,
+  private val updateConfigurationUseCase: UpdateConfigurationUseCase,
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
   private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
-  // Usamos la tabla de configuración para guardar datos del vehículo de forma persistente
-  val vehicleData: StateFlow<Map<String, String>> = configuracionDao.getConfiguracion(householdId)
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val vehicleData: StateFlow<Map<String, String>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> getConfigurationUseCase(id) }
     .map { list -> list.associate { it.clave to it.valor } }
     .stateIn(
       scope = viewModelScope,
@@ -32,11 +35,11 @@ class VehicleViewModel @Inject constructor(
 
   fun saveVehicleData(plate: String, insurance: String, insurancePhone: String, model: String, year: String) {
     viewModelScope.launch {
-      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = householdId, clave = "VEH_PLATE", valor = plate))
-      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = householdId, clave = "VEH_INSURANCE", valor = insurance))
-      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = householdId, clave = "VEH_INSURANCE_PHONE", valor = insurancePhone))
-      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = householdId, clave = "VEH_MODEL", valor = model))
-      configuracionDao.insertConfiguracion(ConfiguracionEntity(hogarId = householdId, clave = "VEH_YEAR", valor = year))
+      updateConfigurationUseCase(householdId, "VEH_PLATE", plate)
+      updateConfigurationUseCase(householdId, "VEH_INSURANCE", insurance)
+      updateConfigurationUseCase(householdId, "VEH_INSURANCE_PHONE", insurancePhone)
+      updateConfigurationUseCase(householdId, "VEH_MODEL", model)
+      updateConfigurationUseCase(householdId, "VEH_YEAR", year)
     }
   }
 }

@@ -76,11 +76,11 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.domain.model.Document
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.feature.dashboard.R
-import com.appcasa.features.documents.data.local.DocumentoEntity
 import com.appcasa.features.utilities.presentation.viewmodel.SmartSafeViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -129,8 +129,8 @@ fun SmartSafeScreen(
 
   val documentos by viewModel.documentos.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
-  var editingDocument by remember { mutableStateOf<DocumentoEntity?>(null) }
-  var documentToDelete by remember { mutableStateOf<DocumentoEntity?>(null) }
+  var editingDocument by remember { mutableStateOf<Document?>(null) }
+  var documentToDelete by remember { mutableStateOf<Document?>(null) }
 
   AppCasaConfirmDialog(
     show = documentToDelete != null,
@@ -243,7 +243,7 @@ fun SmartSafeScreen(
 
 @Composable
 fun DocumentCard(
-  documento: DocumentoEntity,
+  documento: Document,
   onOpen: () -> Unit,
   onEdit: () -> Unit,
   onDelete: () -> Unit,
@@ -398,7 +398,7 @@ fun AddDocumentDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditDocumentDialog(
-  documento: DocumentoEntity,
+  documento: Document,
   onDismiss: () -> Unit,
   onConfirm: (String, String, Long?) -> Unit
 ) {

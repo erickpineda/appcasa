@@ -77,12 +77,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.data.utils.FileUtils
+import com.appcasa.core.domain.model.FamilyMember
+import com.appcasa.core.domain.model.Household
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.feature.settings.R
-import com.appcasa.features.family.data.local.MiembroEntity
-import com.appcasa.features.settings.data.local.HogarEntity
 import com.appcasa.features.settings.presentation.viewmodel.HouseSetupViewModel
 import com.appcasa.navigation.Screen
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -105,6 +105,8 @@ fun HouseSetupScreen(
     LaunchedEffect(existingHousehold) {
         if (existingHousehold != null) {
             step = SetupStep.SELECT_PROFILE
+        } else {
+            step = SetupStep.WELCOME
         }
         isInitializing = false
     }
@@ -159,11 +161,11 @@ fun HouseSetupScreen(
 private fun HouseSetupContent(
     step: SetupStep,
     onStepChange: (SetupStep) -> Unit,
-    existingHousehold: HogarEntity?,
-    householdMembers: List<MiembroEntity>,
+    existingHousehold: Household?,
+    householdMembers: List<FamilyMember>,
     onCreateHousehold: (String, String, String?) -> Unit,
     onJoinHousehold: (String, String, String?) -> Unit,
-    onSelectMember: (MiembroEntity) -> Unit,
+    onSelectMember: (FamilyMember) -> Unit,
     onResetAll: () -> Unit
 ) {
     var inputName by remember { mutableStateOf("") }
@@ -631,9 +633,9 @@ private fun JoinStep(
 
 @Composable
 private fun SelectProfileStep(
-    existingHousehold: HogarEntity?,
-    members: List<MiembroEntity>,
-    onMemberClick: (MiembroEntity) -> Unit,
+    existingHousehold: Household?,
+    members: List<FamilyMember>,
+    onMemberClick: (FamilyMember) -> Unit,
     onAddProfileClick: () -> Unit,
     onResetAll: () -> Unit
 ) {
@@ -651,7 +653,7 @@ private fun SelectProfileStep(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
-                val people = members.filter { it.tipo.uppercase() == TipoMiembro.PERSONA.name }
+                val people = members.filter { it.tipo == TipoMiembro.PERSONA }
                 items(people) { member ->
                     ProfileAvatar(member) { onMemberClick(member) }
                 }
@@ -711,7 +713,7 @@ private fun SelectProfileStep(
 }
 
 @Composable
-private fun ProfileAvatar(member: MiembroEntity, onClick: () -> Unit) {
+private fun ProfileAvatar(member: FamilyMember, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onClick() }) {
         Box(
             modifier = Modifier
@@ -764,10 +766,10 @@ fun HouseSetupPreview_SelectProfile() {
         HouseSetupContent(
             step = SetupStep.SELECT_PROFILE,
             onStepChange = {},
-            existingHousehold = HogarEntity(id = 1, nombre = "Mi Casa"),
+            existingHousehold = Household(id = 1, nombre = "Mi Casa", codigoHogar = "CASA-1234"),
             householdMembers = listOf(
-                MiembroEntity(id = 1, hogarId = 1, nombre = "Juan"),
-                MiembroEntity(id = 2, hogarId = 1, nombre = "Maria")
+                FamilyMember(id = 1, hogarId = 1, nombre = "Juan", tipo = TipoMiembro.PERSONA),
+                FamilyMember(id = 2, hogarId = 1, nombre = "Maria", tipo = TipoMiembro.PERSONA)
             ),
             onCreateHousehold = { _, _, _ -> },
             onJoinHousehold = { _, _, _ -> },

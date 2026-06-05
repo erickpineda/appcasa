@@ -76,11 +76,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.data.utils.FileUtils
+import com.appcasa.core.domain.model.Lista
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.core.ui.utils.QRUtils
 import com.appcasa.feature.settings.R
-import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.settings.presentation.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,7 +131,7 @@ fun SettingsContent(
   householdName: String,
   householdCode: String,
   configs: Map<String, String>,
-  listas: List<ListaEntity>,
+  listas: List<Lista>,
   isAdmin: Boolean,
   onUpdateName: (String) -> Unit,
   onUpdateAvatar: () -> Unit,
@@ -445,7 +445,7 @@ fun AparienciaSection(
 @Composable
 fun PreferenciasSection(
     configs: Map<String, String>,
-    listas: List<ListaEntity>,
+    listas: List<Lista>,
     onUpdateConfig: (String, String) -> Unit
 ) {
     val currency = configs["moneda"] ?: "€"
@@ -581,7 +581,7 @@ fun CurrencySelectorDialog(
 
 @Composable
 fun ListSelectorDialog(
-  listas: List<ListaEntity>,
+  listas: List<Lista>,
   selectedListId: Long?,
   onDismiss: () -> Unit,
   onSelect: (Long) -> Unit

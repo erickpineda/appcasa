@@ -3,12 +3,10 @@ package com.appcasa.features.family.presentation.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.model.TipoMiembro
-import com.appcasa.core.domain.model.TipoEvento
-import com.appcasa.features.family.data.local.MiembroDao
-import com.appcasa.features.family.data.local.MiembroEntity
-import com.appcasa.features.calendar.data.local.EventoDao
-import com.appcasa.features.calendar.data.local.EventoEntity
+import com.appcasa.core.domain.usecase.GetMemberByIdUseCase
+import com.appcasa.core.domain.usecase.UpdateMemberUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,14 +17,14 @@ import javax.inject.Inject
 @HiltViewModel
 class EditMemberViewModel @Inject constructor(
   private val savedStateHandle: SavedStateHandle,
-  private val miembroDao: MiembroDao,
-  private val eventoDao: EventoDao
+  private val getMemberByIdUseCase: GetMemberByIdUseCase,
+  private val updateMemberUseCase: UpdateMemberUseCase
 ) : ViewModel() {
 
   private val memberId: Long = checkNotNull(savedStateHandle["memberId"])
 
-  private val _member = MutableStateFlow<MiembroEntity?>(null)
-  val member: StateFlow<MiembroEntity?> = _member.asStateFlow()
+  private val _member = MutableStateFlow<FamilyMember?>(null)
+  val member: StateFlow<FamilyMember?> = _member.asStateFlow()
 
   init {
     loadMember()
@@ -34,7 +32,7 @@ class EditMemberViewModel @Inject constructor(
 
   private fun loadMember() {
     viewModelScope.launch {
-      _member.value = miembroDao.getMiembroById(memberId)
+      _member.value = getMemberByIdUseCase(memberId)
     }
   }
 
@@ -53,7 +51,7 @@ class EditMemberViewModel @Inject constructor(
       _member.value?.let { current ->
         val updated = current.copy(
           nombre = nombre,
-          tipo = tipo.name,
+          tipo = tipo,
           raza = raza,
           colorPelaje = color,
           numeroChip = chip,
@@ -63,19 +61,7 @@ class EditMemberViewModel @Inject constructor(
           fechaNacimiento = fechaNacimiento,
           updatedAt = System.currentTimeMillis()
         )
-        miembroDao.updateMiembro(updated)
-        
-        // Sincronizar evento de cumpleaños
-        if (fechaNacimiento != null) {
-          eventoDao.insertEvento(
-            EventoEntity(
-              hogarId = current.hogarId,
-              titulo = "Cumpleaños: $nombre 🎂",
-              fecha = fechaNacimiento,
-              tipo = TipoEvento.CUMPLEANOS.name
-            )
-          )
-        }
+        updateMemberUseCase(updated)
       }
     }
   }

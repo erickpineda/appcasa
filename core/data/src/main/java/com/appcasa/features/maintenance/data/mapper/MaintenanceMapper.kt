@@ -1,0 +1,32 @@
+package com.appcasa.features.maintenance.data.mapper
+
+import com.appcasa.core.domain.model.MaintenanceEvent
+import com.appcasa.features.maintenance.data.local.MaintenanceEntity
+
+fun MaintenanceEntity.toDomain(): MaintenanceEvent {
+    return MaintenanceEvent(
+        id = id,
+        hogarId = hogarId,
+        titulo = titulo,
+        descripcion = descripcion,
+        categoria = categoria,
+        fechaRealizacion = fechaRealizacion,
+        proximaRevision = proximaRevision,
+        coste = coste,
+        archived = archived
+    )
+}
+
+fun MaintenanceEvent.toEntity(): MaintenanceEntity {
+    return MaintenanceEntity(
+        id = id,
+        hogarId = hogarId,
+        titulo = titulo,
+        descripcion = descripcion,
+        categoria = categoria,
+        fechaRealizacion = fechaRealizacion,
+        proximaRevision = proximaRevision,
+        coste = coste,
+        archived = archived
+    )
+}

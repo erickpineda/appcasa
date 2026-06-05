@@ -3,14 +3,9 @@ package com.appcasa.features.tasks.presentation.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.core.domain.scheduler.ReminderScheduler
-import com.appcasa.core.domain.model.Periodicidad
-import com.appcasa.core.domain.model.TipoContenidoTarea
-import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
-import com.appcasa.features.tasks.data.local.TareaDao
-import com.appcasa.features.tasks.data.local.TareaEntity
-import com.appcasa.features.family.data.local.MiembroDao
-import com.appcasa.features.family.data.local.MiembroEntity
+import com.appcasa.core.domain.model.*
+import com.appcasa.core.domain.usecase.GetFamilyMembersUseCase
+import com.appcasa.features.tasks.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -19,33 +14,41 @@ import javax.inject.Inject
 @HiltViewModel
 class TaskDetailViewModel @Inject constructor(
   private val savedStateHandle: SavedStateHandle,
-  private val tareaDao: TareaDao,
-  private val miembroDao: MiembroDao,
-  private val reminderScheduler: ReminderScheduler
+  private val getTaskByIdUseCase: GetTaskByIdUseCase,
+  private val updateTaskUseCase: UpdateTaskUseCase,
+  private val getTaskAssignmentsUseCase: GetTaskAssignmentsUseCase,
+  private val getTaskCheckItemsUseCase: GetTaskCheckItemsUseCase,
+  private val addTaskCheckItemUseCase: AddTaskCheckItemUseCase,
+  private val updateTaskCheckItemUseCase: UpdateTaskCheckItemUseCase,
+  private val deleteTaskCheckItemUseCase: DeleteTaskCheckItemUseCase,
+  private val bulkDeleteTaskCheckItemsUseCase: BulkDeleteTaskCheckItemsUseCase,
+  private val bulkUpdateTaskCheckItemsUseCase: BulkUpdateTaskCheckItemsUseCase,
+  private val getFamilyMembersUseCase: GetFamilyMembersUseCase
 ) : ViewModel() {
 
   private val taskId: Long = checkNotNull(savedStateHandle["taskId"])
 
-  private val _task = MutableStateFlow<TareaEntity?>(null)
-  val task: StateFlow<TareaEntity?> = _task.asStateFlow()
+  private val _task = MutableStateFlow<Task?>(null)
+  val task: StateFlow<Task?> = _task.asStateFlow()
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val assignedMember: StateFlow<MiembroEntity?> = _task.flatMapLatest { t ->
+  val assignedMember: StateFlow<FamilyMember?> = _task.flatMapLatest { t ->
     if (t == null) flowOf(null)
     else {
-        flow<MiembroEntity?> {
-            val asignacion = tareaDao.getAsignacionByTarea(t.id)
-            if (asignacion == null) emit(null)
+        flow<FamilyMember?> {
+            val asignaciones = getTaskAssignmentsUseCase(t.id).first()
+            val memberId = asignaciones.firstOrNull()?.miembroId
+            if (memberId == null) emit(null)
             else {
-                miembroDao.getMiembrosByHogar(t.hogarId).collect { list ->
-                    emit(list.find { it.id == asignacion.miembroId })
+                getFamilyMembersUseCase(t.hogarId).collect { list ->
+                    emit(list.find { it.id == memberId })
                 }
             }
         }
     }
   }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-  val subTasks: StateFlow<List<TareaCheckItemEntity>> = tareaDao.getCheckItems(taskId)
+  val subTasks: StateFlow<List<TaskCheckItem>> = getTaskCheckItemsUseCase(taskId)
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
@@ -58,58 +61,50 @@ class TaskDetailViewModel @Inject constructor(
 
   private fun loadTask() {
     viewModelScope.launch {
-      _task.value = tareaDao.getTareaById(taskId)
+      _task.value = getTaskByIdUseCase(taskId).first()
     }
   }
 
   fun addSubTask(texto: String) {
     viewModelScope.launch {
-      tareaDao.insertCheckItem(
-        TareaCheckItemEntity(
-          tareaId = taskId,
-          texto = texto,
-          orden = subTasks.value.size
-        )
-      )
+      addTaskCheckItemUseCase(taskId, texto, subTasks.value.size)
     }
   }
 
-  fun toggleSubTask(item: TareaCheckItemEntity) {
+  fun toggleSubTask(item: TaskCheckItem) {
     viewModelScope.launch {
-      tareaDao.updateCheckItem(item.copy(completado = !item.completado))
+      updateTaskCheckItemUseCase(item.copy(completado = !item.completado))
     }
   }
 
-  fun updateSubTask(item: TareaCheckItemEntity, nuevoTexto: String) {
+  fun updateSubTask(item: TaskCheckItem, nuevoTexto: String) {
     viewModelScope.launch {
-      tareaDao.updateCheckItem(item.copy(texto = nuevoTexto))
+      updateTaskCheckItemUseCase(item.copy(texto = nuevoTexto))
     }
   }
 
-  fun deleteSubTask(item: TareaCheckItemEntity) {
+  fun deleteSubTask(item: TaskCheckItem) {
     viewModelScope.launch {
-      tareaDao.deleteCheckItem(item)
+      deleteTaskCheckItemUseCase(item)
     }
   }
 
-  fun deleteSubTasks(itemsToDelete: List<TareaCheckItemEntity>) {
+  fun deleteSubTasks(itemsToDelete: List<TaskCheckItem>) {
     viewModelScope.launch {
-      itemsToDelete.forEach { tareaDao.deleteCheckItem(it) }
+      bulkDeleteTaskCheckItemsUseCase(itemsToDelete)
     }
   }
 
-  fun toggleSubTasksCompletion(itemsToUpdate: List<TareaCheckItemEntity>, completed: Boolean) {
+  fun toggleSubTasksCompletion(itemsToUpdate: List<TaskCheckItem>, completed: Boolean) {
     viewModelScope.launch {
-      itemsToUpdate.forEach { 
-        tareaDao.updateCheckItem(it.copy(completado = completed))
-      }
+      bulkUpdateTaskCheckItemsUseCase(itemsToUpdate, completed)
     }
   }
 
   fun updateTask(
     titulo: String, 
     descripcion: String?, 
-    prioridad: String, 
+    prioridad: Prioridad, 
     esPersonal: Boolean, 
     fotoUri: String?,
     fechaLimite: Long?,
@@ -119,35 +114,20 @@ class TaskDetailViewModel @Inject constructor(
   ) {
     viewModelScope.launch {
       val current = _task.value ?: return@launch
-      val updated = current.copy(
-        titulo = titulo,
-        descripcion = descripcion,
-        prioridad = prioridad,
-        esPersonal = esPersonal,
-        fotoUri = fotoUri,
-        fechaLimite = fechaLimite,
-        periodicidad = periodicidad.name,
-        tipoContenido = tipoContenido.name,
-        anticipacionMins = anticipacionMins,
-        updatedAt = System.currentTimeMillis()
+      updateTaskUseCase(
+        task = current,
+        nuevoTitulo = titulo,
+        nuevaDescripcion = descripcion,
+        nuevaPrioridad = prioridad,
+        nuevoEsPersonal = esPersonal,
+        nuevaFotoUri = fotoUri,
+        nuevaFechaLimite = fechaLimite,
+        nuevaAnticipacionMins = anticipacionMins,
+        nuevaPeriodicidad = periodicidad,
+        nuevoTipoContenido = tipoContenido
       )
-      tareaDao.updateTarea(updated)
-      _task.value = updated
-      
-      // Reprogramar notificación con anticipación
-      fechaLimite?.let { deadline ->
-        val scheduledTime = deadline - (anticipacionMins * 60 * 1000)
-        if (scheduledTime > System.currentTimeMillis()) {
-          reminderScheduler.scheduleReminder(
-            id = (updated.id + 20000).toInt(),
-            title = "Tarea próxima: $titulo",
-            message = if (anticipacionMins > 0) "Aviso: En $anticipacionMins minutos vence tu tarea" else "Tienes una tarea que vence pronto",
-            timeInMillis = scheduledTime
-          )
-        }
-      } ?: run {
-        reminderScheduler.cancelReminder((updated.id + 20000).toInt())
-      }
+      // Recargamos el estado local
+      _task.value = getTaskByIdUseCase(taskId).first()
     }
   }
 }

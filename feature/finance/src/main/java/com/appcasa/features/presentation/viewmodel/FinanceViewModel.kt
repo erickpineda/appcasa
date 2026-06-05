@@ -3,10 +3,10 @@ package com.appcasa.features.finance.presentation.viewmodel
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.model.Expense
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.features.finance.data.local.ExpenseDao
-import com.appcasa.features.finance.data.local.ExpenseEntity
-import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.core.domain.usecase.*
+import com.appcasa.features.finance.domain.usecase.*
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -27,8 +26,17 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FinanceViewModel @Inject constructor(
-  private val expenseDao: ExpenseDao,
-  private val configuracionDao: ConfiguracionDao,
+  private val getExpensesUseCase: GetExpensesUseCase,
+  private val getArchivedExpensesUseCase: GetArchivedExpensesUseCase,
+  private val getTotalMonthlyExpenseUseCase: GetTotalMonthlyExpenseUseCase,
+  private val addExpenseUseCase: AddExpenseUseCase,
+  private val deleteExpenseUseCase: DeleteExpenseUseCase,
+  private val unarchiveExpenseUseCase: UnarchiveExpenseUseCase,
+  private val clearAllArchivedExpensesUseCase: ClearAllArchivedExpensesUseCase,
+  private val archiveOldExpensesUseCase: ArchiveOldExpensesUseCase,
+  private val purgeOldPhotosUseCase: PurgeOldPhotosUseCase,
+  private val updateExpenseUseCase: UpdateExpenseUseCase,
+  private val getCurrencySymbolUseCase: GetCurrencySymbolUseCase,
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
@@ -53,22 +61,22 @@ class FinanceViewModel @Inject constructor(
   val toastEvent = _toastEvent.asSharedFlow()
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val expenses: StateFlow<List<ExpenseEntity>> = combine(
+  val expenses: StateFlow<List<Expense>> = combine(
     currentHouseholdProvider.householdId,
     _activePage
   ) { id, page -> id to page }
     .flatMapLatest { (id, page) -> 
-        expenseDao.getExpensesPaged(id, limit = page * 20, offset = 0)
+        getExpensesUseCase(id, page)
     }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val archivedExpenses: StateFlow<List<ExpenseEntity>> = combine(
+  val archivedExpenses: StateFlow<List<Expense>> = combine(
     currentHouseholdProvider.householdId,
     _archivedPage
   ) { id, page -> id to page }
     .flatMapLatest { (id, page) -> 
-        expenseDao.getArchivedExpensesPaged(id, limit = page * 20, offset = 0)
+        getArchivedExpensesUseCase(id, page)
     }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -91,10 +99,7 @@ class FinanceViewModel @Inject constructor(
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val currencySymbol: StateFlow<String> = currentHouseholdProvider.householdId
-    .flatMapLatest { id ->
-      configuracionDao.getConfiguracion(id)
-        .map { list -> list.find { it.clave == "moneda" }?.valor ?: "€" }
-    }
+    .flatMapLatest { id -> getCurrencySymbolUseCase(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "€")
 
   fun processTicket(bitmap: Bitmap) {
@@ -125,36 +130,25 @@ class FinanceViewModel @Inject constructor(
 
   fun addExpense(concepto: String, importe: Double, categoria: String, fotoUri: String? = null) {
     viewModelScope.launch {
-      val currentUser = configuracionDao.getUsuarioActual().first()
-      
-      expenseDao.insertExpense(
-        ExpenseEntity(
-          hogarId = householdId,
-          concepto = concepto,
-          importe = importe,
-          categoria = categoria,
-          fotoUri = fotoUri,
-          createdById = currentUser?.id
-        )
-      )
+      addExpenseUseCase(householdId, concepto, importe, categoria, fotoUri)
     }
   }
 
-  fun deleteExpense(expense: ExpenseEntity) {
+  fun deleteExpense(expense: Expense) {
     viewModelScope.launch {
-      expenseDao.deleteExpense(expense)
+      deleteExpenseUseCase(expense)
     }
   }
 
-  fun archiveExpense(expense: ExpenseEntity) {
+  fun archiveExpense(expense: Expense) {
     viewModelScope.launch {
-      expenseDao.insertExpense(expense.copy(archived = true))
+      updateExpenseUseCase(expense.copy(archived = true))
     }
   }
 
   fun unarchiveExpense(expenseId: Long) {
     viewModelScope.launch {
-      expenseDao.unarchiveExpense(expenseId)
+      unarchiveExpenseUseCase(expenseId)
     }
   }
 
@@ -190,27 +184,25 @@ class FinanceViewModel @Inject constructor(
 
   fun clearAllArchived() {
     viewModelScope.launch {
-      expenseDao.deleteAllArchivedExpenses(householdId)
+      clearAllArchivedExpensesUseCase(householdId)
     }
   }
 
-  fun updateExpense(expense: ExpenseEntity) {
+  fun updateExpense(expense: Expense) {
     viewModelScope.launch {
-      expenseDao.insertExpense(expense)
+      updateExpenseUseCase(expense)
     }
   }
 
   fun archiveOldExpenses() {
     viewModelScope.launch {
-      val threshold = System.currentTimeMillis() - (365L * 24 * 60 * 60 * 1000) // 1 año
-      expenseDao.archiveOldExpenses(householdId, threshold)
+      archiveOldExpensesUseCase(householdId)
     }
   }
 
   fun purgeOldPhotos() {
     viewModelScope.launch {
-      val threshold = System.currentTimeMillis() - (365L * 24 * 60 * 60 * 1000) // 1 año
-      expenseDao.purgeOldExpensePhotos(householdId, threshold)
+      purgeOldPhotosUseCase(householdId)
     }
   }
 }

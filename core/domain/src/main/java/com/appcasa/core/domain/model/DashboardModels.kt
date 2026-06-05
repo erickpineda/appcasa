@@ -1,0 +1,14 @@
+package com.appcasa.core.domain.model
+
+data class PostIt(
+    val id: Long = 0,
+    val hogarId: Long,
+    val contenido: String,
+    val colorHex: String = "#FFF9C4",
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+data class DashboardConfig(
+    val hogarId: Long,
+    val ordenModulos: String
+)

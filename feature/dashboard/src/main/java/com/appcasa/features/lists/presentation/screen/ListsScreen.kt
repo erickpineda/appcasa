@@ -56,6 +56,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.domain.model.Lista
 import com.appcasa.core.domain.model.TipoLista
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
@@ -63,7 +64,6 @@ import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.dashboard.R
-import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.lists.presentation.viewmodel.ListsViewModel
 import com.appcasa.navigation.Screen
 import kotlinx.coroutines.delay
@@ -78,7 +78,7 @@ fun ListsScreen(
   val isCompact by viewModel.isCompactView.collectAsState()
   var showAddDialog by remember { mutableStateOf(false) }
   var toastMessage by remember { mutableStateOf<String?>(null) }
-  var listToArchive by remember { mutableStateOf<ListaEntity?>(null) }
+  var listToArchive by remember { mutableStateOf<Lista?>(null) }
 
   LaunchedEffect(Unit) {
     viewModel.toastEvent.collect { message ->
@@ -132,12 +132,12 @@ fun ListsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListsContent(
-  lists: List<ListaEntity>,
+  lists: List<Lista>,
   isCompact: Boolean,
   onListClick: (Long) -> Unit,
-  onDeleteList: (ListaEntity) -> Unit,
+  onDeleteList: (Lista) -> Unit,
   onAddClick: () -> Unit,
-  onUpdateList: (ListaEntity, String) -> Unit,
+  onUpdateList: (Lista, String) -> Unit,
   onLoadMore: () -> Unit
 ) {
   Scaffold(
@@ -201,7 +201,7 @@ fun ListsContent(
 
 @Composable
 fun CompactListCard(
-  lista: ListaEntity, 
+  lista: Lista, 
   isCompact: Boolean,
   onClick: () -> Unit, 
   onDelete: () -> Unit,
@@ -211,11 +211,11 @@ fun CompactListCard(
   var editedText by remember { mutableStateOf(lista.nombre) }
 
   val icon = when (lista.tipo) {
-    TipoLista.COMPRA.name -> Icons.Default.ShoppingCart
-    TipoLista.FARMACIA.name -> Icons.Default.MedicalServices
-    TipoLista.VETERINARIO.name -> Icons.Default.Pets
-    TipoLista.VIAJE.name -> Icons.Default.Flight
-    TipoLista.ESCOLAR.name -> Icons.Default.School
+    TipoLista.COMPRA -> Icons.Default.ShoppingCart
+    TipoLista.FARMACIA -> Icons.Default.MedicalServices
+    TipoLista.VETERINARIO -> Icons.Default.Pets
+    TipoLista.VIAJE -> Icons.Default.Flight
+    TipoLista.ESCOLAR -> Icons.Default.School
     else -> Icons.AutoMirrored.Filled.List
   }
 
@@ -283,7 +283,7 @@ fun CompactListCard(
           )
           if (!isCompact) {
             Text(
-              text = lista.tipo, 
+              text = lista.tipo.name,
               style = MaterialTheme.typography.labelSmall,
               color = MaterialTheme.colorScheme.primary
             )

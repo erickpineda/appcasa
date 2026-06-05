@@ -2,18 +2,10 @@ package com.appcasa.features.tasks.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.core.domain.model.EstadoTarea
-import com.appcasa.core.domain.model.Periodicidad
-import com.appcasa.core.domain.model.Prioridad
-import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.core.domain.scheduler.ReminderScheduler
-import com.appcasa.features.family.data.local.MiembroDao
-import com.appcasa.features.family.data.local.MiembroEntity
-import com.appcasa.features.settings.data.local.ConfiguracionDao
-import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
-import com.appcasa.features.tasks.data.local.TareaDao
-import com.appcasa.features.tasks.data.local.TareaEntity
+import com.appcasa.core.domain.usecase.*
+import com.appcasa.features.tasks.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,20 +14,26 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
 class TasksViewModel @Inject constructor(
-  private val tareaDao: TareaDao,
-  private val miembroDao: MiembroDao,
-  private val configuracionDao: ConfiguracionDao,
-  private val reminderScheduler: ReminderScheduler,
+  private val getActiveTasksUseCase: GetActiveTasksUseCase,
+  private val getArchivedTasksUseCase: GetArchivedTasksUseCase,
+  private val toggleTaskCompletionUseCase: ToggleTaskCompletionUseCase,
+  private val deleteTaskUseCase: DeleteTaskUseCase,
+  private val archiveTaskUseCase: ArchiveTaskUseCase,
+  private val unarchiveTaskUseCase: UnarchiveTaskUseCase,
+  private val clearAllArchivedTasksUseCase: ClearAllArchivedTasksUseCase,
+  private val getSubTaskCountsUseCase: GetSubTaskCountsUseCase,
+  private val getFamilyMembersUseCase: GetFamilyMembersUseCase,
+  private val addTaskUseCase: AddTaskUseCase,
+  private val updateTaskUseCase: UpdateTaskUseCase,
+  private val archiveOldTasksUseCase: ArchiveOldTasksUseCase,
+  private val isCompactViewUseCase: IsCompactViewUseCase,
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
@@ -57,12 +55,12 @@ class TasksViewModel @Inject constructor(
   val toastEvent = _toastEvent.asSharedFlow()
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val tasks: StateFlow<List<TareaEntity>> = combine(
+  val tasks: StateFlow<List<Task>> = combine(
     currentHouseholdProvider.householdId,
     _activePage
   ) { id, page -> id to page }
     .flatMapLatest { (id, page) -> 
-        tareaDao.getTareasPaged(id, limit = page * 20, offset = 0)
+        getActiveTasksUseCase(id, page)
     }
     .stateIn(
       scope = viewModelScope,
@@ -74,103 +72,36 @@ class TasksViewModel @Inject constructor(
   val archivedPage = _archivedPage.asStateFlow()
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val archivedTasks: StateFlow<List<TareaEntity>> = combine(
+  val archivedTasks: StateFlow<List<Task>> = combine(
     currentHouseholdProvider.householdId,
     _archivedPage
   ) { id, page -> id to page }
     .flatMapLatest { (id, page) -> 
-        tareaDao.getArchivedTareasPaged(id, limit = page * 20, offset = 0) 
+        getArchivedTasksUseCase(id, page)
     }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-  val isCompactView: StateFlow<Boolean> = configuracionDao.getConfiguracion(householdId)
-    .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val isCompactView: StateFlow<Boolean> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> isCompactViewUseCase(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-  val subTaskCounts: StateFlow<Map<Long, Pair<Int, Int>>> = tareaDao.getAllCheckItemsCounts(householdId)
-    .map { list -> list.associate { it.taskId to (it.total to it.completed) } }
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val subTaskCounts: StateFlow<Map<Long, Pair<Int, Int>>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> getSubTaskCountsUseCase(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-  val familyMembers: StateFlow<List<MiembroEntity>> = miembroDao.getMiembrosByHogar(householdId)
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val familyMembers: StateFlow<List<FamilyMember>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> getFamilyMembersUseCase(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-  fun toggleTaskCompletion(tarea: TareaEntity) {
+  fun toggleTaskCompletion(task: Task) {
     viewModelScope.launch {
-      val nuevoEstado = if (tarea.estado == EstadoTarea.COMPLETADA.name) {
-        EstadoTarea.PENDIENTE.name
-      } else {
-        EstadoTarea.COMPLETADA.name
-      }
-      
-      val isMarkingAsCompleted = nuevoEstado == EstadoTarea.COMPLETADA.name
-      
-      val updated = tarea.copy(
-        estado = nuevoEstado,
-        completadoEn = if (isMarkingAsCompleted) System.currentTimeMillis() else null,
-        updatedAt = System.currentTimeMillis()
-      )
-      
-      if (isMarkingAsCompleted && !tarea.puntosOtorgados) {
-        reminderScheduler.cancelReminder((tarea.id + 20000).toInt())
-        
-        // Gamificación: Calcular y otorgar puntos solo si no se dieron antes
-        var points = when(tarea.prioridad) {
-          Prioridad.ALTA.name -> 20
-          Prioridad.BAJA.name -> 5
-          else -> 10
-        }
-        
-        if (tarea.esPersonal) {
-            points = 0 // Tareas personales no otorgan puntos para garantizar la justicia en el ranking familiar
-        }
-
-        _gainedXP.value = points
-        if (points > 0) {
-            _showCelebration.value = true
-            awardPointsForTask(tarea, points)
-        }
-        
-        // Marcamos la tarea para que no vuelva a dar puntos
-        tareaDao.updateTarea(updated.copy(puntosOtorgados = true))
-      } else {
-        tareaDao.updateTarea(updated)
-      }
-      
-      if (isMarkingAsCompleted) {
-        // Lógica de Recurrencia (siempre se dispara al completar)
-        if (tarea.periodicidad != Periodicidad.NINGUNA.name) {
-          spawnNextInstance(tarea)
-        }
-      }
-    }
-  }
-
-  private suspend fun awardPointsForTask(tarea: TareaEntity, points: Int) {
-    val asignacion = tareaDao.getAsignacionByTarea(tarea.id)
-    val memberId = if (asignacion != null) {
-      asignacion.miembroId
-    } else {
-      // Si no hay asignación, buscamos al usuario principal del hogar
-      val user = configuracionDao.getUsuarioActual().first()
-      // Buscamos un miembro con ese nombre o el primer miembro PERSONA
-      miembroDao.getMiembrosByHogar(householdId).first().find { 
-        it.nombre == user?.nombre && it.tipo == TipoMiembro.PERSONA.name 
-      }?.id ?: miembroDao.getMiembrosByHogar(householdId).first().find { 
-        it.tipo == TipoMiembro.PERSONA.name
-      }?.id
-    }
-
-    memberId?.let { id ->
-      val miembro = miembroDao.getMiembroById(id)
-      miembro?.let { m ->
-        val nuevosPuntos = m.puntos + points
-        val nuevoNivel = (nuevosPuntos / 100) + 1
-        
-        miembroDao.updateMiembro(m.copy(
-          puntos = nuevosPuntos,
-          nivel = nuevoNivel,
-          updatedAt = System.currentTimeMillis()
-        ))
+      val points = toggleTaskCompletionUseCase(task)
+      if (points > 0) {
+          _gainedXP.value = points
+          _showCelebration.value = true
       }
     }
   }
@@ -179,66 +110,21 @@ class TasksViewModel @Inject constructor(
     _showCelebration.value = false
   }
 
-  private suspend fun spawnNextInstance(tarea: TareaEntity) {
-    val nextDate = calculateNextDate(tarea.fechaLimite ?: System.currentTimeMillis(), tarea.periodicidad)
-    
-    // 1. Clonar Tarea
-    val nextTaskId = tareaDao.insertTarea(
-      tarea.copy(
-        id = 0, // Nueva ID
-        estado = EstadoTarea.PENDIENTE.name,
-        fechaLimite = nextDate,
-        completadoEn = null,
-        anticipacionMins = tarea.anticipacionMins,
-        createdAt = System.currentTimeMillis(),
-        updatedAt = System.currentTimeMillis()
-      )
-    )
-    
-    // 2. Clonar Sub-tareas
-    val subTasks = tareaDao.getCheckItems(tarea.id).first()
-    subTasks.forEach { sub ->
-      tareaDao.insertCheckItem(
-        TareaCheckItemEntity(
-          tareaId = nextTaskId,
-          texto = sub.texto,
-          completado = false,
-          orden = sub.orden
-        )
-      )
-    }
-  }
-
-  private fun calculateNextDate(currentDate: Long, periodicidad: String): Long {
-    val cal = Calendar.getInstance().apply { timeInMillis = currentDate }
-    when (periodicidad) {
-      Periodicidad.DIARIA.name -> cal.add(Calendar.DAY_OF_YEAR, 1)
-      Periodicidad.SEMANAL.name -> cal.add(Calendar.WEEK_OF_YEAR, 1)
-      Periodicidad.QUINCENAL.name -> cal.add(Calendar.DAY_OF_YEAR, 15)
-      Periodicidad.MENSUAL.name -> cal.add(Calendar.MONTH, 1)
-      Periodicidad.TRIMESTRAL.name -> cal.add(Calendar.MONTH, 3)
-      Periodicidad.ANUAL.name -> cal.add(Calendar.YEAR, 1)
-    }
-    return cal.timeInMillis
-  }
-
-  fun deleteTask(tarea: TareaEntity) {
+  fun deleteTask(task: Task) {
     viewModelScope.launch {
-      tareaDao.deleteTarea(tarea)
-      reminderScheduler.cancelReminder((tarea.id + 20000).toInt())
+      deleteTaskUseCase(task)
     }
   }
 
-  fun archiveTask(tarea: TareaEntity) {
+  fun archiveTask(task: Task) {
     viewModelScope.launch {
-      tareaDao.updateTarea(tarea.copy(archived = true))
-      reminderScheduler.cancelReminder((tarea.id + 20000).toInt())
+      archiveTaskUseCase(task)
     }
   }
 
-  fun unarchiveTask(tareaId: Long) {
+  fun unarchiveTask(taskId: Long) {
     viewModelScope.launch {
-      tareaDao.unarchiveTarea(tareaId)
+      unarchiveTaskUseCase(taskId)
     }
   }
 
@@ -251,7 +137,7 @@ class TasksViewModel @Inject constructor(
         kotlinx.coroutines.delay(600)
         if (tasks.value.size <= currentCount) {
             _toastEvent.emit("No hay más tareas para cargar")
-            _activePage.value -= 1 // Revertimos para no seguir incrementando en balde
+            _activePage.value -= 1
         }
         _isLoading.value = false
     }
@@ -274,32 +160,25 @@ class TasksViewModel @Inject constructor(
 
   fun clearAllArchived() {
     viewModelScope.launch {
-      tareaDao.deleteAllArchivedTasks(householdId)
+      clearAllArchivedTasksUseCase(householdId)
     }
   }
 
-  fun addTask(titulo: String, prioridad: String = "MEDIA") {
+  fun addTask(titulo: String, prioridad: Prioridad = Prioridad.MEDIA) {
     viewModelScope.launch {
-      tareaDao.insertTarea(
-        TareaEntity(
-          hogarId = householdId,
-          titulo = titulo,
-          prioridad = prioridad
-        )
-      )
+      addTaskUseCase(householdId, titulo, prioridad)
     }
   }
 
-  fun updateTask(tarea: TareaEntity, nuevoTitulo: String) {
+  fun updateTask(task: Task, nuevoTitulo: String) {
     viewModelScope.launch {
-      tareaDao.insertTarea(tarea.copy(titulo = nuevoTitulo))
+      updateTaskUseCase(task, nuevoTitulo)
     }
   }
 
   fun archiveOldTasks() {
     viewModelScope.launch {
-      val threshold = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000) // 30 días
-      tareaDao.archiveOldCompletedTasks(householdId, threshold)
+      archiveOldTasksUseCase(householdId)
     }
   }
 }

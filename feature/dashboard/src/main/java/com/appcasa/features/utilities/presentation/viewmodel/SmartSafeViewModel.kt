@@ -1,18 +1,15 @@
 package com.appcasa.features.utilities.presentation.viewmodel
 
-import android.content.Context
-import androidx.core.content.ContextCompat
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.model.Document
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.core.domain.scheduler.ReminderScheduler
-import com.appcasa.features.documents.data.local.DocumentoDao
-import com.appcasa.features.documents.data.local.DocumentoEntity
+import com.appcasa.features.documents.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,10 +21,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SmartSafeViewModel @Inject constructor(
-  private val documentoDao: DocumentoDao,
-  private val currentHouseholdProvider: CurrentHouseholdProvider,
-  private val reminderScheduler: ReminderScheduler,
-  @ApplicationContext private val context: Context
+  private val getDocumentsUseCase: GetDocumentsUseCase,
+  private val addDocumentUseCase: AddDocumentUseCase,
+  private val deleteDocumentUseCase: DeleteDocumentUseCase,
+  private val updateDocumentUseCase: UpdateDocumentUseCase,
+  private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
   private val _isUnlocked = MutableStateFlow(false)
@@ -35,15 +33,16 @@ class SmartSafeViewModel @Inject constructor(
 
   private val householdId = currentHouseholdProvider.getCurrentHouseholdId()
 
-  val documentos: StateFlow<List<DocumentoEntity>> = currentHouseholdProvider.householdId
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val documentos: StateFlow<List<Document>> = currentHouseholdProvider.householdId
     .flatMapLatest { id ->
-      documentoDao.getDocumentosByHogar(id)
+      getDocumentsUseCase(id)
     }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   fun authenticate(activity: FragmentActivity) {
     try {
-        val biometricManager = BiometricManager.from(activity) // Usar activity context
+        val biometricManager = BiometricManager.from(activity)
         val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
         
         val canAuth = biometricManager.canAuthenticate(authenticators)
@@ -61,19 +60,12 @@ class SmartSafeViewModel @Inject constructor(
                     super.onAuthenticationSucceeded(result)
                     _isUnlocked.value = true
                 }
-                
-                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                    super.onAuthenticationError(errorCode, errString)
-                    // Si el usuario cancela o hay un error, dejamos que lo intente de nuevo con el botón
-                }
             })
             biometricPrompt.authenticate(promptInfo)
         } else {
-            // Si hay error de hardware o no está configurado, desbloqueamos para no bloquear al usuario
             _isUnlocked.value = true
         }
     } catch (e: Exception) {
-        e.printStackTrace()
         _isUnlocked.value = true
     }
   }
@@ -85,63 +77,27 @@ class SmartSafeViewModel @Inject constructor(
     vencimiento: Long? = null
   ) {
     viewModelScope.launch {
-      val doc = DocumentoEntity(
-        hogarId = householdId,
-        nombre = nombre,
-        categoria = categoria,
-        uriPdf = uriPdf,
-        fechaVencimiento = vencimiento
-      )
-      val id = documentoDao.insertDocumento(doc)
-      
-      // Si tiene vencimiento, programar aviso (ej: 30 días antes)
-      vencimiento?.let { date ->
-        val alertDate = date - (30L * 24 * 60 * 60 * 1000)
-        if (alertDate > System.currentTimeMillis()) {
-          reminderScheduler.scheduleReminder(
-            id = (id + 30000).toInt(),
-            title = "Vencimiento Próximo: $nombre",
-            message = "El documento de la categoría $categoria caduca en 30 días.",
-            timeInMillis = alertDate
-          )
-        }
-      }
+      addDocumentUseCase(householdId, nombre, categoria, uriPdf, vencimiento)
     }
   }
 
-  fun deleteDocumento(documento: DocumentoEntity) {
+  fun deleteDocumento(documento: Document) {
     viewModelScope.launch {
-      documentoDao.deleteDocumento(documento)
-      reminderScheduler.cancelReminder((documento.id + 30000).toInt())
+      deleteDocumentUseCase(documento)
     }
   }
 
-  fun updateDocumento(documento: DocumentoEntity) {
+  fun updateDocumento(documento: Document) {
     viewModelScope.launch {
-      documentoDao.insertDocumento(documento)
-      
-      // Actualizar alerta si cambió la fecha
-      reminderScheduler.cancelReminder((documento.id + 30000).toInt())
-      documento.fechaVencimiento?.let { date ->
-        val alertDate = date - (30L * 24 * 60 * 60 * 1000)
-        if (alertDate > System.currentTimeMillis()) {
-          reminderScheduler.scheduleReminder(
-            id = (documento.id + 30000).toInt(),
-            title = "Vencimiento Próximo: ${documento.nombre}",
-            message = "El documento de la categoría ${documento.categoria} caduca en 30 días.",
-            timeInMillis = alertDate
-          )
-        }
-      }
+      updateDocumentUseCase(documento)
     }
   }
   
-  fun uploadToCloud(documento: DocumentoEntity) {
-    // Placeholder para futura integración con Google Drive
+  fun uploadToCloud(documento: Document) {
     viewModelScope.launch {
-        // Lógica de subida aquí
+        // Mock cloud upload logic
         val mockCloudUrl = "https://drive.google.com/mock/${documento.nombre}"
-        documentoDao.insertDocumento(documento.copy(urlNube = mockCloudUrl, sincronizado = true))
+        updateDocumentUseCase(documento.copy(urlNube = mockCloudUrl, sincronizado = true))
     }
   }
 }

@@ -69,7 +69,7 @@ fun DosageCalculatorScreen(
   if (selectedPetName.isEmpty()) {
       selectedPetName = selectPetHint
   }
-  var petType by remember { mutableStateOf(TipoMiembro.PERRO.name) }
+  var petType by remember { mutableStateOf(TipoMiembro.PERRO) }
   var doseValueInput by remember { mutableStateOf("") }
   
   // Estado local para el peso para evitar que se resetee al escribir
@@ -150,7 +150,7 @@ fun DosageCalculatorScreen(
         ) {
           pets.forEach { pet ->
             DropdownMenuItem(
-              text = { Text("${pet.nombre} (${pet.tipo})") },
+              text = { Text("${pet.nombre} (${pet.tipo.name})") },
               onClick = {
                 selectedPetName = pet.nombre
                 petType = pet.tipo
@@ -162,7 +162,7 @@ fun DosageCalculatorScreen(
         }
       }
 
-      if (petType == TipoMiembro.TORTUGA.name) {
+      if (petType == TipoMiembro.TORTUGA) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f))) {
             Text(
                 stringResource(R.string.util_dosage_turtle_warning),

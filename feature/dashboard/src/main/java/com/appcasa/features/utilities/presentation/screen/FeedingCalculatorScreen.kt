@@ -66,7 +66,7 @@ fun FeedingCalculatorScreen(
   if (selectedPetName.isEmpty()) {
       selectedPetName = selectPetHint
   }
-  var selectedPetType by remember { mutableStateOf(TipoMiembro.PERRO.name) }
+  var selectedPetType by remember { mutableStateOf(TipoMiembro.PERRO) }
   var expanded by remember { mutableStateOf(false) }
 
   var weightInput by remember { mutableStateOf("") }
@@ -78,7 +78,7 @@ fun FeedingCalculatorScreen(
   }
 
   val ration = remember(petWeight, selectedPetType) {
-    if (selectedPetType == TipoMiembro.GATO.name) {
+    if (selectedPetType == TipoMiembro.GATO) {
         when {
             petWeight <= 0 -> "" // Placeholder, using stringResource below
             petWeight < 2 -> "CONSULT_VET_LOW"
@@ -155,7 +155,7 @@ fun FeedingCalculatorScreen(
         ) {
           pets.forEach { pet ->
             DropdownMenuItem(
-              text = { Text("${pet.nombre} (${pet.tipo})") },
+              text = { Text("${pet.nombre} (${pet.tipo.name})") },
               onClick = {
                 selectedPetName = pet.nombre
                 selectedPetType = pet.tipo
@@ -204,14 +204,14 @@ fun FeedingCalculatorScreen(
         }
       }
 
-      val petTypeLabel = if (selectedPetType == TipoMiembro.GATO.name) stringResource(R.string.util_feeding_gatos) else stringResource(R.string.util_feeding_perros)
+      val petTypeLabel = if (selectedPetType == TipoMiembro.GATO) stringResource(R.string.util_feeding_gatos) else stringResource(R.string.util_feeding_perros)
       Text(stringResource(R.string.util_feeding_table_ref, petTypeLabel), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
       Surface(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         shape = MaterialTheme.shapes.medium
       ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            if (selectedPetType == TipoMiembro.GATO.name) {
+            if (selectedPetType == TipoMiembro.GATO) {
                 ReferenceRow("2 - 4 kg", "30 - 50 g")
                 ReferenceRow("4 - 6 kg", "50 - 65 g")
                 ReferenceRow("6 - 8 kg", "65 - 75 g")

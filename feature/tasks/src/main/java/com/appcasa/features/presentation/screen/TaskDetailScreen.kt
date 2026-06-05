@@ -94,10 +94,10 @@ import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.core.domain.model.Prioridad
+import com.appcasa.core.domain.model.TaskCheckItem
 import com.appcasa.core.domain.model.TipoContenidoTarea
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.tasks.R
-import com.appcasa.features.tasks.data.local.TareaCheckItemEntity
 import com.appcasa.features.tasks.presentation.viewmodel.TaskDetailViewModel
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -117,7 +117,7 @@ fun TaskDetailScreen(
   var newSubTaskText by remember { mutableStateOf("") }
   val haptic = LocalHapticFeedback.current
   
-  val isTaskCompleted = task?.estado == EstadoTarea.COMPLETADA.name
+  val isTaskCompleted = task?.estado == EstadoTarea.COMPLETADA
   var selectedItems by remember { mutableStateOf(setOf<Long>()) }
   val isSelectionMode = selectedItems.isNotEmpty()
   var showEditDialog by remember { mutableStateOf(false) }
@@ -126,16 +126,16 @@ fun TaskDetailScreen(
     EditTaskMainDialog(
       titulo = task!!.titulo,
       descripcion = task!!.descripcion ?: "",
-      prioridad = Prioridad.valueOf(task!!.prioridad),
-      periodicidad = Periodicidad.valueOf(task!!.periodicidad),
-      tipoContenido = TipoContenidoTarea.valueOf(task!!.tipoContenido),
+      prioridad = task!!.prioridad,
+      periodicidad = task!!.periodicidad,
+      tipoContenido = task!!.tipoContenido,
       esPersonal = task!!.esPersonal,
       fechaLimite = task!!.fechaLimite,
       anticipacionActual = task!!.anticipacionMins,
       fotoUri = task!!.fotoUri,
       onDismiss = { showEditDialog = false },
       onConfirm = { t, d, p, per, perCont, esp, fecha, f, anticipacion ->
-        viewModel.updateTask(t, d.takeIf { it.isNotBlank() }, p.name, esp, f, fecha, anticipacion, per, perCont)
+        viewModel.updateTask(t, d.takeIf { it.isNotBlank() }, p, esp, f, fecha, anticipacion, per, perCont)
         showEditDialog = false
       }
     )
@@ -255,10 +255,10 @@ fun TaskDetailScreen(
                     }
                     SuggestionChip(
                         onClick = {},
-                        label = { Text(currentTask.prioridad) },
+                        label = { Text(currentTask.prioridad.name) },
                         colors = SuggestionChipDefaults.suggestionChipColors(
                             labelColor = when(currentTask.prioridad) {
-                                "ALTA" -> MaterialTheme.colorScheme.error
+                                Prioridad.ALTA -> MaterialTheme.colorScheme.error
                                 else -> MaterialTheme.colorScheme.primary
                             }
                         )
@@ -270,10 +270,10 @@ fun TaskDetailScreen(
                             icon = { Icon(Icons.Default.Person, null, modifier = Modifier.size(16.dp)) }
                         )
                     }
-                    if (currentTask.periodicidad != Periodicidad.NINGUNA.name) {
+                    if (currentTask.periodicidad != Periodicidad.NINGUNA) {
                         SuggestionChip(
                             onClick = {},
-                            label = { Text(currentTask.periodicidad) },
+                            label = { Text(currentTask.periodicidad.name) },
                             icon = { Icon(Icons.Default.Repeat, null, modifier = Modifier.size(16.dp)) }
                         )
                     }
@@ -312,7 +312,7 @@ fun TaskDetailScreen(
             }
 
             item {
-              if (currentTask.tipoContenido == TipoContenidoTarea.TEXTO.name) {
+              if (currentTask.tipoContenido == TipoContenidoTarea.TEXTO) {
                 // MODO TEXTO: Mostrar descripción prominentemente
                 Column(modifier = Modifier.padding(16.dp)) {
                     if (!currentTask.descripcion.isNullOrBlank()) {
@@ -368,7 +368,7 @@ fun TaskDetailScreen(
               }
             }
 
-            if (currentTask.tipoContenido == TipoContenidoTarea.LISTA.name) {
+            if (currentTask.tipoContenido == TipoContenidoTarea.LISTA) {
               item {
                 AnimatedVisibility(visible = !isSelectionMode && !isTaskCompleted) {
                   Row(
@@ -446,7 +446,7 @@ fun TaskDetailScreen(
 
 @Composable
 fun CompactSubTaskItemEditable(
-  item: TareaCheckItemEntity,
+  item: TaskCheckItem,
   isSelected: Boolean,
   isSelectionMode: Boolean,
   isParentTaskCompleted: Boolean,

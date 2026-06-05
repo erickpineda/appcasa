@@ -2,10 +2,11 @@ package com.appcasa.features.lists.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.model.Lista
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.features.lists.data.local.ListaDao
-import com.appcasa.features.lists.data.local.ListaEntity
-import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.features.lists.domain.usecase.*
+import com.appcasa.core.domain.usecase.GetActiveListsUseCase
+import com.appcasa.core.domain.usecase.IsCompactViewUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,15 +16,22 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ListsViewModel @Inject constructor(
-    private val listaDao: ListaDao,
-    private val configuracionDao: ConfiguracionDao,
+    private val getActiveListsUseCase: GetActiveListsUseCase,
+    private val getArchivedListsUseCase: GetArchivedListsUseCase,
+    private val createListUseCase: CreateListUseCase,
+    private val updateListUseCase: UpdateListUseCase,
+    private val deleteListUseCase: DeleteListUseCase,
+    private val archiveListUseCase: ArchiveListUseCase,
+    private val unarchiveListUseCase: UnarchiveListUseCase,
+    private val clearArchivedListsUseCase: ClearArchivedListsUseCase,
+    private val purgeCompletedItemsUseCase: PurgeCompletedItemsUseCase,
+    private val isCompactViewUseCase: IsCompactViewUseCase,
     private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
@@ -42,12 +50,12 @@ class ListsViewModel @Inject constructor(
     val toastEvent = _toastEvent.asSharedFlow()
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val lists: StateFlow<List<ListaEntity>> = combine(
+    val lists: StateFlow<List<Lista>> = combine(
         currentHouseholdProvider.householdId,
         _activePage
     ) { id, page -> id to page }
         .flatMapLatest { (id, page) -> 
-            listaDao.getListasPaged(id, limit = page * 20, offset = 0)
+            getActiveListsUseCase(id, page)
         }
         .stateIn(
             scope = viewModelScope,
@@ -56,52 +64,47 @@ class ListsViewModel @Inject constructor(
         )
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val archivedLists: StateFlow<List<ListaEntity>> = combine(
+    val archivedLists: StateFlow<List<Lista>> = combine(
         currentHouseholdProvider.householdId,
         _archivedPage
     ) { id, page -> id to page }
         .flatMapLatest { (id, page) -> 
-            listaDao.getArchivedListasPaged(id, limit = page * 20, offset = 0)
+            getArchivedListsUseCase(id, page)
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<Lista>())
 
-    val isCompactView: StateFlow<Boolean> = configuracionDao.getConfiguracion(householdId)
-        .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val isCompactView: StateFlow<Boolean> = currentHouseholdProvider.householdId
+        .flatMapLatest { id -> isCompactViewUseCase(id) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     fun addList(nombre: String, tipo: String) {
         viewModelScope.launch {
-            listaDao.insertLista(
-                ListaEntity(
-                    hogarId = householdId,
-                    nombre = nombre,
-                    tipo = tipo
-                )
-            )
+            createListUseCase(householdId, nombre, tipo)
         }
     }
 
-    fun deleteList(lista: ListaEntity) {
+    fun deleteList(lista: Lista) {
         viewModelScope.launch {
-            listaDao.deleteLista(lista)
+            deleteListUseCase(lista)
         }
     }
 
-    fun updateList(lista: ListaEntity, nuevoNombre: String) {
+    fun updateList(lista: Lista, nuevoNombre: String) {
         viewModelScope.launch {
-            listaDao.insertLista(lista.copy(nombre = nuevoNombre))
+            updateListUseCase(lista, nuevoNombre)
         }
     }
 
-    fun archiveList(lista: ListaEntity) {
+    fun archiveList(lista: Lista) {
         viewModelScope.launch {
-            listaDao.insertLista(lista.copy(archived = true))
+            archiveListUseCase(lista)
         }
     }
 
     fun unarchiveList(listaId: Long) {
         viewModelScope.launch {
-            listaDao.unarchiveLista(listaId)
+            unarchiveListUseCase(listaId)
         }
     }
 
@@ -137,13 +140,13 @@ class ListsViewModel @Inject constructor(
 
     fun clearAllArchived() {
         viewModelScope.launch {
-            listaDao.deleteAllArchivedListas(householdId)
+            clearArchivedListsUseCase(householdId)
         }
     }
 
     fun purgeCompletedItems(listaId: Long) {
         viewModelScope.launch {
-            listaDao.deleteCompletedItems(listaId)
+            purgeCompletedItemsUseCase(listaId)
         }
     }
 }

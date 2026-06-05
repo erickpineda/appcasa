@@ -65,11 +65,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.appcasa.core.domain.model.Utility
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.dashboard.R
-import com.appcasa.features.utilities.data.local.UtilidadEntity
 import com.appcasa.features.utilities.presentation.viewmodel.UtilitiesViewModel
 import com.appcasa.navigation.Screen
 
@@ -111,9 +111,9 @@ fun UtilitiesScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun UtilitiesContent(
-  utilities: List<UtilidadEntity>,
+  utilities: List<Utility>,
   onInitialize: () -> Unit,
-  onUtilityClick: (UtilidadEntity) -> Unit
+  onUtilityClick: (Utility) -> Unit
 ) {
   val groupedUtilities = utilities.groupBy { it.categoria }
   var expandedCategories by rememberSaveable { mutableStateOf(groupedUtilities.keys.toSet()) }
@@ -232,7 +232,7 @@ fun UtilitiesContent(
 }
 
 @Composable
-fun UtilityCard(utility: UtilidadEntity, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun UtilityCard(utility: Utility, onClick: () -> Unit, modifier: Modifier = Modifier) {
   val icon = when (utility.icono) {
     "medication" -> Icons.Default.Medication
     "monitor_weight" -> Icons.Default.MonitorWeight

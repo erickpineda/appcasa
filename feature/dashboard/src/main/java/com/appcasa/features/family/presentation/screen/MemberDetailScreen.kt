@@ -124,7 +124,7 @@ fun MemberDetailScreen(
                   )
                 } else {
                   Icon(
-                    imageVector = if (member.tipo == TipoMiembro.PERSONA.name) Icons.Default.Person else Icons.Default.Pets,
+                    imageVector = if (member.tipo == TipoMiembro.PERSONA) Icons.Default.Person else Icons.Default.Pets,
                     contentDescription = null,
                     modifier = Modifier.size(80.dp),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -141,7 +141,7 @@ fun MemberDetailScreen(
               fontWeight = FontWeight.Bold
             )
             Text(
-              text = if (member.tipo == TipoMiembro.PERSONA.name) stringResource(R.string.dashboard_family_member_label) else stringResource(R.string.dashboard_pet_profile_label),
+              text = if (member.tipo == TipoMiembro.PERSONA) stringResource(R.string.dashboard_family_member_label) else stringResource(R.string.dashboard_pet_profile_label),
               style = MaterialTheme.typography.bodyLarge,
               color = MaterialTheme.colorScheme.primary
             )
@@ -154,7 +154,7 @@ fun MemberDetailScreen(
               modifier = Modifier.fillMaxWidth()
             ) {
               Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                DetailRow(icon = Icons.Default.Category, label = stringResource(R.string.family_label_type), value = member.tipo)
+                DetailRow(icon = Icons.Default.Category, label = stringResource(R.string.family_label_type), value = member.tipo.name)
                 
                 if (member.fechaNacimiento != null) {
                   val dateStr = SimpleDateFormat("dd 'de' MMMM", Locale("es", "ES")).format(Date(member.fechaNacimiento!!))

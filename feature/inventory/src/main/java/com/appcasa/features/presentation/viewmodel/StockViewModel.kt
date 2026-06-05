@@ -2,14 +2,12 @@ package com.appcasa.features.inventory.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.core.domain.model.TipoLista
+import com.appcasa.core.domain.model.Lista
+import com.appcasa.core.domain.model.StockItem
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.features.inventory.data.local.StockDao
-import com.appcasa.features.inventory.data.local.StockEntity
-import com.appcasa.features.lists.data.local.ListaDao
-import com.appcasa.features.lists.data.local.ListaEntity
-import com.appcasa.features.lists.data.local.ListaItemEntity
-import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.core.domain.usecase.GetActiveListsUseCase
+import com.appcasa.core.domain.usecase.IsCompactViewUseCase
+import com.appcasa.features.inventory.domain.usecase.*
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,18 +18,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class StockViewModel @Inject constructor(
-  private val stockDao: StockDao,
-  private val listaDao: ListaDao,
-  private val configuracionDao: ConfiguracionDao,
+  private val getStockUseCase: GetStockUseCase,
+  private val addStockItemUseCase: AddStockItemUseCase,
+  private val updateStockItemUseCase: UpdateStockItemUseCase,
+  private val deleteStockItemUseCase: DeleteStockItemUseCase,
+  private val autoRestockStockItemUseCase: AutoRestockStockItemUseCase,
+  private val addToShoppingListUseCase: AddToShoppingListUseCase,
+  private val getActiveListsUseCase: GetActiveListsUseCase,
+  private val isCompactViewUseCase: IsCompactViewUseCase,
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
@@ -63,12 +64,12 @@ class StockViewModel @Inject constructor(
   fun clearBarcode() { _barcodeResult.value = null }
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val stockItems: StateFlow<List<StockEntity>> = combine(
+  val stockItems: StateFlow<List<StockItem>> = combine(
     currentHouseholdProvider.householdId,
     _activePage
   ) { id, page -> id to page }
     .flatMapLatest { (id, page) -> 
-        stockDao.getStockPaged(id, limit = page * 20, offset = 0)
+        getStockUseCase(id, page)
     }
     .stateIn(
       scope = viewModelScope,
@@ -77,94 +78,46 @@ class StockViewModel @Inject constructor(
     )
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val availableLists: StateFlow<List<ListaEntity>> = currentHouseholdProvider.householdId
-    .flatMapLatest { id -> listaDao.getListasPaged(id, limit = 50, offset = 0) }
+  val availableLists: StateFlow<List<Lista>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> getActiveListsUseCase(id, 1) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val isCompactView: StateFlow<Boolean> = currentHouseholdProvider.householdId
-    .flatMapLatest { id ->
-      configuracionDao.getConfiguracion(id)
-        .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
-    }
+    .flatMapLatest { id -> isCompactViewUseCase(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
   fun addItem(nombre: String, categoria: String, actual: Double, minima: Double, unidad: String) {
     viewModelScope.launch {
-      stockDao.insertItem(
-        StockEntity(
-          hogarId = householdId,
-          nombre = nombre,
-          categoria = categoria,
-          cantidadActual = actual,
-          cantidadMinima = minima,
-          unidad = unidad
-        )
-      )
+      addStockItemUseCase(householdId, nombre, categoria, actual, minima, unidad)
     }
   }
 
-  fun updateQuantity(item: StockEntity, delta: Double) {
+  fun updateQuantity(item: StockItem, delta: Double) {
     viewModelScope.launch {
       val newQuantity = (item.cantidadActual + delta).coerceAtLeast(0.0)
-      val updatedItem = item.copy(cantidadActual = newQuantity, updatedAt = System.currentTimeMillis())
-      stockDao.updateItem(updatedItem)
+      val updatedItem = item.copy(cantidadActual = newQuantity)
+      updateStockItemUseCase(updatedItem)
       
-      // Lógica de reabastecimiento automático
-      if (updatedItem.autoComprar && updatedItem.cantidadActual <= updatedItem.cantidadMinima) {
-        val missing = (updatedItem.cantidadMinima - updatedItem.cantidadActual).coerceAtLeast(1.0)
-        autoAddToPreferredList(updatedItem, missing)
-      }
+      autoRestockStockItemUseCase(updatedItem)
     }
   }
 
-  private suspend fun autoAddToPreferredList(item: StockEntity, delta: Double) {
-    val configs = configuracionDao.getConfiguracion(householdId).first()
-    val preferredListId = configs.find { it.clave == "lista_compra_id" }?.valor?.toLongOrNull()
-    val listId = preferredListId ?: run {
-      val listList = listaDao.getListasPaged(householdId, 50, 0).first()
-      listList.find { it.tipo == TipoLista.COMPRA.name }?.id
-    }
-    if (listId != null) {
-      performAddToList(item, listId, delta)
-    }
-  }
-
-  fun addToShoppingList(item: StockEntity, listId: Long, quantity: Double) {
+  fun addToShoppingList(item: StockItem, listId: Long, quantity: Double) {
     viewModelScope.launch {
-      performAddToList(item, listId, quantity)
+      addToShoppingListUseCase(item, listId, quantity)
     }
   }
 
-  private suspend fun performAddToList(item: StockEntity, listId: Long, delta: Double) {
-    try {
-      val itemsInList = listaDao.getItemsByLista(listId).first()
-      val targetText = "COMPRAR: ${item.nombre}"
-      val existingItem = itemsInList.find { it.texto == targetText && !it.completado }
-
-      if (existingItem != null) {
-        val currentQty = existingItem.cantidad?.split(" ")?.get(0)?.toDoubleOrNull() ?: 0.0
-        val totalQty = currentQty + delta
-        val newQtyStr = "${if (totalQty % 1 == 0.0) totalQty.toInt() else totalQty} ${item.unidad}"
-        listaDao.updateItem(existingItem.copy(cantidad = newQtyStr))
-      } else {
-        val qtyStr = "${if (delta % 1 == 0.0) delta.toInt() else delta} ${item.unidad}"
-        listaDao.insertItem(ListaItemEntity(listaId = listId, texto = targetText, cantidad = qtyStr))
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
-    }
-  }
-
-  fun updateItem(item: StockEntity) {
+  fun updateItem(item: StockItem) {
     viewModelScope.launch {
-      stockDao.updateItem(item.copy(updatedAt = System.currentTimeMillis()))
+      updateStockItemUseCase(item)
     }
   }
 
-  fun deleteItem(item: StockEntity) {
+  fun deleteItem(item: StockItem) {
     viewModelScope.launch {
-      stockDao.deleteItem(item)
+      deleteStockItemUseCase(item)
     }
   }
 

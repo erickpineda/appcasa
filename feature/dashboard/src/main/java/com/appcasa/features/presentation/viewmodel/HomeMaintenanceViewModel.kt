@@ -2,10 +2,9 @@ package com.appcasa.features.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.domain.model.MaintenanceEvent
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.core.domain.scheduler.ReminderScheduler
-import com.appcasa.features.maintenance.data.local.MaintenanceDao
-import com.appcasa.features.maintenance.data.local.MaintenanceEntity
+import com.appcasa.features.maintenance.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,9 +20,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeMaintenanceViewModel @Inject constructor(
-    private val maintenanceDao: MaintenanceDao,
-    private val currentHouseholdProvider: CurrentHouseholdProvider,
-    private val reminderScheduler: ReminderScheduler
+    private val getMaintenanceEventsUseCase: GetMaintenanceEventsUseCase,
+    private val getArchivedMaintenanceEventsUseCase: GetArchivedMaintenanceEventsUseCase,
+    private val addMaintenanceEventUseCase: AddMaintenanceEventUseCase,
+    private val deleteMaintenanceEventUseCase: DeleteMaintenanceEventUseCase,
+    private val archiveMaintenanceEventUseCase: ArchiveMaintenanceEventUseCase,
+    private val unarchiveMaintenanceEventUseCase: UnarchiveMaintenanceEventUseCase,
+    private val clearAllArchivedMaintenanceUseCase: ClearAllArchivedMaintenanceUseCase,
+    private val archiveOldMaintenanceEventsUseCase: ArchiveOldMaintenanceEventsUseCase,
+    private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
     private val householdId = currentHouseholdProvider.getCurrentHouseholdId()
@@ -41,22 +46,22 @@ class HomeMaintenanceViewModel @Inject constructor(
     val toastEvent = _toastEvent.asSharedFlow()
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val events: StateFlow<List<MaintenanceEntity>> = combine(
+    val events: StateFlow<List<MaintenanceEvent>> = combine(
         currentHouseholdProvider.householdId,
         _activePage
     ) { id, page -> id to page }
         .flatMapLatest { (id, page) -> 
-            maintenanceDao.getEventsPaged(id, limit = page * 20, offset = 0)
+            getMaintenanceEventsUseCase(id, page)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val archivedEvents: StateFlow<List<MaintenanceEntity>> = combine(
+    val archivedEvents: StateFlow<List<MaintenanceEvent>> = combine(
         currentHouseholdProvider.householdId,
         _archivedPage
     ) { id, page -> id to page }
         .flatMapLatest { (id, page) -> 
-            maintenanceDao.getArchivedEventsPaged(id, limit = page * 20, offset = 0)
+            getArchivedMaintenanceEventsUseCase(id, page)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -69,49 +74,25 @@ class HomeMaintenanceViewModel @Inject constructor(
         cost: Double?
     ) {
         viewModelScope.launch {
-            val event = MaintenanceEntity(
-                hogarId = householdId,
-                titulo = title,
-                categoria = cat,
-                descripcion = desc,
-                fechaRealizacion = date,
-                proximaRevision = nextDate,
-                coste = cost
-            )
-            val id = maintenanceDao.insertEvent(event)
-
-            // Programar recordatorio si hay próxima revisión
-            nextDate?.let { revision ->
-                val remindTime = revision - (7L * 24 * 60 * 60 * 1000) // 1 semana antes
-                if (remindTime > System.currentTimeMillis()) {
-                    reminderScheduler.scheduleReminder(
-                        id = (id + 40000).toInt(),
-                        title = "Mantenimiento: $title",
-                        message = "Tienes una revisión pendiente de $title la próxima semana.",
-                        timeInMillis = remindTime
-                    )
-                }
-            }
+            addMaintenanceEventUseCase(householdId, title, cat, desc, date, nextDate, cost)
         }
     }
 
-    fun deleteEvent(event: MaintenanceEntity) {
+    fun deleteEvent(event: MaintenanceEvent) {
         viewModelScope.launch {
-            maintenanceDao.deleteEvent(event)
-            reminderScheduler.cancelReminder((event.id + 40000).toInt())
+            deleteMaintenanceEventUseCase(event)
         }
     }
 
-    fun archiveEvent(event: MaintenanceEntity) {
+    fun archiveEvent(event: MaintenanceEvent) {
         viewModelScope.launch {
-            maintenanceDao.insertEvent(event.copy(archived = true))
-            reminderScheduler.cancelReminder((event.id + 40000).toInt())
+            archiveMaintenanceEventUseCase(event)
         }
     }
 
     fun unarchiveEvent(eventId: Long) {
         viewModelScope.launch {
-            maintenanceDao.unarchiveEvent(eventId)
+            unarchiveMaintenanceEventUseCase(eventId)
         }
     }
 
@@ -147,14 +128,13 @@ class HomeMaintenanceViewModel @Inject constructor(
 
     fun clearAllArchived() {
         viewModelScope.launch {
-            maintenanceDao.deleteAllArchivedMaintenanceEvents(householdId)
+            clearAllArchivedMaintenanceUseCase(householdId)
         }
     }
 
     fun archiveOldEvents() {
         viewModelScope.launch {
-            val threshold = System.currentTimeMillis() - (365L * 24 * 60 * 60 * 1000)
-            maintenanceDao.archiveOldMaintenanceEvents(householdId, threshold)
+            archiveOldMaintenanceEventsUseCase(householdId)
         }
     }
 }

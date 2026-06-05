@@ -3,24 +3,26 @@ package com.appcasa.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.features.settings.data.local.ConfiguracionDao
+import com.appcasa.core.domain.usecase.GetConfigurationUseCase
+import com.appcasa.core.domain.usecase.GetCurrentUserUseCase
+import com.appcasa.features.settings.domain.usecase.GetCurrentHouseholdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
 class GlobalViewModel @Inject constructor(
-  configuracionDao: ConfiguracionDao,
+  private val getConfigurationUseCase: GetConfigurationUseCase,
+  private val getCurrentUserUseCase: GetCurrentUserUseCase,
+  private val getCurrentHouseholdUseCase: GetCurrentHouseholdUseCase,
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
   private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
 
-  private val configs = configuracionDao.getConfiguracion(householdId)
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  private val configs = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> getConfigurationUseCase(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   val isDarkMode: StateFlow<Boolean> = configs.map { list ->
@@ -43,12 +45,12 @@ class GlobalViewModel @Inject constructor(
     list.find { it.clave == "moneda" }?.valor ?: "€"
   }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "€")
 
-  val isHouseholdSetup: StateFlow<Boolean?> = configuracionDao.getHogarActual()
-    .combine(configuracionDao.getUsuarioActual()) { hogar, usuario ->
+  val isHouseholdSetup: StateFlow<Boolean?> = getCurrentHouseholdUseCase()
+    .combine(getCurrentUserUseCase()) { hogar, usuario ->
         hogar != null && usuario != null
     }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-  val currentUser = configuracionDao.getUsuarioActual()
+  val currentUser = getCurrentUserUseCase()
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 }

@@ -1,0 +1,14 @@
+package com.appcasa.core.domain.model
+
+data class Expense(
+    val id: Long = 0,
+    val hogarId: Long,
+    val concepto: String,
+    val importe: Double,
+    val categoria: String,
+    val fecha: Long = System.currentTimeMillis(),
+    val fotoUri: String? = null,
+    val createdAt: Long = System.currentTimeMillis(),
+    val createdById: Long? = null,
+    val archived: Boolean = false
+)

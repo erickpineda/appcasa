@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
@@ -62,7 +63,6 @@ import com.appcasa.core.ui.components.PremiumProgressBar
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.feature.dashboard.R
-import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
 import com.appcasa.navigation.Screen
 
@@ -74,7 +74,7 @@ fun FamilyScreen(
   val people by viewModel.people.collectAsState()
   val pets by viewModel.pets.collectAsState()
   
-  var memberToDelete by remember { mutableStateOf<MiembroEntity?>(null) }
+  var memberToDelete by remember { mutableStateOf<FamilyMember?>(null) }
 
   AppCasaConfirmDialog(
     show = memberToDelete != null,
@@ -96,7 +96,7 @@ fun FamilyScreen(
         onAddClick = { navController.navigate(Screen.AddMember.route) },
         onDeleteMember = { memberToDelete = it },
         onMemberClick = { member ->
-          if (member.tipo == TipoMiembro.PERSONA.name) {
+          if (member.tipo == TipoMiembro.PERSONA) {
             navController.navigate(Screen.MemberDetail.createRoute(member.id))
           } else {
             navController.navigate(Screen.PetDetail.createRoute(member.id))
@@ -111,11 +111,11 @@ fun FamilyScreen(
 @Composable
 fun FamilyContent(
   navController: NavController,
-  people: List<MiembroEntity>,
-  pets: List<MiembroEntity>,
+  people: List<FamilyMember>,
+  pets: List<FamilyMember>,
   onAddClick: () -> Unit,
-  onDeleteMember: (MiembroEntity) -> Unit,
-  onMemberClick: (MiembroEntity) -> Unit
+  onDeleteMember: (FamilyMember) -> Unit,
+  onMemberClick: (FamilyMember) -> Unit
 ) {
   Scaffold(
     topBar = {
@@ -203,7 +203,7 @@ fun FamilyContent(
 
 @Composable
 fun MemberCard(
-  member: MiembroEntity,
+  member: FamilyMember,
   icon: ImageVector,
   onDelete: () -> Unit,
   onClick: () -> Unit
@@ -250,7 +250,7 @@ fun MemberCard(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
           )
-          if (member.tipo == TipoMiembro.PERSONA.name) {
+          if (member.tipo == TipoMiembro.PERSONA) {
             Spacer(Modifier.width(8.dp))
             Surface(
               color = MaterialTheme.colorScheme.tertiaryContainer,
@@ -270,7 +270,7 @@ fun MemberCard(
         val currentLevelXP = member.puntos % pointsToNextLevel
         val progress = currentLevelXP.toFloat() / pointsToNextLevel.toFloat()
 
-        if (member.tipo == TipoMiembro.PERSONA.name) {
+        if (member.tipo == TipoMiembro.PERSONA) {
             PremiumProgressBar(
                 progress = progress,
                 label = "XP: ${member.puntos}",
@@ -281,10 +281,10 @@ fun MemberCard(
             val description = when {
               !member.raza.isNullOrBlank() -> member.raza
               !member.colorPelaje.isNullOrBlank() -> member.colorPelaje
-              else -> member.tipo
+              else -> member.tipo.name
             }
             Text(
-              text = description ?: member.tipo,
+              text = description ?: member.tipo.name,
               style = MaterialTheme.typography.bodySmall,
               color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -305,13 +305,13 @@ fun FamilyPreview() {
     FamilyContent(
       navController = NavController(androidx.compose.ui.platform.LocalContext.current),
       people = listOf(
-        MiembroEntity(id = 1, hogarId = 1, nombre = "Yo", tipo = TipoMiembro.PERSONA.name),
-        MiembroEntity(id = 2, hogarId = 1, nombre = "Mi mujer", tipo = TipoMiembro.PERSONA.name)
+        FamilyMember(id = 1, hogarId = 1, nombre = "Yo", tipo = TipoMiembro.PERSONA),
+        FamilyMember(id = 2, hogarId = 1, nombre = "Mi mujer", tipo = TipoMiembro.PERSONA)
       ),
       pets = listOf(
-        MiembroEntity(id = 3, hogarId = 1, nombre = "Perro 1", tipo = TipoMiembro.PERRO.name),
-        MiembroEntity(id = 4, hogarId = 1, nombre = "Gato 1", tipo = TipoMiembro.GATO.name),
-        MiembroEntity(id = 5, hogarId = 1, nombre = "Tortuga", tipo = TipoMiembro.TORTUGA.name)
+        FamilyMember(id = 3, hogarId = 1, nombre = "Perro 1", tipo = TipoMiembro.PERRO),
+        FamilyMember(id = 4, hogarId = 1, nombre = "Gato 1", tipo = TipoMiembro.GATO),
+        FamilyMember(id = 5, hogarId = 1, nombre = "Tortuga", tipo = TipoMiembro.TORTUGA)
       ),
       onAddClick = {},
       onDeleteMember = {},

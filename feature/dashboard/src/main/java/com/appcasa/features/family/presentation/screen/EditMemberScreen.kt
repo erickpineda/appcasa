@@ -96,7 +96,7 @@ fun EditMemberScreen(
 
   member?.let { currentMember ->
     var nombre by remember { mutableStateOf(currentMember.nombre) }
-    var tipo by remember { mutableStateOf(TipoMiembro.valueOf(currentMember.tipo)) }
+    var tipo by remember { mutableStateOf(currentMember.tipo) }
     var raza by remember { mutableStateOf(currentMember.raza ?: "") }
     var color by remember { mutableStateOf(currentMember.colorPelaje ?: "") }
     var chip by remember { mutableStateOf(currentMember.numeroChip ?: "") }

@@ -2,17 +2,18 @@ package com.appcasa.features.utilities.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.features.pets.data.local.MascotaDao
+import com.appcasa.features.pets.domain.usecase.GetPetWeightsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class DosageViewModel @Inject constructor(
-    private val mascotaDao: MascotaDao
+    private val getPetWeightsUseCase: GetPetWeightsUseCase
 ) : ViewModel() {
 
     private val _petWeight = MutableStateFlow(0.0)
@@ -20,8 +21,8 @@ class DosageViewModel @Inject constructor(
 
     fun updateWeightForPet(petId: Long) {
         viewModelScope.launch {
-            val latestPeso = mascotaDao.getLatestPeso(petId)
-            _petWeight.value = latestPeso?.pesoKg ?: 0.0
+            val weights = getPetWeightsUseCase(petId).first()
+            _petWeight.value = weights.lastOrNull()?.pesoKg ?: 0.0
         }
     }
 

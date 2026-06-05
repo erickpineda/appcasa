@@ -145,6 +145,17 @@
     <string name="lists_load_more">Cargar más listas antiguas…</string>
     <string name="lists_type_custom">PERSONALIZADA</string>
 
+    <!-- Archive Module -->
+    <string name="archive_title">Cajón de Archivo</string>
+    <string name="archive_delete_title">Borrar permanentemente</string>
+    <string name="archive_delete_confirm">¿Estás seguro de que quieres borrar este elemento de forma permanente? No se podrá deshacer.</string>
+    <string name="archive_tab_tasks">Tareas</string>
+    <string name="archive_tab_lists">Listas</string>
+    <string name="archive_tab_finance">Gastos</string>
+    <string name="archive_tab_maintenance">Mantenimiento</string>
+    <string name="archive_empty">El archivo está vacío</string>
+    <string name="archive_restore_cd">Restaurar</string>
+
     <string name="util_kitchen_label_amount">Cantidad a convertir</string>
     <string name="util_kitchen_group_liquids">Líquidos / Volumen</string>
     <string name="util_kitchen_group_weight">Peso (Aproximado)</string>

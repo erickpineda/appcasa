@@ -3,9 +3,9 @@ package com.appcasa.features.pets.presentation.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.features.family.data.local.MiembroDao
-import com.appcasa.features.family.data.local.MiembroEntity
-import com.appcasa.features.pets.data.local.*
+import com.appcasa.core.domain.model.*
+import com.appcasa.core.domain.usecase.GetMemberByIdUseCase
+import com.appcasa.features.pets.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,41 +16,52 @@ import javax.inject.Inject
 @HiltViewModel
 class PetDetailViewModel @Inject constructor(
   private val savedStateHandle: SavedStateHandle,
-  private val miembroDao: MiembroDao,
-  private val mascotaDao: MascotaDao
+  private val getMemberByIdUseCase: GetMemberByIdUseCase,
+  private val getPetWeightsUseCase: GetPetWeightsUseCase,
+  private val addPetWeightUseCase: AddPetWeightUseCase,
+  private val deletePetWeightUseCase: DeletePetWeightUseCase,
+  private val getPetVaccinesUseCase: GetPetVaccinesUseCase,
+  private val addPetVaccineUseCase: AddPetVaccineUseCase,
+  private val deletePetVaccineUseCase: DeletePetVaccineUseCase,
+  private val getPetMedicationsUseCase: GetPetMedicationsUseCase,
+  private val addPetMedicationUseCase: AddPetMedicationUseCase,
+  private val updatePetMedicationUseCase: UpdatePetMedicationUseCase,
+  private val deletePetMedicationUseCase: DeletePetMedicationUseCase,
+  private val getPetDewormingsUseCase: GetPetDewormingsUseCase,
+  private val addPetDewormingUseCase: AddPetDewormingUseCase,
+  private val deletePetDewormingUseCase: DeletePetDewormingUseCase
 ) : ViewModel() {
 
   private val petId: Long = checkNotNull(savedStateHandle["petId"])
 
-  val pet: StateFlow<MiembroEntity?> = viewModelScope.let {
-    // En una app real usaríamos un Flow de miembroDao
+  val pet: StateFlow<FamilyMember?> = viewModelScope.let {
     kotlinx.coroutines.flow.flow {
-      emit(miembroDao.getMiembroById(petId))
+      emit(getMemberByIdUseCase(petId))
     }.stateIn(it, SharingStarted.WhileSubscribed(5000), null)
   }
 
-  val pesos: StateFlow<List<MascotaPesoEntity>> = mascotaDao.getPesos(petId)
+  val pesos: StateFlow<List<PetWeight>> = getPetWeightsUseCase(petId)
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
       initialValue = emptyList()
     )
 
-  val vacunas: StateFlow<List<MascotaVacunaEntity>> = mascotaDao.getVacunas(petId)
+  val vacunas: StateFlow<List<PetVaccine>> = getPetVaccinesUseCase(petId)
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
       initialValue = emptyList()
     )
 
-  val medicaciones: StateFlow<List<MascotaMedicacionEntity>> = mascotaDao.getMedicacionesActivas(petId)
+  val medicaciones: StateFlow<List<PetMedication>> = getPetMedicationsUseCase(petId)
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
       initialValue = emptyList()
     )
 
-  val desparasitaciones: StateFlow<List<MascotaDesparasitacionEntity>> = mascotaDao.getDesparasitaciones(petId)
+  val desparasitaciones: StateFlow<List<PetDeworming>> = getPetDewormingsUseCase(petId)
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
@@ -59,82 +70,55 @@ class PetDetailViewModel @Inject constructor(
 
   fun addPeso(valor: Double) {
     viewModelScope.launch {
-      mascotaDao.insertPeso(
-        MascotaPesoEntity(
-          mascotaId = petId,
-          pesoKg = valor,
-          fecha = System.currentTimeMillis()
-        )
-      )
+      addPetWeightUseCase(petId, valor)
     }
   }
 
-  fun deletePeso(peso: MascotaPesoEntity) {
+  fun deletePeso(peso: PetWeight) {
     viewModelScope.launch {
-      mascotaDao.deletePeso(peso)
+      deletePetWeightUseCase(peso)
     }
   }
 
   fun addMedicacion(nombre: String, dosis: String, frecuencia: String) {
     viewModelScope.launch {
-      mascotaDao.insertMedicacion(
-        MascotaMedicacionEntity(
-          mascotaId = petId,
-          nombre = nombre,
-          dosis = dosis,
-          frecuencia = frecuencia,
-          fechaInicio = System.currentTimeMillis()
-        )
-      )
+      addPetMedicationUseCase(petId, nombre, dosis, frecuencia)
     }
   }
 
-  fun updateMedicacion(med: MascotaMedicacionEntity) {
+  fun updateMedicacion(med: PetMedication) {
     viewModelScope.launch {
-      mascotaDao.insertMedicacion(med)
+      updatePetMedicationUseCase(med)
     }
   }
 
-  fun deleteMedicacion(med: MascotaMedicacionEntity) {
+  fun deleteMedicacion(med: PetMedication) {
     viewModelScope.launch {
-      mascotaDao.deleteMedicacion(med)
+      deletePetMedicationUseCase(med)
     }
   }
 
   fun addVacuna(nombre: String) {
     viewModelScope.launch {
-      mascotaDao.insertVacuna(
-        MascotaVacunaEntity(
-          mascotaId = petId,
-          nombre = nombre,
-          fechaAplicacion = System.currentTimeMillis()
-        )
-      )
+      addPetVaccineUseCase(petId, nombre)
     }
   }
 
-  fun deleteVacuna(vacuna: MascotaVacunaEntity) {
+  fun deleteVacuna(vacuna: PetVaccine) {
     viewModelScope.launch {
-      mascotaDao.deleteVacuna(vacuna)
+      deletePetVaccineUseCase(vacuna)
     }
   }
 
   fun addDesparasitacion(tipo: String, producto: String) {
     viewModelScope.launch {
-      mascotaDao.insertDesparasitacion(
-        MascotaDesparasitacionEntity(
-          mascotaId = petId,
-          tipo = tipo,
-          producto = producto,
-          fechaAplicacion = System.currentTimeMillis()
-        )
-      )
+      addPetDewormingUseCase(petId, tipo, producto)
     }
   }
 
-  fun deleteDesparasitacion(item: MascotaDesparasitacionEntity) {
+  fun deleteDesparasitacion(item: PetDeworming) {
     viewModelScope.launch {
-      mascotaDao.deleteDesparasitacion(item)
+      deletePetDewormingUseCase(item)
     }
   }
 }

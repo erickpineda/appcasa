@@ -2,16 +2,9 @@ package com.appcasa.features.settings.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.appcasa.core.domain.model.RolHogar
-import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.core.ui.utils.HouseCodeUtils
-import com.appcasa.features.family.data.local.MiembroDao
-import com.appcasa.features.lists.data.local.ListaDao
-import com.appcasa.features.lists.data.local.ListaEntity
-import com.appcasa.features.settings.data.local.ConfiguracionDao
-import com.appcasa.features.settings.data.local.ConfiguracionEntity
-import com.appcasa.features.settings.data.local.HogarEntity
-import com.appcasa.features.settings.data.local.UsuarioEntity
+import com.appcasa.core.domain.model.*
+import com.appcasa.core.domain.usecase.*
+import com.appcasa.features.settings.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,24 +19,29 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val configuracionDao: ConfiguracionDao,
-    private val listaDao: ListaDao,
-    private val miembroDao: MiembroDao,
-    private val householdProvider: CurrentHouseholdProvider
+    private val getCurrentHouseholdUseCase: GetCurrentHouseholdUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val getActiveListsUseCase: GetActiveListsUseCase,
+    private val getConfigurationUseCase: GetConfigurationUseCase,
+    private val updateConfigurationUseCase: UpdateConfigurationUseCase,
+    private val updateUserUseCase: UpdateUserUseCase,
+    private val regenerateHouseCodeUseCase: RegenerateHouseCodeUseCase,
+    private val updateHouseholdUseCase: UpdateHouseholdUseCase,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
-    val hogarActual: StateFlow<HogarEntity?> = configuracionDao.getHogarActual()
+    val hogarActual: StateFlow<Household?> = getCurrentHouseholdUseCase()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    val usuarioActual: StateFlow<UsuarioEntity?> = configuracionDao.getUsuarioActual()
+    val usuarioActual: StateFlow<User?> = getCurrentUserUseCase()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    val isAdmin: StateFlow<Boolean> = usuarioActual.map { it?.rol == RolHogar.ADMIN.name }
+    val isAdmin: StateFlow<Boolean> = usuarioActual.map { it?.rol == RolHogar.ADMIN }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val todasLasListas: StateFlow<List<ListaEntity>> = hogarActual.flatMapLatest { hogar ->
-        hogar?.let { listaDao.getListasByHogar(it.id) } ?: flowOf(emptyList())
+    val todasLasListas: StateFlow<List<Lista>> = hogarActual.flatMapLatest { hogar ->
+        hogar?.let { getActiveListsUseCase(it.id, 1) } ?: flowOf(emptyList())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _configuraciones = MutableStateFlow<Map<String, String>>(emptyMap())
@@ -53,7 +51,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             hogarActual.collect { hogar ->
                 hogar?.let {
-                    configuracionDao.getConfiguracion(it.id).collect { configs ->
+                    getConfigurationUseCase(it.id).collect { configs ->
                         _configuraciones.value = configs.associate { it.clave to it.valor }
                     }
                 }
@@ -64,38 +62,14 @@ class SettingsViewModel @Inject constructor(
     fun updateConfig(clave: String, valor: String) {
         viewModelScope.launch {
             val hogar = hogarActual.value ?: return@launch
-            configuracionDao.insertConfiguracion(
-                ConfiguracionEntity(
-                    hogarId = hogar.id,
-                    clave = clave,
-                    valor = valor
-                )
-            )
+            updateConfigurationUseCase(hogar.id, clave, valor)
         }
     }
 
     fun updateUsuario(nombre: String, avatarUrl: String? = null) {
         viewModelScope.launch {
             val usuario = usuarioActual.value ?: return@launch
-            
-            // 1. Actualizar Usuario (Perfil)
-            configuracionDao.insertUsuario(
-                usuario.copy(
-                    nombre = nombre,
-                    avatarUrl = avatarUrl ?: usuario.avatarUrl
-                )
-            )
-
-            // 2. Sincronizar con Miembro si existe el vínculo
-            usuario.miembroId?.let { id ->
-                val miembro = miembroDao.getMiembroById(id)
-                miembro?.let {
-                    miembroDao.updateMiembro(it.copy(
-                        nombre = nombre,
-                        fotoUri = avatarUrl ?: it.fotoUri
-                    ))
-                }
-            }
+            updateUserUseCase(usuario, nombre, avatarUrl)
         }
     }
 
@@ -103,9 +77,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val hogar = hogarActual.value ?: return@launch
             if (isAdmin.value) {
-                val newCode = HouseCodeUtils.generateHouseCode()
-                configuracionDao.updateCodigoHogar(hogar.id, newCode)
-                // TODO: Enviar notificación a otros miembros vía Firebase/WorkManager
+                regenerateHouseCodeUseCase(hogar.id)
             }
         }
     }
@@ -113,20 +85,13 @@ class SettingsViewModel @Inject constructor(
     fun updateHogar(nombre: String) {
         viewModelScope.launch {
             val hogar = hogarActual.value ?: return@launch
-            configuracionDao.insertHogar(hogar.copy(nombre = nombre))
+            updateHouseholdUseCase(hogar, nombre)
         }
     }
 
     fun logout() {
         viewModelScope.launch {
-            // 1. Desactivar usuario actual
-            configuracionDao.deactivateAllUsers()
-            
-            // 2. Limpiar ID del hogar en el provider reactivo para forzar re-evaluación
-            householdProvider.setHouseholdId(0L)
-            
-            // Nota: No borramos el hogar ni el usuario de la DB, solo los desactivamos
-            // para que aparezca la pantalla de "Seleccionar Perfil".
+            logoutUseCase()
         }
     }
 }

@@ -1,17 +1,7 @@
 package com.appcasa.features.tasks.presentation.screen
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -21,24 +11,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -56,6 +30,7 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.model.Prioridad
+import com.appcasa.core.domain.model.Task
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
@@ -63,7 +38,6 @@ import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.CelebrationOverlay
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.feature.tasks.R
-import com.appcasa.features.tasks.data.local.TareaEntity
 import com.appcasa.features.tasks.presentation.viewmodel.TasksViewModel
 import com.appcasa.navigation.Screen
 import kotlinx.coroutines.delay
@@ -80,7 +54,7 @@ fun TasksScreen(
   val gainedXP by viewModel.gainedXP.collectAsState()
   val subTaskCounts by viewModel.subTaskCounts.collectAsState()
   var toastMessage by remember { mutableStateOf<String?>(null) }
-  var taskToArchive by remember { mutableStateOf<TareaEntity?>(null) }
+  var taskToArchive by remember { mutableStateOf<Task?>(null) }
   
   val memberMap = remember(members) { members.associate { it.id to it.nombre } }
 
@@ -134,15 +108,15 @@ fun TasksScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TasksContent(
-  tasks: List<TareaEntity>,
+  tasks: List<Task>,
   isCompact: Boolean,
   subTaskCounts: Map<Long, Pair<Int, Int>>,
   memberMap: Map<Long, String>,
   onAddTask: () -> Unit,
-  onToggleTask: (TareaEntity) -> Unit,
-  onDeleteTask: (TareaEntity) -> Unit,
-  onTaskClick: (TareaEntity) -> Unit,
-  onUpdateTask: (TareaEntity, String) -> Unit,
+  onToggleTask: (Task) -> Unit,
+  onDeleteTask: (Task) -> Unit,
+  onTaskClick: (Task) -> Unit,
+  onUpdateTask: (Task, String) -> Unit,
   onLoadMore: () -> Unit
 ) {
   Scaffold(
@@ -168,8 +142,8 @@ fun TasksContent(
       contentPadding = PaddingValues(16.dp),
       verticalArrangement = Arrangement.spacedBy(if (isCompact) 2.dp else 8.dp)
     ) {
-      val pendingTasks = tasks.filter { it.estado != EstadoTarea.COMPLETADA.name }
-      val completedTasks = tasks.filter { it.estado == EstadoTarea.COMPLETADA.name }
+      val pendingTasks = tasks.filter { it.estado != EstadoTarea.COMPLETADA }
+      val completedTasks = tasks.filter { it.estado == EstadoTarea.COMPLETADA }
 
       if (pendingTasks.isEmpty() && completedTasks.isEmpty()) {
         item {
@@ -237,7 +211,7 @@ fun TasksContent(
 
 @Composable
 fun TaskItem(
-  tarea: TareaEntity,
+  tarea: Task,
   isCompact: Boolean,
   onToggle: () -> Unit,
   onDelete: () -> Unit,
@@ -246,7 +220,7 @@ fun TaskItem(
   subTaskInfo: Pair<Int, Int> = 0 to 0,
   creatorName: String? = null
 ) {
-  val isCompleted = tarea.estado == EstadoTarea.COMPLETADA.name
+  val isCompleted = tarea.estado == EstadoTarea.COMPLETADA
   var isEditing by remember { mutableStateOf(false) }
   var editedText by remember { mutableStateOf(tarea.titulo) }
 
@@ -318,11 +292,11 @@ fun TaskItem(
             )
             
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (tarea.prioridad != Prioridad.MEDIA.name && !isCompleted) {
+                if (tarea.prioridad != Prioridad.MEDIA && !isCompleted) {
                   Text(
-                    text = tarea.prioridad,
+                    text = tarea.prioridad.name,
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (tarea.prioridad == Prioridad.ALTA.name) MaterialTheme.colorScheme.error 
+                    color = if (tarea.prioridad == Prioridad.ALTA) MaterialTheme.colorScheme.error
                     else MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.padding(end = 8.dp)
                   )

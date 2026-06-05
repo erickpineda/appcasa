@@ -69,13 +69,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.appcasa.core.domain.model.PetDeworming
+import com.appcasa.core.domain.model.PetMedication
+import com.appcasa.core.domain.model.PetWeight
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.components.skeletonShimmer
 import com.appcasa.feature.dashboard.R
-import com.appcasa.features.pets.data.local.MascotaMedicacionEntity
-import com.appcasa.features.pets.data.local.MascotaPesoEntity
 import com.appcasa.features.pets.presentation.viewmodel.PetDetailViewModel
 import com.appcasa.navigation.Screen
 import kotlinx.coroutines.delay
@@ -101,7 +102,7 @@ fun PetDetailScreen(
   var showVaccineDialog by remember { mutableStateOf(false) }
   var showDewormingDialog by remember { mutableStateOf(false) }
   
-  var editingMedication by remember { mutableStateOf<MascotaMedicacionEntity?>(null) }
+  var editingMedication by remember { mutableStateOf<PetMedication?>(null) }
 
   if (showWeightDialog) {
     WeightDialog(
@@ -299,7 +300,7 @@ fun PetListItem(
 }
 
 @Composable
-fun WeightTrendGraph(pesos: List<MascotaPesoEntity>) {
+fun WeightTrendGraph(pesos: List<PetWeight>) {
   val color = MaterialTheme.colorScheme.primary
   val data = pesos.map { it.pesoKg.toFloat() }
   val minWeight = (data.minOrNull() ?: 0f) * 0.95f
@@ -344,7 +345,7 @@ fun WeightTrendGraph(pesos: List<MascotaPesoEntity>) {
 
 @Composable
 fun MedicationActionDialog(
-  item: MascotaMedicacionEntity? = null,
+  item: PetMedication? = null,
   onDismiss: () -> Unit,
   onConfirm: (String, String, String) -> Unit
 ) {
