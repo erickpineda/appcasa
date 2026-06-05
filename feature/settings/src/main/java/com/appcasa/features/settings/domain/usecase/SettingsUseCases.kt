@@ -1,8 +1,14 @@
 package com.appcasa.features.settings.domain.usecase
 
-import com.appcasa.core.domain.model.*
-import com.appcasa.core.domain.repository.*
+import com.appcasa.core.domain.model.FamilyMember
+import com.appcasa.core.domain.model.Household
+import com.appcasa.core.domain.model.RolHogar
+import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.domain.model.User
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
+import com.appcasa.core.domain.repository.FamilyRepository
+import com.appcasa.core.domain.repository.HouseholdRepository
+import com.appcasa.core.domain.repository.UserRepository
 import com.appcasa.core.ui.utils.HouseCodeUtils
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -99,11 +105,15 @@ class CreateHouseholdUseCase @Inject constructor(
 }
 
 class JoinHouseholdUseCase @Inject constructor(
+    private val householdRepository: HouseholdRepository,
     private val userRepository: UserRepository,
     private val familyRepository: FamilyRepository,
     private val householdProvider: CurrentHouseholdProvider
 ) {
-    suspend operator fun invoke(hogarId: Long, userName: String, photoUri: String?) {
+    suspend operator fun invoke(code: String, userName: String, photoUri: String?): Boolean {
+        val hogar = householdRepository.getHogarByCodigo(code) ?: return false
+        val hogarId = hogar.id
+        
         val miembroId = familyRepository.insertMember(
             FamilyMember(
                 hogarId = hogarId,
@@ -128,6 +138,7 @@ class JoinHouseholdUseCase @Inject constructor(
         )
 
         householdProvider.setHouseholdId(hogarId)
+        return true
     }
 }
 

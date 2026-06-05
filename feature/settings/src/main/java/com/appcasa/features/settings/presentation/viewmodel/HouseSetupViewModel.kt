@@ -56,10 +56,12 @@ class HouseSetupViewModel @Inject constructor(
 
     fun joinHousehold(code: String, userName: String, photoUri: String?) {
         viewModelScope.launch {
-            val existing = existingHousehold.value
-            val hogarId = existing?.id ?: 1L
-            joinHouseholdUseCase(hogarId, userName, photoUri)
-            _setupEvent.emit(SetupResult.Success)
+            val success = joinHouseholdUseCase(code, userName, photoUri)
+            if (success) {
+                _setupEvent.emit(SetupResult.Success)
+            } else {
+                _setupEvent.emit(SetupResult.Error("Código de hogar no encontrado"))
+            }
         }
     }
 

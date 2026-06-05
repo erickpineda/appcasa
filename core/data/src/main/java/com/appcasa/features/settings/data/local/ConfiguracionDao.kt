@@ -11,6 +11,9 @@ interface ConfiguracionDao {
     @Query("SELECT * FROM hogares LIMIT 1")
     fun getHogarActual(): Flow<HogarEntity?>
 
+    @Query("SELECT * FROM hogares WHERE codigo_hogar = :code LIMIT 1")
+    suspend fun getHogarByCodigo(code: String): HogarEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHogar(hogar: HogarEntity): Long
 

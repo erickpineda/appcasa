@@ -9,10 +9,12 @@ import android.widget.RemoteViews
 import com.appcasa.MainActivity
 import com.appcasa.R
 import com.appcasa.features.dashboard.data.local.DashboardDao
+import com.appcasa.features.settings.data.local.ConfiguracionDao
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,6 +23,9 @@ class PostItWidgetProvider : AppWidgetProvider() {
 
     @Inject
     lateinit var dashboardDao: DashboardDao
+
+    @Inject
+    lateinit var configuracionDao: ConfiguracionDao
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         for (appWidgetId in appWidgetIds) {
@@ -32,7 +37,10 @@ class PostItWidgetProvider : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.widget_post_it)
         
         CoroutineScope(Dispatchers.IO).launch {
-            val postIts = dashboardDao.getPostIts(1L).first() // Simplificación: Hogar 1
+            val hogar = configuracionDao.getHogarActual().firstOrNull()
+            val hogarId = hogar?.id ?: 0L
+            
+            val postIts = if (hogarId != 0L) dashboardDao.getPostIts(hogarId).first() else emptyList()
             val lastPostIt = postIts.lastOrNull()?.contenido ?: "Sin notas"
             
             views.setTextViewText(R.id.widget_text, lastPostIt)

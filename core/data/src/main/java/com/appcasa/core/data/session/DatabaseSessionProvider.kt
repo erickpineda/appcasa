@@ -26,6 +26,6 @@ class DatabaseSessionProvider @Inject constructor(
     }
 
     override fun getCurrentHouseholdId(): Long {
-        return if (_cachedId == 0L) 1L else _cachedId
+        return _cachedId
     }
 }
