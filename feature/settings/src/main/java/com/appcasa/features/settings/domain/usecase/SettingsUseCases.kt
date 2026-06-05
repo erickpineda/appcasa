@@ -180,7 +180,26 @@ class LogoutUseCase @Inject constructor(
     private val householdProvider: CurrentHouseholdProvider
 ) {
     suspend operator fun invoke() {
-        userRepository.deleteUsers()
+        userRepository.deactivateAllUsers()
         householdProvider.setHouseholdId(0L)
+    }
+}
+
+class GetAllHouseholdsUseCase @Inject constructor(
+    private val repository: HouseholdRepository
+) {
+    operator fun invoke(): Flow<List<Household>> {
+        return repository.getAllHogares()
+    }
+}
+
+class SwitchHouseholdUseCase @Inject constructor(
+    private val userRepository: UserRepository,
+    private val householdProvider: CurrentHouseholdProvider
+) {
+    suspend operator fun invoke(householdId: Long) {
+        userRepository.deactivateAllUsers()
+        userRepository.activateUserByHousehold(householdId)
+        householdProvider.setHouseholdId(householdId)
     }
 }

@@ -96,15 +96,20 @@ fun HouseSetupScreen(
     viewModel: HouseSetupViewModel = hiltViewModel()
 ) {
     val existingHousehold by viewModel.existingHousehold.collectAsState()
+    val allHouseholds by viewModel.allHouseholds.collectAsState()
     val householdMembers by viewModel.householdMembers.collectAsState()
     val isCheckingDb by viewModel.isCheckingDb.collectAsState()
 
     var step by remember { mutableStateOf<SetupStep?>(null) }
     
     // Decidir el paso inicial solo cuando recibamos el primer valor real de la DB
-    LaunchedEffect(isCheckingDb, existingHousehold) {
+    LaunchedEffect(isCheckingDb, existingHousehold, allHouseholds) {
         if (!isCheckingDb && step == null) {
-            step = if (existingHousehold != null) SetupStep.SELECT_PROFILE else SetupStep.WELCOME
+            step = when {
+                existingHousehold != null -> SetupStep.SELECT_PROFILE
+                allHouseholds.isNotEmpty() -> SetupStep.SWITCH_HOUSEHOLD
+                else -> SetupStep.WELCOME
+            }
         }
     }
     
@@ -112,9 +117,13 @@ fun HouseSetupScreen(
     BackHandler(enabled = step != null) {
         when (step) {
             SetupStep.CREATE, SetupStep.JOIN, SetupStep.ADD_PROFILE -> {
-                step = if (existingHousehold != null) SetupStep.SELECT_PROFILE else SetupStep.WELCOME
+                step = when {
+                    existingHousehold != null -> SetupStep.SELECT_PROFILE
+                    allHouseholds.isNotEmpty() -> SetupStep.SWITCH_HOUSEHOLD
+                    else -> SetupStep.WELCOME
+                }
             }
-            SetupStep.SELECT_PROFILE -> {
+            SetupStep.SELECT_PROFILE, SetupStep.SWITCH_HOUSEHOLD -> {
                 step = SetupStep.WELCOME
             }
             SetupStep.WELCOME -> {
@@ -142,10 +151,12 @@ fun HouseSetupScreen(
             step = step!!,
             onStepChange = { step = it },
             existingHousehold = existingHousehold,
+            allHouseholds = allHouseholds,
             householdMembers = householdMembers,
             onCreateHousehold = viewModel::createHousehold,
             onJoinHousehold = viewModel::joinHousehold,
             onSelectMember = viewModel::selectMember,
+            onSwitchHousehold = viewModel::switchHousehold,
             onResetAll = { 
                 viewModel.resetHousehold()
                 step = SetupStep.WELCOME 
@@ -159,10 +170,12 @@ private fun HouseSetupContent(
     step: SetupStep,
     onStepChange: (SetupStep) -> Unit,
     existingHousehold: Household?,
+    allHouseholds: List<Household>,
     householdMembers: List<FamilyMember>,
     onCreateHousehold: (String, String, String?) -> Unit,
     onJoinHousehold: (String, String, String?) -> Unit,
     onSelectMember: (FamilyMember) -> Unit,
+    onSwitchHousehold: (Long) -> Unit,
     onResetAll: () -> Unit
 ) {
     var inputName by remember { mutableStateOf("") }
@@ -198,7 +211,9 @@ private fun HouseSetupContent(
                     SetupStep.WELCOME -> WelcomeStep(
                         onCreateClick = { onStepChange(SetupStep.CREATE) },
                         onJoinClick = { onStepChange(SetupStep.JOIN) },
-                        onLoginClick = if (existingHousehold != null) { { onStepChange(SetupStep.SELECT_PROFILE) } } else null,
+                        onLoginClick = if (existingHousehold != null) { { onStepChange(SetupStep.SELECT_PROFILE) } } 
+                                       else if (allHouseholds.isNotEmpty()) { { onStepChange(SetupStep.SWITCH_HOUSEHOLD) } }
+                                       else null,
                         householdName = existingHousehold?.nombre
                     )
                     SetupStep.CREATE -> CreateStep(
@@ -209,7 +224,11 @@ private fun HouseSetupContent(
                         onUserNameChange = { inputUserName = it },
                         onPhotoClick = { imagePickerLauncher.launch("image/*") },
                         onBack = { 
-                            onStepChange(if (existingHousehold != null) SetupStep.SELECT_PROFILE else SetupStep.WELCOME) 
+                            onStepChange(when {
+                                existingHousehold != null -> SetupStep.SELECT_PROFILE
+                                allHouseholds.isNotEmpty() -> SetupStep.SWITCH_HOUSEHOLD
+                                else -> SetupStep.WELCOME
+                            }) 
                         },
                         onConfirm = { onCreateHousehold(inputName, inputUserName, userPhotoUri) }
                     )
@@ -222,7 +241,11 @@ private fun HouseSetupContent(
                         onPhotoClick = { imagePickerLauncher.launch("image/*") },
                         onScanClick = { showScanner = true },
                         onBack = { 
-                            onStepChange(if (existingHousehold != null) SetupStep.SELECT_PROFILE else SetupStep.WELCOME) 
+                            onStepChange(when {
+                                existingHousehold != null -> SetupStep.SELECT_PROFILE
+                                allHouseholds.isNotEmpty() -> SetupStep.SWITCH_HOUSEHOLD
+                                else -> SetupStep.WELCOME
+                            }) 
                         },
                         onConfirm = { onJoinHousehold(inputCode, inputUserName, userPhotoUri) }
                     )
@@ -231,10 +254,20 @@ private fun HouseSetupContent(
                         members = householdMembers,
                         onMemberClick = onSelectMember,
                         onAddProfileClick = { onStepChange(SetupStep.ADD_PROFILE) },
+                        onSwitchHouseClick = if (allHouseholds.size > 1) { { onStepChange(SetupStep.SWITCH_HOUSEHOLD) } } else null,
                         onResetAll = {
                             onResetAll()
                             onStepChange(SetupStep.WELCOME)
                         }
+                    )
+                    SetupStep.SWITCH_HOUSEHOLD -> SwitchHouseholdStep(
+                        households = allHouseholds,
+                        onHouseholdClick = { 
+                            onSwitchHousehold(it.id)
+                            onStepChange(SetupStep.SELECT_PROFILE)
+                        },
+                        onCreateNewClick = { onStepChange(SetupStep.CREATE) },
+                        onJoinNewClick = { onStepChange(SetupStep.JOIN) }
                     )
                     SetupStep.ADD_PROFILE -> AddProfileStep(
                         userName = inputUserName,
@@ -629,19 +662,82 @@ private fun JoinStep(
 }
 
 @Composable
+private fun SwitchHouseholdStep(
+    households: List<Household>,
+    onHouseholdClick: (Household) -> Unit,
+    onCreateNewClick: () -> Unit,
+    onJoinNewClick: () -> Unit
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        Text("Tus Hogares", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text("Selecciona una casa para entrar", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        
+        Spacer(Modifier.height(32.dp))
+        
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp)
+        ) {
+            items(households) { household ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onHouseholdClick(household) }) {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Home, null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(household.nombre, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(48.dp))
+        
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            OutlinedButton(onClick = onCreateNewClick) {
+                Icon(Icons.Default.Add, null)
+                Spacer(Modifier.width(4.dp))
+                Text("Crear Nueva")
+            }
+            OutlinedButton(onClick = onJoinNewClick) {
+                Icon(Icons.Default.VpnKey, null)
+                Spacer(Modifier.width(4.dp))
+                Text("Unirse a otra")
+            }
+        }
+    }
+}
+
+@Composable
 private fun SelectProfileStep(
     existingHousehold: Household?,
     members: List<FamilyMember>,
     onMemberClick: (FamilyMember) -> Unit,
     onAddProfileClick: () -> Unit,
+    onSwitchHouseClick: (() -> Unit)? = null,
     onResetAll: () -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text("¿Quién eres?", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text("Selecciona tu perfil para entrar", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         
-        // Debug info
-        Text("Hogar: ${existingHousehold?.nombre ?: "None"} (ID: ${existingHousehold?.id ?: "N/A"})", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+        // Debug info e info de hogar
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Hogar: ${existingHousehold?.nombre ?: "None"}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            if (onSwitchHouseClick != null) {
+                Text(" • ", style = MaterialTheme.typography.labelSmall)
+                Text("Cambiar", 
+                    modifier = Modifier.clickable { onSwitchHouseClick() },
+                    style = MaterialTheme.typography.labelSmall, 
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
 
         Spacer(Modifier.height(32.dp))
         
@@ -736,7 +832,7 @@ private fun ProfileAvatar(member: FamilyMember, onClick: () -> Unit) {
 }
 
 private enum class SetupStep {
-    WELCOME, CREATE, JOIN, SELECT_PROFILE, ADD_PROFILE
+    WELCOME, CREATE, JOIN, SELECT_PROFILE, ADD_PROFILE, SWITCH_HOUSEHOLD
 }
 
 @Preview(showBackground = true)
@@ -747,10 +843,12 @@ fun HouseSetupPreview_Welcome() {
             step = SetupStep.WELCOME,
             onStepChange = {},
             existingHousehold = null,
+            allHouseholds = emptyList(),
             householdMembers = emptyList(),
             onCreateHousehold = { _, _, _ -> },
             onJoinHousehold = { _, _, _ -> },
             onSelectMember = {},
+            onSwitchHousehold = {},
             onResetAll = {}
         )
     }
@@ -764,6 +862,7 @@ fun HouseSetupPreview_SelectProfile() {
             step = SetupStep.SELECT_PROFILE,
             onStepChange = {},
             existingHousehold = Household(id = 1, nombre = "Mi Casa", codigoHogar = "CASA-1234"),
+            allHouseholds = listOf(Household(id = 1, nombre = "Mi Casa")),
             householdMembers = listOf(
                 FamilyMember(id = 1, hogarId = 1, nombre = "Juan", tipo = TipoMiembro.PERSONA),
                 FamilyMember(id = 2, hogarId = 1, nombre = "Maria", tipo = TipoMiembro.PERSONA)
@@ -771,6 +870,7 @@ fun HouseSetupPreview_SelectProfile() {
             onCreateHousehold = { _, _, _ -> },
             onJoinHousehold = { _, _, _ -> },
             onSelectMember = {},
+            onSwitchHousehold = {},
             onResetAll = {}
         )
     }

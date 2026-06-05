@@ -24,4 +24,16 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun deleteUsers() {
         configuracionDao.deleteAllUsuarios()
     }
+
+    override suspend fun deactivateAllUsers() {
+        configuracionDao.deactivateAllUsers()
+    }
+
+    override suspend fun activateUser(userId: Long) {
+        configuracionDao.activateUser(userId)
+    }
+
+    override suspend fun activateUserByHousehold(householdId: Long) {
+        configuracionDao.activateUserByHousehold(householdId)
+    }
 }

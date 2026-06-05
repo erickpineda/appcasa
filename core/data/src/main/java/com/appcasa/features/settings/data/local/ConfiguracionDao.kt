@@ -8,8 +8,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ConfiguracionDao {
-    @Query("SELECT * FROM hogares LIMIT 1")
+    @Query("SELECT h.* FROM hogares h JOIN usuarios u ON h.id = u.hogar_id WHERE u.is_active = 1 LIMIT 1")
     fun getHogarActual(): Flow<HogarEntity?>
+
+    @Query("SELECT * FROM hogares")
+    fun getAllHogares(): Flow<List<HogarEntity>>
 
     @Query("SELECT * FROM hogares WHERE codigo_hogar = :code LIMIT 1")
     suspend fun getHogarByCodigo(code: String): HogarEntity?
@@ -28,6 +31,9 @@ interface ConfiguracionDao {
 
     @Query("UPDATE usuarios SET is_active = 0")
     suspend fun deactivateAllUsers()
+
+    @Query("UPDATE usuarios SET is_active = 1 WHERE id = (SELECT id FROM usuarios WHERE hogar_id = :hogarId LIMIT 1)")
+    suspend fun activateUserByHousehold(hogarId: Long)
 
     @Query("UPDATE usuarios SET is_active = 1 WHERE id = :userId")
     suspend fun activateUser(userId: Long)

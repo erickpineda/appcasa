@@ -17,6 +17,10 @@ class HouseholdRepositoryImpl @Inject constructor(
         return configuracionDao.getHogarActual().map { it?.toDomain() }
     }
 
+    override fun getAllHogares(): Flow<List<Household>> {
+        return configuracionDao.getAllHogares().map { list -> list.map { it.toDomain() } }
+    }
+
     override suspend fun getHogarByCodigo(code: String): Household? {
         return configuracionDao.getHogarByCodigo(code)?.toDomain()
     }

@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.usecase.GetFamilyMembersUseCase
 import com.appcasa.features.settings.domain.usecase.CreateHouseholdUseCase
+import com.appcasa.features.settings.domain.usecase.GetAllHouseholdsUseCase
 import com.appcasa.features.settings.domain.usecase.GetCurrentHouseholdUseCase
 import com.appcasa.features.settings.domain.usecase.JoinHouseholdUseCase
 import com.appcasa.features.settings.domain.usecase.ResetHouseholdUseCase
 import com.appcasa.features.settings.domain.usecase.SelectMemberUseCase
+import com.appcasa.features.settings.domain.usecase.SwitchHouseholdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +31,9 @@ class HouseSetupViewModel @Inject constructor(
     private val createHouseholdUseCase: CreateHouseholdUseCase,
     private val joinHouseholdUseCase: JoinHouseholdUseCase,
     private val selectMemberUseCase: SelectMemberUseCase,
-    private val resetHouseholdUseCase: ResetHouseholdUseCase
+    private val resetHouseholdUseCase: ResetHouseholdUseCase,
+    private val getAllHouseholdsUseCase: GetAllHouseholdsUseCase,
+    private val switchHouseholdUseCase: SwitchHouseholdUseCase
 ) : ViewModel() {
 
     private val _setupEvent = MutableSharedFlow<SetupResult>(replay = 0)
@@ -41,6 +45,9 @@ class HouseSetupViewModel @Inject constructor(
     val existingHousehold = getCurrentHouseholdUseCase()
         .onEach { _isCheckingDb.value = false }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val allHouseholds = getAllHouseholdsUseCase()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val householdMembers = existingHousehold.flatMapLatest { hogar ->
@@ -69,6 +76,14 @@ class HouseSetupViewModel @Inject constructor(
         viewModelScope.launch {
             selectMemberUseCase(member)
             _setupEvent.emit(SetupResult.Success)
+        }
+    }
+
+    fun switchHousehold(householdId: Long) {
+        viewModelScope.launch {
+            switchHouseholdUseCase(householdId)
+            // No emitimos Success todavía, probablemente necesite ir a SELECT_PROFILE
+            // Pero el UI reaccionará al cambio de existingHousehold
         }
     }
 
