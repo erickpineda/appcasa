@@ -5,16 +5,22 @@ import com.appcasa.core.domain.repository.UserRepository
 import com.appcasa.features.settings.data.local.ConfiguracionDao
 import com.appcasa.features.settings.data.mapper.toDomain
 import com.appcasa.features.settings.data.mapper.toEntity
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
-    private val configuracionDao: ConfiguracionDao
+    private val configuracionDao: ConfiguracionDao,
+    private val firebaseAuth: FirebaseAuth
 ) : UserRepository {
 
     override fun getCurrentUser(): Flow<User?> {
-        return configuracionDao.getUsuarioActual().map { it?.toDomain() }
+        return configuracionDao.getUsuarioActual().map { entity ->
+            val domain = entity?.toDomain()
+            // Podríamos vincular con firebaseAuth.currentUser?.uid aquí si fuera necesario
+            domain
+        }
     }
 
     override suspend fun insertUser(user: User): Long {

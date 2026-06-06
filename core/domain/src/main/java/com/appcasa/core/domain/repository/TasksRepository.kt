@@ -33,4 +33,6 @@ interface TasksRepository {
     suspend fun insertCheckItem(item: TaskCheckItem): Long
     suspend fun updateCheckItem(item: TaskCheckItem)
     suspend fun deleteCheckItem(item: TaskCheckItem)
+
+    fun startRemoteSync(hogarId: Long)
 }

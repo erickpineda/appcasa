@@ -32,4 +32,32 @@ Se ha dividido el módulo contenedor `feature:dashboard` para mejorar la cohesi�
 - Todos los módulos utilizan el **SDK 35** de forma unificada.
 - Las referencias de Hilt y la navegación se han verificado tras los cambios de paquetes.
 
-La arquitectura de AppCasa es ahora robusta, testeable y está preparada para seguir creciendo con nuevos módulos sin aumentar la deuda técnica.
+### 4. Fase 3: Integración de Firebase y Sincronización
+He completado la integración de Firebase para habilitar las funcionalidades colaborativas:
+
+- **Infraestructura Cloud:**
+    - Se activó el plugin `google-services` en el proyecto.
+    - Se añadieron todas las dependencias necesarias de Firebase (Auth, Firestore, Messaging) en `:core:data`.
+    - Se configuró Hilt para proveer las instancias de Firebase (`FirebaseModule.kt`).
+- **Capa de Datos Remota:**
+    - Se creó `FirestoreDataSource.kt` en `:core:data` para manejar la comunicación con la nube.
+    - Se implementó un sistema de **DTOs** (`TaskDto.kt`) para desacoplar el modelo de dominio de la estructura de Firebase.
+- **Sincronización Offline-First:**
+    - Se configuró **WorkManager** con Hilt (`SyncWorker.kt`) para subir cambios locales a la nube en segundo plano.
+    - Se implementó la sincronización en tiempo real (Remote -> Local) en `TasksRepositoryImpl` usando snapshots de Firestore.
+    - El `DashboardViewModel` ahora inicia automáticamente la escucha de cambios remotos al cargar.
+- **Notificaciones Colaborativas:**
+    - Se implementó `AppFirebaseMessagingService.kt` para recibir avisos de la pareja.
+    - Se añadió lógica de suscripción automática a "Topics" basados en el ID del hogar (`household_{id}`).
+
+**Nota Importante:** Para que la aplicación compile y funcione en un dispositivo real, es necesario colocar el archivo `google-services.json` generado en la consola de Firebase dentro de la carpeta `/app`.
+
+## Verificación Final
+
+### Estado de la Arquitectura
+El proyecto ahora cuenta con una arquitectura de primer nivel:
+1.  **Modular:** Features aisladas y cohesivas.
+2.  **Limpia:** Lógica de negocio en UseCases, presentación ligera.
+3.  **Colaborativa:** Preparada para sincronización en la nube.
+4.  **Documentada:** README y Guía Técnica actualizados.
+5.  **Testeable:** Infraestructura de tests configurada y operativa.

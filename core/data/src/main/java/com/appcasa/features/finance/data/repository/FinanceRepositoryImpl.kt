@@ -1,5 +1,6 @@
 package com.appcasa.features.finance.data.repository
 
+import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.domain.model.Expense
 import com.appcasa.core.domain.repository.FinanceRepository
 import com.appcasa.features.finance.data.local.ExpenseDao
@@ -10,7 +11,8 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class FinanceRepositoryImpl @Inject constructor(
-    private val expenseDao: ExpenseDao
+    private val expenseDao: ExpenseDao,
+    private val firestoreDataSource: FirestoreDataSource
 ) : FinanceRepository {
 
     override fun getExpensesByHogar(hogarId: Long): Flow<List<Expense>> {
@@ -32,7 +34,9 @@ class FinanceRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertExpense(expense: Expense): Long {
-        return expenseDao.insertExpense(expense.toEntity())
+        val id = expenseDao.insertExpense(expense.toEntity())
+        firestoreDataSource.syncExpense(expense.copy(id = id))
+        return id
     }
 
     override suspend fun deleteExpense(expense: Expense) {

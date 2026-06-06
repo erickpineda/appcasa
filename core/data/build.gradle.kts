@@ -36,6 +36,8 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
 
     // WorkManager
     implementation(libs.workmanager.ktx)
@@ -46,6 +48,12 @@ dependencies {
     // ML Kit
     implementation(libs.mlkit.barcode.scanning)
     implementation(libs.mlkit.text.recognition)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.messaging)
 
     // Domain
     implementation(project(":core:domain"))

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1090125768411",
+    "project_id": "appcasa-ab7a1",
+    "storage_bucket": "appcasa-ab7a1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1090125768411:android:4209ef728b831b3d494efe",
+        "android_client_info": {
+          "package_name": "com.appcasa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHmtK2IjLXqZH2TDh9KHHgCu6xJ6I6ZEA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

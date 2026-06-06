@@ -4,7 +4,7 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.hilt)
   alias(libs.plugins.ksp)
-  // alias(libs.plugins.google.services) // Requiere el archivo google-services.json en la carpeta /app
+  alias(libs.plugins.google.services)
 }
 
 android {
@@ -73,6 +73,8 @@ dependencies {
   implementation(libs.hilt.android)
   ksp(libs.hilt.compiler)
   implementation(libs.hilt.navigation.compose)
+  implementation(libs.hilt.work)
+  ksp(libs.hilt.work.compiler)
 
   // ─── Room ─────────────────────────────────────────────
   implementation(libs.room.runtime)
@@ -101,6 +103,7 @@ dependencies {
   implementation(libs.firebase.auth)
   implementation(libs.firebase.firestore)
   implementation(libs.firebase.messaging)
+  implementation(libs.firebase.analytics)
 
   // ─── Módulos Locales ──────────────────────────────────
   implementation(project(":core:ui"))

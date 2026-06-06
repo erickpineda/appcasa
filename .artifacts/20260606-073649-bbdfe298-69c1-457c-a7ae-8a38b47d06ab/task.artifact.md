@@ -23,3 +23,9 @@
     - [x] Setup unit testing infrastructure
     - [x] Normalize package structures across all modules
     - [x] Reorganize UseCases by functional context
+- [x] Phase 3: Firebase and Collaboration
+    - [x] Create detailed Firebase implementation plan
+    - [x] Enable Google Services and Cloud plugins
+    - [x] Implement Firestore RemoteDataSource in `:core:data`
+    - [x] Setup cross-device synchronization logic (Offline-first)
+    - [x] Configure FCM for partner notifications

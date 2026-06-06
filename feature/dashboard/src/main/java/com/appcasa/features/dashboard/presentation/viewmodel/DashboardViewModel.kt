@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.utils.Constants
+import com.appcasa.core.domain.repository.TasksRepository
 import com.appcasa.core.domain.usecase.config.GetConfigurationUseCase
 import com.appcasa.core.domain.usecase.config.UpdateConfigurationUseCase
 import com.appcasa.core.domain.usecase.user.GetCurrentUserUseCase
@@ -58,6 +59,7 @@ class DashboardViewModel @Inject constructor(
   private val getCurrentUserUseCase: GetCurrentUserUseCase,
   private val getConfigurationUseCase: GetConfigurationUseCase,
   private val updateConfigurationUseCase: UpdateConfigurationUseCase,
+  private val tasksRepository: TasksRepository,
   private val currentHouseholdProvider: CurrentHouseholdProvider,
 ) : ViewModel() {
 
@@ -144,6 +146,13 @@ class DashboardViewModel @Inject constructor(
         .collect { _isReady.value = true }
     }
     setupSearch()
+    
+    // Iniciar sincronización remota en tiempo real
+    viewModelScope.launch {
+        currentHouseholdProvider.householdId.collect { id ->
+            tasksRepository.startRemoteSync(id)
+        }
+    }
   }
 
   fun updateDashboardOrder(newOrder: List<String>) {

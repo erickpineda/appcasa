@@ -1,5 +1,6 @@
 package com.appcasa.features.family.data.repository
 
+import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.repository.FamilyRepository
 import com.appcasa.features.family.data.local.MiembroDao
@@ -10,7 +11,8 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class FamilyRepositoryImpl @Inject constructor(
-    private val miembroDao: MiembroDao
+    private val miembroDao: MiembroDao,
+    private val firestoreDataSource: FirestoreDataSource
 ) : FamilyRepository {
 
     override fun getMembersByHogar(hogarId: Long): Flow<List<FamilyMember>> {
@@ -25,13 +27,17 @@ class FamilyRepositoryImpl @Inject constructor(
 
     override suspend fun updateMember(member: FamilyMember) {
         miembroDao.updateMiembro(member.toEntity())
+        firestoreDataSource.syncMember(member)
     }
 
     override suspend fun insertMember(member: FamilyMember): Long {
-        return miembroDao.insertMiembro(member.toEntity())
+        val id = miembroDao.insertMiembro(member.toEntity())
+        firestoreDataSource.syncMember(member.copy(id = id))
+        return id
     }
 
     override suspend fun deleteMember(member: FamilyMember) {
         miembroDao.deleteMiembro(member.toEntity())
+        // En un caso real marcaríamos como eliminado en remoto
     }
 }

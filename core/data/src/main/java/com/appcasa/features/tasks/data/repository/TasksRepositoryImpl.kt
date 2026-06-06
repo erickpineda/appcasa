@@ -1,18 +1,23 @@
 package com.appcasa.features.tasks.data.repository
 
+import com.appcasa.core.data.remote.FirestoreDataSource
+import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.repository.TasksRepository
 import com.appcasa.features.tasks.data.local.RecompensaDao
 import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.features.tasks.data.mapper.toDomain
 import com.appcasa.features.tasks.data.mapper.toEntity
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class TasksRepositoryImpl @Inject constructor(
     private val tareaDao: TareaDao,
-    private val recompensaDao: RecompensaDao
+    private val recompensaDao: RecompensaDao,
+    private val syncScheduler: SyncScheduler,
+    private val firestoreDataSource: FirestoreDataSource
 ) : TasksRepository {
 
     override fun getTasksByHogar(hogarId: Long): Flow<List<Task>> {
@@ -40,17 +45,21 @@ class TasksRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertTask(task: Task): Long {
-        return tareaDao.insertTarea(task.toEntity())
+        val id = tareaDao.insertTarea(task.toEntity())
+        syncScheduler.scheduleSync(task.hogarId)
+        return id
     }
 
     override suspend fun deleteTask(task: Task) {
         tareaDao.deleteTarea(task.toEntity())
+        syncScheduler.scheduleSync(task.hogarId)
     }
 
     override suspend fun updateTaskStatus(taskId: Long, status: EstadoTarea) {
-        val task = tareaDao.getTareaById(taskId)
-        task?.let {
+        val taskEntity = tareaDao.getTareaById(taskId)
+        taskEntity?.let {
             tareaDao.updateTarea(it.copy(estado = status.name, updatedAt = System.currentTimeMillis()))
+            syncScheduler.scheduleSync(it.hogarId)
         }
     }
 
@@ -123,5 +132,20 @@ class TasksRepositoryImpl @Inject constructor(
 
     override suspend fun deleteCheckItem(item: TaskCheckItem) {
         tareaDao.deleteCheckItem(item.toEntity())
+    }
+
+    override fun startRemoteSync(hogarId: Long) {
+        firestoreDataSource.observeTasks(hogarId) { remoteTasks ->
+            // En un entorno real usaríamos un scope inyectado o el del repositorio
+            @OptIn(DelicateCoroutinesApi::class)
+            GlobalScope.launch(Dispatchers.IO) {
+                remoteTasks.forEach { remoteTask ->
+                    val localTask = tareaDao.getTareaById(remoteTask.id)
+                    if (localTask == null || remoteTask.updatedAt > localTask.updatedAt) {
+                        tareaDao.insertTarea(remoteTask.toEntity())
+                    }
+                }
+            }
+        }
     }
 }
