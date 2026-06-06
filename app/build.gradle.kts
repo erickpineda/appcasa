@@ -107,6 +107,8 @@ dependencies {
   implementation(project(":core:domain"))
   implementation(project(":core:data"))
   implementation(project(":feature:dashboard"))
+  implementation(project(":feature:family"))
+  implementation(project(":feature:lists"))
   implementation(project(":feature:tasks"))
   implementation(project(":feature:finance"))
   implementation(project(":feature:inventory"))

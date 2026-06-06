@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.appcasa.feature.calendar"
+    namespace = "com.appcasa.features.family"
     compileSdk = 35
 
     defaultConfig {
@@ -45,13 +45,14 @@ dependencies {
 
     // Navigation
     implementation(libs.navigation.compose)
+    implementation(libs.coil.compose)
 
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-
-    // M�dulos Core
+    
+    // Módulos Core
     implementation(project(":core:ui"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))

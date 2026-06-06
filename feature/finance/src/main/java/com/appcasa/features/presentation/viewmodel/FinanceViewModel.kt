@@ -7,9 +7,6 @@ import com.appcasa.core.domain.model.Expense
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.usecase.*
 import com.appcasa.features.finance.domain.usecase.*
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +34,7 @@ class FinanceViewModel @Inject constructor(
   private val purgeOldPhotosUseCase: PurgeOldPhotosUseCase,
   private val updateExpenseUseCase: UpdateExpenseUseCase,
   private val getCurrencySymbolUseCase: GetCurrencySymbolUseCase,
+  private val processTicketUseCase: ProcessTicketUseCase,
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
@@ -103,24 +101,11 @@ class FinanceViewModel @Inject constructor(
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "€")
 
   fun processTicket(bitmap: Bitmap) {
-    val image = InputImage.fromBitmap(bitmap, 0)
-    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-    
-    recognizer.process(image)
-        .addOnSuccessListener { visionText: com.google.mlkit.vision.text.Text ->
-            val text = visionText.text
-            
-            val prices = Regex("""\d+[.,]\d{2}""").findAll(text)
-                .map { it.value.replace(",", ".").toDouble() }
-                .toList()
-            val total = prices.maxOrNull()
-            
-            val lines = text.lines().filter { it.isNotBlank() }
-            val store = lines.firstOrNull { !it.contains(Regex("""\d{2}/\d{2}""")) }
-            
-            _ocrResult.value = total
-            _ocrStore.value = store
-        }
+    viewModelScope.launch {
+      val result = processTicketUseCase(bitmap)
+      _ocrResult.value = result.total
+      _ocrStore.value = result.store
+    }
   }
 
   fun clearOcr() { 

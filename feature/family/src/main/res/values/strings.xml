@@ -1,0 +1,78 @@
+<resources>
+    <string name="family_title">Familia y Mascotas</string>
+    <string name="family_add_member_title">Añadir Miembro</string>
+    <string name="family_edit_member_title">Editar Miembro</string>
+    <string name="family_label_photo">Foto</string>
+    <string name="family_label_name">Nombre</string>
+    <string name="family_error_name_required">El nombre es obligatorio</string>
+    <string name="family_label_type">Tipo</string>
+    <string name="family_label_breed">Raza / Especie</string>
+    <string name="family_label_color">Color / Descripción</string>
+    <string name="family_label_chip">Número de Chip</string>
+    <string name="family_btn_save">Guardar Miembro</string>
+    <string name="family_btn_save_changes">Guardar Cambios</string>
+    <string name="family_btn_ok">OK</string>
+    <string name="family_contact_info">Información de Contacto</string>
+    <string name="family_general_info">Información General</string>
+    <string name="family_type_format">Tipo: %s</string>
+    <string name="family_breed_format">Raza: %s</string>
+    <string name="family_chip_format">Chip: %s</string>
+    <string name="family_weight_evolution">Evolución de Peso</string>
+    <string name="family_no_records">Sin registros</string>
+    <string name="family_no_meds">Sin medicaciones</string>
+    <string name="family_btn_add">Añadir</string>
+    <string name="family_label_name_optional">Nombre (opcional)</string>
+    <string name="family_btn_change_photo">Cambiar Foto</string>
+    <string name="family_section_vet">Veterinario</string>
+    <string name="family_label_vet_name">Nombre Clínica/Vet</string>
+    <string name="family_label_vet_phone">Teléfono Veterinario</string>
+    <string name="family_label_category">Categoría</string>
+    <string name="family_btn_add_first">Añadir primer miembro</string>
+    <string name="family_label_add_birthday">Añadir Cumpleaños</string>
+    <string name="family_label_birthday_format">Cumpleaños: %s</string>
+
+    <string name="hub_agenda_title">Agenda</string>
+    <string name="hub_agenda_subtitle">Eventos, vacunas y turnos</string>
+    <string name="dashboard_save">Guardar</string>
+    <string name="dashboard_cancel">Cancelar</string>
+    <string name="dashboard_empty_household_title">Tu hogar está vacío</string>
+    <string name="dashboard_empty_household_desc">Añade a los miembros de tu familia y a tus mascotas para organizar mejor el día a día.</string>
+
+    <string name="dashboard_member_fallback">Miembro</string>
+    <string name="dashboard_family_member_label">Miembro de la Familia</string>
+    <string name="dashboard_pet_profile_label">Perfil de Mascota</string>
+    <string name="dashboard_birthday_label">Cumpleaños</string>
+    <string name="dashboard_chip_short_label">Nº Chip</string>
+    <string name="dashboard_vet_clinic_label">Clínica/Vet</string>
+    <string name="dashboard_phone_label">Teléfono</string>
+    <string name="dashboard_pet_fallback">Mascota</string>
+    <string name="dashboard_deworming_label">Desparasitación</string>
+    <string name="dashboard_no_product">Sin producto</string>
+    <string name="dashboard_medications_label">Medicaciones Activas</string>
+    <string name="dashboard_new_med_title">Nueva Medicación</string>
+    <string name="dashboard_edit_med_title">Editar Medicación</string>
+    <string name="dashboard_label_med_name">Nombre (ej: Apoquel)</string>
+    <string name="dashboard_label_med_dose">Dosis (ej: 1 pastilla)</string>
+    <string name="dashboard_label_med_freq">Frecuencia (ej: Cada 12h)</string>
+    <string name="dashboard_register_vaccine_title">Registrar Vacuna</string>
+    <string name="dashboard_label_vaccine_name">Nombre de la vacuna</string>
+    <string name="dashboard_new_deworming_title">Nueva Desparasitación</string>
+    <string name="dashboard_label_product_name">Producto (ej: Advocate)</string>
+    <string name="dashboard_register_weight_title">Registrar Peso</string>
+    <string name="dashboard_label_weight_kg">Peso en kg</string>
+
+    <string name="dashboard_delete_title_fallback">Eliminar %s</string>
+    <string name="dashboard_delete_confirm_fallback">¿Estás seguro de que quieres eliminar a %s? Se perderá todo su progreso y XP.</string>
+    <string name="dashboard_family_members">Miembros de la Familia</string>
+    <string name="dashboard_pets_title">Nuestras Mascotas (%d)</string>
+    <string name="dashboard_level_format">Nivel %d</string>
+
+    <string name="hub_members_title">Miembros</string>
+    <string name="hub_members_subtitle">Humanos y pasaportes de mascotas</string>
+    <string name="hub_family_life_title">Familia y Vida</string>
+
+    <string name="cd_back">Atrás</string>
+    <string name="cd_edit">Editar</string>
+    <string name="cd_add">Añadir</string>
+    <string name="cd_delete">Borrar</string>
+</resources>

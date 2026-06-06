@@ -1,0 +1,20 @@
+# Task Management
+
+- [x] Research and Planning
+    - [x] Analyze ViewModels for business logic leakage
+    - [x] Review technical report and identify priorities
+    - [x] Create detailed implementation plan
+- [x] Refactor ViewModels (Extract Business Logic)
+    - [x] Extract OCR logic from `FinanceViewModel` to `ProcessTicketUseCase`
+    - [x] Extract Mood logic from `DashboardViewModel` to `UpdateMemberMoodUseCase`
+    - [x] Extract Inventory update logic from `StockViewModel` to `UpdateStockQuantityUseCase`
+- [x] Modularization (Split `feature:dashboard`)
+    - [x] Create `feature:family` module
+    - [x] Move family-related code from `feature:dashboard` to `feature:family`
+    - [x] Create `feature:lists` module
+    - [x] Move list-related code from `feature:dashboard` to `feature:lists`
+- [x] Documentation Update
+    - [x] Update README.md with correct tech stack and architecture
+- [x] Verification
+    - [x] Verify builds and dependency graph
+    - [x] Manual verification of refactored features

@@ -53,7 +53,7 @@ import com.appcasa.features.lists.presentation.screen.ListsScreen
 import com.appcasa.features.pets.presentation.screen.PetDetailScreen
 import com.appcasa.features.presentation.screen.ArchiveScreen
 import com.appcasa.features.presentation.screen.DashboardScreen
-import com.appcasa.features.presentation.screen.FamilyHubScreen
+import com.appcasa.features.family.presentation.screen.FamilyHubScreen
 import com.appcasa.features.presentation.screen.HomeMaintenanceScreen
 import com.appcasa.features.presentation.screen.MaintenanceDetailScreen
 import com.appcasa.features.presentation.screen.ManagementHubScreen

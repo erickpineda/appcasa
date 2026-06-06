@@ -46,3 +46,19 @@ class DeleteMemberUseCase @Inject constructor(
         familyRepository.deleteMember(member)
     }
 }
+
+class GetPetDataSummaryUseCase @Inject constructor() {
+    operator fun invoke(miembros: List<FamilyMember>): Pair<String, String> {
+        val mascotas = miembros.filter { it.tipo != TipoMiembro.PERSONA }
+        val count = mascotas.size.toString()
+        val summaryList = mutableListOf<String>()
+        val perros = mascotas.count { it.tipo == TipoMiembro.PERRO }
+        val gatos = mascotas.count { it.tipo == TipoMiembro.GATO }
+        val tortugas = mascotas.count { it.tipo == TipoMiembro.TORTUGA }
+        if (perros > 0) summaryList.add("$perros perro${if (perros > 1) "s" else ""}")
+        if (gatos > 0) summaryList.add("$gatos gato${if (gatos > 1) "s" else ""}")
+        if (tortugas > 0) summaryList.add("$tortugas tortuga${if (tortugas > 1) "s" else ""}")
+        val summary = if (summaryList.isEmpty()) "Sin mascotas" else summaryList.joinToString(" · ")
+        return count to summary
+    }
+}

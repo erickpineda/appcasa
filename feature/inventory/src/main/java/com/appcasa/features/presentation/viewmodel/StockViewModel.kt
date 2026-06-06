@@ -29,7 +29,7 @@ class StockViewModel @Inject constructor(
   private val addStockItemUseCase: AddStockItemUseCase,
   private val updateStockItemUseCase: UpdateStockItemUseCase,
   private val deleteStockItemUseCase: DeleteStockItemUseCase,
-  private val autoRestockStockItemUseCase: AutoRestockStockItemUseCase,
+  private val updateStockQuantityUseCase: UpdateStockQuantityUseCase,
   private val addToShoppingListUseCase: AddToShoppingListUseCase,
   private val getActiveListsUseCase: GetActiveListsUseCase,
   private val isCompactViewUseCase: IsCompactViewUseCase,
@@ -95,11 +95,7 @@ class StockViewModel @Inject constructor(
 
   fun updateQuantity(item: StockItem, delta: Double) {
     viewModelScope.launch {
-      val newQuantity = (item.cantidadActual + delta).coerceAtLeast(0.0)
-      val updatedItem = item.copy(cantidadActual = newQuantity)
-      updateStockItemUseCase(updatedItem)
-      
-      autoRestockStockItemUseCase(updatedItem)
+      updateStockQuantityUseCase(item, delta)
     }
   }
 

@@ -7,7 +7,6 @@
         <option name="testRunner" value="CHOOSE_PER_TEST" />
         <option name="distributionType" value="LOCAL" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="C:\dev\soft\gradle\gradle-9.5.1" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
@@ -19,8 +18,10 @@
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/calendar" />
             <option value="$PROJECT_DIR$/feature/dashboard" />
+            <option value="$PROJECT_DIR$/feature/family" />
             <option value="$PROJECT_DIR$/feature/finance" />
             <option value="$PROJECT_DIR$/feature/inventory" />
+            <option value="$PROJECT_DIR$/feature/lists" />
             <option value="$PROJECT_DIR$/feature/settings" />
             <option value="$PROJECT_DIR$/feature/tasks" />
           </set>

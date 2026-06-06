@@ -68,7 +68,7 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.data.utils.FileUtils
 import com.appcasa.core.domain.model.TipoMiembro
-import com.appcasa.feature.dashboard.R
+import com.appcasa.features.family.R
 import com.appcasa.features.family.presentation.viewmodel.EditMemberViewModel
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat

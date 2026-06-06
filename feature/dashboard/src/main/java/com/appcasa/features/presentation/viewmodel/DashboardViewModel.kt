@@ -14,12 +14,12 @@ import com.appcasa.core.domain.usecase.GetConfigurationUseCase
 import com.appcasa.core.domain.usecase.UpdateConfigurationUseCase
 import com.appcasa.core.domain.usecase.GetCurrentUserUseCase
 import com.appcasa.core.domain.usecase.GetFamilyMembersUseCase
-import com.appcasa.core.domain.usecase.GetMemberByIdUseCase
-import com.appcasa.core.domain.usecase.UpdateMemberUseCase
+import com.appcasa.core.domain.usecase.UpdateMemberMoodUseCase
 import com.appcasa.core.domain.usecase.GetActiveTasksUseCase
 import com.appcasa.core.domain.usecase.GetLowStockItemsUseCase
 import com.appcasa.core.domain.usecase.GetTotalMonthlyExpenseUseCase
 import com.appcasa.features.dashboard.domain.usecase.*
+import com.appcasa.features.family.domain.usecase.GetPetDataSummaryUseCase
 import com.appcasa.features.dashboard.presentation.model.SearchItem
 import com.appcasa.features.dashboard.presentation.model.SearchType
 import com.appcasa.navigation.Screen
@@ -53,8 +53,8 @@ class DashboardViewModel @Inject constructor(
   private val getLowStockItemsUseCase: GetLowStockItemsUseCase,
   private val getTotalMonthlyExpenseUseCase: GetTotalMonthlyExpenseUseCase,
   private val getFamilyMembersUseCase: GetFamilyMembersUseCase,
-  private val getMemberByIdUseCase: GetMemberByIdUseCase,
-  private val updateMemberUseCase: UpdateMemberUseCase,
+  private val updateMemberMoodUseCase: UpdateMemberMoodUseCase,
+  private val getPetDataSummaryUseCase: GetPetDataSummaryUseCase,
   private val getCurrentUserUseCase: GetCurrentUserUseCase,
   private val getConfigurationUseCase: GetConfigurationUseCase,
   private val updateConfigurationUseCase: UpdateConfigurationUseCase,
@@ -100,19 +100,7 @@ class DashboardViewModel @Inject constructor(
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
   val petData: StateFlow<Pair<String, String>> = familyMembers
-    .map { miembros ->
-        val mascotas = miembros.filter { it.tipo != TipoMiembro.PERSONA }
-        val count = mascotas.size.toString()
-        val summaryList = mutableListOf<String>()
-        val perros = mascotas.count { it.tipo == TipoMiembro.PERRO }
-        val gatos = mascotas.count { it.tipo == TipoMiembro.GATO }
-        val tortugas = mascotas.count { it.tipo == TipoMiembro.TORTUGA }
-        if (perros > 0) summaryList.add("$perros perro${if (perros > 1) "s" else ""}")
-        if (gatos > 0) summaryList.add("$gatos gato${if (gatos > 1) "s" else ""}")
-        if (tortugas > 0) summaryList.add("$tortugas tortuga${if (tortugas > 1) "s" else ""}")
-        val summary = if (summaryList.isEmpty()) "Sin mascotas" else summaryList.joinToString(" · ")
-        count to summary
-    }
+    .map { miembros -> getPetDataSummaryUseCase(miembros) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "0" to "Sin mascotas registradas")
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -193,13 +181,7 @@ class DashboardViewModel @Inject constructor(
 
   fun updateMemberMood(miembroId: Long, emoji: String?) {
     viewModelScope.launch {
-        val miembro = getMemberByIdUseCase(miembroId)
-        miembro?.let {
-            updateMemberUseCase(it.copy(
-                estadoAnimo = emoji,
-                estadoAnimoUpdatedAt = if (emoji != null) System.currentTimeMillis() else null
-            ))
-        }
+      updateMemberMoodUseCase(miembroId, emoji)
     }
   }
 

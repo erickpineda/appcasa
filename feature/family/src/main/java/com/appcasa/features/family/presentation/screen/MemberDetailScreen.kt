@@ -53,7 +53,7 @@ import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.components.skeletonShimmer
-import com.appcasa.feature.dashboard.R
+import com.appcasa.features.family.R
 import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
 import com.appcasa.navigation.Screen
 import java.text.SimpleDateFormat

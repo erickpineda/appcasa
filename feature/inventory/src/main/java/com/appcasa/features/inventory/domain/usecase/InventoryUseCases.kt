@@ -47,6 +47,18 @@ class UpdateStockItemUseCase @Inject constructor(
     }
 }
 
+class UpdateStockQuantityUseCase @Inject constructor(
+    private val updateStockItemUseCase: UpdateStockItemUseCase,
+    private val autoRestockStockItemUseCase: AutoRestockStockItemUseCase
+) {
+    suspend operator fun invoke(item: StockItem, delta: Double) {
+        val newQuantity = (item.cantidadActual + delta).coerceAtLeast(0.0)
+        val updatedItem = item.copy(cantidadActual = newQuantity)
+        updateStockItemUseCase(updatedItem)
+        autoRestockStockItemUseCase(updatedItem)
+    }
+}
+
 class DeleteStockItemUseCase @Inject constructor(
     private val repository: InventoryRepository
 ) {

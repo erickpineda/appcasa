@@ -1,4 +1,4 @@
-package com.appcasa.features.presentation.screen
+package com.appcasa.features.family.presentation.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,7 +19,7 @@ import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.navigation.Screen
 import androidx.compose.ui.res.stringResource
-import com.appcasa.feature.dashboard.R
+import com.appcasa.features.family.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

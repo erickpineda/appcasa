@@ -3,10 +3,42 @@ package com.appcasa.features.finance.domain.usecase
 import com.appcasa.core.domain.model.Expense
 import com.appcasa.core.domain.repository.FinanceRepository
 import com.appcasa.core.domain.repository.UserRepository
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Calendar
 import javax.inject.Inject
+import kotlin.coroutines.resume
+
+data class OcrResult(val total: Double?, val store: String?)
+
+class ProcessTicketUseCase @Inject constructor() {
+    suspend operator fun invoke(bitmap: android.graphics.Bitmap): OcrResult = suspendCancellableCoroutine { continuation ->
+        val image = InputImage.fromBitmap(bitmap, 0)
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+        recognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                val text = visionText.text
+
+                val prices = Regex("""\d+[.,]\d{2}""").findAll(text)
+                    .map { it.value.replace(",", ".").toDouble() }
+                    .toList()
+                val total = prices.maxOrNull()
+
+                val lines = text.lines().filter { it.isNotBlank() }
+                val store = lines.firstOrNull { !it.contains(Regex("""\d{2}/\d{2}""")) }
+
+                continuation.resume(OcrResult(total, store))
+            }
+            .addOnFailureListener {
+                continuation.resume(OcrResult(null, null))
+            }
+    }
+}
 
 class GetExpensesUseCase @Inject constructor(
     private val repository: FinanceRepository

@@ -63,7 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.ListaItem
-import com.appcasa.feature.dashboard.R
+import com.appcasa.features.lists.R
 import com.appcasa.features.lists.presentation.viewmodel.ListDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

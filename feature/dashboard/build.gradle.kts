@@ -68,4 +68,6 @@ dependencies {
     // Features para el Hub de Gestión
     implementation(project(":feature:tasks"))
     implementation(project(":feature:finance"))
+    implementation(project(":feature:family"))
+    implementation(project(":feature:lists"))
 }

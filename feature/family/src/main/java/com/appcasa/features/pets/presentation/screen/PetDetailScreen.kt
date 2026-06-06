@@ -76,7 +76,7 @@ import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.components.skeletonShimmer
-import com.appcasa.feature.dashboard.R
+import com.appcasa.features.family.R
 import com.appcasa.features.pets.presentation.viewmodel.PetDetailViewModel
 import com.appcasa.navigation.Screen
 import kotlinx.coroutines.delay
