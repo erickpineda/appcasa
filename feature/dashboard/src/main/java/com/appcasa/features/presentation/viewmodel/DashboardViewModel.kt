@@ -226,4 +226,10 @@ class DashboardViewModel @Inject constructor(
   fun onSearchQueryChange(query: String) {
     _searchQuery.value = query
   }
+
+  suspend fun refresh() {
+    // Simulamos un breve delay para que el usuario vea el cargador,
+    // ya que los datos de Room son muy rápidos
+    kotlinx.coroutines.delay(800)
+  }
 }

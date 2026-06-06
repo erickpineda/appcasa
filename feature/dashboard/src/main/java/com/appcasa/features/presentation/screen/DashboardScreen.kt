@@ -94,6 +94,7 @@ import com.appcasa.core.domain.model.PostIt
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.domain.model.User
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.utils.Constants
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.dashboard.presentation.model.SearchItem
@@ -182,22 +183,26 @@ fun DashboardScreen(
     }
   ) { padding ->
     Box(modifier = Modifier.padding(padding)) {
-      DashboardContent(
-        dashboardOrder = dashboardOrder,
-        quickActions = quickActions,
-        navController = navController,
-        familyMembers = familyMembers,
-        petData = petData,
-        pendingTasksCount = pendingTasks,
-        monthlyExpense = monthlyExpense,
-        lowStockCount = lowStockCount,
-        nextEvent = nextEvent,
-        postIts = postIts,
-        onMoodClick = { showMoodSelector = it },
-        onAddPostIt = { showPostItDialog = true },
-        onEditPostIt = { editingPostIt = it },
-        onDeletePostIt = { viewModel.deletePostIt(it) }
-      )
+      PullToRefreshWrapper(
+        onRefresh = { viewModel.refresh() }
+      ) {
+        DashboardContent(
+          dashboardOrder = dashboardOrder,
+          quickActions = quickActions,
+          navController = navController,
+          familyMembers = familyMembers,
+          petData = petData,
+          pendingTasksCount = pendingTasks,
+          monthlyExpense = monthlyExpense,
+          lowStockCount = lowStockCount,
+          nextEvent = nextEvent,
+          postIts = postIts,
+          onMoodClick = { showMoodSelector = it },
+          onAddPostIt = { showPostItDialog = true },
+          onEditPostIt = { editingPostIt = it },
+          onDeletePostIt = { viewModel.deletePostIt(it) }
+        )
+      }
 
       if (searchQuery.isNotEmpty()) {
         SearchResultsOverlay(
