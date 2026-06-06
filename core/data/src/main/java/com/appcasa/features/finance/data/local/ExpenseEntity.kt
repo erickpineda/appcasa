@@ -54,6 +54,9 @@ data class ExpenseEntity(
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
 
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: Long = System.currentTimeMillis(),
+
     @ColumnInfo(name = "created_by_id")
     val createdById: Long? = null,
 

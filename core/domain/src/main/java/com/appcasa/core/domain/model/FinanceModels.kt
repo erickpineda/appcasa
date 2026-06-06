@@ -9,6 +9,8 @@ data class Expense(
     val fecha: Long = System.currentTimeMillis(),
     val fotoUri: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
     val createdById: Long? = null,
-    val archived: Boolean = false
+    val archived: Boolean = false,
+    val syncId: String? = null
 )

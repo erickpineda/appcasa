@@ -34,6 +34,8 @@ class FinanceViewModel @Inject constructor(
   private val archiveOldExpensesUseCase: ArchiveOldExpensesUseCase,
   private val purgeOldPhotosUseCase: PurgeOldPhotosUseCase,
   private val updateExpenseUseCase: UpdateExpenseUseCase,
+  private val getExpensesByCategoryUseCase: GetExpensesByCategoryUseCase,
+  private val getMonthlyEvolutionUseCase: GetMonthlyEvolutionUseCase,
   private val getCurrencySymbolUseCase: GetCurrencySymbolUseCase,
   private val processTicketUseCase: ProcessTicketUseCase,
   private val currentHouseholdProvider: CurrentHouseholdProvider
@@ -81,19 +83,12 @@ class FinanceViewModel @Inject constructor(
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val expensesByCategory: StateFlow<Map<String, Double>> = expenses
-    .map { list -> 
-        list.groupBy { it.categoria }
-            .mapValues { entry -> entry.value.sumOf { it.importe } }
-    }
+    .map { list -> getExpensesByCategoryUseCase(list) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val monthlyEvolution: StateFlow<Map<String, Double>> = expenses
-    .map { list ->
-        val sdf = java.text.SimpleDateFormat("MMM", java.util.Locale.getDefault())
-        list.groupBy { sdf.format(java.util.Date(it.fecha)) }
-            .mapValues { entry -> entry.value.sumOf { it.importe } }
-    }
+    .map { list -> getMonthlyEvolutionUseCase(list) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)

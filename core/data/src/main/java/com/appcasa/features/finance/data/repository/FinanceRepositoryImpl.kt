@@ -1,18 +1,21 @@
 package com.appcasa.features.finance.data.repository
 
 import com.appcasa.core.data.remote.FirestoreDataSource
+import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.domain.model.Expense
 import com.appcasa.core.domain.repository.FinanceRepository
 import com.appcasa.features.finance.data.local.ExpenseDao
 import com.appcasa.features.finance.data.mapper.toDomain
 import com.appcasa.features.finance.data.mapper.toEntity
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class FinanceRepositoryImpl @Inject constructor(
     private val expenseDao: ExpenseDao,
-    private val firestoreDataSource: FirestoreDataSource
+    private val firestoreDataSource: FirestoreDataSource,
+    private val syncScheduler: SyncScheduler
 ) : FinanceRepository {
 
     override fun getExpensesByHogar(hogarId: Long): Flow<List<Expense>> {
@@ -35,16 +38,18 @@ class FinanceRepositoryImpl @Inject constructor(
 
     override suspend fun insertExpense(expense: Expense): Long {
         val id = expenseDao.insertExpense(expense.toEntity())
-        firestoreDataSource.syncExpense(expense.copy(id = id))
+        syncScheduler.scheduleSync(expense.hogarId)
         return id
     }
 
     override suspend fun deleteExpense(expense: Expense) {
         expenseDao.deleteExpense(expense.toEntity())
+        syncScheduler.scheduleSync(expense.hogarId)
     }
 
     override suspend fun deleteAllExpenses(hogarId: Long) {
         expenseDao.deleteAllArchivedExpenses(hogarId)
+        syncScheduler.scheduleSync(hogarId)
     }
 
     override fun getTotalMonthlyExpense(hogarId: Long, startOfMonth: Long): Flow<Double?> {
@@ -53,13 +58,29 @@ class FinanceRepositoryImpl @Inject constructor(
 
     override suspend fun unarchiveExpense(id: Long) {
         expenseDao.unarchiveExpense(id)
+        // sync if needed
     }
 
     override suspend fun archiveOldExpenses(hogarId: Long, threshold: Long) {
         expenseDao.archiveOldExpenses(hogarId, threshold)
+        syncScheduler.scheduleSync(hogarId)
     }
 
     override suspend fun purgeOldExpensePhotos(hogarId: Long, threshold: Long) {
         expenseDao.purgeOldExpensePhotos(hogarId, threshold)
+    }
+
+    override fun startRemoteSync(hogarId: Long) {
+        firestoreDataSource.observeExpenses(hogarId) { remoteExpenses ->
+            @OptIn(DelicateCoroutinesApi::class)
+            GlobalScope.launch(Dispatchers.IO) {
+                remoteExpenses.forEach { remoteExpense ->
+                    val localExpense = expenseDao.getExpenseById(remoteExpense.id)
+                    if (localExpense == null || remoteExpense.updatedAt > localExpense.updatedAt) {
+                        expenseDao.insertExpense(remoteExpense.toEntity())
+                    }
+                }
+            }
+        }
     }
 }

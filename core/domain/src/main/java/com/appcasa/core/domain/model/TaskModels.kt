@@ -19,7 +19,8 @@ data class Task(
     val updatedAt: Long = System.currentTimeMillis(),
     val puntosOtorgados: Boolean = false,
     val createdById: Long? = null,
-    val archived: Boolean = false
+    val archived: Boolean = false,
+    val lastSyncedAt: Long? = null
 )
 
 data class Reward(

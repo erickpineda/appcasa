@@ -126,3 +126,18 @@ class UpdateExpenseUseCase @Inject constructor(
         repository.insertExpense(expense)
     }
 }
+
+class GetExpensesByCategoryUseCase @Inject constructor() {
+    operator fun invoke(expenses: List<Expense>): Map<String, Double> {
+        return expenses.groupBy { it.categoria }
+            .mapValues { entry -> entry.value.sumOf { it.importe } }
+    }
+}
+
+class GetMonthlyEvolutionUseCase @Inject constructor() {
+    operator fun invoke(expenses: List<Expense>): Map<String, Double> {
+        val sdf = java.text.SimpleDateFormat("MMM", java.util.Locale.getDefault())
+        return expenses.groupBy { sdf.format(java.util.Date(it.fecha)) }
+            .mapValues { entry -> entry.value.sumOf { it.importe } }
+    }
+}

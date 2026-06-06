@@ -5,6 +5,8 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.appcasa.core.data.remote.FirestoreDataSource
+import com.appcasa.core.domain.repository.FamilyRepository
+import com.appcasa.core.domain.repository.FinanceRepository
 import com.appcasa.core.domain.repository.TasksRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -15,6 +17,8 @@ class SyncWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val tasksRepository: TasksRepository,
+    private val financeRepository: FinanceRepository,
+    private val familyRepository: FamilyRepository,
     private val firestoreDataSource: FirestoreDataSource
 ) : CoroutineWorker(appContext, workerParams) {
 
@@ -23,12 +27,19 @@ class SyncWorker @AssistedInject constructor(
         if (hogarId == -1L) return Result.failure()
 
         return try {
-            // Fetch all tasks for this household from local DB
-            val localTasks = tasksRepository.getTasksByHogar(hogarId).first()
+            // Sincronizar Tareas
+            tasksRepository.getTasksByHogar(hogarId).first().forEach { 
+                firestoreDataSource.syncTask(it) 
+            }
             
-            // Upload each to Firestore
-            localTasks.forEach { task ->
-                firestoreDataSource.syncTask(task)
+            // Sincronizar Gastos
+            financeRepository.getExpensesByHogar(hogarId).first().forEach {
+                firestoreDataSource.syncExpense(it)
+            }
+
+            // Sincronizar Miembros
+            familyRepository.getMembersByHogar(hogarId).first().forEach {
+                firestoreDataSource.syncMember(it)
             }
             
             Result.success()

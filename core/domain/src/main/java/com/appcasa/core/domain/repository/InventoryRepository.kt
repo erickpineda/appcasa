@@ -9,4 +9,5 @@ interface InventoryRepository {
     fun getLowStockItems(hogarId: Long): Flow<List<StockItem>>
     suspend fun insertStockItem(item: StockItem): Long
     suspend fun deleteStockItem(item: StockItem)
+    fun startRemoteSync(hogarId: Long)
 }

@@ -29,3 +29,7 @@
     - [x] Implement Firestore RemoteDataSource in `:core:data`
     - [x] Setup cross-device synchronization logic (Offline-first)
     - [x] Configure FCM for partner notifications
+- [x] Final Polish
+    - [x] Clean FinanceViewModel groupings into UseCases
+    - [x] Final build verification (assembleDebug)
+    - [x] Comprehensive architectural walk-through update

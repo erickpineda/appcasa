@@ -14,4 +14,5 @@ interface FinanceRepository {
     suspend fun unarchiveExpense(id: Long)
     suspend fun archiveOldExpenses(hogarId: Long, threshold: Long)
     suspend fun purgeOldExpensePhotos(hogarId: Long, threshold: Long)
+    fun startRemoteSync(hogarId: Long)
 }

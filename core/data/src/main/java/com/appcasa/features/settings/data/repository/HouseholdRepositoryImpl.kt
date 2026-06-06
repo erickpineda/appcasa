@@ -1,5 +1,6 @@
 package com.appcasa.features.settings.data.repository
 
+import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.domain.model.Household
 import com.appcasa.core.domain.repository.HouseholdRepository
 import com.appcasa.features.settings.data.local.ConfiguracionDao
@@ -12,7 +13,8 @@ import javax.inject.Inject
 
 class HouseholdRepositoryImpl @Inject constructor(
     private val configuracionDao: ConfiguracionDao,
-    private val firebaseMessaging: FirebaseMessaging
+    private val firebaseMessaging: FirebaseMessaging,
+    private val firestoreDataSource: FirestoreDataSource
 ) : HouseholdRepository {
 
     override fun getHogarActual(): Flow<Household?> {
@@ -34,7 +36,13 @@ class HouseholdRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertHogar(hogar: Household): Long {
-        return configuracionDao.insertHogar(hogar.toEntity())
+        val id = configuracionDao.insertHogar(hogar.toEntity())
+        firestoreDataSource.syncHousehold(hogar.copy(id = id))
+        return id
+    }
+
+    override suspend fun findHouseholdRemotely(code: String): Household? {
+        return firestoreDataSource.getHouseholdByCode(code)
     }
 
     override suspend fun updateCodigoHogar(hogarId: Long, newCode: String) {

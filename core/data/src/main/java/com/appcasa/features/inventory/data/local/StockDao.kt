@@ -28,6 +28,9 @@ interface StockDao {
     @Delete
     suspend fun deleteItem(item: StockEntity)
 
+    @Query("SELECT * FROM stock WHERE id = :id")
+    suspend fun getItemById(id: Long): StockEntity?
+
     @Query("DELETE FROM stock")
     suspend fun deleteAll()
 }

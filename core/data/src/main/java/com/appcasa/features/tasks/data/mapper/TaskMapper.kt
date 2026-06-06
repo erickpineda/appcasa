@@ -23,7 +23,8 @@ fun TareaEntity.toDomain(): Task {
         updatedAt = updatedAt,
         puntosOtorgados = puntosOtorgados,
         createdById = createdById,
-        archived = archived
+        archived = archived,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -47,7 +48,8 @@ fun Task.toEntity(): TareaEntity {
         updatedAt = updatedAt,
         puntosOtorgados = puntosOtorgados,
         createdById = createdById,
-        archived = archived
+        archived = archived,
+        lastSyncedAt = lastSyncedAt
     )
 }
 

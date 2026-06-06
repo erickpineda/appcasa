@@ -8,6 +8,7 @@ interface HouseholdRepository {
     fun getAllHogares(): Flow<List<Household>>
     suspend fun getHogarByCodigo(code: String): Household?
     suspend fun insertHogar(hogar: Household): Long
+    suspend fun findHouseholdRemotely(code: String): Household?
     suspend fun updateCodigoHogar(hogarId: Long, newCode: String)
     suspend fun deleteAllHogares()
 }

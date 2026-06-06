@@ -73,10 +73,7 @@ class CreateHouseholdUseCase @Inject constructor(
         val code = HouseCodeUtils.generateHouseCode()
         
         val hogarId = householdRepository.insertHogar(
-            Household(
-                nombre = houseName,
-                codigoHogar = code
-            )
+            Household(nombre = houseName, codigoHogar = code)
         )
         
         val miembroId = familyRepository.insertMember(
@@ -113,7 +110,17 @@ class JoinHouseholdUseCase @Inject constructor(
     private val householdProvider: CurrentHouseholdProvider
 ) {
     suspend operator fun invoke(code: String, userName: String, photoUri: String?): Boolean {
-        val hogar = householdRepository.getHogarByCodigo(code) ?: return false
+        // Primero intentamos buscarlo localmente
+        var hogar = householdRepository.getHogarByCodigo(code)
+        
+        // Si no está local, lo buscamos en Firebase
+        if (hogar == null) {
+            hogar = householdRepository.findHouseholdRemotely(code)
+            // Si lo encontramos en la nube, lo guardamos localmente para empezar
+            hogar?.let { householdRepository.insertHogar(it) }
+        }
+
+        if (hogar == null) return false
         val hogarId = hogar.id
         
         val miembroId = familyRepository.insertMember(

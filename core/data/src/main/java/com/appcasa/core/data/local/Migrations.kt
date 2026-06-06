@@ -230,6 +230,18 @@ object Migrations {
   }
 
   /**
+   * Migración para añadir soporte de sincronización cloud (updated_at, last_synced_at).
+   */
+  val MIGRATION_23_24 = object : Migration(23, 24) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE tareas ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE gastos ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      // Inicializar updated_at con created_at para gastos existentes
+      db.execSQL("UPDATE gastos SET updated_at = created_at")
+    }
+  }
+
+  /**
    * Lista de todas las migraciones registradas.
    */
   fun getAll(): Array<Migration> {
@@ -248,7 +260,8 @@ object Migrations {
       MIGRATION_19_20,
       MIGRATION_20_21,
       MIGRATION_21_22,
-      MIGRATION_22_23
+      MIGRATION_22_23,
+      MIGRATION_23_24
     )
   }
 }

@@ -13,8 +13,10 @@ fun ExpenseEntity.toDomain(): Expense {
         fecha = fecha,
         fotoUri = fotoUri,
         createdAt = createdAt,
+        updatedAt = updatedAt,
         createdById = createdById,
-        archived = archived
+        archived = archived,
+        syncId = syncId
     )
 }
 
@@ -28,7 +30,9 @@ fun Expense.toEntity(): ExpenseEntity {
         fecha = fecha,
         fotoUri = fotoUri,
         createdAt = createdAt,
+        updatedAt = updatedAt,
         createdById = createdById,
-        archived = archived
+        archived = archived,
+        syncId = syncId
     )
 }

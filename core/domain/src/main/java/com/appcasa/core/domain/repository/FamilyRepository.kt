@@ -9,4 +9,5 @@ interface FamilyRepository {
     suspend fun updateMember(member: FamilyMember)
     suspend fun insertMember(member: FamilyMember): Long
     suspend fun deleteMember(member: FamilyMember)
+    fun startRemoteSync(hogarId: Long)
 }
