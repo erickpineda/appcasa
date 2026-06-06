@@ -1,6 +1,5 @@
 package com.appcasa.features.presentation.viewmodel
 
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Person
@@ -35,6 +34,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
@@ -61,20 +61,35 @@ class DashboardViewModel @Inject constructor(
   private val currentHouseholdProvider: CurrentHouseholdProvider,
 ) : ViewModel() {
 
-  private val _postIts = MutableStateFlow<List<PostIt>>(emptyList())
-  val postIts = _postIts.asStateFlow()
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val postIts: StateFlow<List<PostIt>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> getPostItsUseCase(id) }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-  private val _dashboardOrder = MutableStateFlow(listOf(
-    Constants.Modules.TASKS, 
-    Constants.Modules.PETS, 
-    Constants.Modules.CALENDAR, 
-    Constants.Modules.EXPENSES, 
-    Constants.Modules.POSTITS
-  ))
-  val dashboardOrder = _dashboardOrder.asStateFlow()
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val dashboardOrder: StateFlow<List<String>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id ->
+      getDashboardConfigUseCase(id).map { config ->
+        config?.ordenModulos?.split(",") ?: listOf(
+          Constants.Modules.TASKS,
+          Constants.Modules.PETS,
+          Constants.Modules.CALENDAR,
+          Constants.Modules.EXPENSES,
+          Constants.Modules.POSTITS,
+        )
+      }
+    }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-  private val _quickActions = MutableStateFlow(listOf("CALC_DOSIS", "UTIL_PDF", "UTIL_SAFE", "LISTS"))
-  val quickActions = _quickActions.asStateFlow()
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val quickActions: StateFlow<List<String>> = currentHouseholdProvider.householdId
+    .flatMapLatest { id ->
+      getConfigurationUseCase(id).map { configs ->
+        configs.find { it.clave == "DASHBOARD_QUICK_ACTIONS" }?.valor?.split(",")
+          ?: listOf("CALC_DOSIS", "UTIL_PDF", "UTIL_SAFE", "LISTS")
+      }
+    }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val familyMembers: StateFlow<List<FamilyMember>> = currentHouseholdProvider.householdId
@@ -129,38 +144,22 @@ class DashboardViewModel @Inject constructor(
   private val _searchResults = MutableStateFlow<List<SearchItem>>(emptyList())
   val searchResults: StateFlow<List<SearchItem>> = _searchResults.asStateFlow()
 
+  private val _isReady = MutableStateFlow(false)
+  val isReady = _isReady.asStateFlow()
+
   init {
     viewModelScope.launch {
-      currentHouseholdProvider.householdId.collect { id ->
-        observeDashboardExtras(id)
-      }
+      // Sincronizamos la carga inicial: solo mostramos el Dashboard cuando
+      // los flujos principales tengan datos reales (al menos una emisión)
+      combine(familyMembers, dashboardOrder, quickActions) { _, _, _ -> true }
+        .take(1)
+        .collect { _isReady.value = true }
     }
     setupSearch()
   }
 
-  private fun observeDashboardExtras(id: Long) {
-    viewModelScope.launch {
-      getPostItsUseCase(id).collect { _postIts.value = it }
-    }
-    viewModelScope.launch {
-      getDashboardConfigUseCase(id).collect { config ->
-        config?.ordenModulos?.let {
-          _dashboardOrder.value = it.split(",")
-        }
-      }
-    }
-    viewModelScope.launch {
-        getConfigurationUseCase(id).collect { configs ->
-            configs.find { it.clave == "DASHBOARD_QUICK_ACTIONS" }?.valor?.let {
-                _quickActions.value = it.split(",")
-            }
-        }
-    }
-  }
-
   fun updateDashboardOrder(newOrder: List<String>) {
     val id = currentHouseholdProvider.getCurrentHouseholdId()
-    _dashboardOrder.value = newOrder
     viewModelScope.launch {
       updateDashboardOrderUseCase(id, newOrder)
     }
@@ -168,7 +167,6 @@ class DashboardViewModel @Inject constructor(
 
   fun updateQuickActions(newActions: List<String>) {
       val id = currentHouseholdProvider.getCurrentHouseholdId()
-      _quickActions.value = newActions
       viewModelScope.launch {
           updateConfigurationUseCase(id, "DASHBOARD_QUICK_ACTIONS", newActions.joinToString(","))
       }

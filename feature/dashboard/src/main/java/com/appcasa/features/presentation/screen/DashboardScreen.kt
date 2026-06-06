@@ -94,6 +94,7 @@ import com.appcasa.core.domain.model.PostIt
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.domain.model.User
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.utils.Constants
 import com.appcasa.feature.dashboard.R
@@ -119,6 +120,7 @@ fun DashboardScreen(
   val quickActions by viewModel.quickActions.collectAsState()
   val searchResults by viewModel.searchResults.collectAsState()
   val searchQuery by viewModel.searchQuery.collectAsState()
+  val isReady by viewModel.isReady.collectAsState()
 
   BackHandler(enabled = searchQuery.isNotEmpty()) {
       viewModel.onSearchQueryChange("")
@@ -171,50 +173,54 @@ fun DashboardScreen(
       )
   }
 
-  Scaffold(
-    topBar = {
-      DashboardTopBar(
-        user = currentUser,
-        searchQuery = searchQuery,
-        onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
-        onSettingsClick = { navController.navigate(Screen.Settings.route) },
-        onCustomizeClick = { showReorderDialog = true }
-      )
-    }
-  ) { padding ->
-    Box(modifier = Modifier.padding(padding)) {
-      PullToRefreshWrapper(
-        onRefresh = { viewModel.refresh() }
-      ) {
-        DashboardContent(
-          dashboardOrder = dashboardOrder,
-          quickActions = quickActions,
-          navController = navController,
-          familyMembers = familyMembers,
-          petData = petData,
-          pendingTasksCount = pendingTasks,
-          monthlyExpense = monthlyExpense,
-          lowStockCount = lowStockCount,
-          nextEvent = nextEvent,
-          postIts = postIts,
-          onMoodClick = { showMoodSelector = it },
-          onAddPostIt = { showPostItDialog = true },
-          onEditPostIt = { editingPostIt = it },
-          onDeletePostIt = { viewModel.deletePostIt(it) }
-        )
-      }
+  if (!isReady) {
+      AppCasaMeshBackground { }
+  } else {
+      Scaffold(
+        topBar = {
+          DashboardTopBar(
+            user = currentUser,
+            searchQuery = searchQuery,
+            onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+            onSettingsClick = { navController.navigate(Screen.Settings.route) },
+            onCustomizeClick = { showReorderDialog = true }
+          )
+        }
+      ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+          PullToRefreshWrapper(
+            onRefresh = { viewModel.refresh() }
+          ) {
+            DashboardContent(
+              dashboardOrder = dashboardOrder,
+              quickActions = quickActions,
+              navController = navController,
+              familyMembers = familyMembers,
+              petData = petData,
+              pendingTasksCount = pendingTasks,
+              monthlyExpense = monthlyExpense,
+              lowStockCount = lowStockCount,
+              nextEvent = nextEvent,
+              postIts = postIts,
+              onMoodClick = { showMoodSelector = it },
+              onAddPostIt = { showPostItDialog = true },
+              onEditPostIt = { editingPostIt = it },
+              onDeletePostIt = { viewModel.deletePostIt(it) }
+            )
+          }
 
-      if (searchQuery.isNotEmpty()) {
-        SearchResultsOverlay(
-          results = searchResults,
-          onResultClick = { item ->
-            navController.navigate(item.route)
-            viewModel.onSearchQueryChange("")
-          },
-          onClose = { viewModel.onSearchQueryChange("") }
-        )
+          if (searchQuery.isNotEmpty()) {
+            SearchResultsOverlay(
+              results = searchResults,
+              onResultClick = { item ->
+                navController.navigate(item.route)
+                viewModel.onSearchQueryChange("")
+              },
+              onClose = { viewModel.onSearchQueryChange("") }
+            )
+          }
+        }
       }
-    }
   }
 }
 
