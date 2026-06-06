@@ -3,7 +3,10 @@ package com.appcasa.features.settings.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.*
-import com.appcasa.core.domain.usecase.*
+import com.appcasa.core.domain.usecase.lists.GetActiveListsUseCase
+import com.appcasa.core.domain.usecase.config.GetConfigurationUseCase
+import com.appcasa.core.domain.usecase.config.UpdateConfigurationUseCase
+import com.appcasa.core.domain.usecase.user.GetCurrentUserUseCase
 import com.appcasa.features.settings.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

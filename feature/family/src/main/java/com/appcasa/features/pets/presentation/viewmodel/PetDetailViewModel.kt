@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.*
-import com.appcasa.core.domain.usecase.GetMemberByIdUseCase
+import com.appcasa.core.domain.usecase.household.GetMemberByIdUseCase
 import com.appcasa.features.pets.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted

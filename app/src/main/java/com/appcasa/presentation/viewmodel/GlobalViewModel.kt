@@ -3,8 +3,8 @@ package com.appcasa.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.core.domain.usecase.GetConfigurationUseCase
-import com.appcasa.core.domain.usecase.GetCurrentUserUseCase
+import com.appcasa.core.domain.usecase.config.GetConfigurationUseCase
+import com.appcasa.core.domain.usecase.user.GetCurrentUserUseCase
 import com.appcasa.features.settings.domain.usecase.GetCurrentHouseholdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*

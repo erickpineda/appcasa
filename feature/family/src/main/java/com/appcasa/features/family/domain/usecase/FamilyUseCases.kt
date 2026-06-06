@@ -2,7 +2,7 @@ package com.appcasa.features.family.domain.usecase
 
 import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.repository.*
-import com.appcasa.core.domain.usecase.SyncBirthdayEventUseCase
+import com.appcasa.core.domain.usecase.household.SyncBirthdayEventUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

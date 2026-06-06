@@ -64,7 +64,4 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
-    
-    // Cross-feature temporary links for Phase 1
-    implementation(project(":feature:dashboard"))
 }

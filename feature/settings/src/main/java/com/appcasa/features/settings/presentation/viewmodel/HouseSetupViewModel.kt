@@ -3,7 +3,7 @@ package com.appcasa.features.settings.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.FamilyMember
-import com.appcasa.core.domain.usecase.GetFamilyMembersUseCase
+import com.appcasa.core.domain.usecase.household.GetFamilyMembersUseCase
 import com.appcasa.features.settings.domain.usecase.CreateHouseholdUseCase
 import com.appcasa.features.settings.domain.usecase.GetAllHouseholdsUseCase
 import com.appcasa.features.settings.domain.usecase.GetCurrentHouseholdUseCase

@@ -22,21 +22,23 @@ class ProcessTicketUseCase @Inject constructor() {
 
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
-                val text = visionText.text
-
-                val prices = Regex("""\d+[.,]\d{2}""").findAll(text)
-                    .map { it.value.replace(",", ".").toDouble() }
-                    .toList()
-                val total = prices.maxOrNull()
-
-                val lines = text.lines().filter { it.isNotBlank() }
-                val store = lines.firstOrNull { !it.contains(Regex("""\d{2}/\d{2}""")) }
-
-                continuation.resume(OcrResult(total, store))
+                continuation.resume(interpretText(visionText.text))
             }
             .addOnFailureListener {
                 continuation.resume(OcrResult(null, null))
             }
+    }
+
+    fun interpretText(text: String): OcrResult {
+        val prices = Regex("""\d+[.,]\d{2}""").findAll(text)
+            .map { it.value.replace(",", ".").toDouble() }
+            .toList()
+        val total = prices.maxOrNull()
+
+        val lines = text.lines().filter { it.isNotBlank() }
+        val store = lines.firstOrNull { !it.contains(Regex("""\d{2}/\d{2}""")) }
+
+        return OcrResult(total, store)
     }
 }
 

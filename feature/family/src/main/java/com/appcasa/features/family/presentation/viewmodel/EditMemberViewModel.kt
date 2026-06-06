@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.model.TipoMiembro
-import com.appcasa.core.domain.usecase.GetMemberByIdUseCase
-import com.appcasa.core.domain.usecase.UpdateMemberUseCase
+import com.appcasa.core.domain.usecase.household.GetMemberByIdUseCase
+import com.appcasa.core.domain.usecase.household.UpdateMemberUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.Lista
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.features.lists.domain.usecase.*
-import com.appcasa.core.domain.usecase.GetActiveListsUseCase
-import com.appcasa.core.domain.usecase.IsCompactViewUseCase
+import com.appcasa.core.domain.usecase.lists.GetActiveListsUseCase
+import com.appcasa.core.domain.usecase.config.IsCompactViewUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
-import com.appcasa.core.domain.usecase.GetFamilyMembersUseCase
-import com.appcasa.core.domain.usecase.SyncBirthdayEventUseCase
+import com.appcasa.core.domain.usecase.household.GetFamilyMembersUseCase
+import com.appcasa.core.domain.usecase.household.SyncBirthdayEventUseCase
 import com.appcasa.features.family.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted

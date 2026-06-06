@@ -27,4 +27,8 @@ dependencies {
     implementation(libs.coroutines.android)
     implementation(libs.google.play.location)
     implementation("javax.inject:javax.inject:1")
+
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
 }

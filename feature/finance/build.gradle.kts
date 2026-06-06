@@ -59,4 +59,9 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
+
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
+    testImplementation(libs.mlkit.text.recognition) // Needed if we want to mock InputImage or similar, though better to mock the result
 }
