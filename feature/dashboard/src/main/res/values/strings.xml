@@ -317,4 +317,15 @@
     <string name="maintenance_detail_title">Detalle de Mantenimiento</string>
     <string name="maintenance_category_format">Categoría: %s</string>
     <string name="maintenance_qr_ident_label">QR de Identificación</string>
+    <!-- Archive Module Extras -->
+    <string name="archive_clear_section_title">Vaciar sección</string>
+    <string name="archive_clear_section_desc">¿Estás seguro de que quieres borrar todos los elementos de esta pestaña?</string>
+    <string name="archive_clear_section_btn">Vaciar</string>
+    <string name="archive_btn_cancel">Cancelar</string>
+    <string name="archive_clear_all_title">Vaciar TODO el archivo</string>
+    <string name="archive_clear_all_desc">Esta acción eliminará permanentemente TODOS los elementos archivados de todas las categorías. No se puede deshacer.</string>
+    <string name="archive_clear_all_btn">BORRAR TODO</string>
+    <string name="archive_cd_clear_section">Limpiar sección</string>
+    <string name="archive_cd_clear_all">Vaciar todo</string>
+    <string name="archive_load_more">Cargar más...</string>
 </resources>

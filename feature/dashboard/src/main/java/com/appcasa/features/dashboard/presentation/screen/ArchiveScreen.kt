@@ -76,8 +76,8 @@ fun ArchiveScreen(
   if (showClearSectionConfirm) {
       AlertDialog(
           onDismissRequest = { showClearSectionConfirm = false },
-          title = { Text("Vaciar sección") },
-          text = { Text("¿Estás seguro de que quieres borrar todos los elementos de esta pestaña?") },
+          title = { Text(stringResource(R.string.archive_clear_section_title)) },
+          text = { Text(stringResource(R.string.archive_clear_section_desc)) },
           confirmButton = {
               Button(onClick = {
                   when(selectedTab) {
@@ -88,18 +88,18 @@ fun ArchiveScreen(
                   }
                   showClearSectionConfirm = false
               }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
-                  Text("Vaciar")
+                  Text(stringResource(R.string.archive_clear_section_btn))
               }
           },
-          dismissButton = { TextButton(onClick = { showClearSectionConfirm = false }) { Text("Cancelar") } }
+          dismissButton = { TextButton(onClick = { showClearSectionConfirm = false }) { Text(stringResource(R.string.archive_btn_cancel)) } }
       )
   }
 
   if (showClearAllConfirm) {
       AlertDialog(
           onDismissRequest = { showClearAllConfirm = false },
-          title = { Text("Vaciar TODO el archivo") },
-          text = { Text("Esta acción eliminará permanentemente TODOS los elementos archivados de todas las categorías. No se puede deshacer.") },
+          title = { Text(stringResource(R.string.archive_clear_all_title)) },
+          text = { Text(stringResource(R.string.archive_clear_all_desc)) },
           confirmButton = {
               Button(onClick = {
                   tasksViewModel.clearAllArchived()
@@ -108,10 +108,10 @@ fun ArchiveScreen(
                   maintenanceViewModel.clearAllArchived()
                   showClearAllConfirm = false
               }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
-                  Text("BORRAR TODO")
+                  Text(stringResource(R.string.archive_clear_all_btn))
               }
           },
-          dismissButton = { TextButton(onClick = { showClearAllConfirm = false }) { Text("Cancelar") } }
+          dismissButton = { TextButton(onClick = { showClearAllConfirm = false }) { Text(stringResource(R.string.archive_btn_cancel)) } }
       )
   }
 
@@ -127,10 +127,10 @@ fun ArchiveScreen(
             },
             actions = {
                 IconButton(onClick = { showClearSectionConfirm = true }) {
-                    Icon(Icons.Default.DeleteSweep, contentDescription = "Limpiar sección", tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.DeleteSweep, contentDescription = stringResource(R.string.archive_cd_clear_section), tint = MaterialTheme.colorScheme.error)
                 }
                 IconButton(onClick = { showClearAllConfirm = true }) {
-                    Icon(Icons.Default.AutoDelete, contentDescription = "Vaciar todo", tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.AutoDelete, contentDescription = stringResource(R.string.archive_cd_clear_all), tint = MaterialTheme.colorScheme.error)
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
@@ -177,7 +177,7 @@ fun ArchivedTasksList(viewModel: TasksViewModel, onDelete: (Task) -> Unit) {
       }
       item {
           TextButton(onClick = { viewModel.loadMoreArchived() }, modifier = Modifier.fillMaxWidth()) {
-              Text("Cargar más...")
+              Text(stringResource(R.string.archive_load_more))
           }
       }
     }
@@ -196,7 +196,7 @@ fun ArchivedListsList(viewModel: ListsViewModel, onDelete: (Lista) -> Unit) {
       }
       item {
           TextButton(onClick = { viewModel.loadMoreArchived() }, modifier = Modifier.fillMaxWidth()) {
-              Text("Cargar más...")
+              Text(stringResource(R.string.archive_load_more))
           }
       }
     }
@@ -215,7 +215,7 @@ fun ArchivedExpensesList(viewModel: FinanceViewModel, onDelete: (Expense) -> Uni
       }
       item {
           TextButton(onClick = { viewModel.loadMoreArchived() }, modifier = Modifier.fillMaxWidth()) {
-              Text("Cargar más...")
+              Text(stringResource(R.string.archive_load_more))
           }
       }
     }
@@ -234,7 +234,7 @@ fun ArchivedMaintenanceList(viewModel: HomeMaintenanceViewModel, onDelete: (Main
       }
       item {
           TextButton(onClick = { viewModel.loadMoreArchived() }, modifier = Modifier.fillMaxWidth()) {
-              Text("Cargar más...")
+              Text(stringResource(R.string.archive_load_more))
           }
       }
     }

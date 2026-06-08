@@ -2,6 +2,7 @@
 agp                    = "9.2.1"
 kotlin                 = "2.1.0"
 ksp                    = "2.1.0-1.0.29"
+kotlinx-serialization  = "1.7.3"
 compileSdk             = "35"
 targetSdk              = "35"
 minSdk                 = "26"
@@ -101,6 +102,7 @@ firebase-analytics          = { group = "com.google.firebase", name = "firebase-
 junit                       = { group = "junit",               name = "junit",                   version.ref = "junit" }
 mockk                       = { group = "io.mockk",            name = "mockk",                   version.ref = "mockk" }
 coroutines-test             = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines-test" }
+kotlinx-serialization-json  = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 [plugins]
 android-application   = { id = "com.android.application",             version.ref = "agp" }
@@ -110,3 +112,4 @@ kotlin-compose        = { id = "org.jetbrains.kotlin.plugin.compose", version.re
 hilt                  = { id = "com.google.dagger.hilt.android",      version.ref = "hilt" }
 ksp                   = { id = "com.google.devtools.ksp",             version.ref = "ksp" }
 google-services       = { id = "com.google.gms.google-services",      version.ref = "google-services" }
+kotlin-serialization  = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
