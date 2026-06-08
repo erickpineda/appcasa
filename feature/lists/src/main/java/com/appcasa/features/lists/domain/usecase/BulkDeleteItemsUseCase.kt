@@ -8,6 +8,6 @@ class BulkDeleteItemsUseCase @Inject constructor(
     private val repository: ListsRepository
 ) {
     suspend operator fun invoke(items: List<ListaItem>) {
-        items.forEach { repository.deleteItem(it) }
+        repository.deleteItems(items)
     }
 }

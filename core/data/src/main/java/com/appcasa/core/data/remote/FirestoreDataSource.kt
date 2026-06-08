@@ -2,6 +2,7 @@ package com.appcasa.core.data.remote
 
 import com.appcasa.core.data.remote.model.EventDto
 import com.appcasa.core.data.remote.model.ExpenseDto
+import com.appcasa.core.data.remote.model.HouseholdDto
 import com.appcasa.core.data.remote.model.MemberDto
 import com.appcasa.core.data.remote.model.PostItDto
 import com.appcasa.core.data.remote.model.StockDto
@@ -13,6 +14,9 @@ import com.appcasa.core.domain.model.PostIt
 import com.appcasa.core.domain.model.StockItem
 import com.appcasa.core.domain.model.Task
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -49,12 +53,16 @@ class FirestoreDataSource @Inject constructor(
         getTaskCollection(task.hogarId).document(task.id.toString()).delete().await()
     }
 
-    fun observeTasks(hogarId: Long, onTasksChanged: (List<Task>) -> Unit) {
-        getTaskCollection(hogarId).addSnapshotListener { snapshot, error ->
-            if (error != null) return@addSnapshotListener
+    fun observeTasks(hogarId: Long): Flow<List<Task>> = callbackFlow {
+        val reg = getTaskCollection(hogarId).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
             val tasks = snapshot?.documents?.mapNotNull { it.toObject(TaskDto::class.java)?.toDomain() } ?: emptyList()
-            onTasksChanged(tasks)
+            trySend(tasks)
         }
+        awaitClose { reg.remove() }
     }
 
     suspend fun syncExpense(expense: Expense) {
@@ -62,12 +70,16 @@ class FirestoreDataSource @Inject constructor(
             .set(ExpenseDto.fromDomain(expense)).await()
     }
 
-    fun observeExpenses(hogarId: Long, onExpensesChanged: (List<Expense>) -> Unit) {
-        getExpenseCollection(hogarId).addSnapshotListener { snapshot, error ->
-            if (error != null) return@addSnapshotListener
+    fun observeExpenses(hogarId: Long): Flow<List<Expense>> = callbackFlow {
+        val reg = getExpenseCollection(hogarId).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
             val expenses = snapshot?.documents?.mapNotNull { it.toObject(ExpenseDto::class.java)?.toDomain() } ?: emptyList()
-            onExpensesChanged(expenses)
+            trySend(expenses)
         }
+        awaitClose { reg.remove() }
     }
 
     suspend fun syncMember(member: FamilyMember) {
@@ -75,12 +87,16 @@ class FirestoreDataSource @Inject constructor(
             .set(MemberDto.fromDomain(member)).await()
     }
 
-    fun observeMembers(hogarId: Long, onMembersChanged: (List<FamilyMember>) -> Unit) {
-        getMemberCollection(hogarId).addSnapshotListener { snapshot, error ->
-            if (error != null) return@addSnapshotListener
+    fun observeMembers(hogarId: Long): Flow<List<FamilyMember>> = callbackFlow {
+        val reg = getMemberCollection(hogarId).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
             val members = snapshot?.documents?.mapNotNull { it.toObject(MemberDto::class.java)?.toDomain() } ?: emptyList()
-            onMembersChanged(members)
+            trySend(members)
         }
+        awaitClose { reg.remove() }
     }
 
     suspend fun syncStock(item: StockItem) {
@@ -88,12 +104,16 @@ class FirestoreDataSource @Inject constructor(
             .set(StockDto.fromDomain(item)).await()
     }
 
-    fun observeStock(hogarId: Long, onStockChanged: (List<StockItem>) -> Unit) {
-        getStockCollection(hogarId).addSnapshotListener { snapshot, error ->
-            if (error != null) return@addSnapshotListener
+    fun observeStock(hogarId: Long): Flow<List<StockItem>> = callbackFlow {
+        val reg = getStockCollection(hogarId).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
             val items = snapshot?.documents?.mapNotNull { it.toObject(StockDto::class.java)?.toDomain() } ?: emptyList()
-            onStockChanged(items)
+            trySend(items)
         }
+        awaitClose { reg.remove() }
     }
 
     suspend fun syncPostIt(postIt: PostIt) {
@@ -101,12 +121,16 @@ class FirestoreDataSource @Inject constructor(
             .set(PostItDto.fromDomain(postIt)).await()
     }
 
-    fun observePostIts(hogarId: Long, onPostItsChanged: (List<PostIt>) -> Unit) {
-        getPostItCollection(hogarId).addSnapshotListener { snapshot, error ->
-            if (error != null) return@addSnapshotListener
+    fun observePostIts(hogarId: Long): Flow<List<PostIt>> = callbackFlow {
+        val reg = getPostItCollection(hogarId).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
             val postIts = snapshot?.documents?.mapNotNull { it.toObject(PostItDto::class.java)?.toDomain() } ?: emptyList()
-            onPostItsChanged(postIts)
+            trySend(postIts)
         }
+        awaitClose { reg.remove() }
     }
 
     suspend fun syncEvent(event: Event) {
@@ -114,17 +138,21 @@ class FirestoreDataSource @Inject constructor(
             .set(EventDto.fromDomain(event)).await()
     }
 
-    fun observeEvents(hogarId: Long, onEventsChanged: (List<Event>) -> Unit) {
-        getEventCollection(hogarId).addSnapshotListener { snapshot, error ->
-            if (error != null) return@addSnapshotListener
+    fun observeEvents(hogarId: Long): Flow<List<Event>> = callbackFlow {
+        val reg = getEventCollection(hogarId).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
             val events = snapshot?.documents?.mapNotNull { it.toObject(EventDto::class.java)?.toDomain() } ?: emptyList()
-            onEventsChanged(events)
+            trySend(events)
         }
+        awaitClose { reg.remove() }
     }
 
     suspend fun syncHousehold(household: com.appcasa.core.domain.model.Household) {
         firestore.collection("households").document(household.id.toString())
-            .set(household).await()
+            .set(HouseholdDto.fromDomain(household)).await()
     }
 
     suspend fun getHouseholdByCode(code: String): com.appcasa.core.domain.model.Household? {
@@ -133,6 +161,6 @@ class FirestoreDataSource @Inject constructor(
             .limit(1)
             .get().await()
         
-        return query.documents.firstOrNull()?.toObject(com.appcasa.core.domain.model.Household::class.java)
+        return query.documents.firstOrNull()?.toObject(HouseholdDto::class.java)?.toDomain()
     }
 }

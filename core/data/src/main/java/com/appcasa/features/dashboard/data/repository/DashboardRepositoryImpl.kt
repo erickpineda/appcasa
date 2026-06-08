@@ -2,6 +2,7 @@ package com.appcasa.features.dashboard.data.repository
 
 import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
+import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.DashboardConfig
 import com.appcasa.core.domain.model.PostIt
 import com.appcasa.core.domain.repository.DashboardRepository
@@ -10,10 +11,13 @@ import com.appcasa.features.dashboard.data.mapper.toDomain
 import com.appcasa.features.dashboard.data.mapper.toEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 class DashboardRepositoryImpl @Inject constructor(
+    @ApplicationScope private val appScope: CoroutineScope,
     private val dashboardDao: DashboardDao,
     private val firestoreDataSource: FirestoreDataSource,
     private val syncScheduler: SyncScheduler
@@ -45,9 +49,8 @@ class DashboardRepositoryImpl @Inject constructor(
     }
 
     override fun startRemoteSync(hogarId: Long) {
-        firestoreDataSource.observePostIts(hogarId) { remoteItems ->
-            @OptIn(DelicateCoroutinesApi::class)
-            GlobalScope.launch(Dispatchers.IO) {
+        firestoreDataSource.observePostIts(hogarId)
+            .onEach { remoteItems ->
                 remoteItems.forEach { remoteItem ->
                     val localItem = dashboardDao.getPostItById(remoteItem.id)
                     if (localItem == null || remoteItem.updatedAt > localItem.updatedAt) {
@@ -55,6 +58,6 @@ class DashboardRepositoryImpl @Inject constructor(
                     }
                 }
             }
-        }
+            .launchIn(appScope)
     }
 }

@@ -60,7 +60,15 @@ class ListsRepositoryImpl @Inject constructor(
         listaDao.updateItem(item.toEntity())
     }
 
+    override suspend fun updateItems(items: List<ListaItem>) {
+        listaDao.updateItems(items.map { it.toEntity() })
+    }
+
     override suspend fun deleteItem(item: ListaItem) {
         listaDao.deleteItem(item.toEntity())
+    }
+
+    override suspend fun deleteItems(items: List<ListaItem>) {
+        listaDao.deleteItems(items.map { it.toEntity() })
     }
 }

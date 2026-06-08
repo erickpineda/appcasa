@@ -13,17 +13,12 @@ import javax.inject.Inject
 
 class HouseholdRepositoryImpl @Inject constructor(
     private val configuracionDao: ConfiguracionDao,
-    private val firebaseMessaging: FirebaseMessaging,
     private val firestoreDataSource: FirestoreDataSource
 ) : HouseholdRepository {
 
     override fun getHogarActual(): Flow<Household?> {
         return configuracionDao.getHogarActual().map { entity ->
-            val domain = entity?.toDomain()
-            domain?.let {
-                firebaseMessaging.subscribeToTopic("household_${it.id}")
-            }
-            domain
+            entity?.toDomain()
         }
     }
 

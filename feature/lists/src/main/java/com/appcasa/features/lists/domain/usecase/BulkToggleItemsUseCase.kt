@@ -8,6 +8,6 @@ class BulkToggleItemsUseCase @Inject constructor(
     private val repository: ListsRepository
 ) {
     suspend operator fun invoke(items: List<ListaItem>, completed: Boolean) {
-        items.forEach { repository.updateItem(it.copy(completado = completed)) }
+        repository.updateItems(items.map { it.copy(completado = completed) })
     }
 }

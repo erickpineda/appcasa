@@ -2,6 +2,7 @@ package com.appcasa.features.inventory.data.repository
 
 import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
+import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.StockItem
 import com.appcasa.core.domain.repository.InventoryRepository
 import com.appcasa.features.inventory.data.local.StockDao
@@ -9,10 +10,13 @@ import com.appcasa.features.inventory.data.mapper.toDomain
 import com.appcasa.features.inventory.data.mapper.toEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 class InventoryRepositoryImpl @Inject constructor(
+    @ApplicationScope private val appScope: CoroutineScope,
     private val stockDao: StockDao,
     private val firestoreDataSource: FirestoreDataSource,
     private val syncScheduler: SyncScheduler
@@ -48,9 +52,8 @@ class InventoryRepositoryImpl @Inject constructor(
     }
 
     override fun startRemoteSync(hogarId: Long) {
-        firestoreDataSource.observeStock(hogarId) { remoteItems ->
-            @OptIn(DelicateCoroutinesApi::class)
-            GlobalScope.launch(Dispatchers.IO) {
+        firestoreDataSource.observeStock(hogarId)
+            .onEach { remoteItems ->
                 remoteItems.forEach { remoteItem ->
                     val localItem = stockDao.getItemById(remoteItem.id)
                     if (localItem == null || remoteItem.updatedAt > localItem.updatedAt) {
@@ -58,6 +61,6 @@ class InventoryRepositoryImpl @Inject constructor(
                     }
                 }
             }
-        }
+            .launchIn(appScope)
     }
 }

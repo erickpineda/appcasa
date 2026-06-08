@@ -10,6 +10,7 @@ import com.appcasa.core.domain.repository.FamilyRepository
 import com.appcasa.core.domain.repository.HouseholdRepository
 import com.appcasa.core.domain.repository.UserRepository
 import com.appcasa.core.ui.utils.HouseCodeUtils
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -67,7 +68,8 @@ class CreateHouseholdUseCase @Inject constructor(
     private val householdRepository: HouseholdRepository,
     private val userRepository: UserRepository,
     private val familyRepository: FamilyRepository,
-    private val householdProvider: CurrentHouseholdProvider
+    private val householdProvider: CurrentHouseholdProvider,
+    private val firebaseMessaging: FirebaseMessaging
 ) {
     suspend operator fun invoke(houseName: String, userName: String, photoUri: String?) {
         val code = HouseCodeUtils.generateHouseCode()
@@ -75,6 +77,8 @@ class CreateHouseholdUseCase @Inject constructor(
         val hogarId = householdRepository.insertHogar(
             Household(nombre = houseName, codigoHogar = code)
         )
+
+        firebaseMessaging.subscribeToTopic("household_$hogarId")
         
         val miembroId = familyRepository.insertMember(
             FamilyMember(
@@ -107,7 +111,8 @@ class JoinHouseholdUseCase @Inject constructor(
     private val householdRepository: HouseholdRepository,
     private val userRepository: UserRepository,
     private val familyRepository: FamilyRepository,
-    private val householdProvider: CurrentHouseholdProvider
+    private val householdProvider: CurrentHouseholdProvider,
+    private val firebaseMessaging: FirebaseMessaging
 ) {
     suspend operator fun invoke(code: String, userName: String, photoUri: String?): Boolean {
         // Primero intentamos buscarlo localmente
@@ -122,6 +127,8 @@ class JoinHouseholdUseCase @Inject constructor(
 
         if (hogar == null) return false
         val hogarId = hogar.id
+        
+        firebaseMessaging.subscribeToTopic("household_$hogarId")
         
         val miembroId = familyRepository.insertMember(
             FamilyMember(
@@ -204,11 +211,13 @@ class GetAllHouseholdsUseCase @Inject constructor(
 
 class SwitchHouseholdUseCase @Inject constructor(
     private val userRepository: UserRepository,
-    private val householdProvider: CurrentHouseholdProvider
+    private val householdProvider: CurrentHouseholdProvider,
+    private val firebaseMessaging: FirebaseMessaging
 ) {
     suspend operator fun invoke(householdId: Long) {
         userRepository.deactivateAllUsers()
         userRepository.activateUserByHousehold(householdId)
         householdProvider.setHouseholdId(householdId)
+        firebaseMessaging.subscribeToTopic("household_$householdId")
     }
 }

@@ -12,8 +12,8 @@ class ImportShiftsFromCsvUseCase @Inject constructor(
     private val repository: CalendarRepository,
     private val reminderScheduler: ReminderScheduler
 ) {
-    suspend operator fun invoke(hogarId: Long, content: String) {
-        try {
+    suspend operator fun invoke(hogarId: Long, content: String): Boolean {
+        return try {
             val lines = content.lines()
             val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
             lines.forEach { line ->
@@ -43,8 +43,10 @@ class ImportShiftsFromCsvUseCase @Inject constructor(
                 }
               }
             }
+            true
           } catch (e: Exception) {
-            // Error log
+            e.printStackTrace()
+            false
           }
     }
 }

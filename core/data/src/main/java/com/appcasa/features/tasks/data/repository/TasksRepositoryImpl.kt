@@ -2,6 +2,7 @@ package com.appcasa.features.tasks.data.repository
 
 import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
+import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.repository.TasksRepository
 import com.appcasa.features.tasks.data.local.RecompensaDao
@@ -10,10 +11,13 @@ import com.appcasa.features.tasks.data.mapper.toDomain
 import com.appcasa.features.tasks.data.mapper.toEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 class TasksRepositoryImpl @Inject constructor(
+    @ApplicationScope private val appScope: CoroutineScope,
     private val tareaDao: TareaDao,
     private val recompensaDao: RecompensaDao,
     private val syncScheduler: SyncScheduler,
@@ -135,10 +139,8 @@ class TasksRepositoryImpl @Inject constructor(
     }
 
     override fun startRemoteSync(hogarId: Long) {
-        firestoreDataSource.observeTasks(hogarId) { remoteTasks ->
-            // En un entorno real usaríamos un scope inyectado o el del repositorio
-            @OptIn(DelicateCoroutinesApi::class)
-            GlobalScope.launch(Dispatchers.IO) {
+        firestoreDataSource.observeTasks(hogarId)
+            .onEach { remoteTasks ->
                 remoteTasks.forEach { remoteTask ->
                     val localTask = tareaDao.getTareaById(remoteTask.id)
                     if (localTask == null || remoteTask.updatedAt > localTask.updatedAt) {
@@ -146,6 +148,6 @@ class TasksRepositoryImpl @Inject constructor(
                     }
                 }
             }
-        }
+            .launchIn(appScope)
     }
 }

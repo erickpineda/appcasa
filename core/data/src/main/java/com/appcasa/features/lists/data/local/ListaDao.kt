@@ -40,8 +40,14 @@ interface ListaDao {
     @Update
     suspend fun updateItem(item: ListaItemEntity)
 
+    @Update
+    suspend fun updateItems(items: List<ListaItemEntity>)
+
     @Delete
     suspend fun deleteItem(item: ListaItemEntity)
+
+    @Delete
+    suspend fun deleteItems(items: List<ListaItemEntity>)
 
     @Delete
     suspend fun deleteLista(lista: ListaEntity)

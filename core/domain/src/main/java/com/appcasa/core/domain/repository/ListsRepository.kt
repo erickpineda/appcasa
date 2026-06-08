@@ -17,5 +17,7 @@ interface ListsRepository {
     fun getItemsByLista(listaId: Long): Flow<List<ListaItem>>
     suspend fun insertItem(item: ListaItem)
     suspend fun updateItem(item: ListaItem)
+    suspend fun updateItems(items: List<ListaItem>)
     suspend fun deleteItem(item: ListaItem)
+    suspend fun deleteItems(items: List<ListaItem>)
 }

@@ -2,6 +2,7 @@ package com.appcasa.features.finance.data.repository
 
 import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
+import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.Expense
 import com.appcasa.core.domain.repository.FinanceRepository
 import com.appcasa.features.finance.data.local.ExpenseDao
@@ -9,10 +10,13 @@ import com.appcasa.features.finance.data.mapper.toDomain
 import com.appcasa.features.finance.data.mapper.toEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 class FinanceRepositoryImpl @Inject constructor(
+    @ApplicationScope private val appScope: CoroutineScope,
     private val expenseDao: ExpenseDao,
     private val firestoreDataSource: FirestoreDataSource,
     private val syncScheduler: SyncScheduler
@@ -71,9 +75,8 @@ class FinanceRepositoryImpl @Inject constructor(
     }
 
     override fun startRemoteSync(hogarId: Long) {
-        firestoreDataSource.observeExpenses(hogarId) { remoteExpenses ->
-            @OptIn(DelicateCoroutinesApi::class)
-            GlobalScope.launch(Dispatchers.IO) {
+        firestoreDataSource.observeExpenses(hogarId)
+            .onEach { remoteExpenses ->
                 remoteExpenses.forEach { remoteExpense ->
                     val localExpense = expenseDao.getExpenseById(remoteExpense.id)
                     if (localExpense == null || remoteExpense.updatedAt > localExpense.updatedAt) {
@@ -81,6 +84,6 @@ class FinanceRepositoryImpl @Inject constructor(
                     }
                 }
             }
-        }
+            .launchIn(appScope)
     }
 }

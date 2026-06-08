@@ -2,6 +2,7 @@ package com.appcasa.features.family.data.repository
 
 import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
+import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.repository.FamilyRepository
 import com.appcasa.features.family.data.local.MiembroDao
@@ -9,10 +10,13 @@ import com.appcasa.features.family.data.mapper.toDomain
 import com.appcasa.features.family.data.mapper.toEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 class FamilyRepositoryImpl @Inject constructor(
+    @ApplicationScope private val appScope: CoroutineScope,
     private val miembroDao: MiembroDao,
     private val firestoreDataSource: FirestoreDataSource,
     private val syncScheduler: SyncScheduler
@@ -45,9 +49,8 @@ class FamilyRepositoryImpl @Inject constructor(
     }
 
     override fun startRemoteSync(hogarId: Long) {
-        firestoreDataSource.observeMembers(hogarId) { remoteMembers ->
-            @OptIn(DelicateCoroutinesApi::class)
-            GlobalScope.launch(Dispatchers.IO) {
+        firestoreDataSource.observeMembers(hogarId)
+            .onEach { remoteMembers ->
                 remoteMembers.forEach { remoteMember ->
                     val localMember = miembroDao.getMiembroById(remoteMember.id)
                     if (localMember == null || remoteMember.updatedAt > localMember.updatedAt) {
@@ -55,6 +58,6 @@ class FamilyRepositoryImpl @Inject constructor(
                     }
                 }
             }
-        }
+            .launchIn(appScope)
     }
 }

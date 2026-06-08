@@ -90,11 +90,6 @@ dependencies {
   // ─── Coil ─────────────────────────────────────────────
   implementation(libs.coil.compose)
 
-  // ─── Retrofit + OkHttp ────────────────────────────────
-  implementation(libs.retrofit)
-  implementation(libs.retrofit.gson)
-  implementation(libs.okhttp.logging)
-
   // ─── Coroutines ───────────────────────────────────────
   implementation(libs.coroutines.android)
 

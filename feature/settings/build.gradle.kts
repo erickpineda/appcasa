@@ -57,6 +57,10 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
     
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+
     // ML Kit Barcode
     implementation(libs.mlkit.barcode.scanning)
 
