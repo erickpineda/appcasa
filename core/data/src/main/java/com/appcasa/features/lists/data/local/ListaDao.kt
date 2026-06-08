@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -40,12 +41,14 @@ interface ListaDao {
     @Update
     suspend fun updateItem(item: ListaItemEntity)
 
+    @Transaction
     @Update
     suspend fun updateItems(items: List<ListaItemEntity>)
 
     @Delete
     suspend fun deleteItem(item: ListaItemEntity)
 
+    @Transaction
     @Delete
     suspend fun deleteItems(items: List<ListaItemEntity>)
 

@@ -5,14 +5,10 @@
 -keep @androidx.room.Entity class *
 -dontwarn androidx.room.paging.**
 
-# Retrofit + Gson
+# Gson
 -keepattributes Signature
 -keepattributes *Annotation*
 -keep class com.google.gson.** { *; }
--keep class retrofit2.** { *; }
--keepclasseswithmembers class * {
-  @retrofit2.http.* <methods>;
-}
 
 # Hilt
 -dontwarn dagger.hilt.**

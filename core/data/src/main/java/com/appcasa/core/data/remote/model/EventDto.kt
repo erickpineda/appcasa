@@ -23,7 +23,7 @@ data class EventDto(
         hogarId = hogarId,
         titulo = titulo,
         descripcion = descripcion,
-        tipo = TipoEvento.valueOf(tipo),
+        tipo = runCatching { TipoEvento.valueOf(tipo) }.getOrDefault(TipoEvento.OTRO),
         fecha = fecha,
         fechaFin = fechaFin,
         miembroId = miembroId,
