@@ -11,7 +11,9 @@ fun PostItEntity.toDomain(): PostIt {
         hogarId = hogarId,
         contenido = contenido,
         colorHex = colorHex,
-        createdAt = createdAt
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        syncId = syncId
     )
 }
 
@@ -21,7 +23,9 @@ fun PostIt.toEntity(): PostItEntity {
         hogarId = hogarId,
         contenido = contenido,
         colorHex = colorHex,
-        createdAt = createdAt
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        syncId = syncId
     )
 }
 

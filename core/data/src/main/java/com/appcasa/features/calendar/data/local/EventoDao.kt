@@ -11,6 +11,9 @@ interface EventoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvento(evento: EventoEntity): Long
 
+    @Query("SELECT * FROM eventos WHERE id = :id")
+    suspend fun getEventoById(id: Long): EventoEntity?
+
     @Update
     suspend fun updateEvento(evento: EventoEntity)
 

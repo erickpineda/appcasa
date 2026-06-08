@@ -17,7 +17,8 @@ fun EventoEntity.toDomain(): Event {
         todoElDia = todoElDia,
         repeticionAnual = repeticionAnual,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        syncId = syncId
     )
 }
 
@@ -34,6 +35,7 @@ fun Event.toEntity(): EventoEntity {
         todoElDia = todoElDia,
         repeticionAnual = repeticionAnual,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        syncId = syncId
     )
 }

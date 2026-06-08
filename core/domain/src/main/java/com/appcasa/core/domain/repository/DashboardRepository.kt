@@ -10,4 +10,5 @@ interface DashboardRepository {
     suspend fun deletePostIt(postIt: PostIt)
     fun getDashboardConfig(hogarId: Long): Flow<DashboardConfig?>
     suspend fun saveDashboardConfig(config: DashboardConfig)
+    fun startRemoteSync(hogarId: Long)
 }

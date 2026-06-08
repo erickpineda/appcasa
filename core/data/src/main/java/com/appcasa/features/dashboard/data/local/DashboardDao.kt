@@ -11,6 +11,9 @@ interface DashboardDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPostIt(postIt: PostItEntity): Long
 
+    @Query("SELECT * FROM post_its WHERE id = :id")
+    suspend fun getPostItById(id: Long): PostItEntity?
+
     @Delete
     suspend fun deletePostIt(postIt: PostItEntity)
 

@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.utils.Constants
+import com.appcasa.core.domain.repository.DashboardRepository
 import com.appcasa.core.domain.repository.FamilyRepository
 import com.appcasa.core.domain.repository.FinanceRepository
 import com.appcasa.core.domain.repository.InventoryRepository
@@ -66,6 +67,7 @@ class DashboardViewModel @Inject constructor(
   private val financeRepository: FinanceRepository,
   private val familyRepository: FamilyRepository,
   private val inventoryRepository: InventoryRepository,
+  private val dashboardRepository: DashboardRepository,
   private val currentHouseholdProvider: CurrentHouseholdProvider,
 ) : ViewModel() {
 
@@ -160,6 +162,7 @@ class DashboardViewModel @Inject constructor(
             financeRepository.startRemoteSync(id)
             familyRepository.startRemoteSync(id)
             inventoryRepository.startRemoteSync(id)
+            dashboardRepository.startRemoteSync(id)
         }
     }
   }

@@ -242,6 +242,17 @@ object Migrations {
   }
 
   /**
+   * Migración para añadir soporte de sincronización cloud a Post-its (updated_at).
+   */
+  val MIGRATION_24_25 = object : Migration(24, 25) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE post_its ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      // Inicializar con created_at
+      db.execSQL("UPDATE post_its SET updated_at = created_at")
+    }
+  }
+
+  /**
    * Lista de todas las migraciones registradas.
    */
   fun getAll(): Array<Migration> {
@@ -261,7 +272,8 @@ object Migrations {
       MIGRATION_20_21,
       MIGRATION_21_22,
       MIGRATION_22_23,
-      MIGRATION_23_24
+      MIGRATION_23_24,
+      MIGRATION_24_25
     )
   }
 }

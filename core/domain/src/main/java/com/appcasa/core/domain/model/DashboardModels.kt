@@ -5,7 +5,9 @@ data class PostIt(
     val hogarId: Long,
     val contenido: String,
     val colorHex: String = "#FFF9C4",
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val syncId: String? = null
 )
 
 data class DashboardConfig(

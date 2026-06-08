@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
+import com.appcasa.core.domain.repository.CalendarRepository
 import com.appcasa.features.calendar.domain.usecase.CalendarState
 import com.appcasa.features.calendar.domain.usecase.GetCalendarItemsUseCase
 import com.appcasa.features.calendar.domain.usecase.AddEventUseCase
@@ -29,8 +30,17 @@ class CalendarViewModel @Inject constructor(
   private val updateEventUseCase: UpdateEventUseCase,
   private val deleteEventUseCase: DeleteEventUseCase,
   private val importShiftsFromCsvUseCase: ImportShiftsFromCsvUseCase,
+  private val calendarRepository: CalendarRepository,
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
+
+  init {
+      viewModelScope.launch {
+          currentHouseholdProvider.householdId.collect { id ->
+              calendarRepository.startRemoteSync(id)
+          }
+      }
+  }
 
   private val _historyPage = MutableStateFlow(0)
   val historyPage = _historyPage.asStateFlow()

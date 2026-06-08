@@ -1,16 +1,21 @@
 package com.appcasa.features.calendar.data.repository
 
+import com.appcasa.core.data.remote.FirestoreDataSource
+import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.domain.model.Event
 import com.appcasa.core.domain.repository.CalendarRepository
 import com.appcasa.features.calendar.data.local.EventoDao
 import com.appcasa.features.calendar.data.mapper.toDomain
 import com.appcasa.features.calendar.data.mapper.toEntity
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class CalendarRepositoryImpl @Inject constructor(
-    private val eventoDao: EventoDao
+    private val eventoDao: EventoDao,
+    private val firestoreDataSource: FirestoreDataSource,
+    private val syncScheduler: SyncScheduler
 ) : CalendarRepository {
 
     override fun getEventsByHogar(hogarId: Long): Flow<List<Event>> {
@@ -20,10 +25,27 @@ class CalendarRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertEvent(event: Event): Long {
-        return eventoDao.insertEvento(event.toEntity())
+        val id = eventoDao.insertEvento(event.toEntity())
+        syncScheduler.scheduleSync(event.hogarId)
+        return id
     }
 
     override suspend fun deleteEvent(event: Event) {
         eventoDao.deleteEvento(event.toEntity())
+        syncScheduler.scheduleSync(event.hogarId)
+    }
+
+    override fun startRemoteSync(hogarId: Long) {
+        firestoreDataSource.observeEvents(hogarId) { remoteItems ->
+            @OptIn(DelicateCoroutinesApi::class)
+            GlobalScope.launch(Dispatchers.IO) {
+                remoteItems.forEach { remoteItem ->
+                    val localItem = eventoDao.getEventoById(remoteItem.id)
+                    if (localItem == null || remoteItem.updatedAt > localItem.updatedAt) {
+                        eventoDao.insertEvento(remoteItem.toEntity())
+                    }
+                }
+            }
+        }
     }
 }

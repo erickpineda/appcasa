@@ -28,6 +28,8 @@ class ToggleTaskCompletionUseCase @Inject constructor(
             updatedAt = System.currentTimeMillis()
         )
         
+        repository.insertTask(updatedTask)
+        
         var pointsGained = 0
         
         if (isMarkingAsCompleted) {
@@ -36,8 +38,6 @@ class ToggleTaskCompletionUseCase @Inject constructor(
             if (task.periodicidad != Periodicidad.NINGUNA) {
                 spawnNextTaskInstanceUseCase(updatedTask)
             }
-        } else {
-            repository.insertTask(updatedTask)
         }
         
         return pointsGained

@@ -12,5 +12,6 @@ data class Event(
     val todoElDia: Boolean = true,
     val repeticionAnual: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val syncId: String? = null
 )

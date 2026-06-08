@@ -5,6 +5,8 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.appcasa.core.data.remote.FirestoreDataSource
+import com.appcasa.core.domain.repository.CalendarRepository
+import com.appcasa.core.domain.repository.DashboardRepository
 import com.appcasa.core.domain.repository.FamilyRepository
 import com.appcasa.core.domain.repository.FinanceRepository
 import com.appcasa.core.domain.repository.TasksRepository
@@ -19,6 +21,8 @@ class SyncWorker @AssistedInject constructor(
     private val tasksRepository: TasksRepository,
     private val financeRepository: FinanceRepository,
     private val familyRepository: FamilyRepository,
+    private val dashboardRepository: DashboardRepository,
+    private val calendarRepository: CalendarRepository,
     private val firestoreDataSource: FirestoreDataSource
 ) : CoroutineWorker(appContext, workerParams) {
 
@@ -40,6 +44,16 @@ class SyncWorker @AssistedInject constructor(
             // Sincronizar Miembros
             familyRepository.getMembersByHogar(hogarId).first().forEach {
                 firestoreDataSource.syncMember(it)
+            }
+
+            // Sincronizar Post-its
+            dashboardRepository.getPostIts(hogarId).first().forEach {
+                firestoreDataSource.syncPostIt(it)
+            }
+
+            // Sincronizar Eventos
+            calendarRepository.getEventsByHogar(hogarId).first().forEach {
+                firestoreDataSource.syncEvent(it)
             }
             
             Result.success()
