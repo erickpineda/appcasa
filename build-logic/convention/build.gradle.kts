@@ -5,12 +5,11 @@ plugins {
 group = "com.appcasa.buildlogic"
 
 dependencies {
-    compileOnly(libs.plugins.android.application)
-    compileOnly(libs.plugins.android.library)
-    compileOnly(libs.plugins.kotlin.android)
-    compileOnly(libs.plugins.kotlin.compose)
-    compileOnly(libs.plugins.hilt)
-    compileOnly(libs.plugins.ksp)
+    compileOnly(libs.android.gradlePlugin)
+    compileOnly(libs.kotlin.gradlePlugin)
+    compileOnly(libs.compose.gradlePlugin)
+    compileOnly(libs.hilt.gradlePlugin)
+    compileOnly(libs.ksp.gradlePlugin)
 }
 
 gradlePlugin {

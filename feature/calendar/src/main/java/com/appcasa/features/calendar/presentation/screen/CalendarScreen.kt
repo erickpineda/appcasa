@@ -149,11 +149,11 @@ fun CalendarScreen(
           currentMonth = YearMonth.from(selectedDate)
         }
       },
-      onItemDoubleClick = { item ->
+      onItemClick = { item ->
         when (item) {
-          is CalendarItem.TaskItem -> navController.navigate(Screen.TaskDetail.createRoute(item.task.id))
-          is CalendarItem.ReminderItem -> { editingItem = item }
-          is CalendarItem.EventItem -> { editingItem = item }
+          is CalendarItem.TaskItem -> navController.navigate(Screen.TaskDetail(item.task.id))
+          is CalendarItem.EventItem -> { /* Todo: Navegar a detalle de evento */ }
+          is CalendarItem.ReminderItem -> { /* Todo: Recordatorios ya se gestionan en el diálogo de edición */ }
         }
       },
       onMonthChange = { 
@@ -186,7 +186,7 @@ fun CalendarContent(
   selectedItemKey: String?,
   onDateSelected: (LocalDate) -> Unit,
   onItemToggle: (CalendarItem) -> Unit,
-  onItemDoubleClick: (CalendarItem) -> Unit,
+  onItemClick: (CalendarItem) -> Unit,
   onMonthChange: (YearMonth) -> Unit,
   onEditItem: (CalendarItem) -> Unit,
   onImportClick: () -> Unit,
@@ -502,7 +502,7 @@ fun CalendarContent(
                   isHistory = false,
                   isHighlighted = true,
                   onClick = { onItemToggle(item) },
-                  onDoubleClick = { onItemDoubleClick(item) },
+                  onDoubleClick = { onItemClick(item) },
                   onEdit = { onEditItem(item) },
                   onDelete = { 
                     when (item) {
@@ -550,7 +550,7 @@ fun CalendarContent(
                   isHistory = false,
                   isHighlighted = isHighlighted,
                   onClick = { onItemToggle(item) },
-                  onDoubleClick = { onItemDoubleClick(item) },
+                  onDoubleClick = { onItemClick(item) },
                   onEdit = { onEditItem(item) },
                   onDelete = { 
                     when (item) {
@@ -590,7 +590,7 @@ fun CalendarContent(
                   isHistory = false,
                   isHighlighted = isHighlighted,
                   onClick = { onItemToggle(item) },
-                  onDoubleClick = { onItemDoubleClick(item) },
+                  onDoubleClick = { onItemClick(item) },
                   onEdit = { onEditItem(item) },
                   onDelete = { 
                     when (item) {
@@ -627,7 +627,7 @@ fun CalendarContent(
                 isHistory = true,
                 isHighlighted = isHighlighted,
                 onClick = { onItemToggle(item) },
-                onDoubleClick = { onItemDoubleClick(item) },
+                onDoubleClick = { onItemClick(item) },
                 onEdit = { onEditItem(item) },
                 onDelete = { 
                   when (item) {
@@ -1062,7 +1062,7 @@ fun CalendarPreview() {
       selectedItemKey = null,
       onDateSelected = {},
       onItemToggle = {},
-      onItemDoubleClick = {},
+      onItemClick = {},
       onMonthChange = {},
       onEditItem = {},
       onImportClick = {},

@@ -22,3 +22,6 @@ data class FamilyMember(
     val estadoAnimo: String? = null,
     val estadoAnimoUpdatedAt: Long? = null
 )
+
+val FamilyMember.isPet: Boolean
+    get() = tipo != TipoMiembro.PERSONA

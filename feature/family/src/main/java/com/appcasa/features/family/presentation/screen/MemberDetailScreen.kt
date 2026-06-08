@@ -84,7 +84,7 @@ fun MemberDetailScreen(
             },
             actions = {
               IconButton(onClick = { 
-                member?.let { navController.navigate(Screen.EditMember.createRoute(it.id)) }
+                member?.let { navController.navigate(Screen.EditMember(it.id)) }
               }) {
                 Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit))
               }

@@ -7,7 +7,7 @@ data class SearchItem(
     val title: String,
     val type: SearchType,
     val icon: ImageVector,
-    val route: String
+    val route: Any
 )
 
 enum class SearchType {

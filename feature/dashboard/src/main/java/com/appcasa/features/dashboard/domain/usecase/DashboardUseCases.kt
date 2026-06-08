@@ -80,22 +80,22 @@ class SearchUseCase @Inject constructor(
 
         results.addAll(
           tasks.filter { it.titulo.contains(query, ignoreCase = true) }
-            .map { SearchItem(it.id, it.titulo, SearchType.TASK, Icons.Default.Task, Screen.TaskDetail.createRoute(it.id)) }
+            .map { SearchItem(it.id, it.titulo, SearchType.TASK, Icons.Default.Task, Screen.TaskDetail(it.id)) }
         )
         results.addAll(
           lists.filter { it.nombre.contains(query, ignoreCase = true) }
-            .map { SearchItem(it.id, it.nombre, SearchType.LIST, Icons.AutoMirrored.Filled.List, Screen.ListDetail.createRoute(it.id)) }
+            .map { SearchItem(it.id, it.nombre, SearchType.LIST, Icons.AutoMirrored.Filled.List, Screen.ListDetail(it.id)) }
         )
         results.addAll(
           members.filter { it.nombre.contains(query, ignoreCase = true) }
             .map { 
-              val route = if (it.tipo == TipoMiembro.PERSONA) Screen.MemberDetail.createRoute(it.id) else Screen.PetDetail.createRoute(it.id)
+              val route = if (it.tipo == TipoMiembro.PERSONA) Screen.MemberDetail(it.id) else Screen.PetDetail(it.id)
               SearchItem(it.id, it.nombre, SearchType.MEMBER, if (it.tipo == TipoMiembro.PERSONA) Icons.Default.Person else Icons.Default.Pets, route) 
             }
         )
         results.addAll(
           stock.filter { it.nombre.contains(query, ignoreCase = true) }
-            .map { SearchItem(it.id, it.nombre, SearchType.STOCK, Icons.Default.Inventory, Screen.Inventory.route) }
+            .map { SearchItem(it.id, it.nombre, SearchType.STOCK, Icons.Default.Inventory, Screen.Inventory) }
         )
 
         return results

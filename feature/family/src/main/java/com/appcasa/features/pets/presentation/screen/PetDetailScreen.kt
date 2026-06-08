@@ -167,7 +167,7 @@ fun PetDetailScreen(
               }
             },
             actions = {
-              IconButton(onClick = { pet?.let { navController.navigate(Screen.EditMember.createRoute(it.id)) } }) {
+              IconButton(onClick = { pet?.let { navController.navigate(Screen.EditMember(it.id)) } }) {
                 Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit))
               }
             },

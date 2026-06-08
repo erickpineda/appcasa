@@ -99,6 +99,14 @@ firebase-auth               = { group = "com.google.firebase", name = "firebase-
 firebase-firestore          = { group = "com.google.firebase", name = "firebase-firestore" }
 firebase-messaging          = { group = "com.google.firebase", name = "firebase-messaging" }
 firebase-analytics          = { group = "com.google.firebase", name = "firebase-analytics" }
+
+# Build logic dependencies
+android-gradlePlugin        = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
+kotlin-gradlePlugin         = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+compose-gradlePlugin        = { group = "org.jetbrains.kotlin", name = "compose-compiler-gradle-plugin", version.ref = "kotlin" }
+hilt-gradlePlugin           = { group = "com.google.dagger", name = "hilt-android-gradle-plugin", version.ref = "hilt" }
+ksp-gradlePlugin            = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
+
 junit                       = { group = "junit",               name = "junit",                   version.ref = "junit" }
 mockk                       = { group = "io.mockk",            name = "mockk",                   version.ref = "mockk" }
 coroutines-test             = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines-test" }

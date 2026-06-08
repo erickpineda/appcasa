@@ -54,7 +54,7 @@ fun FamilyHubScreen(
             subtitle = stringResource(R.string.hub_members_subtitle),
             icon = Icons.Default.Groups,
             color = MaterialTheme.colorScheme.primary,
-            onClick = { navController.navigate(Screen.Family.route) }
+            onClick = { navController.navigate(Screen.Family) }
           )
 
           HubCard(
@@ -62,7 +62,7 @@ fun FamilyHubScreen(
             subtitle = stringResource(R.string.hub_agenda_subtitle),
             icon = Icons.Default.CalendarMonth,
             color = MaterialTheme.colorScheme.secondary,
-            onClick = { navController.navigate(Screen.Calendar.route) }
+            onClick = { navController.navigate(Screen.Calendar) }
           )
         }
       }

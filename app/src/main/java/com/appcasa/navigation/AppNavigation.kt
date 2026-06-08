@@ -34,12 +34,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.appcasa.features.calendar.presentation.screen.CalendarScreen
 import com.appcasa.features.family.presentation.screen.AddMemberScreen
 import com.appcasa.features.family.presentation.screen.EditMemberScreen
@@ -99,7 +101,9 @@ fun AppNavigation(
       return
   }
 
-  val showBottomBar = currentDestination?.route !in listOf(Screen.HouseSetup.route, Screen.Auth.route) && isHouseholdSetup == true
+  val showBottomBar = currentDestination?.hasRoute(Screen.HouseSetup::class) == false && 
+                      currentDestination.hasRoute(Screen.Auth::class) == false && 
+                      isHouseholdSetup == true
 
   Scaffold(
     bottomBar = {
@@ -113,16 +117,16 @@ fun AppNavigation(
   ) { innerPadding ->
     NavHost(
       navController = navController,
-      startDestination = if (isHouseholdSetup == false) Screen.HouseSetup.route else Screen.Dashboard.route,
+      startDestination = if (isHouseholdSetup == false) Screen.HouseSetup else Screen.Dashboard,
       modifier = Modifier
         .fillMaxSize()
         .padding(bottom = if (isKeyboardVisible || !showBottomBar) 0.dp else innerPadding.calculateBottomPadding())
         .padding(top = innerPadding.calculateTopPadding()),
       enterTransition = { 
-        if (targetState.destination.route == Screen.Dashboard.route || 
-            targetState.destination.route == Screen.Management.route ||
-            targetState.destination.route == Screen.FamilyHub.route ||
-            targetState.destination.route == Screen.Utilities.route) {
+        if (targetState.destination.hasRoute(Screen.Dashboard::class) || 
+            targetState.destination.hasRoute(Screen.Management::class) ||
+            targetState.destination.hasRoute(Screen.FamilyHub::class) ||
+            targetState.destination.hasRoute(Screen.Utilities::class)) {
           fadeIn(animationSpec = tween(400))
         } else {
           fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f, animationSpec = tween(300)) 
@@ -132,96 +136,74 @@ fun AppNavigation(
       popEnterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 1.05f, animationSpec = tween(300)) },
       popExitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 0.95f, animationSpec = tween(200)) }
     ) {
-      composable(Screen.HouseSetup.route) { HouseSetupScreen(navController = navController) }
-      composable(Screen.Auth.route) { /* TODO */ }
+      composable<Screen.HouseSetup> { HouseSetupScreen(navController = navController) }
+      composable<Screen.Auth> { /* TODO */ }
 
-      composable(Screen.Dashboard.route) { DashboardScreen(navController = navController) }
+      composable<Screen.Dashboard> { DashboardScreen(navController = navController) }
 
       // --- Gestión (Management) ---
-      navigation(
-        startDestination = Screen.Management.route,
-        route = "management_graph"
+      navigation<Screen.ManagementGraph>(
+        startDestination = Screen.Management
       ) {
-        composable(Screen.Management.route) { ManagementHubScreen(navController = navController) }
-        composable(Screen.Tasks.route) { TasksScreen(navController = navController) }
-        composable(Screen.Lists.route) { ListsScreen(navController = navController) }
-        composable(Screen.Inventory.route) { StockScreen(navController = navController) }
-        composable(Screen.AddTask.route) { AddTaskScreen(navController = navController) }
-        composable(Screen.HomeMaintenance.route) { HomeMaintenanceScreen(navController = navController) }
+        composable<Screen.Management> { ManagementHubScreen(navController = navController) }
+        composable<Screen.Tasks> { TasksScreen(navController = navController) }
+        composable<Screen.Lists> { ListsScreen(navController = navController) }
+        composable<Screen.Inventory> { StockScreen(navController = navController) }
+        composable<Screen.AddTask> { AddTaskScreen(navController = navController) }
+        composable<Screen.HomeMaintenance> { HomeMaintenanceScreen(navController = navController) }
         
-        composable(
-          route = Screen.TaskDetail.route,
-          arguments = listOf(androidx.navigation.navArgument("taskId") { type = androidx.navigation.NavType.LongType })
-        ) { TaskDetailScreen(navController = navController) }
+        composable<Screen.TaskDetail> { TaskDetailScreen(navController = navController) }
+        composable<Screen.ListDetail> { ListDetailScreen(navController = navController) }
 
-        composable(
-          route = Screen.ListDetail.route,
-          arguments = listOf(androidx.navigation.navArgument("listId") { type = androidx.navigation.NavType.LongType })
-        ) { ListDetailScreen(navController = navController) }
-
-        composable(
-          route = Screen.MaintenanceDetail.route,
-          arguments = listOf(androidx.navigation.navArgument("id") { type = androidx.navigation.NavType.LongType })
-        ) { backStackEntry ->
-          val id = backStackEntry.arguments?.getLong("id") ?: 0L
-          MaintenanceDetailScreen(id = id, navController = navController)
+        composable<Screen.MaintenanceDetail> { backStackEntry ->
+          val detail = backStackEntry.toRoute<Screen.MaintenanceDetail>()
+          MaintenanceDetailScreen(id = detail.id, navController = navController)
         }
       }
 
       // --- Familia (Family) ---
-      navigation(
-        startDestination = Screen.FamilyHub.route,
-        route = "family_graph"
+      navigation<Screen.FamilyGraph>(
+        startDestination = Screen.FamilyHub
       ) {
-        composable(Screen.FamilyHub.route) { FamilyHubScreen(navController = navController) }
-        composable(Screen.Family.route) { FamilyScreen(navController = navController) }
-        composable(Screen.Calendar.route) { CalendarScreen(navController = navController) }
-        composable(Screen.AddMember.route) { AddMemberScreen(navController = navController) }
+        composable<Screen.FamilyHub> { FamilyHubScreen(navController = navController) }
+        composable<Screen.Family> { FamilyScreen(navController = navController) }
+        composable<Screen.Calendar> { CalendarScreen(navController = navController) }
+        composable<Screen.AddMember> { AddMemberScreen(navController = navController) }
         
-        composable(
-          route = Screen.PetDetail.route,
-          arguments = listOf(androidx.navigation.navArgument("petId") { type = androidx.navigation.NavType.LongType })
-        ) { PetDetailScreen(navController = navController) }
+        composable<Screen.PetDetail> { PetDetailScreen(navController = navController) }
 
-        composable(
-          route = Screen.MemberDetail.route,
-          arguments = listOf(androidx.navigation.navArgument("memberId") { type = androidx.navigation.NavType.LongType })
-        ) { backStackEntry ->
-          val memberId = backStackEntry.arguments?.getLong("memberId") ?: 0L
-          MemberDetailScreen(navController = navController, memberId = memberId)
+        composable<Screen.MemberDetail> { backStackEntry ->
+          val detail = backStackEntry.toRoute<Screen.MemberDetail>()
+          MemberDetailScreen(navController = navController, memberId = detail.memberId)
         }
 
-        composable(
-          route = Screen.EditMember.route,
-          arguments = listOf(androidx.navigation.navArgument("memberId") { type = androidx.navigation.NavType.LongType })
-        ) { EditMemberScreen(navController = navController) }
+        composable<Screen.EditMember> { EditMemberScreen(navController = navController) }
       }
 
       // --- Utilidades (Utilities) ---
-      navigation(
-        startDestination = Screen.Utilities.route,
-        route = "utilities_graph"
+      navigation<Screen.UtilitiesGraph>(
+        startDestination = Screen.Utilities
       ) {
-        composable(Screen.Utilities.route) { UtilitiesScreen(navController = navController) }
-        composable(Screen.DosageCalculator.route) { DosageCalculatorScreen(navController = navController) }
-        composable(Screen.BMICalculator.route) { BMICalculatorScreen(navController = navController) }
-        composable(Screen.MortgageCalculator.route) { MortgageCalculatorScreen(navController = navController) }
-        composable(Screen.AgeCalculator.route) { AgeCalculatorScreen(navController = navController) }
-        composable(Screen.ConsumptionCalculator.route) { ConsumptionCalculatorScreen(navController = navController) }
-        composable(Screen.SavingsCalculator.route) { SavingsCalculatorScreen(navController = navController) }
-        composable(Screen.VehicleManager.route) { VehicleManagementScreen(navController = navController) }
-        composable(Screen.Expenses.route) { ExpenseScreen(navController = navController) }
-        composable(Screen.PhotoToPdf.route) { PhotoToPdfScreen(navController = navController) }
-        composable(Screen.WifiQR.route) { WifiQRScreen(navController = navController) }
-        composable(Screen.CocinaConverter.route) { CocinaConverterScreen(navController = navController) }
-        composable(Screen.FeedingCalculator.route) { FeedingCalculatorScreen(navController = navController) }
-        composable(Screen.SmartSafe.route) { SmartSafeScreen(navController = navController) }
-        composable(Screen.FinanceStats.route) { FinanceStatsScreen(navController = navController) }
+        composable<Screen.Utilities> { UtilitiesScreen(navController = navController) }
+        composable<Screen.DosageCalculator> { DosageCalculatorScreen(navController = navController) }
+        composable<Screen.BMICalculator> { BMICalculatorScreen(navController = navController) }
+        composable<Screen.MortgageCalculator> { MortgageCalculatorScreen(navController = navController) }
+        composable<Screen.AgeCalculator> { AgeCalculatorScreen(navController = navController) }
+        composable<Screen.ConsumptionCalculator> { ConsumptionCalculatorScreen(navController = navController) }
+        composable<Screen.SavingsCalculator> { SavingsCalculatorScreen(navController = navController) }
+        composable<Screen.VehicleManager> { VehicleManagementScreen(navController = navController) }
+        composable<Screen.Expenses> { ExpenseScreen(navController = navController) }
+        composable<Screen.PhotoToPdf> { PhotoToPdfScreen(navController = navController) }
+        composable<Screen.WifiQR> { WifiQRScreen(navController = navController) }
+        composable<Screen.CocinaConverter> { CocinaConverterScreen(navController = navController) }
+        composable<Screen.FeedingCalculator> { FeedingCalculatorScreen(navController = navController) }
+        composable<Screen.SmartSafe> { SmartSafeScreen(navController = navController) }
+        composable<Screen.FinanceStats> { FinanceStatsScreen(navController = navController) }
       }
 
-      composable(Screen.Settings.route) { SettingsScreen(navController = navController, innerPadding = innerPadding) }
-      composable(Screen.RewardStore.route) { RewardStoreScreen(navController = navController) }
-      composable(Screen.Archive.route) { ArchiveScreen(navController = navController) }
+      composable<Screen.Settings> { SettingsScreen(navController = navController, innerPadding = innerPadding) }
+      composable<Screen.RewardStore> { RewardStoreScreen(navController = navController) }
+      composable<Screen.Archive> { ArchiveScreen(navController = navController) }
     }
   }
 }
@@ -244,10 +226,10 @@ private fun AppBottomBar(
     ) {
       bottomNavItems.forEach { item ->
         val selected = when (item.screen) {
-          Screen.Dashboard -> currentDestination?.route == Screen.Dashboard.route
-          Screen.Management -> currentDestination?.route in Screen.managementTabRoutes
-          Screen.FamilyHub -> currentDestination?.route in Screen.familyTabRoutes
-          Screen.Utilities -> currentDestination?.route in Screen.utilitiesTabRoutes
+          Screen.Dashboard -> currentDestination?.hasRoute(Screen.Dashboard::class) == true
+          Screen.Management -> currentDestination?.hasRoute(Screen.ManagementGraph::class) == true || currentDestination?.hasRoute(Screen.Management::class) == true || Screen.managementTabRoutes.any { currentDestination?.hasRoute(it) == true }
+          Screen.FamilyHub -> currentDestination?.hasRoute(Screen.FamilyGraph::class) == true || currentDestination?.hasRoute(Screen.FamilyHub::class) == true || Screen.familyTabRoutes.any { currentDestination?.hasRoute(it) == true }
+          Screen.Utilities -> currentDestination?.hasRoute(Screen.UtilitiesGraph::class) == true || currentDestination?.hasRoute(Screen.Utilities::class) == true || Screen.utilitiesTabRoutes.any { currentDestination?.hasRoute(it) == true }
           else -> false
         }
         
@@ -256,18 +238,18 @@ private fun AppBottomBar(
         NavigationBarItem(
           selected = selected,
           onClick = {
-            val isAtHub = currentDestination?.route == item.screen.route
+            val isAtHub = currentDestination?.hasRoute(item.screen::class) == true
             if (!isAtHub) {
               if (selected) {
-                val popped = navController.popBackStack(item.screen.route, inclusive = false)
+                val popped = navController.popBackStack(item.screen, inclusive = false)
                 if (!popped) {
-                  navController.navigate(item.screen.route) {
+                  navController.navigate(item.screen) {
                     popUpTo(navController.graph.findStartDestination().id) { saveState = false }
                     launchSingleTop = true
                   }
                 }
               } else {
-                navController.navigate(item.screen.route) {
+                navController.navigate(item.screen) {
                   popUpTo(navController.graph.findStartDestination().id) {
                     saveState = false
                   }

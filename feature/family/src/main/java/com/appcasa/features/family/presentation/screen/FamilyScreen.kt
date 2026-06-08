@@ -55,6 +55,7 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.domain.model.isPet
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
@@ -93,13 +94,13 @@ fun FamilyScreen(
         navController = navController,
         people = people,
         pets = pets,
-        onAddClick = { navController.navigate(Screen.AddMember.route) },
+        onAddClick = { navController.navigate(Screen.AddMember) },
         onDeleteMember = { memberToDelete = it },
         onMemberClick = { member ->
-          if (member.tipo == TipoMiembro.PERSONA) {
-            navController.navigate(Screen.MemberDetail.createRoute(member.id))
+          if (member.isPet) {
+            navController.navigate(Screen.PetDetail(member.id))
           } else {
-            navController.navigate(Screen.PetDetail.createRoute(member.id))
+            navController.navigate(Screen.MemberDetail(member.id))
           }
         }
       )

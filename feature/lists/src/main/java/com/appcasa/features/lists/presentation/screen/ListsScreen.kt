@@ -113,7 +113,7 @@ fun ListsScreen(
           lists = lists,
           isCompact = isCompact,
           onListClick = { listId ->
-            navController.navigate(Screen.ListDetail.createRoute(listId))
+            navController.navigate(Screen.ListDetail(listId))
           },
           onDeleteList = { listToArchive = it },
           onAddClick = { showAddDialog = true },

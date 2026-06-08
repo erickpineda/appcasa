@@ -73,7 +73,7 @@ fun ManagementHubScreen(
             subtitle = stringResource(R.string.hub_tasks_subtitle),
             icon = Icons.Default.CheckCircle,
             color = MaterialTheme.colorScheme.primary,
-            onClick = { navController.navigate(Screen.Tasks.route) }
+            onClick = { navController.navigate(Screen.Tasks) }
           )
 
           HubCard(
@@ -81,7 +81,7 @@ fun ManagementHubScreen(
             subtitle = stringResource(R.string.hub_lists_subtitle),
             icon = Icons.Default.List,
             color = MaterialTheme.colorScheme.secondary,
-            onClick = { navController.navigate(Screen.Lists.route) }
+            onClick = { navController.navigate(Screen.Lists) }
           )
 
           HubCard(
@@ -89,7 +89,7 @@ fun ManagementHubScreen(
             subtitle = stringResource(R.string.hub_inventory_subtitle),
             icon = Icons.Default.Inventory,
             color = MaterialTheme.colorScheme.tertiary,
-            onClick = { navController.navigate(Screen.Inventory.route) }
+            onClick = { navController.navigate(Screen.Inventory) }
           )
 
           HubCard(
@@ -97,7 +97,7 @@ fun ManagementHubScreen(
             subtitle = stringResource(R.string.hub_maintenance_subtitle),
             icon = Icons.Default.HomeRepairService,
             color = MaterialTheme.colorScheme.error,
-            onClick = { navController.navigate(Screen.HomeMaintenance.route) }
+            onClick = { navController.navigate(Screen.HomeMaintenance) }
           )
 
           HubCard(
@@ -105,7 +105,7 @@ fun ManagementHubScreen(
             subtitle = "Canjea tus XP por premios familiares",
             icon = Icons.Default.CardGiftcard,
             color = MaterialTheme.colorScheme.tertiary,
-            onClick = { navController.navigate(Screen.RewardStore.route) }
+            onClick = { navController.navigate(Screen.RewardStore) }
           )
 
           HubCard(
@@ -113,7 +113,7 @@ fun ManagementHubScreen(
             subtitle = "Consulta registros antiguos y optimiza",
             icon = Icons.Default.Inventory2,
             color = MaterialTheme.colorScheme.outline,
-            onClick = { navController.navigate(Screen.Archive.route) }
+            onClick = { navController.navigate(Screen.Archive) }
           )
         }
       }

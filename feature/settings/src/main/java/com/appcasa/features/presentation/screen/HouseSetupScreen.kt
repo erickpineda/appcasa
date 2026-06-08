@@ -136,8 +136,8 @@ fun HouseSetupScreen(
     LaunchedEffect(Unit) {
         viewModel.setupEvent.collect { result ->
             if (result is HouseSetupViewModel.SetupResult.Success) {
-                navController.navigate(Screen.Dashboard.route) {
-                    popUpTo(Screen.HouseSetup.route) { inclusive = true }
+                navController.navigate(Screen.Dashboard) {
+                    popUpTo(Screen.HouseSetup) { inclusive = true }
                 }
             }
         }

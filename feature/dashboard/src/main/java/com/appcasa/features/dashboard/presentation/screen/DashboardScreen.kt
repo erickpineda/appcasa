@@ -182,7 +182,7 @@ fun DashboardScreen(
             user = currentUser,
             searchQuery = searchQuery,
             onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
-            onSettingsClick = { navController.navigate(Screen.Settings.route) },
+            onSettingsClick = { navController.navigate(Screen.Settings) },
             onCustomizeClick = { showReorderDialog = true }
           )
         }
@@ -265,21 +265,21 @@ fun DashboardContent(
             when (module) {
                 Constants.Modules.TASKS -> DashboardTaskCard(
                     pendingCount = pendingTasksCount,
-                    onClick = { navController.navigate(Screen.Tasks.route) }
+                    onClick = { navController.navigate(Screen.Tasks) }
                 )
                 Constants.Modules.PETS -> DashboardPetCard(
                     count = petData.first,
                     summary = petData.second,
-                    onClick = { navController.navigate(Screen.Family.route) }
+                    onClick = { navController.navigate(Screen.Family) }
                 )
                 Constants.Modules.CALENDAR -> DashboardCalendarCard(
                     eventTitle = nextEvent.first,
                     eventDate = nextEvent.second,
-                    onClick = { navController.navigate(Screen.Calendar.route) }
+                    onClick = { navController.navigate(Screen.Calendar) }
                 )
                 Constants.Modules.EXPENSES -> DashboardFinanceCard(
                     total = monthlyExpense,
-                    onClick = { navController.navigate(Screen.Expenses.route) }
+                    onClick = { navController.navigate(Screen.Expenses) }
                 )
                 Constants.Modules.POSTITS -> {
                     Column(modifier = Modifier.padding(bottom = 8.dp)) {
@@ -480,15 +480,15 @@ fun QuickActionsRow(navController: NavController, actions: List<String>, onAddPo
             verticalAlignment = Alignment.CenterVertically
         ) {
             actions.forEach { actionCode ->
-                val (icon, label, route) = when (actionCode) {
-                    "CALC_DOSIS" -> Triple(Icons.AutoMirrored.Filled.NoteAdd, "Dosis", Screen.DosageCalculator.route)
-                    "UTIL_PDF" -> Triple(Icons.Default.PictureAsPdf, "PDF", Screen.PhotoToPdf.route)
-                    "UTIL_SAFE" -> Triple(Icons.Default.Lock, "Safe", Screen.SmartSafe.route)
-                    "LISTS" -> Triple(Icons.AutoMirrored.Filled.List, "Listas", Screen.Lists.route)
+                val (icon, label, screen) = when (actionCode) {
+                    "CALC_DOSIS" -> Triple(Icons.AutoMirrored.Filled.NoteAdd, "Dosis", Screen.DosageCalculator)
+                    "UTIL_PDF" -> Triple(Icons.Default.PictureAsPdf, "PDF", Screen.PhotoToPdf)
+                    "UTIL_SAFE" -> Triple(Icons.Default.Lock, "Safe", Screen.SmartSafe)
+                    "LISTS" -> Triple(Icons.AutoMirrored.Filled.List, "Listas", Screen.Lists)
                     "POSTIT" -> Triple(Icons.Default.EditNote, "Post-it", null)
-                    "CALC_IMC" -> Triple(Icons.Default.MonitorWeight, "IMC", Screen.BMICalculator.route)
-                    "EXPENSES" -> Triple(Icons.Default.Payments, "Gasto", Screen.Expenses.route)
-                    else -> Triple(Icons.Default.Apps, "Extra", Screen.Utilities.route)
+                    "CALC_IMC" -> Triple(Icons.Default.MonitorWeight, "IMC", Screen.BMICalculator)
+                    "EXPENSES" -> Triple(Icons.Default.Payments, "Gasto", Screen.Expenses)
+                    else -> Triple(Icons.Default.Apps, "Extra", Screen.Utilities)
                 }
                 
                 QuickActionButton(
@@ -496,7 +496,7 @@ fun QuickActionsRow(navController: NavController, actions: List<String>, onAddPo
                     label = label, 
                     onClick = { 
                         if (actionCode == "POSTIT") onAddPostIt() 
-                        else if (route != null) navController.navigate(route) 
+                        else if (screen != null) navController.navigate(screen) 
                     }
                 )
             }

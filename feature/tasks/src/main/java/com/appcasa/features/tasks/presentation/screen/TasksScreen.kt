@@ -82,10 +82,10 @@ fun TasksScreen(
           isCompact = isCompact,
           subTaskCounts = subTaskCounts,
           memberMap = memberMap,
-          onAddTask = { navController.navigate(Screen.AddTask.route) },
+          onAddTask = { navController.navigate(Screen.AddTask) },
           onToggleTask = { viewModel.toggleTaskCompletion(it) },
           onDeleteTask = { taskToArchive = it },
-          onTaskClick = { navController.navigate(Screen.TaskDetail.createRoute(it.id)) },
+          onTaskClick = { navController.navigate(Screen.TaskDetail(it.id)) },
           onUpdateTask = { tarea, nuevoTitulo -> viewModel.updateTask(tarea, nuevoTitulo) },
           onLoadMore = { viewModel.loadMoreActive() }
         )

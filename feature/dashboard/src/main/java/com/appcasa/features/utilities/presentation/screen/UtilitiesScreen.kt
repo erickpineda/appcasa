@@ -88,19 +88,19 @@ fun UtilitiesScreen(
         onInitialize = { viewModel.initializeUtilities() },
         onUtilityClick = { utility ->
           when (utility.codigo) {
-            "CALC_DOSIS" -> navController.navigate(Screen.DosageCalculator.route)
-            "CALC_IMC" -> navController.navigate(Screen.BMICalculator.route)
-            "CALC_HIPOTECA" -> navController.navigate(Screen.MortgageCalculator.route)
-            "CALC_EDAD" -> navController.navigate(Screen.AgeCalculator.route)
-            "CALC_CONSUMO" -> navController.navigate(Screen.ConsumptionCalculator.route)
-            "CALC_AHORRO" -> navController.navigate(Screen.SavingsCalculator.route)
-            "FIN_GASTOS" -> navController.navigate(Screen.Expenses.route)
-            "VEH_MGR" -> navController.navigate(Screen.VehicleManager.route)
-            "UTIL_PDF" -> navController.navigate(Screen.PhotoToPdf.route)
-            "UTIL_WIFI" -> navController.navigate(Screen.WifiQR.route)
-            "UTIL_COCINA" -> navController.navigate(Screen.CocinaConverter.route)
-            "UTIL_PIENSO" -> navController.navigate(Screen.FeedingCalculator.route)
-            "UTIL_SAFE" -> navController.navigate(Screen.SmartSafe.route)
+            "CALC_DOSIS" -> navController.navigate(Screen.DosageCalculator)
+            "CALC_IMC" -> navController.navigate(Screen.BMICalculator)
+            "CALC_HIPOTECA" -> navController.navigate(Screen.MortgageCalculator)
+            "CALC_EDAD" -> navController.navigate(Screen.AgeCalculator)
+            "CALC_CONSUMO" -> navController.navigate(Screen.ConsumptionCalculator)
+            "CALC_AHORRO" -> navController.navigate(Screen.SavingsCalculator)
+            "FIN_GASTOS" -> navController.navigate(Screen.Expenses)
+            "VEH_MGR" -> navController.navigate(Screen.VehicleManager)
+            "UTIL_PDF" -> navController.navigate(Screen.PhotoToPdf)
+            "UTIL_WIFI" -> navController.navigate(Screen.WifiQR)
+            "UTIL_COCINA" -> navController.navigate(Screen.CocinaConverter)
+            "UTIL_PIENSO" -> navController.navigate(Screen.FeedingCalculator)
+            "UTIL_SAFE" -> navController.navigate(Screen.SmartSafe)
           }
         }
       )

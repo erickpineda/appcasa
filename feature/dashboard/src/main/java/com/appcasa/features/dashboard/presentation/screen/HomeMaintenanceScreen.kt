@@ -110,7 +110,7 @@ fun HomeMaintenanceScreen(
                 barcodes.firstOrNull()?.rawValue?.let { code ->
                     if (code.startsWith("maintenance/")) {
                         val id = code.substringAfter("maintenance/").toLongOrNull()
-                        id?.let { navController.navigate(Screen.MaintenanceDetail.createRoute(it)) }
+                        id?.let { navController.navigate(Screen.MaintenanceDetail(it)) }
                     }
                 }
             }
@@ -193,7 +193,7 @@ fun HomeMaintenanceScreen(
                             MaintenanceCard(
                                 event = event,
                                 onDelete = { eventToDelete = event },
-                                onClick = { navController.navigate(Screen.MaintenanceDetail.createRoute(event.id)) }
+                                onClick = { navController.navigate(Screen.MaintenanceDetail(event.id)) }
                             )
                         }
     

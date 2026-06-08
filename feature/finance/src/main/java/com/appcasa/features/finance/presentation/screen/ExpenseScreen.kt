@@ -192,8 +192,8 @@ fun ExpenseScreen(
                 actionIconContentColor = MaterialTheme.colorScheme.onPrimary
               ),
               actions = {
-                IconButton(onClick = { navController.navigate(Screen.FinanceStats.route) }) {
-                    Icon(Icons.Default.Assessment, contentDescription = "Estadísticas")
+                IconButton(onClick = { navController.navigate(Screen.FinanceStats) }) {
+                  Icon(Icons.Default.Assessment, contentDescription = "Estadísticas")
                 }
                 IconButton(onClick = { galleryLauncher.launch("image/*") }) {
                     Icon(Icons.Default.DocumentScanner, contentDescription = stringResource(R.string.cd_scan_ticket))
