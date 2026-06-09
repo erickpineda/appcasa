@@ -193,7 +193,7 @@ fun ExpenseScreen(
               ),
               actions = {
                 IconButton(onClick = { navController.navigate(Screen.FinanceStats) }) {
-                  Icon(Icons.Default.Assessment, contentDescription = "Estadísticas")
+                  Icon(Icons.Default.Assessment, contentDescription = stringResource(R.string.cd_stats))
                 }
                 IconButton(onClick = { galleryLauncher.launch("image/*") }) {
                     Icon(Icons.Default.DocumentScanner, contentDescription = stringResource(R.string.cd_scan_ticket))
@@ -260,7 +260,7 @@ fun ExpenseScreen(
                     onClick = { viewModel.loadMoreActive() }, 
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Cargar más gastos antiguos...")
+                    Text(stringResource(R.string.finance_load_more))
                 }
               }
             }
@@ -295,7 +295,7 @@ fun ExpenseCard(expense: Expense, currency: String, onEdit: () -> Unit, onDelete
               )
           },
           confirmButton = {
-              TextButton(onClick = { showImagePreview = false }) { Text("Cerrar") }
+              TextButton(onClick = { showImagePreview = false }) { Text(stringResource(R.string.finance_btn_close)) }
           }
       )
   }
@@ -350,12 +350,13 @@ fun ExpenseActionDialog(
   onDismiss: () -> Unit,
   onConfirm: (String, Double, String, String?) -> Unit
 ) {
+  val context = LocalContext.current
+  val othersCat = stringResource(R.string.finance_cat_others)
   var concepto by remember { mutableStateOf(if (initialConcepto.isNotEmpty()) initialConcepto else item?.concepto ?: "") }
   var importe by remember { mutableStateOf(if (initialImporte.isNotEmpty()) initialImporte else item?.importe?.toString() ?: "") }
-  var categoria by remember { mutableStateOf(item?.categoria ?: "Otros") }
+  var categoria by remember { mutableStateOf(item?.categoria ?: othersCat) }
   var fotoUri by remember { mutableStateOf(item?.fotoUri) }
   
-  val context = LocalContext.current
   val focusRequester = remember { FocusRequester() }
   val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -449,7 +450,7 @@ fun ExpenseActionDialog(
             ) {
                 Icon(Icons.Default.PhotoCamera, null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(if (fotoUri == null) "Adjuntar Ticket" else "Cambiar Foto", style = MaterialTheme.typography.labelSmall)
+                Text(if (fotoUri == null) stringResource(R.string.finance_btn_attach_ticket) else stringResource(R.string.finance_btn_change_photo), style = MaterialTheme.typography.labelSmall)
             }
             
             if (fotoUri != null) {

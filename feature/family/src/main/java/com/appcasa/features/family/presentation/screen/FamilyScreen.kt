@@ -274,7 +274,7 @@ fun MemberCard(
         if (member.tipo == TipoMiembro.PERSONA) {
             PremiumProgressBar(
                 progress = progress,
-                label = "XP: ${member.puntos}",
+                label = stringResource(R.string.family_label_xp, member.puntos),
                 modifier = Modifier.padding(top = 4.dp),
                 color = MaterialTheme.colorScheme.tertiary
             )

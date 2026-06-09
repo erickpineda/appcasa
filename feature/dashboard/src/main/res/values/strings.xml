@@ -21,12 +21,34 @@
     <string name="module_calendar">Agenda</string>
     <string name="module_expenses">Gastos</string>
     <string name="module_postits">Post-its</string>
+    <string name="module_rewards">Recompensas</string>
+    <string name="dashboard_rewards_title">Mis Recompensas</string>
+    <string name="dashboard_rewards_status">Nivel %1$d · %2$d puntos</string>
+    <string name="dashboard_rewards_next_level">Próximo nivel</string>
 
     <!-- Quick Actions -->
+    <string name="dashboard_quick_actions">Accesos Rápidos</string>
     <string name="action_dosage">Dosis</string>
     <string name="action_pdf">PDF</string>
     <string name="action_safe">Safe</string>
-    <string name="action_shopping">Compra</string>
+    <string name="action_lists">Listas</string>
+    <string name="action_postit">Post-it</string>
+    <string name="action_bmi">IMC</string>
+    <string name="action_expense">Gasto</string>
+    <string name="action_extra">Extra</string>
+
+    <!-- Mood -->
+    <string name="dashboard_mood_clear">Limpiar estado</string>
+
+    <!-- Customization -->
+    <string name="dashboard_tab_modules">Módulos</string>
+    <string name="dashboard_tab_actions">Accesos</string>
+    <string name="dashboard_customizer_desc_modules">Configura qué módulos quieres ver y en qué orden:</string>
+    <string name="dashboard_customizer_desc_actions">Selecciona 4 accesos rápidos:</string>
+
+    <!-- Search -->
+    <string name="dashboard_search_results_title">Resultados de búsqueda</string>
+    <string name="dashboard_search_no_results">No hay resultados</string>
 
     <!-- Content Descriptions -->
     <string name="cd_postit">Post-it</string>
@@ -271,6 +293,10 @@
     <string name="hub_inventory_subtitle">Stock de despensa y mascotas</string>
     <string name="hub_maintenance_title">Mantenimiento</string>
     <string name="hub_maintenance_subtitle">Log de reparaciones y filtros</string>
+    <string name="hub_rewards_title">Tienda de Recompensas</string>
+    <string name="hub_rewards_subtitle">Canjea tus XP por premios familiares</string>
+    <string name="hub_archive_title">Cajón de Archivo</string>
+    <string name="hub_archive_subtitle">Consulta registros antiguos y optimiza</string>
     <string name="hub_family_life_title">Familia y Vida</string>
     <string name="hub_members_title">Miembros</string>
     <string name="hub_members_subtitle">Humanos y pasaportes de mascotas</string>
@@ -300,6 +326,25 @@
     <string name="util_mortgage_label_interest">Interés Anual (%)</string>
     <string name="util_mortgage_label_term">Plazo (Años)</string>
     <string name="util_mortgage_result_label">Cuota Mensual</string>
+    <string name="util_mortgage_total_interest">Total intereses: %s €</string>
+    <string name="util_mortgage_save_note">Nota: Los datos se guardan para facilitar consultas rápidas.</string>
+
+    <string name="util_photo_pdf_default_filename">Doc_%s</string>
+    <string name="util_photo_pdf_extension">.pdf</string>
+
+    <string name="util_safe_cat_education">Escolares</string>
+    <string name="util_safe_cat_warranty">Garantías</string>
+    <string name="util_safe_cat_health">Salud</string>
+    <string name="util_safe_cat_insurance">Seguros</string>
+    <string name="util_safe_cat_others">Otros</string>
+
+    <string name="maintenance_cat_appliances">Electrodomésticos</string>
+    <string name="maintenance_cat_plumbing">Fontanería</string>
+    <string name="maintenance_cat_electricity">Electricidad</string>
+    <string name="maintenance_cat_painting">Pintura</string>
+    <string name="maintenance_cat_hvac">Climatización</string>
+    <string name="maintenance_cat_structure">Estructura</string>
+    <string name="maintenance_cat_others">Otros</string>
     <string name="util_feeding_title">Ración de Pienso</string>
     <string name="util_feeding_header">Guía de Alimentación Diaria</string>
     <string name="util_feeding_step1">1. Selecciona la mascota</string>
@@ -328,4 +373,8 @@
     <string name="archive_cd_clear_section">Limpiar sección</string>
     <string name="archive_cd_clear_all">Vaciar todo</string>
     <string name="archive_load_more">Cargar más...</string>
+
+    <string name="maintenance_error_no_more_active">No hay más registros para cargar</string>
+    <string name="maintenance_error_no_more_archived">No hay más registros en el archivo</string>
+    <string name="archive_expense_format">%1$s (%2$.2f%3$s)</string>
 </resources>

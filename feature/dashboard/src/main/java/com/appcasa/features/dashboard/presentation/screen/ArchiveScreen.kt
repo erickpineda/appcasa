@@ -206,12 +206,18 @@ fun ArchivedListsList(viewModel: ListsViewModel, onDelete: (Lista) -> Unit) {
 @Composable
 fun ArchivedExpensesList(viewModel: FinanceViewModel, onDelete: (Expense) -> Unit) {
   val expenses by viewModel.archivedExpenses.collectAsState()
+  val currency by viewModel.currencySymbol.collectAsState()
+  
   if (expenses.isEmpty()) {
     AppCasaEmptyState(title = stringResource(R.string.archive_empty), description = "", icon = Icons.Default.Payments)
   } else {
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
       items(expenses) { expense ->
-        ArchiveItemCard(title = "${expense.concepto} (${expense.importe}€)", onRestore = { viewModel.unarchiveExpense(expense.id) }, onDelete = { onDelete(expense) })
+        ArchiveItemCard(
+            title = stringResource(R.string.archive_expense_format, expense.concepto, expense.importe, currency), 
+            onRestore = { viewModel.unarchiveExpense(expense.id) }, 
+            onDelete = { onDelete(expense) }
+        )
       }
       item {
           TextButton(onClick = { viewModel.loadMoreArchived() }, modifier = Modifier.fillMaxWidth()) {

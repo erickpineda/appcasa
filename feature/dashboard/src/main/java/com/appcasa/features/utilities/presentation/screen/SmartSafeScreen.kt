@@ -263,10 +263,10 @@ fun DocumentCard(
       },
       leadingContent = {
         val icon = when(documento.categoria) {
-          "Escolares" -> Icons.Default.School
-          "Garantías" -> Icons.Default.VerifiedUser
-          "Salud" -> Icons.Default.LocalHospital
-          "Seguros" -> Icons.Default.Shield
+          stringResource(R.string.util_safe_cat_education) -> Icons.Default.School
+          stringResource(R.string.util_safe_cat_warranty) -> Icons.Default.VerifiedUser
+          stringResource(R.string.util_safe_cat_health) -> Icons.Default.LocalHospital
+          stringResource(R.string.util_safe_cat_insurance) -> Icons.Default.Shield
           else -> Icons.Default.Description
         }
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
@@ -299,15 +299,21 @@ fun AddDocumentDialog(
   onDismiss: () -> Unit,
   onConfirm: (String, String, String, Long?) -> Unit
 ) {
+  val warrantyCat = stringResource(R.string.util_safe_cat_warranty)
+  val educationCat = stringResource(R.string.util_safe_cat_education)
+  val healthCat = stringResource(R.string.util_safe_cat_health)
+  val insuranceCat = stringResource(R.string.util_safe_cat_insurance)
+  val otherCat = stringResource(R.string.util_safe_cat_others)
+
   var nombre by remember { mutableStateOf("") }
-  var categoria by remember { mutableStateOf("Garantías") }
+  var categoria by remember { mutableStateOf(warrantyCat) }
   var selectedUri by remember { mutableStateOf<Uri?>(null) }
   
   var showDatePicker by remember { mutableStateOf(false) }
   val datePickerState = rememberDatePickerState()
   var selectedDate by remember { mutableStateOf<Long?>(null) }
   
-  val categories = listOf("Garantías", "Escolares", "Salud", "Seguros", "Otros")
+  val categories = listOf(warrantyCat, educationCat, healthCat, insuranceCat, otherCat)
   var expanded by remember { mutableStateOf(false) }
 
   val filePickerLauncher = rememberLauncherForActivityResult(
@@ -402,13 +408,19 @@ fun EditDocumentDialog(
   onDismiss: () -> Unit,
   onConfirm: (String, String, Long?) -> Unit
 ) {
+  val warrantyCat = stringResource(R.string.util_safe_cat_warranty)
+  val educationCat = stringResource(R.string.util_safe_cat_education)
+  val healthCat = stringResource(R.string.util_safe_cat_health)
+  val insuranceCat = stringResource(R.string.util_safe_cat_insurance)
+  val otherCat = stringResource(R.string.util_safe_cat_others)
+
   var nombre by remember { mutableStateOf(documento.nombre) }
   var categoria by remember { mutableStateOf(documento.categoria) }
   var showDatePicker by remember { mutableStateOf(false) }
   val datePickerState = rememberDatePickerState(initialSelectedDateMillis = documento.fechaVencimiento)
   var selectedDate by remember { mutableStateOf(documento.fechaVencimiento) }
   
-  val categories = listOf("Garantías", "Escolares", "Salud", "Seguros", "Otros")
+  val categories = listOf(warrantyCat, educationCat, healthCat, insuranceCat, otherCat)
   var expanded by remember { mutableStateOf(false) }
 
   if (showDatePicker) {

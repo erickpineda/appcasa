@@ -738,7 +738,12 @@ fun EditTaskMainDialog(
               modifier = Modifier.fillMaxWidth(),
               horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-              val options = listOf(0 to "En punto", 5 to "5 min", 15 to "15 min", 30 to "30 min")
+              val options = listOf(
+                0 to stringResource(R.string.task_notify_on_time), 
+                5 to stringResource(R.string.task_notify_5_min), 
+                15 to stringResource(R.string.task_notify_15_min), 
+                30 to stringResource(R.string.task_notify_30_min)
+              )
               options.forEach { (mins, label) ->
                 FilterChip(
                   selected = selectedAnticipacion == mins,

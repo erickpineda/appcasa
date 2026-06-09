@@ -6,12 +6,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaMeshBackground
+import com.appcasa.feature.settings.R
 import com.appcasa.features.settings.presentation.viewmodel.AuthViewModel
 import com.appcasa.navigation.Screen
 
@@ -45,7 +47,7 @@ fun AuthScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = if (isRegister) "Crear Cuenta" else "Bienvenido",
+                text = if (isRegister) stringResource(R.string.auth_create_account) else stringResource(R.string.auth_welcome),
                 style = MaterialTheme.typography.headlineLarge
             )
             Spacer(modifier = Modifier.height(32.dp))
@@ -53,7 +55,7 @@ fun AuthScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.auth_label_email)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
@@ -62,7 +64,7 @@ fun AuthScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Contraseña") },
+                label = { Text(stringResource(R.string.auth_label_password)) },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
@@ -88,11 +90,11 @@ fun AuthScreen(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (isRegister) "Registrarse" else "Entrar")
+                    Text(if (isRegister) stringResource(R.string.auth_btn_register) else stringResource(R.string.auth_btn_login))
                 }
 
                 TextButton(onClick = { isRegister = !isRegister }) {
-                    Text(if (isRegister) "¿Ya tienes cuenta? Inicia sesión" else "¿No tienes cuenta? Regístrate")
+                    Text(if (isRegister) stringResource(R.string.auth_btn_goto_login) else stringResource(R.string.auth_btn_goto_register))
                 }
             }
         }

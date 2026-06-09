@@ -240,11 +240,11 @@ fun MaintenanceCard(
             },
             leadingContent = {
                 val icon = when (event.categoria) {
-                    "Electrodomésticos" -> Icons.Default.Kitchen
-                    "Fontanería" -> Icons.Default.WaterDrop
-                    "Electricidad" -> Icons.Default.ElectricBolt
-                    "Pintura" -> Icons.Default.FormatPaint
-                    "Climatización" -> Icons.Default.Air
+                    stringResource(R.string.maintenance_cat_appliances) -> Icons.Default.Kitchen
+                    stringResource(R.string.maintenance_cat_plumbing) -> Icons.Default.WaterDrop
+                    stringResource(R.string.maintenance_cat_electricity) -> Icons.Default.ElectricBolt
+                    stringResource(R.string.maintenance_cat_painting) -> Icons.Default.FormatPaint
+                    stringResource(R.string.maintenance_cat_hvac) -> Icons.Default.Air
                     else -> Icons.Default.Build
                 }
                 Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
@@ -265,8 +265,16 @@ fun MaintenanceActionDialog(
     onDismiss: () -> Unit,
     onConfirm: (String, String, String?, Long, Long?, Double?) -> Unit
 ) {
+    val catAppliances = stringResource(R.string.maintenance_cat_appliances)
+    val catPlumbing = stringResource(R.string.maintenance_cat_plumbing)
+    val catElectricity = stringResource(R.string.maintenance_cat_electricity)
+    val catPainting = stringResource(R.string.maintenance_cat_painting)
+    val catHvac = stringResource(R.string.maintenance_cat_hvac)
+    val catStructure = stringResource(R.string.maintenance_cat_structure)
+    val catOthers = stringResource(R.string.maintenance_cat_others)
+
     var title by remember { mutableStateOf("") }
-    var cat by remember { mutableStateOf("Electrodomésticos") }
+    var cat by remember { mutableStateOf(catAppliances) }
     var desc by remember { mutableStateOf("") }
     var cost by remember { mutableStateOf("") }
     
@@ -276,7 +284,7 @@ fun MaintenanceActionDialog(
     var showDatePicker by remember { mutableStateOf(false) }
     var showNextDatePicker by remember { mutableStateOf(false) }
     
-    val categories = listOf("Electrodomésticos", "Fontanería", "Electricidad", "Pintura", "Climatización", "Estructura", "Otros")
+    val categories = listOf(catAppliances, catPlumbing, catElectricity, catPainting, catHvac, catStructure, catOthers)
     var expanded by remember { mutableStateOf(false) }
 
     val focusRequester = remember { FocusRequester() }

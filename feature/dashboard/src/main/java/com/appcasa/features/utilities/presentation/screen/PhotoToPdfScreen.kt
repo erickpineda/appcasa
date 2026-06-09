@@ -88,7 +88,8 @@ fun PhotoToPdfScreen(
   val isGenerating by viewModel.isGenerating.collectAsState()
   val pdfUri by viewModel.pdfUri.collectAsState()
   
-  var fileName by remember { mutableStateOf("Doc_${System.currentTimeMillis() / 100000}") }
+  val defaultName = stringResource(R.string.util_photo_pdf_default_filename, System.currentTimeMillis() / 100000)
+  var fileName by remember { mutableStateOf(defaultName) }
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
 
@@ -151,7 +152,7 @@ fun PhotoToPdfScreen(
                   modifier = Modifier.weight(1f),
                   singleLine = true,
                   keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                  trailingIcon = { Text(".pdf", modifier = Modifier.padding(end = 8.dp), style = MaterialTheme.typography.bodySmall) }
+                  trailingIcon = { Text(stringResource(R.string.util_photo_pdf_extension), modifier = Modifier.padding(end = 8.dp), style = MaterialTheme.typography.bodySmall) }
               )
               
               IconButton(
@@ -220,9 +221,10 @@ fun PhotoToPdfScreen(
               }
 
               val safeViewModel: SmartSafeViewModel = hiltViewModel()
+              val otherCat = stringResource(R.string.util_safe_cat_others)
               Button(
                   onClick = {
-                      safeViewModel.addDocumento(fileName, "Otros", pdfUri.toString())
+                      safeViewModel.addDocumento(fileName, otherCat, pdfUri.toString())
                       scope.launch {
                           snackbarHostState.showSnackbar(savedSafeMsg)
                       }

@@ -45,6 +45,7 @@
     <string name="setup_join_title">Unirse con Código</string>
     <string name="setup_join_desc">Introduce el código que te ha facilitado tu pareja (ej: CASA-7X2W).</string>
     <string name="setup_label_code">Código de Invitación</string>
+    <string name="setup_placeholder_code">CASA-XXXX</string>
     <string name="setup_btn_join">Vincular mi cuenta</string>
     <string name="setup_create_title">Nombre de tu Hogar</string>
     <string name="setup_create_desc">Este nombre será visible para todos los miembros de la casa.</string>
@@ -54,4 +55,38 @@
     <string name="setup_success_linked">¡Hogar vinculado con éxito!</string>
     <string name="settings_profile_change_photo">Cambiar foto de perfil</string>
     <string name="settings_profile_name_hint">¿Cómo te llamas?</string>
+
+    <!-- House Setup New Strings -->
+    <string name="setup_qr_scan_title">Escanear Código de Casa</string>
+    <string name="setup_qr_permission_error">Se requiere permiso de cámara para escanear el QR.</string>
+    <string name="setup_profile_who_are_you">¿Quién eres?</string>
+    <string name="setup_profile_desc">Introduce tu nombre para entrar al hogar</string>
+    <string name="setup_profile_your_photo">Tu Foto</string>
+    <string name="setup_btn_enter">Entrar</string>
+    <string name="setup_household_detected">Hogar detectado: %s</string>
+    <string name="setup_btn_enter_my_house">Entrar en mi Hogar</string>
+    <string name="setup_cd_scan_qr">Escanear QR</string>
+    <string name="setup_switch_title">Tus Hogares</string>
+    <string name="setup_switch_desc">Selecciona una casa para entrar</string>
+    <string name="setup_btn_create_new">Crear Nueva</string>
+    <string name="setup_btn_join_another">Unirse a otra</string>
+    <string name="setup_select_profile_desc">Selecciona tu perfil para entrar</string>
+    <string name="setup_info_household">Hogar: %s</string>
+    <string name="setup_btn_change">Cambiar</string>
+    <string name="setup_btn_new_profile">Nuevo</string>
+    <string name="setup_no_members_error">No hay miembros registrados todavía.</string>
+    <string name="setup_reset_title">¿Borrar todo?</string>
+    <string name="setup_reset_desc">Esta acción eliminará permanentemente este hogar y todos sus datos (tareas, gastos, etc.) de este dispositivo.</string>
+    <string name="setup_btn_reset_confirm">Borrar permanentemente</string>
+    <string name="setup_btn_reset_all">Empezar de cero (Borrar hogar)</string>
+
+    <!-- Auth Strings -->
+    <string name="auth_create_account">Crear Cuenta</string>
+    <string name="auth_welcome">Bienvenido</string>
+    <string name="auth_label_email">Email</string>
+    <string name="auth_label_password">Contraseña</string>
+    <string name="auth_btn_register">Registrarse</string>
+    <string name="auth_btn_login">Entrar</string>
+    <string name="auth_btn_goto_login">¿Ya tienes cuenta? Inicia sesión</string>
+    <string name="auth_btn_goto_register">¿No tienes cuenta? Regístrate</string>
 </resources>

@@ -35,4 +35,8 @@
     <string name="inventory_delete_title">Eliminar producto</string>
     <string name="inventory_delete_confirm">¿Estás seguro de que quieres eliminar este producto del inventario?</string>
     <string name="inventory_load_more">Cargar más inventario antiguo...</string>
+
+    <string name="inventory_cat_pantry">Despensa</string>
+    <string name="inventory_unit_default">uds</string>
+    <string name="inventory_placeholder_barcode_name">Producto %s</string>
 </resources>

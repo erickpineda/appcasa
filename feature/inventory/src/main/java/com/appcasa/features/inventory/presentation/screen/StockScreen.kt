@@ -339,12 +339,16 @@ fun StockActionDialog(
   onDismiss: () -> Unit,
   onConfirm: (String, String, Double, Double, String) -> Unit
 ) {
-  var nombre by remember { mutableStateOf(if (initialBarcode.isNotEmpty()) "Producto $initialBarcode" else item?.nombre ?: "") }
+  val pantryCat = stringResource(R.string.inventory_cat_pantry)
+  val unitsDefault = stringResource(R.string.inventory_unit_default)
+  val barcodeNamePlaceholder = stringResource(R.string.inventory_placeholder_barcode_name, initialBarcode)
+
+  var nombre by remember { mutableStateOf(if (initialBarcode.isNotEmpty()) barcodeNamePlaceholder else item?.nombre ?: "") }
   var nombreTouched by remember { mutableStateOf(false) }
-  var categoria by remember { mutableStateOf(item?.categoria ?: "Despensa") }
+  var categoria by remember { mutableStateOf(item?.categoria ?: pantryCat) }
   var cantidad by remember { mutableStateOf(item?.cantidadActual?.toString() ?: "") }
   var minima by remember { mutableStateOf(item?.cantidadMinima?.toString() ?: "") }
-  var unidad by remember { mutableStateOf(item?.unidad ?: "uds") }
+  var unidad by remember { mutableStateOf(item?.unidad ?: unitsDefault) }
 
   val focusRequester = remember { FocusRequester() }
   val keyboardController = LocalSoftwareKeyboardController.current

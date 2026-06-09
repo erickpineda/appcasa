@@ -317,7 +317,7 @@ fun QRScannerDialog(onCodeScanned: (String) -> Unit, onDismiss: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Escanear Código de Casa") },
+        title = { Text(stringResource(R.string.setup_qr_scan_title)) },
         text = {
             if (hasPermission) {
                 Box(modifier = Modifier.size(280.dp).clip(RoundedCornerShape(16.dp))) {
@@ -369,10 +369,10 @@ fun QRScannerDialog(onCodeScanned: (String) -> Unit, onDismiss: () -> Unit) {
                     )
                 }
             } else {
-                Text("Se requiere permiso de cámara para escanear el QR.")
+                Text(stringResource(R.string.setup_qr_permission_error))
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.settings_btn_cancel)) } }
     )
 }
 
@@ -386,8 +386,8 @@ private fun AddProfileStep(
     onConfirm: () -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("¿Quién eres?", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Introduce tu nombre para entrar al hogar", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.setup_profile_who_are_you), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.setup_profile_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(24.dp))
         
         // Avatar Selection
@@ -409,7 +409,7 @@ private fun AddProfileStep(
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.AddAPhoto, null, tint = MaterialTheme.colorScheme.primary)
-                    Text("Tu Foto", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.setup_profile_your_photo), style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -427,7 +427,7 @@ private fun AddProfileStep(
         Spacer(Modifier.height(32.dp))
         
         Button(onClick = onConfirm, enabled = userName.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
-            Text("Entrar")
+            Text(stringResource(R.string.setup_btn_enter))
         }
         TextButton(onClick = onBack) { Text(stringResource(R.string.settings_btn_cancel)) }
     }
@@ -456,7 +456,7 @@ private fun WelcomeStep(
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            if (householdName != null) "Hogar detectado: $householdName" else stringResource(R.string.setup_welcome_desc),
+            if (householdName != null) stringResource(R.string.setup_household_detected, householdName) else stringResource(R.string.setup_welcome_desc),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -497,7 +497,7 @@ private fun WelcomeStep(
             ) {
                 Icon(Icons.Default.Person, null)
                 Spacer(Modifier.width(8.dp))
-                Text("Entrar en mi Hogar")
+                Text(stringResource(R.string.setup_btn_enter_my_house))
             }
         }
     }
@@ -538,7 +538,7 @@ private fun CreateStep(
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.AddAPhoto, null, tint = MaterialTheme.colorScheme.primary)
-                    Text("Tu Foto", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.setup_profile_your_photo), style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -613,7 +613,7 @@ private fun JoinStep(
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.AddAPhoto, null, tint = MaterialTheme.colorScheme.primary)
-                        Text("Tu Foto", style = MaterialTheme.typography.labelSmall)
+                        Text(stringResource(R.string.setup_profile_your_photo), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -627,7 +627,7 @@ private fun JoinStep(
                 modifier = Modifier.size(64.dp),
                 contentPadding = PaddingValues(0.dp)
             ) {
-                Icon(Icons.Default.QrCodeScanner, contentDescription = "Escanear QR")
+                Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.setup_cd_scan_qr))
             }
         }
 
@@ -638,7 +638,7 @@ private fun JoinStep(
             onValueChange = { if (it.length <= 10) onCodeChange(it) },
             label = { Text(stringResource(R.string.setup_label_code)) },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("CASA-XXXX") },
+            placeholder = { Text(stringResource(R.string.setup_placeholder_code)) },
             textStyle = MaterialTheme.typography.titleLarge.copy(textAlign = TextAlign.Center, fontWeight = FontWeight.ExtraBold)
         )
 
@@ -669,8 +669,8 @@ private fun SwitchHouseholdStep(
     onJoinNewClick: () -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-        Text("Tus Hogares", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Selecciona una casa para entrar", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.setup_switch_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.setup_switch_desc), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         
         Spacer(Modifier.height(32.dp))
         
@@ -701,12 +701,12 @@ private fun SwitchHouseholdStep(
             OutlinedButton(onClick = onCreateNewClick) {
                 Icon(Icons.Default.Add, null)
                 Spacer(Modifier.width(4.dp))
-                Text("Crear Nueva")
+                Text(stringResource(R.string.setup_btn_create_new))
             }
             OutlinedButton(onClick = onJoinNewClick) {
                 Icon(Icons.Default.VpnKey, null)
                 Spacer(Modifier.width(4.dp))
-                Text("Unirse a otra")
+                Text(stringResource(R.string.setup_btn_join_another))
             }
         }
     }
@@ -722,15 +722,15 @@ private fun SelectProfileStep(
     onResetAll: () -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("¿Quién eres?", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Selecciona tu perfil para entrar", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.setup_profile_who_are_you), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.setup_select_profile_desc), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         
         // Debug info e info de hogar
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Hogar: ${existingHousehold?.nombre ?: "None"}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            Text(stringResource(R.string.setup_info_household, existingHousehold?.nombre ?: "None"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
             if (onSwitchHouseClick != null) {
                 Text(" • ", style = MaterialTheme.typography.labelSmall)
-                Text("Cambiar", 
+                Text(stringResource(R.string.setup_btn_change), 
                     modifier = Modifier.clickable { onSwitchHouseClick() },
                     style = MaterialTheme.typography.labelSmall, 
                     color = MaterialTheme.colorScheme.primary,
@@ -763,7 +763,7 @@ private fun SelectProfileStep(
                             Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
                         }
                         Spacer(Modifier.height(8.dp))
-                        Text("Nuevo", style = MaterialTheme.typography.labelSmall)
+                        Text(stringResource(R.string.setup_btn_new_profile), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -771,7 +771,7 @@ private fun SelectProfileStep(
 
         if (members.isEmpty()) {
             Text(
-                "No hay miembros registrados todavía.",
+                stringResource(R.string.setup_no_members_error),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error
             )
@@ -784,15 +784,15 @@ private fun SelectProfileStep(
         if (showConfirmReset) {
             AlertDialog(
                 onDismissRequest = { showConfirmReset = false },
-                title = { Text("¿Borrar todo?") },
-                text = { Text("Esta acción eliminará permanentemente este hogar y todos sus datos (tareas, gastos, etc.) de este dispositivo.") },
+                title = { Text(stringResource(R.string.setup_reset_title)) },
+                text = { Text(stringResource(R.string.setup_reset_desc)) },
                 confirmButton = {
                     Button(onClick = { onResetAll(); showConfirmReset = false }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
-                        Text("Borrar permanentemente")
+                        Text(stringResource(R.string.setup_btn_reset_confirm))
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showConfirmReset = false }) { Text("Cancelar") }
+                    TextButton(onClick = { showConfirmReset = false }) { Text(stringResource(R.string.settings_btn_cancel)) }
                 }
             )
         }
@@ -800,7 +800,7 @@ private fun SelectProfileStep(
         TextButton(onClick = { showConfirmReset = true }) {
             Icon(Icons.Default.RestartAlt, null)
             Spacer(Modifier.width(8.dp))
-            Text("Empezar de cero (Borrar hogar)")
+            Text(stringResource(R.string.setup_btn_reset_all))
         }
     }
 }

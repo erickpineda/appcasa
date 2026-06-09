@@ -486,7 +486,7 @@ fun MoodAvatar(member: FamilyMember, onMoodClick: () -> Unit) {
 fun QuickActionsRow(navController: NavController, actions: List<String>, onAddPostIt: () -> Unit) {
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp)) {
         Text(
-            text = "Accesos Rápidos",
+            text = stringResource(R.string.dashboard_quick_actions),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 12.dp)
@@ -498,14 +498,14 @@ fun QuickActionsRow(navController: NavController, actions: List<String>, onAddPo
         ) {
             actions.forEach { actionCode ->
                 val (icon, label, screen) = when (actionCode) {
-                    "CALC_DOSIS" -> Triple(Icons.AutoMirrored.Filled.NoteAdd, "Dosis", Screen.DosageCalculator)
-                    "UTIL_PDF" -> Triple(Icons.Default.PictureAsPdf, "PDF", Screen.PhotoToPdf)
-                    "UTIL_SAFE" -> Triple(Icons.Default.Lock, "Safe", Screen.SmartSafe)
-                    "LISTS" -> Triple(Icons.AutoMirrored.Filled.List, "Listas", Screen.Lists)
-                    "POSTIT" -> Triple(Icons.Default.EditNote, "Post-it", null)
-                    "CALC_IMC" -> Triple(Icons.Default.MonitorWeight, "IMC", Screen.BMICalculator)
-                    "EXPENSES" -> Triple(Icons.Default.Payments, "Gasto", Screen.Expenses)
-                    else -> Triple(Icons.Default.Apps, "Extra", Screen.Utilities)
+                    "CALC_DOSIS" -> Triple(Icons.AutoMirrored.Filled.NoteAdd, stringResource(R.string.action_dosage), Screen.DosageCalculator)
+                    "UTIL_PDF" -> Triple(Icons.Default.PictureAsPdf, stringResource(R.string.action_pdf), Screen.PhotoToPdf)
+                    "UTIL_SAFE" -> Triple(Icons.Default.Lock, stringResource(R.string.action_safe), Screen.SmartSafe)
+                    "LISTS" -> Triple(Icons.AutoMirrored.Filled.List, stringResource(R.string.action_lists), Screen.Lists)
+                    "POSTIT" -> Triple(Icons.Default.EditNote, stringResource(R.string.action_postit), null)
+                    "CALC_IMC" -> Triple(Icons.Default.MonitorWeight, stringResource(R.string.action_bmi), Screen.BMICalculator)
+                    "EXPENSES" -> Triple(Icons.Default.Payments, stringResource(R.string.action_expense), Screen.Expenses)
+                    else -> Triple(Icons.Default.Apps, stringResource(R.string.action_extra), Screen.Utilities)
                 }
                 
                 QuickActionButton(
@@ -632,8 +632,8 @@ fun DashboardRewardCard(points: Int, level: Int, onClick: () -> Unit, modifier: 
                 }
                 Spacer(Modifier.width(16.dp))
                 Column {
-                    Text("Mis Recompensas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text("Nivel $level · $points puntos", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.dashboard_rewards_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.dashboard_rewards_status, level, points), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Spacer(Modifier.weight(1f))
                 Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
@@ -642,7 +642,7 @@ fun DashboardRewardCard(points: Int, level: Int, onClick: () -> Unit, modifier: 
             val progress = (points % 100) / 100f
             PremiumProgressBar(
                 progress = progress,
-                label = "Próximo nivel",
+                label = stringResource(R.string.dashboard_rewards_next_level),
                 color = MaterialTheme.colorScheme.secondary
             )
         }
@@ -769,7 +769,7 @@ fun MoodSelectorDialog(member: FamilyMember, onDismiss: () -> Unit, onSelect: (S
                     onClick = { onSelect("") }, // Clear mood
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Limpiar estado")
+                    Text(stringResource(R.string.dashboard_mood_clear))
                 }
             }
         },
@@ -797,17 +797,17 @@ fun DashboardCustomizerDialog(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 TabRow(selectedTabIndex = selectedTab) {
                     Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) {
-                        Text("Módulos", modifier = Modifier.padding(8.dp))
+                        Text(stringResource(R.string.dashboard_tab_modules), modifier = Modifier.padding(8.dp))
                     }
                     Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) {
-                        Text("Accesos", modifier = Modifier.padding(8.dp))
+                        Text(stringResource(R.string.dashboard_tab_actions), modifier = Modifier.padding(8.dp))
                     }
                 }
                 
                 Spacer(Modifier.height(8.dp))
                 
                 if (selectedTab == 0) {
-                    Text("Configura qué módulos quieres ver y en qué orden:", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.dashboard_customizer_desc_modules), style = MaterialTheme.typography.bodySmall)
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.heightIn(max = 400.dp)) {
                         itemsIndexed(fullListOrder) { index, item ->
                             val isHidden = item.startsWith("HIDDEN_")
@@ -819,7 +819,7 @@ fun DashboardCustomizerDialog(
                                 Constants.Modules.CALENDAR -> stringResource(R.string.module_calendar)
                                 Constants.Modules.EXPENSES -> stringResource(R.string.module_expenses)
                                 Constants.Modules.POSTITS -> stringResource(R.string.module_postits)
-                                Constants.Modules.REWARDS -> "Recompensas"
+                                Constants.Modules.REWARDS -> stringResource(R.string.module_rewards)
                                 else -> stringResource(R.string.cd_customize)
                             }
                             
@@ -853,10 +853,15 @@ fun DashboardCustomizerDialog(
                         }
                     }
                 } else {
-                    Text("Selecciona 4 accesos rápidos:", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.dashboard_customizer_desc_actions), style = MaterialTheme.typography.bodySmall)
                     val allActions = listOf(
-                        "CALC_DOSIS" to "Dosis", "UTIL_PDF" to "PDF", "UTIL_SAFE" to "Safe", 
-                        "LISTS" to "Listas", "POSTIT" to "Post-it", "CALC_IMC" to "IMC", "EXPENSES" to "Gasto"
+                        "CALC_DOSIS" to stringResource(R.string.action_dosage), 
+                        "UTIL_PDF" to stringResource(R.string.action_pdf), 
+                        "UTIL_SAFE" to stringResource(R.string.action_safe), 
+                        "LISTS" to stringResource(R.string.action_lists), 
+                        "POSTIT" to stringResource(R.string.action_postit), 
+                        "CALC_IMC" to stringResource(R.string.action_bmi), 
+                        "EXPENSES" to stringResource(R.string.action_expense)
                     )
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.heightIn(max = 300.dp)) {
                         items(allActions) { (code, label) ->
@@ -955,7 +960,7 @@ fun SearchResultsOverlay(results: List<SearchItem>, onResultClick: (SearchItem) 
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Resultados de búsqueda", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.dashboard_search_results_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 IconButton(onClick = onClose) {
                     Icon(Icons.Default.Close, contentDescription = null)
                 }
@@ -963,7 +968,7 @@ fun SearchResultsOverlay(results: List<SearchItem>, onResultClick: (SearchItem) 
             
             if (results.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No hay resultados", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.dashboard_search_no_results), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
                 LazyColumn(

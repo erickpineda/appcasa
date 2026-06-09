@@ -70,6 +70,9 @@
     <string name="cd_back">Atrás</string>
     <string name="cd_add">Añadir</string>
 
+    <string name="tasks_error_no_more_active">No hay más tareas para cargar</string>
+    <string name="tasks_error_no_more_archived">No hay más registros en el archivo</string>
+
     <!-- Reward Store -->
     <string name="rewards_title">Tienda de Recompensas</string>
     <string name="rewards_new_reward">Nueva Recompensa</string>

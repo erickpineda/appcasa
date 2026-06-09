@@ -101,16 +101,16 @@ fun ManagementHubScreen(
           )
 
           HubCard(
-            title = "Tienda de Recompensas",
-            subtitle = "Canjea tus XP por premios familiares",
+            title = stringResource(R.string.hub_rewards_title),
+            subtitle = stringResource(R.string.hub_rewards_subtitle),
             icon = Icons.Default.CardGiftcard,
             color = MaterialTheme.colorScheme.tertiary,
             onClick = { navController.navigate(Screen.RewardStore) }
           )
 
           HubCard(
-            title = "Cajón de Archivo",
-            subtitle = "Consulta registros antiguos y optimiza",
+            title = stringResource(R.string.hub_archive_title),
+            subtitle = stringResource(R.string.hub_archive_subtitle),
             icon = Icons.Default.Inventory2,
             color = MaterialTheme.colorScheme.outline,
             onClick = { navController.navigate(Screen.Archive) }

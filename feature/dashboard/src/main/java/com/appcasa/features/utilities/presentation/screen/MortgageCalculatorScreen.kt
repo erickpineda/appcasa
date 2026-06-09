@@ -137,7 +137,7 @@ fun MortgageCalculatorScreen(
           )
           Spacer(modifier = Modifier.height(8.dp))
           Text(
-            text = "Total intereses: ${String.format("%.2f", totalInterest)} €",
+            text = stringResource(R.string.util_mortgage_total_interest, String.format("%.2f", totalInterest)),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.secondary
           )
@@ -145,7 +145,7 @@ fun MortgageCalculatorScreen(
       }
       
       Text(
-        "Nota: Los datos se guardan para facilitar consultas rápidas.",
+        stringResource(R.string.util_mortgage_save_note),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.outline
       )

@@ -24,4 +24,7 @@
     <string name="cd_edit">Editar</string>
     <string name="cd_add">Añadir</string>
     <string name="cd_delete">Borrar</string>
+
+    <string name="lists_error_no_more_active">No hay más listas para cargar</string>
+    <string name="lists_error_no_more_archived">No hay más registros en el archivo</string>
 </resources>
