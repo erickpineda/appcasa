@@ -51,6 +51,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -63,6 +64,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -78,6 +80,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -95,6 +98,7 @@ import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.domain.model.User
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaMeshBackground
+import com.appcasa.core.ui.components.PremiumProgressBar
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.utils.Constants
 import com.appcasa.feature.dashboard.R
@@ -117,10 +121,13 @@ fun DashboardScreen(
   val nextEvent by viewModel.nextEventData.collectAsState()
   val postIts by viewModel.postIts.collectAsState()
   val dashboardOrder by viewModel.dashboardOrder.collectAsState()
+  val fullDashboardConfig by viewModel.fullDashboardConfig.collectAsState()
   val quickActions by viewModel.quickActions.collectAsState()
   val searchResults by viewModel.searchResults.collectAsState()
   val searchQuery by viewModel.searchQuery.collectAsState()
   val isReady by viewModel.isReady.collectAsState()
+  val userPoints by viewModel.userPoints.collectAsState()
+  val userLevel by viewModel.userLevel.collectAsState()
 
   BackHandler(enabled = searchQuery.isNotEmpty()) {
       viewModel.onSearchQueryChange("")
@@ -165,7 +172,7 @@ fun DashboardScreen(
 
   if (showReorderDialog) {
       DashboardCustomizerDialog(
-          currentOrder = dashboardOrder,
+          currentOrder = fullDashboardConfig,
           currentQuickActions = quickActions,
           onDismiss = { showReorderDialog = false },
           onSaveOrder = { viewModel.updateDashboardOrder(it) },
@@ -202,6 +209,8 @@ fun DashboardScreen(
               lowStockCount = lowStockCount,
               nextEvent = nextEvent,
               postIts = postIts,
+              userPoints = userPoints,
+              userLevel = userLevel,
               onMoodClick = { showMoodSelector = it },
               onAddPostIt = { showPostItDialog = true },
               onEditPostIt = { editingPostIt = it },
@@ -236,6 +245,8 @@ fun DashboardContent(
   lowStockCount: Int,
   nextEvent: Pair<String, String>,
   postIts: List<PostIt>,
+  userPoints: Int,
+  userLevel: Int,
   onMoodClick: (FamilyMember) -> Unit,
   onAddPostIt: () -> Unit,
   onEditPostIt: (PostIt) -> Unit,
@@ -256,62 +267,68 @@ fun DashboardContent(
         )
     }
 
-    items(dashboardOrder) { module ->
-        AnimatedVisibility(
-            visible = true,
-            enter = fadeIn() + expandVertically(),
-            modifier = Modifier.padding(horizontal = 16.dp)
-        ) {
-            when (module) {
-                Constants.Modules.TASKS -> DashboardTaskCard(
-                    pendingCount = pendingTasksCount,
-                    onClick = { navController.navigate(Screen.Tasks) }
-                )
-                Constants.Modules.PETS -> DashboardPetCard(
-                    count = petData.first,
-                    summary = petData.second,
-                    onClick = { navController.navigate(Screen.Family) }
-                )
-                Constants.Modules.CALENDAR -> DashboardCalendarCard(
-                    eventTitle = nextEvent.first,
-                    eventDate = nextEvent.second,
-                    onClick = { navController.navigate(Screen.Calendar) }
-                )
-                Constants.Modules.EXPENSES -> DashboardFinanceCard(
-                    total = monthlyExpense,
-                    onClick = { navController.navigate(Screen.Expenses) }
-                )
-                Constants.Modules.POSTITS -> {
-                    Column(modifier = Modifier.padding(bottom = 8.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = stringResource(R.string.module_postits),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+    items(dashboardOrder, key = { it }) { module ->
+        val itemModifier = Modifier.padding(horizontal = 16.dp)
+        
+        when (module) {
+            Constants.Modules.TASKS -> DashboardTaskCard(
+                pendingCount = pendingTasksCount,
+                onClick = { navController.navigate(Screen.Tasks) },
+                modifier = itemModifier
+            )
+            Constants.Modules.PETS -> DashboardPetCard(
+                count = petData.first,
+                summary = petData.second,
+                onClick = { navController.navigate(Screen.Family) },
+                modifier = itemModifier
+            )
+            Constants.Modules.CALENDAR -> DashboardCalendarCard(
+                eventTitle = nextEvent.first,
+                eventDate = nextEvent.second,
+                onClick = { navController.navigate(Screen.Calendar) },
+                modifier = itemModifier
+            )
+            Constants.Modules.EXPENSES -> DashboardFinanceCard(
+                total = monthlyExpense,
+                onClick = { navController.navigate(Screen.Expenses) },
+                modifier = itemModifier
+            )
+            Constants.Modules.REWARDS -> DashboardRewardCard(
+                points = userPoints,
+                level = userLevel,
+                onClick = { navController.navigate(Screen.RewardStore) },
+                modifier = itemModifier
+            )
+            Constants.Modules.POSTITS -> {
+                Column(modifier = itemModifier.padding(bottom = 8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = stringResource(R.string.module_postits),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        IconButton(onClick = onAddPostIt) {
+                            Icon(
+                                Icons.Default.AddCircleOutline,
+                                contentDescription = stringResource(R.string.dashboard_new_postit),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                             )
-                            IconButton(onClick = onAddPostIt) {
-                                Icon(
-                                    Icons.Default.AddCircleOutline,
-                                    contentDescription = stringResource(R.string.dashboard_new_postit),
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                                )
-                            }
                         }
-                        
-                        if (postIts.isEmpty()) {
-                            Text(
-                                text = stringResource(R.string.dashboard_postit_placeholder),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-                            )
-                        } else {
-                            PostItSection(postIts = postIts, onEditPostIt = onEditPostIt, onDeletePostIt = onDeletePostIt)
-                        }
+                    }
+                    
+                    if (postIts.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.dashboard_postit_placeholder),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                        )
+                    } else {
+                        PostItSection(postIts = postIts, onEditPostIt = onEditPostIt, onDeletePostIt = onDeletePostIt)
                     }
                 }
             }
@@ -522,8 +539,8 @@ fun QuickActionButton(icon: ImageVector, label: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun DashboardTaskCard(pendingCount: String, onClick: () -> Unit) {
-    AppCasaCard(onClick = onClick, useGlassmorphism = true) {
+fun DashboardTaskCard(pendingCount: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    AppCasaCard(onClick = onClick, useGlassmorphism = true, modifier = modifier) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)) {
                 Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.padding(10.dp), tint = MaterialTheme.colorScheme.primary)
@@ -544,8 +561,8 @@ fun DashboardTaskCard(pendingCount: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun DashboardPetCard(count: String, summary: String, onClick: () -> Unit) {
-    AppCasaCard(onClick = onClick, useGlassmorphism = true) {
+fun DashboardPetCard(count: String, summary: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    AppCasaCard(onClick = onClick, useGlassmorphism = true, modifier = modifier) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)) {
                 Icon(Icons.Default.Pets, contentDescription = null, modifier = Modifier.padding(10.dp), tint = MaterialTheme.colorScheme.secondary)
@@ -562,8 +579,8 @@ fun DashboardPetCard(count: String, summary: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun DashboardCalendarCard(eventTitle: String, eventDate: String, onClick: () -> Unit) {
-    AppCasaCard(onClick = onClick, useGlassmorphism = true) {
+fun DashboardCalendarCard(eventTitle: String, eventDate: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    AppCasaCard(onClick = onClick, useGlassmorphism = true, modifier = modifier) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)) {
                 Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.padding(10.dp), tint = MaterialTheme.colorScheme.tertiary)
@@ -584,8 +601,8 @@ fun DashboardCalendarCard(eventTitle: String, eventDate: String, onClick: () -> 
 }
 
 @Composable
-fun DashboardFinanceCard(total: String, onClick: () -> Unit) {
-    AppCasaCard(onClick = onClick, useGlassmorphism = true) {
+fun DashboardFinanceCard(total: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    AppCasaCard(onClick = onClick, useGlassmorphism = true, modifier = modifier) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = CircleShape, color = Color(0xFF4CAF50).copy(alpha = 0.1f)) {
                 Icon(Icons.Default.Payments, contentDescription = null, modifier = Modifier.padding(10.dp), tint = Color(0xFF4CAF50))
@@ -601,6 +618,33 @@ fun DashboardFinanceCard(total: String, onClick: () -> Unit) {
             }
             Spacer(Modifier.weight(1f))
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+        }
+    }
+}
+
+@Composable
+fun DashboardRewardCard(points: Int, level: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    AppCasaCard(onClick = onClick, useGlassmorphism = true, modifier = modifier) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)) {
+                    Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.padding(10.dp), tint = MaterialTheme.colorScheme.secondary)
+                }
+                Spacer(Modifier.width(16.dp))
+                Column {
+                    Text("Mis Recompensas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text("Nivel $level · $points puntos", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Spacer(Modifier.weight(1f))
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+            }
+            Spacer(Modifier.height(16.dp))
+            val progress = (points % 100) / 100f
+            PremiumProgressBar(
+                progress = progress,
+                label = "Próximo nivel",
+                color = MaterialTheme.colorScheme.secondary
+            )
         }
     }
 }
@@ -735,13 +779,14 @@ fun MoodSelectorDialog(member: FamilyMember, onDismiss: () -> Unit, onSelect: (S
 
 @Composable
 fun DashboardCustomizerDialog(
-    currentOrder: List<String>, 
+    currentOrder: List<String>, // Esta ahora trae la lista completa (activos y HIDDEN_)
     currentQuickActions: List<String>,
     onDismiss: () -> Unit, 
     onSaveOrder: (List<String>) -> Unit,
     onSaveQuickActions: (List<String>) -> Unit
 ) {
-    var order by remember { mutableStateOf(currentOrder) }
+    // Estado interno para manejar el orden y visibilidad
+    var fullListOrder by remember { mutableStateOf(currentOrder) }
     var actions by remember { mutableStateOf(currentQuickActions) }
     var selectedTab by remember { mutableStateOf(0) }
     
@@ -762,37 +807,48 @@ fun DashboardCustomizerDialog(
                 Spacer(Modifier.height(8.dp))
                 
                 if (selectedTab == 0) {
-                    Text(stringResource(R.string.dashboard_reorder_instruction), style = MaterialTheme.typography.bodySmall)
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.heightIn(max = 300.dp)) {
-                        itemsIndexed(order) { index, module ->
-                            val labelRes = when(module) {
-                                Constants.Modules.TASKS -> R.string.module_tasks
-                                Constants.Modules.PETS -> R.string.module_pets
-                                Constants.Modules.CALENDAR -> R.string.module_calendar
-                                Constants.Modules.EXPENSES -> R.string.module_expenses
-                                Constants.Modules.POSTITS -> R.string.module_postits
-                                else -> R.string.cd_customize
+                    Text("Configura qué módulos quieres ver y en qué orden:", style = MaterialTheme.typography.bodySmall)
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.heightIn(max = 400.dp)) {
+                        itemsIndexed(fullListOrder) { index, item ->
+                            val isHidden = item.startsWith("HIDDEN_")
+                            val moduleKey = if (isHidden) item.substring(7) else item
+                            
+                            val label = when(moduleKey) {
+                                Constants.Modules.TASKS -> stringResource(R.string.module_tasks)
+                                Constants.Modules.PETS -> stringResource(R.string.module_pets)
+                                Constants.Modules.CALENDAR -> stringResource(R.string.module_calendar)
+                                Constants.Modules.EXPENSES -> stringResource(R.string.module_expenses)
+                                Constants.Modules.POSTITS -> stringResource(R.string.module_postits)
+                                Constants.Modules.REWARDS -> "Recompensas"
+                                else -> stringResource(R.string.cd_customize)
                             }
-                            CustomizerItem(
-                                label = stringResource(labelRes),
+                            
+                            CustomizerModuleItem(
+                                label = label,
+                                isVisible = !isHidden,
+                                onToggle = {
+                                    val newList = fullListOrder.toMutableList()
+                                    newList[index] = if (isHidden) moduleKey else "HIDDEN_$moduleKey"
+                                    fullListOrder = newList
+                                },
                                 onUp = { 
                                     if (index > 0) {
-                                        val newList = order.toMutableList()
-                                        val item = newList.removeAt(index)
-                                        newList.add(index - 1, item)
-                                        order = newList
+                                        val newList = fullListOrder.toMutableList()
+                                        val element = newList.removeAt(index)
+                                        newList.add(index - 1, element)
+                                        fullListOrder = newList
                                     }
                                 },
                                 onDown = {
-                                    if (index < order.size - 1) {
-                                        val newList = order.toMutableList()
-                                        val item = newList.removeAt(index)
-                                        newList.add(index + 1, item)
-                                        order = newList
+                                    if (index < fullListOrder.size - 1) {
+                                        val newList = fullListOrder.toMutableList()
+                                        val element = newList.removeAt(index)
+                                        newList.add(index + 1, element)
+                                        fullListOrder = newList
                                     }
                                 },
                                 isFirst = index == 0,
-                                isLast = index == order.size - 1
+                                isLast = index == fullListOrder.size - 1
                             )
                         }
                     }
@@ -831,7 +887,7 @@ fun DashboardCustomizerDialog(
         },
         confirmButton = {
             Button(onClick = { 
-                onSaveOrder(order)
+                onSaveOrder(fullListOrder)
                 onSaveQuickActions(actions)
                 onDismiss()
             }) { Text(stringResource(R.string.dashboard_done)) }
@@ -843,10 +899,18 @@ fun DashboardCustomizerDialog(
 }
 
 @Composable
-fun CustomizerItem(label: String, onUp: () -> Unit, onDown: () -> Unit, isFirst: Boolean, isLast: Boolean) {
+fun CustomizerModuleItem(
+    label: String, 
+    isVisible: Boolean,
+    onToggle: () -> Unit,
+    onUp: () -> Unit, 
+    onDown: () -> Unit, 
+    isFirst: Boolean, 
+    isLast: Boolean
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        color = if (isVisible) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
         shape = RoundedCornerShape(8.dp)
     ) {
         Row(
@@ -854,7 +918,19 @@ fun CustomizerItem(label: String, onUp: () -> Unit, onDown: () -> Unit, isFirst:
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(label, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                Switch(
+                    checked = isVisible,
+                    onCheckedChange = { onToggle() },
+                    modifier = Modifier.scale(0.7f)
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    text = label, 
+                    fontWeight = FontWeight.Bold,
+                    color = if (isVisible) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                )
+            }
             Row {
                 IconButton(onClick = onUp, enabled = !isFirst) {
                     Icon(Icons.Default.ArrowUpward, null, modifier = Modifier.size(16.dp))

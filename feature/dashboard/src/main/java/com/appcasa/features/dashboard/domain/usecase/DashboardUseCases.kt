@@ -2,7 +2,9 @@ package com.appcasa.features.dashboard.domain.usecase
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Task
@@ -68,13 +70,17 @@ class SearchUseCase @Inject constructor(
     private val tasksRepository: TasksRepository,
     private val listsRepository: ListsRepository,
     private val familyRepository: FamilyRepository,
-    private val inventoryRepository: InventoryRepository
+    private val inventoryRepository: InventoryRepository,
+    private val financeRepository: FinanceRepository,
+    private val maintenanceRepository: MaintenanceRepository
 ) {
     suspend operator fun invoke(hogarId: Long, query: String): List<SearchItem> {
         val tasks = tasksRepository.getTasksByHogar(hogarId).first()
         val lists = listsRepository.getListasPaged(hogarId, 50, 0).first()
         val members = familyRepository.getMembersByHogar(hogarId).first()
         val stock = inventoryRepository.getStockByHogar(hogarId).first()
+        val expenses = financeRepository.getExpensesByHogar(hogarId).first()
+        val maintenance = maintenanceRepository.getEventsPaged(hogarId, 50, 0).first()
 
         val results = mutableListOf<SearchItem>()
 
@@ -96,6 +102,14 @@ class SearchUseCase @Inject constructor(
         results.addAll(
           stock.filter { it.nombre.contains(query, ignoreCase = true) }
             .map { SearchItem(it.id, it.nombre, SearchType.STOCK, Icons.Default.Inventory, Screen.Inventory) }
+        )
+        results.addAll(
+          expenses.filter { it.concepto.contains(query, ignoreCase = true) }
+            .map { SearchItem(it.id, it.concepto, SearchType.EXPENSE, Icons.Default.Payments, Screen.Expenses) }
+        )
+        results.addAll(
+          maintenance.filter { it.titulo.contains(query, ignoreCase = true) }
+            .map { SearchItem(it.id, it.titulo, SearchType.MAINTENANCE, Icons.Default.Build, Screen.MaintenanceDetail(it.id)) }
         )
 
         return results

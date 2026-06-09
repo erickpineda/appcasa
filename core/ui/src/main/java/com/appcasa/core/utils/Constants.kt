@@ -7,6 +7,7 @@ object Constants {
         const val CALENDAR = "CALENDAR"
         const val EXPENSES = "EXPENSES"
         const val POSTITS = "POSTITS"
+        const val REWARDS = "REWARDS"
     }
     
     object Formatting {

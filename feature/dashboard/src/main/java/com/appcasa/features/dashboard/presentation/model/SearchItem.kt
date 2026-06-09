@@ -11,5 +11,5 @@ data class SearchItem(
 )
 
 enum class SearchType {
-    TASK, LIST, MEMBER, STOCK
+    TASK, LIST, MEMBER, STOCK, EXPENSE, MAINTENANCE
 }

@@ -59,6 +59,7 @@ import com.appcasa.features.family.presentation.screen.FamilyHubScreen
 import com.appcasa.features.dashboard.presentation.screen.HomeMaintenanceScreen
 import com.appcasa.features.dashboard.presentation.screen.MaintenanceDetailScreen
 import com.appcasa.features.dashboard.presentation.screen.ManagementHubScreen
+import com.appcasa.features.settings.presentation.screen.AuthScreen
 import com.appcasa.features.settings.presentation.screen.SettingsScreen
 import com.appcasa.features.settings.presentation.screen.HouseSetupScreen
 import com.appcasa.features.tasks.presentation.screen.AddTaskScreen
@@ -137,74 +138,81 @@ fun AppNavigation(
       popExitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 0.95f, animationSpec = tween(200)) }
     ) {
       composable<Screen.HouseSetup> { HouseSetupScreen(navController = navController) }
-      composable<Screen.Auth> { /* TODO */ }
+      composable<Screen.Auth> { AuthScreen(navController = navController) }
 
       composable<Screen.Dashboard> { DashboardScreen(navController = navController) }
 
-      // --- Gestión (Management) ---
-      navigation<Screen.ManagementGraph>(
-        startDestination = Screen.Management
-      ) {
-        composable<Screen.Management> { ManagementHubScreen(navController = navController) }
-        composable<Screen.Tasks> { TasksScreen(navController = navController) }
-        composable<Screen.Lists> { ListsScreen(navController = navController) }
-        composable<Screen.Inventory> { StockScreen(navController = navController) }
-        composable<Screen.AddTask> { AddTaskScreen(navController = navController) }
-        composable<Screen.HomeMaintenance> { HomeMaintenanceScreen(navController = navController) }
-        
-        composable<Screen.TaskDetail> { TaskDetailScreen(navController = navController) }
-        composable<Screen.ListDetail> { ListDetailScreen(navController = navController) }
-
-        composable<Screen.MaintenanceDetail> { backStackEntry ->
-          val detail = backStackEntry.toRoute<Screen.MaintenanceDetail>()
-          MaintenanceDetailScreen(id = detail.id, navController = navController)
-        }
-      }
-
-      // --- Familia (Family) ---
-      navigation<Screen.FamilyGraph>(
-        startDestination = Screen.FamilyHub
-      ) {
-        composable<Screen.FamilyHub> { FamilyHubScreen(navController = navController) }
-        composable<Screen.Family> { FamilyScreen(navController = navController) }
-        composable<Screen.Calendar> { CalendarScreen(navController = navController) }
-        composable<Screen.AddMember> { AddMemberScreen(navController = navController) }
-        
-        composable<Screen.PetDetail> { PetDetailScreen(navController = navController) }
-
-        composable<Screen.MemberDetail> { backStackEntry ->
-          val detail = backStackEntry.toRoute<Screen.MemberDetail>()
-          MemberDetailScreen(navController = navController, memberId = detail.memberId)
-        }
-
-        composable<Screen.EditMember> { EditMemberScreen(navController = navController) }
-      }
-
-      // --- Utilidades (Utilities) ---
-      navigation<Screen.UtilitiesGraph>(
-        startDestination = Screen.Utilities
-      ) {
-        composable<Screen.Utilities> { UtilitiesScreen(navController = navController) }
-        composable<Screen.DosageCalculator> { DosageCalculatorScreen(navController = navController) }
-        composable<Screen.BMICalculator> { BMICalculatorScreen(navController = navController) }
-        composable<Screen.MortgageCalculator> { MortgageCalculatorScreen(navController = navController) }
-        composable<Screen.AgeCalculator> { AgeCalculatorScreen(navController = navController) }
-        composable<Screen.ConsumptionCalculator> { ConsumptionCalculatorScreen(navController = navController) }
-        composable<Screen.SavingsCalculator> { SavingsCalculatorScreen(navController = navController) }
-        composable<Screen.VehicleManager> { VehicleManagementScreen(navController = navController) }
-        composable<Screen.Expenses> { ExpenseScreen(navController = navController) }
-        composable<Screen.PhotoToPdf> { PhotoToPdfScreen(navController = navController) }
-        composable<Screen.WifiQR> { WifiQRScreen(navController = navController) }
-        composable<Screen.CocinaConverter> { CocinaConverterScreen(navController = navController) }
-        composable<Screen.FeedingCalculator> { FeedingCalculatorScreen(navController = navController) }
-        composable<Screen.SmartSafe> { SmartSafeScreen(navController = navController) }
-        composable<Screen.FinanceStats> { FinanceStatsScreen(navController = navController) }
-      }
+      managementGraph(navController)
+      familyGraph(navController)
+      utilitiesGraph(navController)
 
       composable<Screen.Settings> { SettingsScreen(navController = navController, innerPadding = innerPadding) }
       composable<Screen.RewardStore> { RewardStoreScreen(navController = navController) }
       composable<Screen.Archive> { ArchiveScreen(navController = navController) }
     }
+  }
+}
+
+private fun androidx.navigation.NavGraphBuilder.managementGraph(navController: androidx.navigation.NavController) {
+  navigation<Screen.ManagementGraph>(
+    startDestination = Screen.Management
+  ) {
+    composable<Screen.Management> { ManagementHubScreen(navController = navController) }
+    composable<Screen.Tasks> { TasksScreen(navController = navController) }
+    composable<Screen.Lists> { ListsScreen(navController = navController) }
+    composable<Screen.Inventory> { StockScreen(navController = navController) }
+    composable<Screen.AddTask> { AddTaskScreen(navController = navController) }
+    composable<Screen.HomeMaintenance> { HomeMaintenanceScreen(navController = navController) }
+    
+    composable<Screen.TaskDetail> { TaskDetailScreen(navController = navController) }
+    composable<Screen.ListDetail> { ListDetailScreen(navController = navController) }
+
+    composable<Screen.MaintenanceDetail> { backStackEntry ->
+      val detail = backStackEntry.toRoute<Screen.MaintenanceDetail>()
+      MaintenanceDetailScreen(id = detail.id, navController = navController)
+    }
+  }
+}
+
+private fun androidx.navigation.NavGraphBuilder.familyGraph(navController: androidx.navigation.NavController) {
+  navigation<Screen.FamilyGraph>(
+    startDestination = Screen.FamilyHub
+  ) {
+    composable<Screen.FamilyHub> { FamilyHubScreen(navController = navController) }
+    composable<Screen.Family> { FamilyScreen(navController = navController) }
+    composable<Screen.Calendar> { CalendarScreen(navController = navController) }
+    composable<Screen.AddMember> { AddMemberScreen(navController = navController) }
+    
+    composable<Screen.PetDetail> { PetDetailScreen(navController = navController) }
+
+    composable<Screen.MemberDetail> { backStackEntry ->
+      val detail = backStackEntry.toRoute<Screen.MemberDetail>()
+      MemberDetailScreen(navController = navController, memberId = detail.memberId)
+    }
+
+    composable<Screen.EditMember> { EditMemberScreen(navController = navController) }
+  }
+}
+
+private fun androidx.navigation.NavGraphBuilder.utilitiesGraph(navController: androidx.navigation.NavController) {
+  navigation<Screen.UtilitiesGraph>(
+    startDestination = Screen.Utilities
+  ) {
+    composable<Screen.Utilities> { UtilitiesScreen(navController = navController) }
+    composable<Screen.DosageCalculator> { DosageCalculatorScreen(navController = navController) }
+    composable<Screen.BMICalculator> { BMICalculatorScreen(navController = navController) }
+    composable<Screen.MortgageCalculator> { MortgageCalculatorScreen(navController = navController) }
+    composable<Screen.AgeCalculator> { AgeCalculatorScreen(navController = navController) }
+    composable<Screen.ConsumptionCalculator> { ConsumptionCalculatorScreen(navController = navController) }
+    composable<Screen.SavingsCalculator> { SavingsCalculatorScreen(navController = navController) }
+    composable<Screen.VehicleManager> { VehicleManagementScreen(navController = navController) }
+    composable<Screen.Expenses> { ExpenseScreen(navController = navController) }
+    composable<Screen.PhotoToPdf> { PhotoToPdfScreen(navController = navController) }
+    composable<Screen.WifiQR> { WifiQRScreen(navController = navController) }
+    composable<Screen.CocinaConverter> { CocinaConverterScreen(navController = navController) }
+    composable<Screen.FeedingCalculator> { FeedingCalculatorScreen(navController = navController) }
+    composable<Screen.SmartSafe> { SmartSafeScreen(navController = navController) }
+    composable<Screen.FinanceStats> { FinanceStatsScreen(navController = navController) }
   }
 }
 
