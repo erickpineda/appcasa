@@ -38,12 +38,14 @@ import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DashboardCustomize
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.Payments
@@ -505,10 +507,11 @@ fun QuickActionsRow(navController: NavController, actions: List<String>, onAddPo
                     "CALC_DOSIS" -> Triple(Icons.AutoMirrored.Filled.NoteAdd, stringResource(R.string.action_dosage), Screen.DosageCalculator)
                     "UTIL_PDF" -> Triple(Icons.Default.PictureAsPdf, stringResource(R.string.action_pdf), Screen.PhotoToPdf)
                     "UTIL_SAFE" -> Triple(Icons.Default.Lock, stringResource(R.string.action_safe), Screen.SmartSafe)
-                    "LISTS" -> Triple(Icons.AutoMirrored.Filled.List, stringResource(R.string.action_lists), Screen.Lists)
-                    "POSTIT" -> Triple(Icons.Default.EditNote, stringResource(R.string.action_postit), null)
                     "CALC_IMC" -> Triple(Icons.Default.MonitorWeight, stringResource(R.string.action_bmi), Screen.BMICalculator)
-                    "EXPENSES" -> Triple(Icons.Default.Payments, stringResource(R.string.action_expense), Screen.Expenses)
+                    "AGE_CALC" -> Triple(Icons.Default.CalendarToday, stringResource(R.string.util_age_title), Screen.AgeCalculator)
+                    "SAVINGS" -> Triple(Icons.Default.Payments, stringResource(R.string.util_savings_title), Screen.SavingsCalculator)
+                    "CONSUMPTION" -> Triple(Icons.Default.Build, stringResource(R.string.util_consumption_title), Screen.ConsumptionCalculator)
+                    "VEHICLE" -> Triple(Icons.Default.Home, stringResource(R.string.util_vehicle_title), Screen.VehicleManager)
                     else -> Triple(Icons.Default.Apps, stringResource(R.string.action_extra), Screen.Utilities)
                 }
                 
@@ -516,8 +519,7 @@ fun QuickActionsRow(navController: NavController, actions: List<String>, onAddPo
                     icon = icon, 
                     label = label, 
                     onClick = { 
-                        if (actionCode == "POSTIT") onAddPostIt() 
-                        else if (screen != null) navController.navigate(screen) 
+                        if (screen != null) navController.navigate(screen)
                     }
                 )
             }
@@ -905,10 +907,11 @@ fun DashboardCustomizerDialog(
                         "CALC_DOSIS" to stringResource(R.string.action_dosage), 
                         "UTIL_PDF" to stringResource(R.string.action_pdf), 
                         "UTIL_SAFE" to stringResource(R.string.action_safe), 
-                        "LISTS" to stringResource(R.string.action_lists), 
-                        "POSTIT" to stringResource(R.string.action_postit), 
-                        "CALC_IMC" to stringResource(R.string.action_bmi), 
-                        "EXPENSES" to stringResource(R.string.action_expense)
+                        "CALC_IMC" to stringResource(R.string.action_bmi),
+                        "AGE_CALC" to stringResource(R.string.util_age_title),
+                        "SAVINGS" to stringResource(R.string.util_savings_title),
+                        "CONSUMPTION" to stringResource(R.string.util_consumption_title),
+                        "VEHICLE" to stringResource(R.string.util_vehicle_title)
                     )
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.heightIn(max = 300.dp)) {
                         items(allActions) { (code, label) ->

@@ -35,11 +35,20 @@ class DocumentRepositoryImpl @Inject constructor(
 
     override suspend fun deleteDocumento(documento: Document) {
         documentoDao.deleteDocumento(documento.toEntity())
+        try {
+            remoteDataSource.deleteDocument(documento)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         syncScheduler.scheduleSync(documento.hogarId)
     }
 
     override suspend fun updateDocumentSyncTimestamp(docId: Long) {
         documentoDao.updateSyncTimestamp(docId, System.currentTimeMillis())
+    }
+
+    override suspend fun downloadDocument(document: Document, localFile: java.io.File): Boolean {
+        return remoteDataSource.downloadDocument(document.hogarId, document.id, localFile)
     }
 
     private var syncJob: Job? = null
@@ -56,6 +65,15 @@ class DocumentRepositoryImpl @Inject constructor(
                 }
             }
             .onEach { remoteItems ->
+                val remoteIds = remoteItems.map { it.id }.toSet()
+                val localItems = documentoDao.getDocumentosByHogar(hogarId).first()
+                
+                localItems.forEach { local ->
+                    if (local.id !in remoteIds) {
+                        documentoDao.deleteDocumento(local)
+                    }
+                }
+
                 remoteItems.forEach { remoteDoc ->
                     val localDoc = documentoDao.getDocumentById(remoteDoc.id)
                     if (localDoc == null || remoteDoc.updatedAt > localDoc.updatedAt) {

@@ -46,4 +46,44 @@ interface MascotaDao {
 
   @Delete
   suspend fun deleteDesparasitacion(item: MascotaDesparasitacionEntity)
+
+  @Query("SELECT * FROM mascota_pesos WHERE id = :id")
+  suspend fun getPesoById(id: Long): MascotaPesoEntity?
+
+  @Query("SELECT * FROM mascota_vacunas WHERE id = :id")
+  suspend fun getVacunaById(id: Long): MascotaVacunaEntity?
+
+  @Query("SELECT * FROM mascota_medicaciones WHERE id = :id")
+  suspend fun getMedicacionById(id: Long): MascotaMedicacionEntity?
+
+  @Query("SELECT * FROM mascota_desparasitaciones WHERE id = :id")
+  suspend fun getDesparasitacionById(id: Long): MascotaDesparasitacionEntity?
+
+  @Query("SELECT * FROM miembros WHERE id = :id")
+  suspend fun getMiembroById(id: Long): com.appcasa.features.family.data.local.MiembroEntity?
+
+  // Sync helpers
+  @Query("SELECT * FROM mascota_pesos WHERE updated_at > COALESCE(last_synced_at, 0)")
+  suspend fun getWeightsToSync(): List<MascotaPesoEntity>
+
+  @Query("UPDATE mascota_pesos SET last_synced_at = :timestamp WHERE id = :id")
+  suspend fun updateWeightSyncTimestamp(id: Long, timestamp: Long)
+
+  @Query("SELECT * FROM mascota_vacunas WHERE updated_at > COALESCE(last_synced_at, 0)")
+  suspend fun getVaccinesToSync(): List<MascotaVacunaEntity>
+
+  @Query("UPDATE mascota_vacunas SET last_synced_at = :timestamp WHERE id = :id")
+  suspend fun updateVaccineSyncTimestamp(id: Long, timestamp: Long)
+
+  @Query("SELECT * FROM mascota_medicaciones WHERE updated_at > COALESCE(last_synced_at, 0)")
+  suspend fun getMedicationsToSync(): List<MascotaMedicacionEntity>
+
+  @Query("UPDATE mascota_medicaciones SET last_synced_at = :timestamp WHERE id = :id")
+  suspend fun updateMedicationSyncTimestamp(id: Long, timestamp: Long)
+
+  @Query("SELECT * FROM mascota_desparasitaciones WHERE updated_at > COALESCE(last_synced_at, 0)")
+  suspend fun getDewormingsToSync(): List<MascotaDesparasitacionEntity>
+
+  @Query("UPDATE mascota_desparasitaciones SET last_synced_at = :timestamp WHERE id = :id")
+  suspend fun updateDewormingSyncTimestamp(id: Long, timestamp: Long)
 }

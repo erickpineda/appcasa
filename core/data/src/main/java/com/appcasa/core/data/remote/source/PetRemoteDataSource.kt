@@ -31,6 +31,9 @@ class PetRemoteDataSource @Inject constructor(
         }
         awaitClose { reg.remove() }
     }
+    suspend fun deleteWeight(hogarId: Long, weight: PetWeight) {
+        getPetCollection(hogarId, weight.mascotaId, "weights").document(weight.id.toString()).delete().await()
+    }
 
     // Vacunas
     suspend fun syncVaccine(hogarId: Long, vaccine: PetVaccine) {
@@ -43,6 +46,9 @@ class PetRemoteDataSource @Inject constructor(
             trySend(s?.documents?.mapNotNull { it.toObject(PetVaccineDto::class.java)?.toDomain() } ?: emptyList())
         }
         awaitClose { reg.remove() }
+    }
+    suspend fun deleteVaccine(hogarId: Long, vaccine: PetVaccine) {
+        getPetCollection(hogarId, vaccine.mascotaId, "vaccines").document(vaccine.id.toString()).delete().await()
     }
 
     // Medicaciones
@@ -57,6 +63,9 @@ class PetRemoteDataSource @Inject constructor(
         }
         awaitClose { reg.remove() }
     }
+    suspend fun deleteMedication(hogarId: Long, med: PetMedication) {
+        getPetCollection(hogarId, med.mascotaId, "medications").document(med.id.toString()).delete().await()
+    }
 
     // Desparasitaciones
     suspend fun syncDeworming(hogarId: Long, item: PetDeworming) {
@@ -69,5 +78,8 @@ class PetRemoteDataSource @Inject constructor(
             trySend(s?.documents?.mapNotNull { it.toObject(PetDewormingDto::class.java)?.toDomain() } ?: emptyList())
         }
         awaitClose { reg.remove() }
+    }
+    suspend fun deleteDeworming(hogarId: Long, item: PetDeworming) {
+        getPetCollection(hogarId, item.mascotaId, "dewormings").document(item.id.toString()).delete().await()
     }
 }

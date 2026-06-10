@@ -9,14 +9,7 @@ import com.appcasa.core.domain.usecase.config.UpdateConfigurationUseCase
 import com.appcasa.core.domain.usecase.user.GetCurrentUserUseCase
 import com.appcasa.features.settings.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,8 +23,19 @@ class SettingsViewModel @Inject constructor(
     private val updateUserUseCase: UpdateUserUseCase,
     private val regenerateHouseCodeUseCase: RegenerateHouseCodeUseCase,
     private val updateHouseholdUseCase: UpdateHouseholdUseCase,
+    private val forceSyncUseCase: ForceSyncUseCase,
+    private val exportHouseholdDataUseCase: ExportHouseholdDataUseCase,
     private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
+
+    private val _settingsEvent = MutableSharedFlow<SettingsUiEvent>()
+    val settingsEvent = _settingsEvent.asSharedFlow()
+
+    private val _isSyncing = MutableStateFlow(false)
+    val isSyncing = _isSyncing.asStateFlow()
+
+    private val _isExporting = MutableStateFlow(false)
+    val isExporting = _isExporting.asStateFlow()
 
     val hogarActual: StateFlow<Household?> = getCurrentHouseholdUseCase()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -92,9 +96,38 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun forceSync() {
+        if (_isSyncing.value) return
+        viewModelScope.launch {
+            val hogar = hogarActual.value ?: return@launch
+            _isSyncing.value = true
+            forceSyncUseCase(hogar.id)
+            _settingsEvent.emit(SettingsUiEvent.ShowToast("Sincronización iniciada"))
+            // Simulamos un tiempo de "proceso" para dar feedback y evitar spam
+            kotlinx.coroutines.delay(3000)
+            _isSyncing.value = false
+        }
+    }
+
+    fun exportData() {
+        if (_isExporting.value) return
+        viewModelScope.launch {
+            val hogar = hogarActual.value ?: return@launch
+            _isExporting.value = true
+            val data = exportHouseholdDataUseCase(hogar.id)
+            _settingsEvent.emit(SettingsUiEvent.ExportReady(data))
+            _isExporting.value = false
+        }
+    }
+
     fun logout() {
         viewModelScope.launch {
             logoutUseCase()
         }
     }
+}
+
+sealed interface SettingsUiEvent {
+    data class ShowToast(val message: String) : SettingsUiEvent
+    data class ExportReady(val content: String) : SettingsUiEvent
 }

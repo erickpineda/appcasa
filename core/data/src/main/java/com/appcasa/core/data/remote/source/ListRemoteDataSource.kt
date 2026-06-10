@@ -22,6 +22,10 @@ class ListRemoteDataSource @Inject constructor(
             .set(ListDto.fromDomain(list)).await()
     }
 
+    suspend fun deleteList(list: Lista) {
+        getListCollection(list.hogarId).document(list.id.toString()).delete().await()
+    }
+
     fun observeLists(hogarId: Long): Flow<List<Lista>> = callbackFlow {
         val reg = getListCollection(hogarId).addSnapshotListener { s, e ->
             if (e != null) { close(e); return@addSnapshotListener }
@@ -37,6 +41,10 @@ class ListRemoteDataSource @Inject constructor(
     suspend fun syncListItem(hogarId: Long, item: ListaItem) {
         getItemCollection(hogarId, item.listaId).document(item.id.toString())
             .set(ListItemDto.fromDomain(item)).await()
+    }
+
+    suspend fun deleteListItem(hogarId: Long, item: ListaItem) {
+        getItemCollection(hogarId, item.listaId).document(item.id.toString()).delete().await()
     }
 
     fun observeListItems(hogarId: Long, listaId: Long): Flow<List<ListaItem>> = callbackFlow {

@@ -1,5 +1,7 @@
 package com.appcasa.features.settings.presentation.screen
 
+import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Compress
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -55,6 +58,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +66,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -81,6 +86,7 @@ import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.core.ui.utils.QRUtils
 import com.appcasa.feature.settings.R
+import com.appcasa.features.settings.presentation.viewmodel.SettingsUiEvent
 import com.appcasa.features.settings.presentation.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,6 +102,28 @@ fun SettingsScreen(
   val configs by settingsViewModel.configuraciones.collectAsState()
   val listas by settingsViewModel.todasLasListas.collectAsState()
   val isAdmin by settingsViewModel.isAdmin.collectAsState()
+  val isSyncing by settingsViewModel.isSyncing.collectAsState()
+  val isExporting by settingsViewModel.isExporting.collectAsState()
+
+  LaunchedEffect(Unit) {
+    settingsViewModel.settingsEvent.collect { event ->
+      when (event) {
+        is SettingsUiEvent.ShowToast -> {
+          Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+        }
+        is SettingsUiEvent.ExportReady -> {
+          Toast.makeText(context, "Copia de seguridad generada", Toast.LENGTH_SHORT).show()
+          val sendIntent: Intent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, event.content)
+            type = "text/plain"
+          }
+          val shareIntent = Intent.createChooser(sendIntent, "Exportar datos de AppCasa")
+          context.startActivity(shareIntent)
+        }
+      }
+    }
+  }
 
   val imagePickerLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.GetContent()
@@ -114,11 +142,15 @@ fun SettingsScreen(
     configs = configs,
     listas = listas,
     isAdmin = isAdmin,
+    isSyncing = isSyncing,
+    isExporting = isExporting,
     onUpdateName = { settingsViewModel.updateUsuario(it) },
     onUpdateAvatar = { imagePickerLauncher.launch("image/*") },
     onUpdateHouseholdName = { settingsViewModel.updateHogar(it) },
     onUpdateConfig = { k, v -> settingsViewModel.updateConfig(k, v) },
     onRegenerateCode = { settingsViewModel.regenerateHouseCode() },
+    onForceSync = { settingsViewModel.forceSync() },
+    onExportData = { settingsViewModel.exportData() },
     onLogout = { settingsViewModel.logout() }
   )
 }
@@ -133,11 +165,15 @@ fun SettingsContent(
   configs: Map<String, String>,
   listas: List<Lista>,
   isAdmin: Boolean,
+  isSyncing: Boolean,
+  isExporting: Boolean,
   onUpdateName: (String) -> Unit,
   onUpdateAvatar: () -> Unit,
   onUpdateHouseholdName: (String) -> Unit,
   onUpdateConfig: (String, String) -> Unit,
   onRegenerateCode: () -> Unit,
+  onForceSync: () -> Unit,
+  onExportData: () -> Unit,
   onLogout: () -> Unit
 ) {
   var activeSection by remember { mutableStateOf<SettingsSection?>(null) }
@@ -187,6 +223,12 @@ fun SettingsContent(
             listas = listas,
             onUpdateConfig = onUpdateConfig
           )
+          SettingsSection.SYSTEM -> SistemaSection(
+            isSyncing = isSyncing,
+            isExporting = isExporting,
+            onForceSync = onForceSync,
+            onExportData = onExportData
+          )
         }
       }
     }
@@ -196,7 +238,8 @@ fun SettingsContent(
 enum class SettingsSection(val title: String) {
     HOUSEHOLD("Mi Hogar e Invitaciones"),
     APPEARANCE("Pantalla y Notificaciones"),
-    PREFERENCES("Preferencias de Uso")
+    PREFERENCES("Preferencias de Uso"),
+    SYSTEM("Sistema y Copias de Seguridad")
 }
 
 @Composable
@@ -291,6 +334,14 @@ fun SettingsHub(
         }
 
         item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_account)) }
+        item(contentType = "category") {
+            CategoryItem(
+                title = "Sistema y Seguridad",
+                subtitle = "Sincronización forzada y backups",
+                icon = Icons.Default.Compress,
+                onClick = { onSectionClick(SettingsSection.SYSTEM) }
+            )
+        }
         item(contentType = "category") {
             CategoryItem(
                 title = stringResource(R.string.settings_hub_logout),
@@ -628,12 +679,13 @@ fun SettingsItem(
   icon: androidx.compose.ui.graphics.vector.ImageVector,
   title: String,
   subtitle: String,
+  enabled: Boolean = true,
   onClick: () -> Unit
 ) {
   AppCasaCard(
-    onClick = onClick,
+    onClick = if (enabled) onClick else ({}),
     useGlassmorphism = false, // Desactivado por rendimiento en listas largas
-    modifier = Modifier.fillMaxWidth()
+    modifier = Modifier.fillMaxWidth().then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
   ) {
     ListItem(
       headlineContent = { Text(title, fontWeight = FontWeight.Medium) },
@@ -668,6 +720,35 @@ fun SettingsToggleItem(
   }
 }
 
+@Composable
+fun SistemaSection(
+    isSyncing: Boolean,
+    isExporting: Boolean,
+    onForceSync: () -> Unit,
+    onExportData: () -> Unit
+) {
+    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
+            SettingsItem(
+                icon = Icons.Default.Refresh,
+                title = "Forzar Sincronización",
+                subtitle = if (isSyncing) "Sincronización en curso..." else "Sube todos los datos locales a la nube ahora",
+                enabled = !isSyncing,
+                onClick = onForceSync
+            )
+        }
+        item {
+            SettingsItem(
+                icon = Icons.Default.FileUpload,
+                title = "Exportar Datos (JSON)",
+                subtitle = if (isExporting) "Generando copia..." else "Crea una copia de seguridad externa de tu hogar",
+                enabled = !isExporting,
+                onClick = onExportData
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun SettingsPreview() {
@@ -680,11 +761,15 @@ fun SettingsPreview() {
       configs = emptyMap(),
       listas = emptyList(),
       isAdmin = true,
+      isSyncing = false,
+      isExporting = false,
       onUpdateName = {},
       onUpdateAvatar = {},
       onUpdateHouseholdName = {},
       onUpdateConfig = { _, _ -> },
       onRegenerateCode = {},
+      onForceSync = {},
+      onExportData = {},
       onLogout = {}
     )
   }

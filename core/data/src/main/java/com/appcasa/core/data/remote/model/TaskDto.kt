@@ -5,6 +5,8 @@ import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.TipoContenidoTarea
 import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.model.Periodicidad
+import com.appcasa.core.domain.model.TaskAssignment
+import com.appcasa.core.domain.model.TaskCheckItem
 
 data class TaskDto(
     val id: Long = 0,
@@ -22,6 +24,7 @@ data class TaskDto(
     val fotoUri: String? = null,
     val createdAt: Long = 0,
     val updatedAt: Long = 0,
+    val points: Int = 10,
     val puntosOtorgados: Boolean = false,
     val createdById: Long? = null,
     val archived: Boolean = false
@@ -42,6 +45,7 @@ data class TaskDto(
         fotoUri = fotoUri,
         createdAt = createdAt,
         updatedAt = updatedAt,
+        points = points,
         puntosOtorgados = puntosOtorgados,
         createdById = createdById,
         archived = archived
@@ -64,9 +68,65 @@ data class TaskDto(
             fotoUri = task.fotoUri,
             createdAt = task.createdAt,
             updatedAt = task.updatedAt,
+            points = task.points,
             puntosOtorgados = task.puntosOtorgados,
             createdById = task.createdById,
             archived = task.archived
+        )
+    }
+}
+
+data class TaskAssignmentDto(
+    val tareaId: Long = 0,
+    val miembroId: Long = 0,
+    val createdAt: Long = 0,
+    val updatedAt: Long = 0
+) {
+    fun toDomain(): TaskAssignment = TaskAssignment(
+        tareaId = tareaId,
+        miembroId = miembroId,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+    companion object {
+        fun fromDomain(item: TaskAssignment): TaskAssignmentDto = TaskAssignmentDto(
+            tareaId = item.tareaId,
+            miembroId = item.miembroId,
+            createdAt = item.createdAt,
+            updatedAt = item.updatedAt
+        )
+    }
+}
+
+data class TaskCheckItemDto(
+    val id: Long = 0,
+    val tareaId: Long = 0,
+    val texto: String = "",
+    val completado: Boolean = false,
+    val orden: Int = 0,
+    val createdAt: Long = 0,
+    val updatedAt: Long = 0
+) {
+    fun toDomain(): TaskCheckItem = TaskCheckItem(
+        id = id,
+        tareaId = tareaId,
+        texto = texto,
+        completado = completado,
+        orden = orden,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+    companion object {
+        fun fromDomain(item: TaskCheckItem): TaskCheckItemDto = TaskCheckItemDto(
+            id = item.id,
+            tareaId = item.tareaId,
+            texto = item.texto,
+            completado = item.completado,
+            orden = item.orden,
+            createdAt = item.createdAt,
+            updatedAt = item.updatedAt
         )
     }
 }

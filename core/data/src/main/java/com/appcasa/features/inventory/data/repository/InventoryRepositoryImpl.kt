@@ -47,6 +47,11 @@ class InventoryRepositoryImpl @Inject constructor(
 
     override suspend fun deleteStockItem(item: StockItem) {
         stockDao.deleteItem(item.toEntity())
+        try {
+            remoteDataSource.deleteStock(item)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         syncScheduler.scheduleSync(item.hogarId)
     }
 
@@ -68,6 +73,15 @@ class InventoryRepositoryImpl @Inject constructor(
                 }
             }
             .onEach { remoteItems ->
+                val remoteIds = remoteItems.map { it.id }.toSet()
+                val localItems = stockDao.getStockByHogar(hogarId).first()
+                
+                localItems.forEach { local ->
+                    if (local.id !in remoteIds) {
+                        stockDao.deleteItem(local)
+                    }
+                }
+
                 remoteItems.forEach { remoteItem ->
                     val localItem = stockDao.getItemById(remoteItem.id)
                     if (localItem == null || remoteItem.updatedAt > localItem.updatedAt) {

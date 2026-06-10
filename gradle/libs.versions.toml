@@ -98,6 +98,7 @@ firebase-bom                = { group = "com.google.firebase", name = "firebase-
 firebase-auth               = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore          = { group = "com.google.firebase", name = "firebase-firestore" }
 firebase-messaging          = { group = "com.google.firebase", name = "firebase-messaging" }
+firebase-storage            = { group = "com.google.firebase", name = "firebase-storage" }
 firebase-analytics          = { group = "com.google.firebase", name = "firebase-analytics" }
 
 # Build logic dependencies

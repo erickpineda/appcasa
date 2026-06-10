@@ -41,6 +41,11 @@ class ListsRepositoryImpl @Inject constructor(
 
     override suspend fun deleteLista(lista: Lista) {
         listaDao.deleteLista(lista.toEntity())
+        try {
+            remoteDataSource.deleteList(lista)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         syncScheduler.scheduleSync(lista.hogarId)
     }
 
@@ -77,6 +82,14 @@ class ListsRepositoryImpl @Inject constructor(
 
     override suspend fun deleteItem(item: ListaItem) {
         listaDao.deleteItem(item.toEntity())
+        try {
+            val lista = listaDao.getListById(item.listaId)
+            lista?.let { 
+                remoteDataSource.deleteListItem(it.hogarId, item)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override suspend fun deleteItems(items: List<ListaItem>) {
@@ -105,10 +118,53 @@ class ListsRepositoryImpl @Inject constructor(
                 }
             }
             .onEach { remoteLists ->
+                val remoteIds = remoteLists.map { it.id }.toSet()
+                val localLists = listaDao.getListasPaged(hogarId, 1000, 0).first()
+                
+                localLists.forEach { local ->
+                    if (local.id !in remoteIds) {
+                        listaDao.deleteLista(local)
+                    }
+                }
+
                 remoteLists.forEach { remoteList ->
                     val localList = listaDao.getListById(remoteList.id)
                     if (localList == null || remoteList.updatedAt > localList.updatedAt) {
                         listaDao.insertLista(remoteList.toEntity())
+                    }
+                    
+                    // Sincronizar ítems de forma reactiva para cada lista (simplificado)
+                    observeAndSyncItems(hogarId, remoteList.id)
+                }
+            }
+            .launchIn(appScope)
+    }
+
+    private val itemSyncJobs = mutableMapOf<Long, Job>()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeAndSyncItems(hogarId: Long, listaId: Long) {
+        if (itemSyncJobs.containsKey(listaId)) return
+        
+        itemSyncJobs[listaId] = syncManager.isAppInForeground
+            .flatMapLatest { isInForeground ->
+                if (isInForeground) remoteDataSource.observeListItems(hogarId, listaId)
+                else emptyFlow()
+            }
+            .onEach { remoteItems ->
+                val remoteIds = remoteItems.map { it.id }.toSet()
+                val localItems = listaDao.getItemsByLista(listaId).first()
+                
+                localItems.forEach { local ->
+                    if (local.id !in remoteIds) {
+                        listaDao.deleteItem(local)
+                    }
+                }
+
+                remoteItems.forEach { remoteItem ->
+                    val localItem = listaDao.getItemById(remoteItem.id)
+                    if (localItem == null || remoteItem.updatedAt > localItem.updatedAt) {
+                        listaDao.insertItem(remoteItem.toEntity())
                     }
                 }
             }

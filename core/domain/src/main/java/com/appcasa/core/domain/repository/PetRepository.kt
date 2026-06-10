@@ -19,5 +19,19 @@ interface PetRepository {
     fun getDesparasitaciones(mascotaId: Long): Flow<List<PetDeworming>>
     suspend fun insertDesparasitacion(item: PetDeworming): Long
     suspend fun deleteDesparasitacion(item: PetDeworming)
+
+    // Sync methods
+    suspend fun getWeightsToSync(): List<PetWeight>
+    suspend fun updateWeightSyncTimestamp(id: Long)
+    
+    suspend fun getVaccinesToSync(): List<PetVaccine>
+    suspend fun updateVaccineSyncTimestamp(id: Long)
+    
+    suspend fun getMedicationsToSync(): List<PetMedication>
+    suspend fun updateMedicationSyncTimestamp(id: Long)
+    
+    suspend fun getDewormingsToSync(): List<PetDeworming>
+    suspend fun updateDewormingSyncTimestamp(id: Long)
+
     fun startRemoteSync(hogarId: Long, mascotaId: Long)
 }

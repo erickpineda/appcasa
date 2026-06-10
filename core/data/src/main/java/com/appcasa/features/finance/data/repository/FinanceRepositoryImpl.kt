@@ -6,15 +6,19 @@ import com.appcasa.core.data.remote.source.FinanceRemoteDataSource
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.Expense
 import com.appcasa.core.domain.repository.FinanceRepository
+import com.appcasa.core.utils.NotificationHelper
 import com.appcasa.features.finance.data.local.ExpenseDao
 import com.appcasa.features.finance.data.mapper.toDomain
 import com.appcasa.features.finance.data.mapper.toEntity
+import dagger.hilt.android.qualifiers.ApplicationContext
+import android.content.Context
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class FinanceRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
+    @ApplicationContext private val context: Context,
     private val expenseDao: ExpenseDao,
     private val remoteDataSource: FinanceRemoteDataSource,
     private val syncManager: SyncManager,
@@ -47,6 +51,11 @@ class FinanceRepositoryImpl @Inject constructor(
 
     override suspend fun deleteExpense(expense: Expense) {
         expenseDao.deleteExpense(expense.toEntity())
+        try {
+            remoteDataSource.deleteExpense(expense)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         syncScheduler.scheduleSync(expense.hogarId)
     }
 
@@ -91,9 +100,26 @@ class FinanceRepositoryImpl @Inject constructor(
                 }
             }
             .onEach { remoteExpenses ->
+                val remoteIds = remoteExpenses.map { it.id }.toSet()
+                val localExpenses = expenseDao.getExpensesByHogar(hogarId).first()
+                
+                localExpenses.forEach { local ->
+                    if (local.id !in remoteIds) {
+                        expenseDao.deleteExpense(local)
+                    }
+                }
+
                 remoteExpenses.forEach { remoteExpense ->
                     val localExpense = expenseDao.getExpenseById(remoteExpense.id)
-                    if (localExpense == null || remoteExpense.updatedAt > localExpense.updatedAt) {
+                    if (localExpense == null) {
+                        expenseDao.insertExpense(remoteExpense.toEntity())
+                        NotificationHelper.showNotification(
+                            context,
+                            remoteExpense.id.toInt() + 5000,
+                            "Nuevo Gasto",
+                            "${remoteExpense.concepto}: ${remoteExpense.importe} €"
+                        )
+                    } else if (remoteExpense.updatedAt > localExpense.updatedAt) {
                         expenseDao.insertExpense(remoteExpense.toEntity())
                     }
                 }

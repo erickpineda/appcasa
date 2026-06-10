@@ -11,6 +11,7 @@ import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.DashboardConfig
 import com.appcasa.core.domain.model.PostIt
 import com.appcasa.core.domain.repository.DashboardRepository
+import com.appcasa.core.utils.NotificationHelper
 import com.appcasa.features.dashboard.data.local.DashboardDao
 import com.appcasa.features.dashboard.data.mapper.toDomain
 import com.appcasa.features.dashboard.data.mapper.toEntity
@@ -43,6 +44,11 @@ class DashboardRepositoryImpl @Inject constructor(
 
     override suspend fun deletePostIt(postIt: PostIt) {
         dashboardDao.deletePostIt(postIt.toEntity())
+        try {
+            remoteDataSource.deletePostIt(postIt)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         syncScheduler.scheduleSync(postIt.hogarId)
         updateWidget()
     }
@@ -86,9 +92,29 @@ class DashboardRepositoryImpl @Inject constructor(
                 }
             }
             .onEach { remoteItems ->
+                val remoteIds = remoteItems.map { it.id }.toSet()
+                val localItems = dashboardDao.getPostIts(hogarId).first()
+                
+                // Borrar locales que ya no existen en remoto
+                localItems.forEach { local ->
+                    if (local.id !in remoteIds) {
+                        dashboardDao.deletePostIt(local)
+                        updateWidget()
+                    }
+                }
+
                 remoteItems.forEach { remoteItem ->
                     val localItem = dashboardDao.getPostItById(remoteItem.id)
-                    if (localItem == null || remoteItem.updatedAt > localItem.updatedAt) {
+                    if (localItem == null) {
+                        dashboardDao.insertPostIt(remoteItem.toEntity())
+                        updateWidget()
+                        NotificationHelper.showNotification(
+                            context,
+                            remoteItem.id.toInt() + 2000,
+                            "Nuevo Post-it",
+                            remoteItem.contenido.take(50)
+                        )
+                    } else if (remoteItem.updatedAt > localItem.updatedAt) {
                         dashboardDao.insertPostIt(remoteItem.toEntity())
                         updateWidget()
                     }

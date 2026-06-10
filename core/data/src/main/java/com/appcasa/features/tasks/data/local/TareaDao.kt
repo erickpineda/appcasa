@@ -59,8 +59,17 @@ interface TareaDao {
     @Query("SELECT * FROM tarea_asignaciones WHERE tarea_id = :tareaId LIMIT 1")
     suspend fun getAsignacionByTarea(tareaId: Long): TareaAsignacionEntity?
 
+    @Query("SELECT * FROM tarea_asignaciones WHERE tarea_id = :tareaId")
+    suspend fun getAsignacionesByTarea(tareaId: Long): List<TareaAsignacionEntity>
+
+    @Query("SELECT * FROM tarea_asignaciones WHERE tarea_id = :tareaId AND miembro_id = :miembroId")
+    suspend fun getAsignacionByTareaAndMiembro(tareaId: Long, miembroId: Long): TareaAsignacionEntity?
+
     @Query("SELECT * FROM tarea_check_items WHERE tarea_id = :tareaId ORDER BY orden ASC")
     fun getCheckItems(tareaId: Long): Flow<List<TareaCheckItemEntity>>
+
+    @Query("SELECT * FROM tarea_check_items WHERE id = :id")
+    suspend fun getCheckItemById(id: Long): TareaCheckItemEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCheckItem(item: TareaCheckItemEntity): Long

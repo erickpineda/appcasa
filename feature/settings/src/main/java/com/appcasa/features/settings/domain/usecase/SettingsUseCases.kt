@@ -8,6 +8,7 @@ import com.appcasa.core.domain.model.User
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.repository.FamilyRepository
 import com.appcasa.core.domain.repository.HouseholdRepository
+import com.appcasa.core.domain.repository.SettingsRepository
 import com.appcasa.core.domain.repository.UserRepository
 import com.appcasa.core.ui.utils.HouseCodeUtils
 import com.google.firebase.messaging.FirebaseMessaging
@@ -219,5 +220,21 @@ class SwitchHouseholdUseCase @Inject constructor(
         userRepository.activateUserByHousehold(householdId)
         householdProvider.setHouseholdId(householdId)
         firebaseMessaging.subscribeToTopic("household_$householdId")
+    }
+}
+
+class ForceSyncUseCase @Inject constructor(
+    private val repository: SettingsRepository
+) {
+    suspend operator fun invoke(hogarId: Long) {
+        repository.triggerManualSync(hogarId)
+    }
+}
+
+class ExportHouseholdDataUseCase @Inject constructor(
+    private val repository: SettingsRepository
+) {
+    suspend operator fun invoke(hogarId: Long): String {
+        return repository.exportData(hogarId)
     }
 }

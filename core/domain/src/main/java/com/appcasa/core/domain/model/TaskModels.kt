@@ -17,6 +17,7 @@ data class Task(
     val anticipacionMins: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
+    val points: Int = 10,
     val puntosOtorgados: Boolean = false,
     val createdById: Long? = null,
     val archived: Boolean = false,

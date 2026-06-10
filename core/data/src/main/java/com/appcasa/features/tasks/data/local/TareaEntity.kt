@@ -96,6 +96,9 @@ data class TareaEntity(
   @ColumnInfo(name = "updated_at")
   val updatedAt: Long = System.currentTimeMillis(),
 
+  @ColumnInfo(name = "points")
+  val points: Int = 10,
+
   @ColumnInfo(name = "puntos_otorgados")
   val puntosOtorgados: Boolean = false,
 

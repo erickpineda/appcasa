@@ -35,6 +35,11 @@ class CalendarRepositoryImpl @Inject constructor(
 
     override suspend fun deleteEvent(event: Event) {
         eventoDao.deleteEvento(event.toEntity())
+        try {
+            remoteDataSource.deleteEvent(event)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         syncScheduler.scheduleSync(event.hogarId)
     }
 
@@ -56,6 +61,15 @@ class CalendarRepositoryImpl @Inject constructor(
                 }
             }
             .onEach { remoteItems ->
+                val remoteIds = remoteItems.map { it.id }.toSet()
+                val localItems = eventoDao.getEventosByHogar(hogarId).first()
+                
+                localItems.forEach { local ->
+                    if (local.id !in remoteIds) {
+                        eventoDao.deleteEvento(local)
+                    }
+                }
+
                 remoteItems.forEach { remoteItem ->
                     val localItem = eventoDao.getEventoById(remoteItem.id)
                     if (localItem == null || remoteItem.updatedAt > localItem.updatedAt) {

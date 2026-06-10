@@ -38,6 +38,9 @@ interface ListaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(item: ListaItemEntity): Long
 
+    @Query("SELECT * FROM lista_items WHERE id = :id")
+    suspend fun getItemById(id: Long): ListaItemEntity?
+
     @Update
     suspend fun updateItem(item: ListaItemEntity)
 

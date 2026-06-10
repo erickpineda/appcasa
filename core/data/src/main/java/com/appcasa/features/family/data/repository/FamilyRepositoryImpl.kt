@@ -44,11 +44,31 @@ class FamilyRepositoryImpl @Inject constructor(
 
     override suspend fun deleteMember(member: FamilyMember) {
         miembroDao.deleteMiembro(member.toEntity())
+        try {
+            remoteDataSource.deleteMember(member)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         syncScheduler.scheduleSync(member.hogarId)
     }
 
     override suspend fun updateMemberSyncTimestamp(memberId: Long) {
         miembroDao.updateSyncTimestamp(memberId, System.currentTimeMillis())
+    }
+
+    override suspend fun addPointsToMember(memberId: Long, points: Int) {
+        val member = miembroDao.getMiembroById(memberId)
+        member?.let {
+            val newPoints = it.puntos + points
+            // Lógica simple de niveles: cada 100 puntos sube de nivel
+            val newLevel = (newPoints / 100) + 1
+            miembroDao.updateMiembro(it.copy(
+                puntos = newPoints, 
+                nivel = newLevel,
+                updatedAt = System.currentTimeMillis()
+            ))
+            syncScheduler.scheduleSync(it.hogarId)
+        }
     }
 
     private var syncJob: Job? = null

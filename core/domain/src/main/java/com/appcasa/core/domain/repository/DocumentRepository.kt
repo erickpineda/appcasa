@@ -8,5 +8,6 @@ interface DocumentRepository {
     suspend fun insertDocumento(documento: Document): Long
     suspend fun deleteDocumento(documento: Document)
     suspend fun updateDocumentSyncTimestamp(docId: Long)
+    suspend fun downloadDocument(document: Document, localFile: java.io.File): Boolean
     fun startRemoteSync(hogarId: Long)
 }
