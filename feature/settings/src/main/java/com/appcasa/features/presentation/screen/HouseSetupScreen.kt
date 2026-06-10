@@ -102,6 +102,8 @@ fun HouseSetupScreen(
     val isCheckingDb by viewModel.isCheckingDb.collectAsState()
 
     var step by remember { mutableStateOf<SetupStep?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
     
     // Decidir el paso inicial solo cuando recibamos el primer valor real de la DB
     LaunchedEffect(isCheckingDb, existingHousehold, allHouseholds) {
@@ -113,9 +115,26 @@ fun HouseSetupScreen(
             }
         }
     }
+
+    LaunchedEffect(Unit) {
+        viewModel.setupEvent.collect { result ->
+            isLoading = false
+            when (result) {
+                is HouseSetupViewModel.SetupResult.Success -> {
+                    navController.navigate(Screen.Dashboard) {
+                        popUpTo(Screen.HouseSetup) { inclusive = true }
+                    }
+                }
+                is HouseSetupViewModel.SetupResult.Error -> {
+                    errorMessage = result.message
+                }
+            }
+        }
+    }
     
     // Manejo inteligente del botón Atrás del sistema
     BackHandler(enabled = step != null) {
+        if (isLoading) return@BackHandler
         when (step) {
             SetupStep.CREATE, SetupStep.JOIN, SetupStep.ADD_PROFILE -> {
                 step = when {
@@ -134,41 +153,58 @@ fun HouseSetupScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.setupEvent.collect { result ->
-            if (result is HouseSetupViewModel.SetupResult.Success) {
-                navController.navigate(Screen.Dashboard) {
-                    popUpTo(Screen.HouseSetup) { inclusive = true }
+    AppCasaMeshBackground {
+        if (step == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                androidx.compose.material3.CircularProgressIndicator()
+            }
+        } else {
+            Box(Modifier.fillMaxSize()) {
+                HouseSetupContent(
+                    step = step!!,
+                    isLoading = isLoading,
+                    onStepChange = { step = it },
+                    existingHousehold = existingHousehold,
+                    allHouseholds = allHouseholds,
+                    householdMembers = householdMembers,
+                    onCreateHousehold = { h, u, p -> 
+                        isLoading = true
+                        viewModel.createHousehold(h, u, p) 
+                    },
+                    onJoinHousehold = { c, u, p -> 
+                        isLoading = true
+                        viewModel.joinHousehold(c, u, p) 
+                    },
+                    onSelectMember = {
+                        isLoading = true
+                        viewModel.selectMember(it)
+                    },
+                    onSwitchHousehold = viewModel::switchHousehold,
+                    onResetAll = { 
+                        viewModel.resetHousehold()
+                        step = SetupStep.WELCOME 
+                    }
+                )
+
+                if (errorMessage != null) {
+                    AlertDialog(
+                        onDismissRequest = { errorMessage = null },
+                        title = { Text("Ups!") },
+                        text = { Text(errorMessage!!) },
+                        confirmButton = {
+                            TextButton(onClick = { errorMessage = null }) { Text("OK") }
+                        }
+                    )
                 }
             }
         }
-    }
-
-    if (step == null) {
-        // Pantalla vacía con fondo de malla para un arranque suave sin parpadeos
-        AppCasaMeshBackground { }
-    } else {
-        HouseSetupContent(
-            step = step!!,
-            onStepChange = { step = it },
-            existingHousehold = existingHousehold,
-            allHouseholds = allHouseholds,
-            householdMembers = householdMembers,
-            onCreateHousehold = viewModel::createHousehold,
-            onJoinHousehold = viewModel::joinHousehold,
-            onSelectMember = viewModel::selectMember,
-            onSwitchHousehold = viewModel::switchHousehold,
-            onResetAll = { 
-                viewModel.resetHousehold()
-                step = SetupStep.WELCOME 
-            }
-        )
     }
 }
 
 @Composable
 private fun HouseSetupContent(
     step: SetupStep,
+    isLoading: Boolean,
     onStepChange: (SetupStep) -> Unit,
     existingHousehold: Household?,
     allHouseholds: List<Household>,
@@ -195,105 +231,107 @@ private fun HouseSetupContent(
         }
     }
 
-    AppCasaMeshBackground {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            AnimatedContent(
-                targetState = step,
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "setup_steps"
-            ) { targetStep ->
-                when (targetStep) {
-                    SetupStep.WELCOME -> WelcomeStep(
-                        onCreateClick = { onStepChange(SetupStep.CREATE) },
-                        onJoinClick = { onStepChange(SetupStep.JOIN) },
-                        onLoginClick = if (existingHousehold != null) { { onStepChange(SetupStep.SELECT_PROFILE) } } 
-                                       else if (allHouseholds.isNotEmpty()) { { onStepChange(SetupStep.SWITCH_HOUSEHOLD) } }
-                                       else null,
-                        householdName = existingHousehold?.nombre
-                    )
-                    SetupStep.CREATE -> CreateStep(
-                        name = inputName,
-                        userName = inputUserName,
-                        photoUri = userPhotoUri,
-                        onNameChange = { inputName = it },
-                        onUserNameChange = { inputUserName = it },
-                        onPhotoClick = { imagePickerLauncher.launch("image/*") },
-                        onBack = { 
-                            onStepChange(when {
-                                existingHousehold != null -> SetupStep.SELECT_PROFILE
-                                allHouseholds.isNotEmpty() -> SetupStep.SWITCH_HOUSEHOLD
-                                else -> SetupStep.WELCOME
-                            }) 
-                        },
-                        onConfirm = { onCreateHousehold(inputName, inputUserName, userPhotoUri) }
-                    )
-                    SetupStep.JOIN -> JoinStep(
-                        code = inputCode,
-                        userName = inputUserName,
-                        photoUri = userPhotoUri,
-                        onCodeChange = { inputCode = it },
-                        onUserNameChange = { inputUserName = it },
-                        onPhotoClick = { imagePickerLauncher.launch("image/*") },
-                        onScanClick = { showScanner = true },
-                        onBack = { 
-                            onStepChange(when {
-                                existingHousehold != null -> SetupStep.SELECT_PROFILE
-                                allHouseholds.isNotEmpty() -> SetupStep.SWITCH_HOUSEHOLD
-                                else -> SetupStep.WELCOME
-                            }) 
-                        },
-                        onConfirm = { onJoinHousehold(inputCode, inputUserName, userPhotoUri) }
-                    )
-                    SetupStep.SELECT_PROFILE -> SelectProfileStep(
-                        existingHousehold = existingHousehold,
-                        members = householdMembers,
-                        onMemberClick = onSelectMember,
-                        onAddProfileClick = { onStepChange(SetupStep.ADD_PROFILE) },
-                        onSwitchHouseClick = if (allHouseholds.size > 1) { { onStepChange(SetupStep.SWITCH_HOUSEHOLD) } } else null,
-                        onResetAll = {
-                            onResetAll()
-                            onStepChange(SetupStep.WELCOME)
-                        }
-                    )
-                    SetupStep.SWITCH_HOUSEHOLD -> SwitchHouseholdStep(
-                        households = allHouseholds,
-                        onHouseholdClick = { 
-                            onSwitchHousehold(it.id)
-                            onStepChange(SetupStep.SELECT_PROFILE)
-                        },
-                        onCreateNewClick = { onStepChange(SetupStep.CREATE) },
-                        onJoinNewClick = { onStepChange(SetupStep.JOIN) }
-                    )
-                    SetupStep.ADD_PROFILE -> AddProfileStep(
-                        userName = inputUserName,
-                        photoUri = userPhotoUri,
-                        onUserNameChange = { inputUserName = it },
-                        onPhotoClick = { imagePickerLauncher.launch("image/*") },
-                        onBack = { onStepChange(SetupStep.SELECT_PROFILE) },
-                        onConfirm = { 
-                            existingHousehold?.let { 
-                                onJoinHousehold(it.codigoHogar ?: "", inputUserName, userPhotoUri) 
-                            }
-                        }
-                    )
-                }
-            }
-            
-            if (showScanner) {
-                QRScannerDialog(
-                    onCodeScanned = { 
-                        inputCode = it
-                        showScanner = false 
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        AnimatedContent(
+            targetState = step,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            label = "setup_steps"
+        ) { targetStep ->
+            when (targetStep) {
+                SetupStep.WELCOME -> WelcomeStep(
+                    onCreateClick = { onStepChange(SetupStep.CREATE) },
+                    onJoinClick = { onStepChange(SetupStep.JOIN) },
+                    onLoginClick = if (existingHousehold != null) { { onStepChange(SetupStep.SELECT_PROFILE) } } 
+                                   else if (allHouseholds.isNotEmpty()) { { onStepChange(SetupStep.SWITCH_HOUSEHOLD) } }
+                                   else null,
+                    householdName = existingHousehold?.nombre
+                )
+                SetupStep.CREATE -> CreateStep(
+                    name = inputName,
+                    userName = inputUserName,
+                    photoUri = userPhotoUri,
+                    isLoading = isLoading,
+                    onNameChange = { inputName = it },
+                    onUserNameChange = { inputUserName = it },
+                    onPhotoClick = { imagePickerLauncher.launch("image/*") },
+                    onBack = { 
+                        onStepChange(when {
+                            existingHousehold != null -> SetupStep.SELECT_PROFILE
+                            allHouseholds.isNotEmpty() -> SetupStep.SWITCH_HOUSEHOLD
+                            else -> SetupStep.WELCOME
+                        }) 
                     },
-                    onDismiss = { showScanner = false }
+                    onConfirm = { onCreateHousehold(inputName, inputUserName, userPhotoUri) }
+                )
+                SetupStep.JOIN -> JoinStep(
+                    code = inputCode,
+                    userName = inputUserName,
+                    photoUri = userPhotoUri,
+                    isLoading = isLoading,
+                    onCodeChange = { inputCode = it },
+                    onUserNameChange = { inputUserName = it },
+                    onPhotoClick = { imagePickerLauncher.launch("image/*") },
+                    onScanClick = { showScanner = true },
+                    onBack = { 
+                        onStepChange(when {
+                            existingHousehold != null -> SetupStep.SELECT_PROFILE
+                            allHouseholds.isNotEmpty() -> SetupStep.SWITCH_HOUSEHOLD
+                            else -> SetupStep.WELCOME
+                        }) 
+                    },
+                    onConfirm = { onJoinHousehold(inputCode, inputUserName, userPhotoUri) }
+                )
+                SetupStep.SELECT_PROFILE -> SelectProfileStep(
+                    existingHousehold = existingHousehold,
+                    members = householdMembers,
+                    isLoading = isLoading,
+                    onMemberClick = onSelectMember,
+                    onAddProfileClick = { onStepChange(SetupStep.ADD_PROFILE) },
+                    onSwitchHouseClick = if (allHouseholds.size > 1) { { onStepChange(SetupStep.SWITCH_HOUSEHOLD) } } else null,
+                    onResetAll = {
+                        onResetAll()
+                        onStepChange(SetupStep.WELCOME)
+                    }
+                )
+                SetupStep.SWITCH_HOUSEHOLD -> SwitchHouseholdStep(
+                    households = allHouseholds,
+                    onHouseholdClick = { 
+                        onSwitchHousehold(it.id)
+                        onStepChange(SetupStep.SELECT_PROFILE)
+                    },
+                    onCreateNewClick = { onStepChange(SetupStep.CREATE) },
+                    onJoinNewClick = { onStepChange(SetupStep.JOIN) }
+                )
+                SetupStep.ADD_PROFILE -> AddProfileStep(
+                    userName = inputUserName,
+                    photoUri = userPhotoUri,
+                    isLoading = isLoading,
+                    onUserNameChange = { inputUserName = it },
+                    onPhotoClick = { imagePickerLauncher.launch("image/*") },
+                    onBack = { onStepChange(SetupStep.SELECT_PROFILE) },
+                    onConfirm = { 
+                        existingHousehold?.let { 
+                            onJoinHousehold(it.codigoHogar ?: "", inputUserName, userPhotoUri) 
+                        }
+                    }
                 )
             }
+        }
+        
+        if (showScanner) {
+            QRScannerDialog(
+                onCodeScanned = { 
+                    inputCode = it
+                    showScanner = false 
+                },
+                onDismiss = { showScanner = false }
+            )
         }
     }
 }
@@ -345,7 +383,7 @@ fun QRScannerDialog(onCodeScanned: (String) -> Unit, onDismiss: () -> Unit) {
                                     .build()
                                 
                                 imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                                    @OptIn(ExperimentalGetImage::class)
+                                    @ExperimentalGetImage
                                     val mediaImage = imageProxy.image
                                     if (mediaImage != null) {
                                         val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
@@ -387,6 +425,7 @@ fun QRScannerDialog(onCodeScanned: (String) -> Unit, onDismiss: () -> Unit) {
 private fun AddProfileStep(
     userName: String, 
     photoUri: String?,
+    isLoading: Boolean,
     onUserNameChange: (String) -> Unit,
     onPhotoClick: () -> Unit,
     onBack: () -> Unit, 
@@ -403,7 +442,7 @@ private fun AddProfileStep(
                 .size(100.dp)
                 .clip(CircleShape)
                 .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                .clickable { onPhotoClick() },
+                .clickable(enabled = !isLoading) { onPhotoClick() },
             contentAlignment = Alignment.Center
         ) {
             if (photoUri != null) {
@@ -428,15 +467,21 @@ private fun AddProfileStep(
             onValueChange = onUserNameChange,
             label = { Text(stringResource(R.string.settings_user_name_title)) },
             modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
         )
         
         Spacer(Modifier.height(32.dp))
         
-        Button(onClick = onConfirm, enabled = userName.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.setup_btn_enter))
+        Button(
+            onClick = onConfirm, 
+            enabled = userName.isNotBlank() && !isLoading, 
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (isLoading) androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+            else Text(stringResource(R.string.setup_btn_enter))
         }
-        TextButton(onClick = onBack) { Text(stringResource(R.string.settings_btn_cancel)) }
+        TextButton(onClick = onBack, enabled = !isLoading) { Text(stringResource(R.string.settings_btn_cancel)) }
     }
 }
 
@@ -515,6 +560,7 @@ private fun CreateStep(
     name: String, 
     userName: String, 
     photoUri: String?,
+    isLoading: Boolean,
     onNameChange: (String) -> Unit, 
     onUserNameChange: (String) -> Unit,
     onPhotoClick: () -> Unit,
@@ -532,7 +578,7 @@ private fun CreateStep(
                 .size(100.dp)
                 .clip(CircleShape)
                 .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                .clickable { onPhotoClick() },
+                .clickable(enabled = !isLoading) { onPhotoClick() },
             contentAlignment = Alignment.Center
         ) {
             if (photoUri != null) {
@@ -557,6 +603,7 @@ private fun CreateStep(
             onValueChange = onNameChange,
             label = { Text(stringResource(R.string.setup_label_house_name)) },
             modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
         )
 
@@ -567,15 +614,21 @@ private fun CreateStep(
             onValueChange = onUserNameChange,
             label = { Text(stringResource(R.string.settings_user_name_title)) },
             modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
         )
         
         Spacer(Modifier.height(32.dp))
         
-        Button(onClick = onConfirm, enabled = name.isNotBlank() && userName.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.setup_btn_finish))
+        Button(
+            onClick = onConfirm, 
+            enabled = name.isNotBlank() && userName.isNotBlank() && !isLoading, 
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (isLoading) androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+            else Text(stringResource(R.string.setup_btn_finish))
         }
-        TextButton(onClick = onBack) { Text(stringResource(R.string.settings_btn_cancel)) }
+        TextButton(onClick = onBack, enabled = !isLoading) { Text(stringResource(R.string.settings_btn_cancel)) }
     }
 }
 
@@ -584,6 +637,7 @@ private fun JoinStep(
     code: String, 
     userName: String,
     photoUri: String?,
+    isLoading: Boolean,
     onCodeChange: (String) -> Unit, 
     onUserNameChange: (String) -> Unit,
     onPhotoClick: () -> Unit,
@@ -607,7 +661,7 @@ private fun JoinStep(
                     .size(100.dp)
                     .clip(CircleShape)
                     .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                    .clickable { onPhotoClick() },
+                    .clickable(enabled = !isLoading) { onPhotoClick() },
                 contentAlignment = Alignment.Center
             ) {
                 if (photoUri != null) {
@@ -632,6 +686,7 @@ private fun JoinStep(
                 onClick = onScanClick,
                 shape = CircleShape,
                 modifier = Modifier.size(64.dp),
+                enabled = !isLoading,
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.setup_cd_scan_qr))
@@ -645,6 +700,7 @@ private fun JoinStep(
             onValueChange = { if (it.length <= 10) onCodeChange(it) },
             label = { Text(stringResource(R.string.setup_label_code)) },
             modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading,
             placeholder = { Text(stringResource(R.string.setup_placeholder_code)) },
             textStyle = MaterialTheme.typography.titleLarge.copy(textAlign = TextAlign.Center, fontWeight = FontWeight.ExtraBold)
         )
@@ -656,15 +712,21 @@ private fun JoinStep(
             onValueChange = onUserNameChange,
             label = { Text(stringResource(R.string.settings_user_name_title)) },
             modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
         
         Spacer(Modifier.height(32.dp))
         
-        Button(onClick = onConfirm, enabled = code.length >= 6 && userName.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.setup_btn_join))
+        Button(
+            onClick = onConfirm, 
+            enabled = code.length >= 6 && userName.isNotBlank() && !isLoading, 
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (isLoading) androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+            else Text(stringResource(R.string.setup_btn_join))
         }
-        TextButton(onClick = onBack) { Text(stringResource(R.string.settings_btn_cancel)) }
+        TextButton(onClick = onBack, enabled = !isLoading) { Text(stringResource(R.string.settings_btn_cancel)) }
     }
 }
 
@@ -723,6 +785,7 @@ private fun SwitchHouseholdStep(
 private fun SelectProfileStep(
     existingHousehold: Household?,
     members: List<FamilyMember>,
+    isLoading: Boolean,
     onMemberClick: (FamilyMember) -> Unit,
     onAddProfileClick: () -> Unit,
     onSwitchHouseClick: (() -> Unit)? = null,
@@ -738,7 +801,7 @@ private fun SelectProfileStep(
             if (onSwitchHouseClick != null) {
                 Text(" • ", style = MaterialTheme.typography.labelSmall)
                 Text(stringResource(R.string.setup_btn_change), 
-                    modifier = Modifier.clickable { onSwitchHouseClick() },
+                    modifier = Modifier.clickable(enabled = !isLoading) { onSwitchHouseClick() },
                     style = MaterialTheme.typography.labelSmall, 
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
@@ -749,34 +812,38 @@ private fun SelectProfileStep(
         Spacer(Modifier.height(32.dp))
         
         Box(modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp), contentAlignment = Alignment.Center) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                val people = members.filter { it.tipo == TipoMiembro.PERSONA }
-                items(people) { member ->
-                    ProfileAvatar(member) { onMemberClick(member) }
-                }
-                
-                item {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onAddProfileClick() }) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.secondaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+            if (isLoading) {
+                androidx.compose.material3.CircularProgressIndicator()
+            } else {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    val people = members.filter { it.tipo == TipoMiembro.PERSONA }
+                    items(people) { member ->
+                        ProfileAvatar(member) { if (!isLoading) onMemberClick(member) }
+                    }
+                    
+                    item {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(enabled = !isLoading) { onAddProfileClick() }) {
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(stringResource(R.string.setup_btn_new_profile), style = MaterialTheme.typography.labelSmall)
                         }
-                        Spacer(Modifier.height(8.dp))
-                        Text(stringResource(R.string.setup_btn_new_profile), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
         }
 
-        if (members.isEmpty()) {
+        if (members.isEmpty() && !isLoading) {
             Text(
                 stringResource(R.string.setup_no_members_error),
                 style = MaterialTheme.typography.bodySmall,
@@ -848,6 +915,7 @@ fun HouseSetupPreview_Welcome() {
     AppCasaTheme {
         HouseSetupContent(
             step = SetupStep.WELCOME,
+            isLoading = false,
             onStepChange = {},
             existingHousehold = null,
             allHouseholds = emptyList(),
@@ -867,6 +935,7 @@ fun HouseSetupPreview_SelectProfile() {
     AppCasaTheme {
         HouseSetupContent(
             step = SetupStep.SELECT_PROFILE,
+            isLoading = false,
             onStepChange = {},
             existingHousehold = Household(id = 1, nombre = "Mi Casa", codigoHogar = "CASA-1234"),
             allHouseholds = listOf(Household(id = 1, nombre = "Mi Casa")),

@@ -56,8 +56,13 @@ class HouseSetupViewModel @Inject constructor(
 
     fun createHousehold(houseName: String, userName: String, photoUri: String?) {
         viewModelScope.launch {
-            createHouseholdUseCase(houseName, userName, photoUri)
-            _setupEvent.emit(SetupResult.Success)
+            try {
+                createHouseholdUseCase(houseName, userName, photoUri)
+                _setupEvent.emit(SetupResult.Success)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _setupEvent.emit(SetupResult.Error(e.message ?: "Error al crear el hogar"))
+            }
         }
     }
 

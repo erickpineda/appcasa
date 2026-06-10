@@ -8,6 +8,7 @@ import com.appcasa.features.settings.data.mapper.toDomain
 import com.appcasa.features.settings.data.mapper.toEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 class HouseholdRepositoryImpl @Inject constructor(
@@ -31,7 +32,14 @@ class HouseholdRepositoryImpl @Inject constructor(
 
     override suspend fun insertHogar(hogar: Household): Long {
         val id = configuracionDao.insertHogar(hogar.toEntity())
-        remoteDataSource.syncHousehold(hogar.copy(id = id))
+        try {
+            // Ponemos un timeout de 3 segundos para que no bloquee la creación local si falla la nube
+            withTimeoutOrNull(3000) {
+                remoteDataSource.syncHousehold(hogar.copy(id = id))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         return id
     }
 
