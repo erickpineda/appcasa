@@ -15,7 +15,8 @@ fun ListaEntity.toDomain(): Lista {
         completada = completada,
         archived = archived,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -28,7 +29,8 @@ fun Lista.toEntity(): ListaEntity {
         completada = completada,
         archived = archived,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -40,7 +42,9 @@ fun ListaItemEntity.toDomain(): ListaItem {
         cantidad = cantidad,
         completado = completado,
         orden = orden,
-        createdAt = createdAt
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -52,6 +56,8 @@ fun ListaItem.toEntity(): ListaItemEntity {
         cantidad = cantidad,
         completado = completado,
         orden = orden,
-        createdAt = createdAt
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

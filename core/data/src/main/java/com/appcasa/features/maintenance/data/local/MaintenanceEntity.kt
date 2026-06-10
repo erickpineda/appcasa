@@ -56,5 +56,11 @@ data class MaintenanceEntity(
     val syncId: String? = null,
 
     @ColumnInfo(name = "archived")
-    val archived: Boolean = false
+    val archived: Boolean = false,
+
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "last_synced_at")
+    val lastSyncedAt: Long? = null
 )

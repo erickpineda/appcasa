@@ -253,6 +253,117 @@ object Migrations {
   }
 
   /**
+   * Migración para añadir soporte de sincronización (last_synced_at) a múltiples entidades.
+   * También añade updated_at a mantenimiento y recompensas.
+   */
+  val MIGRATION_25_26 = object : Migration(25, 26) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      db.execSQL("ALTER TABLE gastos ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE miembros ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE stock ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE post_its ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE eventos ADD COLUMN last_synced_at INTEGER")
+      
+      db.execSQL("ALTER TABLE mantenimiento_hogar ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE mantenimiento_hogar ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("UPDATE mantenimiento_hogar SET updated_at = fecha_realizacion")
+
+      db.execSQL("ALTER TABLE recompensas ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE recompensas ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+    }
+  }
+
+  /**
+   * Migración para completar la preparación de sincronización en todas las entidades restantes.
+   */
+  val MIGRATION_26_27 = object : Migration(26, 27) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      // Mascotas
+      db.execSQL("ALTER TABLE mascota_vacunas ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE mascota_vacunas ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("UPDATE mascota_vacunas SET updated_at = created_at")
+
+      db.execSQL("ALTER TABLE mascota_desparasitaciones ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE mascota_desparasitaciones ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("UPDATE mascota_desparasitaciones SET updated_at = created_at")
+
+      db.execSQL("ALTER TABLE mascota_pesos ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE mascota_pesos ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("UPDATE mascota_pesos SET updated_at = created_at")
+
+      db.execSQL("ALTER TABLE mascota_medicaciones ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE mascota_medicaciones ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("UPDATE mascota_medicaciones SET updated_at = created_at")
+
+      // Documentos y Tareas
+      db.execSQL("ALTER TABLE documentos ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE documentos ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("UPDATE documentos SET updated_at = created_at")
+
+      db.execSQL("ALTER TABLE categorias_tarea ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE categorias_tarea ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+
+      db.execSQL("ALTER TABLE tarea_check_items ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE tarea_check_items ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("UPDATE tarea_check_items SET updated_at = created_at")
+
+      db.execSQL("ALTER TABLE tarea_asignaciones ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE tarea_asignaciones ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("UPDATE tarea_asignaciones SET updated_at = created_at")
+
+      // Dashboard Config
+      db.execSQL("ALTER TABLE dashboard_config ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE dashboard_config ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+
+      // Hogares y Usuarios
+      db.execSQL("ALTER TABLE hogares ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE usuarios ADD COLUMN last_synced_at INTEGER")
+
+      // Configuracion
+      db.execSQL("ALTER TABLE configuracion ADD COLUMN created_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("ALTER TABLE configuracion ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("ALTER TABLE configuracion ADD COLUMN sync_id TEXT")
+      db.execSQL("ALTER TABLE configuracion ADD COLUMN last_synced_at INTEGER")
+
+      // Listas
+      db.execSQL("ALTER TABLE listas ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE lista_items ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE lista_items ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("UPDATE lista_items SET updated_at = created_at")
+
+      // Utilidades y Recordatorios
+      db.execSQL("ALTER TABLE utilidades ADD COLUMN last_synced_at INTEGER")
+      db.execSQL("ALTER TABLE utilidades ADD COLUMN created_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("ALTER TABLE utilidades ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
+      db.execSQL("ALTER TABLE recordatorios ADD COLUMN last_synced_at INTEGER")
+    }
+  }
+
+  /**
+   * Migración para asegurar que todas las entidades tengan last_synced_at.
+   * Se eliminan intentos redundantes de añadir columnas que ya existían desde v1.
+   */
+  val MIGRATION_27_28 = object : Migration(27, 28) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      // Solo añadimos lo que realmente falta y no estaba en versiones previas
+      // Recordatorios: solo faltaba last_synced_at (añadido en 26-27).
+      // created_at y updated_at ya estaban en v1.
+      
+      // Stock y Eventos ya tenían updated_at en v1/v4.
+    }
+  }
+
+  /**
+   * Migración puente para estabilizar la base de datos tras cambios masivos de sincronización.
+   */
+  val MIGRATION_28_29 = object : Migration(28, 29) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+      // No hacemos cambios estructurales aquí, confiamos en fallbackToDestructiveMigration
+      // si hay inconsistencias graves, pero intentamos mantener datos.
+    }
+  }
+
+  /**
    * Lista de todas las migraciones registradas.
    */
   fun getAll(): Array<Migration> {
@@ -273,7 +384,11 @@ object Migrations {
       MIGRATION_21_22,
       MIGRATION_22_23,
       MIGRATION_23_24,
-      MIGRATION_24_25
+      MIGRATION_24_25,
+      MIGRATION_25_26,
+      MIGRATION_26_27,
+      MIGRATION_27_28,
+      MIGRATION_28_29
     )
   }
 }

@@ -71,6 +71,9 @@ interface TareaDao {
     @Delete
     suspend fun deleteCheckItem(item: TareaCheckItemEntity)
 
+    @Query("UPDATE tareas SET last_synced_at = :timestamp WHERE id = :id")
+    suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
+
     @Query("""
         SELECT tarea_id as taskId, COUNT(*) as total, SUM(CASE WHEN completado THEN 1 ELSE 0 END) as completed 
         FROM tarea_check_items 

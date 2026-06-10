@@ -12,14 +12,19 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
+import com.appcasa.core.data.remote.manager.SyncManager
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.navigation.AppNavigation
 import com.appcasa.presentation.viewmodel.GlobalViewModel
 import com.appcasa.core.utils.NotificationHelper
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
+
+  @Inject
+  lateinit var syncManager: SyncManager
 
   private val globalViewModel: GlobalViewModel by viewModels()
 
@@ -56,6 +61,16 @@ class MainActivity : FragmentActivity() {
         AppNavigation()
       }
     }
+  }
+
+  override fun onStart() {
+    super.onStart()
+    syncManager.setAppInForeground(true)
+  }
+
+  override fun onStop() {
+    super.onStop()
+    syncManager.setAppInForeground(false)
   }
 }
 

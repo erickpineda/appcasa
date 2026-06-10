@@ -28,8 +28,10 @@ data class Reward(
     val hogarId: Long,
     val titulo: String,
     val descripcion: String? = null,
-    val costoPuntos: Int,
-    val icono: String = "card_giftcard"
+    val costePuntos: Int,
+    val icono: String = "card_giftcard",
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )
 
 data class TaskCategory(
@@ -38,13 +40,17 @@ data class TaskCategory(
     val nombre: String,
     val colorHex: String = "2563EB",
     val icono: String? = null,
-    val orden: Int = 0
+    val orden: Int = 0,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )
 
 data class TaskAssignment(
     val tareaId: Long,
     val miembroId: Long,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )
 
 data class TaskCheckItem(
@@ -53,5 +59,7 @@ data class TaskCheckItem(
     val texto: String,
     val completado: Boolean = false,
     val orden: Int = 0,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )

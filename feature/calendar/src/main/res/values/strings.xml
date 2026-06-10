@@ -45,4 +45,10 @@
     <string name="cd_select_date">Seleccionar fecha</string>
     <string name="cd_edit">Editar</string>
     <string name="cd_delete">Borrar</string>
+    <string name="calendar_search_placeholder">Buscar en la agenda…</string>
+    <string name="cd_search">Buscar</string>
+    <string name="calendar_group_current_month">Mes actual</string>
+    <string name="calendar_group_other_months">Otros meses</string>
+    <string name="calendar_archive_title">Archivo histórico</string>
+    <string name="calendar_archive_desc">Hay registros antiguos ocultos. Usa la búsqueda para encontrarlos.</string>
 </resources>

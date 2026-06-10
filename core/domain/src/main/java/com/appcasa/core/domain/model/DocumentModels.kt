@@ -9,5 +9,7 @@ data class Document(
     val fechaVencimiento: Long? = null,
     val urlNube: String? = null,
     val sincronizado: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )

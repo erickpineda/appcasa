@@ -12,5 +12,6 @@ data class User(
     val miembroId: Long? = null,
     val isActive: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )

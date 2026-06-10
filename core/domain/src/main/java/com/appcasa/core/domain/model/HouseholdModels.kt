@@ -7,5 +7,6 @@ data class Household(
     val estado: EstadoGeneral = EstadoGeneral.ACTIVO,
     val codigoHogar: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )

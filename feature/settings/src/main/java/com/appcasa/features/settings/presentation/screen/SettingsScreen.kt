@@ -148,7 +148,7 @@ fun SettingsContent(
       navigationIcon = {
         if (activeSection != null) {
           IconButton(onClick = { activeSection = null }) {
-            Icon(Icons.Default.Close, contentDescription = "Volver")
+            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_back))
           }
         }
       },
@@ -212,7 +212,7 @@ fun SettingsHub(
 
     if (showNameDialog) {
         EditValueDialog(
-            title = "Tu Nombre",
+            title = stringResource(R.string.settings_edit_name_title),
             initialValue = userName,
             onDismiss = { showNameDialog = false },
             onConfirm = { onUpdateName(it); showNameDialog = false }
@@ -253,7 +253,7 @@ fun SettingsHub(
                     }
                     Column(modifier = Modifier.weight(1f).clickable { showNameDialog = true }) {
                         Text(userName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        Text("Toca para editar nombre o foto", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.settings_profile_edit_hint), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     }
                     IconButton(onClick = onUpdateAvatar) {
                         Icon(Icons.Default.PhotoCamera, null, tint = MaterialTheme.colorScheme.primary)
@@ -262,39 +262,39 @@ fun SettingsHub(
             }
         }
 
-        item(contentType = "header") { SettingsSectionHeader("Gestión") }
+        item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_management)) }
         item(contentType = "category") {
             CategoryItem(
-                title = "Mi Hogar e Invitaciones",
-                subtitle = "Nombre de casa, código QR y pareja",
+                title = stringResource(R.string.settings_section_household),
+                subtitle = stringResource(R.string.settings_hub_household_subtitle),
                 icon = Icons.Default.Home,
                 onClick = { onSectionClick(SettingsSection.HOUSEHOLD) }
             )
         }
 
-        item(contentType = "header") { SettingsSectionHeader("Personalización") }
+        item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_personalization)) }
         item(contentType = "category") {
             CategoryItem(
-                title = "Pantalla y Notificaciones",
-                subtitle = "Modo oscuro, notificaciones de pareja...",
+                title = stringResource(R.string.settings_section_appearance_full),
+                subtitle = stringResource(R.string.settings_hub_appearance_subtitle),
                 icon = Icons.Default.NotificationsActive,
                 onClick = { onSectionClick(SettingsSection.APPEARANCE) }
             )
         }
         item(contentType = "category") {
             CategoryItem(
-                title = "Preferencias",
-                subtitle = "Moneda, listas y modo tienda",
+                title = stringResource(R.string.settings_hub_preferences),
+                subtitle = stringResource(R.string.settings_hub_preferences_subtitle),
                 icon = Icons.Default.Payments,
                 onClick = { onSectionClick(SettingsSection.PREFERENCES) }
             )
         }
 
-        item(contentType = "header") { SettingsSectionHeader("Cuenta") }
+        item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_account)) }
         item(contentType = "category") {
             CategoryItem(
-                title = "Cerrar Sesión",
-                subtitle = "Salir de este perfil familiar",
+                title = stringResource(R.string.settings_hub_logout),
+                subtitle = stringResource(R.string.settings_hub_logout_subtitle),
                 icon = Icons.AutoMirrored.Filled.Logout,
                 color = MaterialTheme.colorScheme.error,
                 onClick = onLogout
@@ -304,7 +304,7 @@ fun SettingsHub(
         item {
             Spacer(Modifier.height(24.dp))
             Text(
-                "AppCasa v1.2.0 | Con ❤️ para la familia",
+                stringResource(R.string.settings_version_footer, "v1.2.0"),
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.labelSmall,
@@ -327,7 +327,7 @@ fun HogarSection(
 
     if (showNameDialog) {
         EditValueDialog(
-            title = "Nombre del Hogar",
+            title = stringResource(R.string.settings_household_name_title),
             initialValue = householdName,
             onDismiss = { showNameDialog = false },
             onConfirm = { onUpdateName(it); showNameDialog = false }
@@ -337,14 +337,14 @@ fun HogarSection(
     if (showRegenerateConfirm) {
         AlertDialog(
             onDismissRequest = { showRegenerateConfirm = false },
-            title = { Text("¿Regenerar código?") },
-            text = { Text("El código actual dejará de funcionar para nuevas invitaciones.") },
+            title = { Text(stringResource(R.string.settings_regenerate_code_title)) },
+            text = { Text(stringResource(R.string.settings_regenerate_code_desc)) },
             confirmButton = {
                 Button(onClick = { onRegenerateCode(); showRegenerateConfirm = false }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
-                    Text("Confirmar")
+                    Text(stringResource(R.string.settings_confirm))
                 }
             },
-            dismissButton = { TextButton(onClick = { showRegenerateConfirm = false }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { showRegenerateConfirm = false }) { Text(stringResource(R.string.settings_btn_cancel)) } }
         )
     }
 
@@ -352,7 +352,7 @@ fun HogarSection(
         item(contentType = "item") {
             AppCasaCard(onClick = { if (isAdmin) showNameDialog = true }, useGlassmorphism = false) {
                 ListItem(
-                    headlineContent = { Text("Nombre del Hogar") },
+                    headlineContent = { Text(stringResource(R.string.settings_household_name_title)) },
                     supportingContent = { Text(householdName) },
                     leadingContent = { Icon(Icons.Default.Home, null, tint = MaterialTheme.colorScheme.primary) },
                     trailingContent = { if (isAdmin) Icon(Icons.Default.ChevronRight, null) },
@@ -364,7 +364,7 @@ fun HogarSection(
         item(contentType = "qr") {
             AppCasaCard(useGlassmorphism = false) {
                 Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Código de Invitación", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.setup_label_code), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(householdCode, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
                         if (isAdmin) {
@@ -378,12 +378,12 @@ fun HogarSection(
                     qr?.let {
                         androidx.compose.foundation.Image(
                             bitmap = it.asImageBitmap(),
-                            contentDescription = "QR",
+                            contentDescription = stringResource(R.string.cd_qr),
                             modifier = Modifier.size(200.dp).clip(RoundedCornerShape(8.dp))
                         )
                     }
                     Spacer(Modifier.height(16.dp))
-                    Text("Tu pareja puede escanear este código para unirse a la casa al instante.", 
+                    Text(stringResource(R.string.settings_qr_subtitle), 
                         textAlign = TextAlign.Center, 
                         style = MaterialTheme.typography.bodySmall)
                 }
@@ -406,8 +406,8 @@ fun AparienciaSection(
         item(contentType = "toggle") {
             SettingsToggleItem(
                 icon = Icons.Default.DarkMode,
-                title = "Modo Oscuro",
-                subtitle = "Cambiar el tema de la app",
+                title = stringResource(R.string.settings_dark_mode_title),
+                subtitle = stringResource(R.string.settings_dark_mode_subtitle),
                 checked = darkMode,
                 onCheckedChange = { onUpdateConfig("tema_oscuro", it.toString()) }
             )
@@ -415,8 +415,8 @@ fun AparienciaSection(
         item(contentType = "toggle") {
             SettingsToggleItem(
                 icon = Icons.Default.Notifications,
-                title = "Notificaciones",
-                subtitle = "Recibir avisos de tareas",
+                title = stringResource(R.string.settings_notifications_title),
+                subtitle = stringResource(R.string.settings_notifications_subtitle),
                 checked = notifications,
                 onCheckedChange = { onUpdateConfig("notif_activas", it.toString()) }
             )
@@ -424,8 +424,8 @@ fun AparienciaSection(
         item(contentType = "toggle") {
             SettingsToggleItem(
                 icon = Icons.Default.Groups,
-                title = "Notificaciones de Pareja",
-                subtitle = "Avisar cuando ella haga cambios",
+                title = stringResource(R.string.settings_partner_notifications_title),
+                subtitle = stringResource(R.string.settings_partner_notifications_desc),
                 checked = partnerNotifs,
                 onCheckedChange = { onUpdateConfig("notif_pareja", it.toString()) }
             )
@@ -433,8 +433,8 @@ fun AparienciaSection(
         item(contentType = "toggle") {
             SettingsToggleItem(
                 icon = Icons.Default.Compress,
-                title = "Vista Compacta",
-                subtitle = "Listas con menos espacio",
+                title = stringResource(R.string.settings_compact_view_title),
+                subtitle = stringResource(R.string.settings_compact_view_subtitle),
                 checked = compactView,
                 onCheckedChange = { onUpdateConfig("vista_compacta", it.toString()) }
             )
@@ -477,15 +477,15 @@ fun PreferenciasSection(
         item(contentType = "item") {
             SettingsItem(
                 icon = Icons.Default.Payments,
-                title = "Moneda Local",
-                subtitle = "Actual: $currency",
+                title = stringResource(R.string.settings_currency_title),
+                subtitle = stringResource(R.string.settings_currency_current, currency),
                 onClick = { showCurrencyDialog = true }
             )
         }
         item(contentType = "item") {
             SettingsItem(
                 icon = Icons.Default.ShoppingCart,
-                title = "Lista de la Compra Principal",
+                title = stringResource(R.string.settings_main_list_title),
                 subtitle = preferredListName,
                 onClick = { showListSelector = true }
             )
@@ -493,8 +493,8 @@ fun PreferenciasSection(
         item(contentType = "toggle") {
             SettingsToggleItem(
                 icon = Icons.Default.Storefront,
-                title = "Modo Tienda",
-                subtitle = "Mantener pantalla encendida",
+                title = stringResource(R.string.settings_shop_mode_title),
+                subtitle = stringResource(R.string.settings_shop_mode_subtitle),
                 checked = shopMode,
                 onCheckedChange = { onUpdateConfig("modo_tienda", it.toString()) }
             )

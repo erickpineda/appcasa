@@ -13,7 +13,8 @@ fun StockEntity.toDomain(): StockItem {
         cantidadMinima = cantidadMinima,
         unidad = unidad,
         autoComprar = autoComprar,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -27,6 +28,7 @@ fun StockItem.toEntity(): StockEntity {
         cantidadMinima = cantidadMinima,
         unidad = unidad,
         autoComprar = autoComprar,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

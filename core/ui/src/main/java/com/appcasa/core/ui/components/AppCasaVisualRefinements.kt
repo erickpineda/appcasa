@@ -112,12 +112,13 @@ fun Modifier.skeletonShimmer(): Modifier = composed {
  */
 @Composable
 fun AppCasaMeshBackground(content: @Composable () -> Unit) {
+    // Aumentamos la duración a 20 segundos para reducir la carga de CPU
     val infiniteTransition = rememberInfiniteTransition(label = "mesh")
     val offset by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 100f,
         animationSpec = infiniteRepeatable(
-            animation = tween(10000, easing = LinearEasing),
+            animation = tween(20000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "offset"
@@ -129,18 +130,19 @@ fun AppCasaMeshBackground(content: @Composable () -> Unit) {
             .background(MaterialTheme.colorScheme.background)
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
+            // Dibujamos solo dos círculos con opacidad muy baja para ahorrar GPU
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(Color(0xFF4338CA).copy(alpha = 0.08f), Color.Transparent),
+                    colors = listOf(Color(0xFF4338CA).copy(alpha = 0.05f), Color.Transparent),
                     center = Offset(size.width * 0.2f + offset, size.height * 0.2f),
-                    radius = size.width * 0.8f
+                    radius = size.width * 0.7f
                 )
             )
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(Color(0xFF0D9488).copy(alpha = 0.05f), Color.Transparent),
+                    colors = listOf(Color(0xFF0D9488).copy(alpha = 0.03f), Color.Transparent),
                     center = Offset(size.width * 0.8f - offset, size.height * 0.8f),
-                    radius = size.width * 0.6f
+                    radius = size.width * 0.5f
                 )
             )
         }

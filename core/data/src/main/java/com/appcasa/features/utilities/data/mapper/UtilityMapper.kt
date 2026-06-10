@@ -12,7 +12,10 @@ fun UtilidadEntity.toDomain(): Utility {
         icono = icono,
         activa = activa,
         orden = orden,
-        categoria = categoria
+        categoria = categoria,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -25,6 +28,9 @@ fun Utility.toEntity(): UtilidadEntity {
         icono = icono,
         activa = activa,
         orden = orden,
-        categoria = categoria
+        categoria = categoria,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

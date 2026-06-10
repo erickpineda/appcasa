@@ -13,7 +13,9 @@ fun DocumentoEntity.toDomain(): Document {
         fechaVencimiento = fechaVencimiento,
         urlNube = urlNube,
         sincronizado = sincronizado,
-        createdAt = createdAt
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -27,6 +29,8 @@ fun Document.toEntity(): DocumentoEntity {
         fechaVencimiento = fechaVencimiento,
         urlNube = urlNube,
         sincronizado = sincronizado,
-        createdAt = createdAt
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

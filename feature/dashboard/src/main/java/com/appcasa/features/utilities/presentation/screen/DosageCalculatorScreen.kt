@@ -248,7 +248,7 @@ fun DosageCalculatorScreen(
           
           if (isLiquid && finalMl > 0) {
             Text(
-              text = "${String.format("%.2f", finalMl)} ml",
+              text = stringResource(R.string.util_dosage_unit_ml_format, String.format("%.2f", finalMl)),
               style = MaterialTheme.typography.displayMedium,
               color = MaterialTheme.colorScheme.primary,
               fontWeight = FontWeight.ExtraBold
@@ -256,16 +256,16 @@ fun DosageCalculatorScreen(
             Text(stringResource(R.string.util_dosage_equiv_mg, String.format("%.1f", totalDoseMg)), style = MaterialTheme.typography.bodySmall)
           } else {
             val displayValue = if (totalDoseMg >= 1000) totalDoseMg / 1000 else totalDoseMg
-            val displayUnit = if (totalDoseMg >= 1000) "gr" else "mg"
+            val displayRes = if (totalDoseMg >= 1000) R.string.util_dosage_unit_gr_format else R.string.util_dosage_unit_mg_format
             
             Text(
-              text = "${String.format("%.1f", displayValue)} $displayUnit",
+              text = stringResource(displayRes, String.format("%.1f", displayValue)),
               style = MaterialTheme.typography.displayMedium,
               color = MaterialTheme.colorScheme.primary,
               fontWeight = FontWeight.ExtraBold
             )
             if (totalDoseMg < 1.0 && totalDoseMg > 0) {
-                Text(text = "(${String.format("%.0f", totalDoseMg * 1000)} µg)", style = MaterialTheme.typography.bodySmall)
+                Text(text = stringResource(R.string.util_dosage_unit_mcg, String.format("%.0f", totalDoseMg * 1000)), style = MaterialTheme.typography.bodySmall)
             }
           }
         }

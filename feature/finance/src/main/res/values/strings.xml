@@ -43,6 +43,7 @@
     <string name="finance_stats_title">Estadísticas de Gastos</string>
     <string name="finance_stats_by_category">Distribución por Categoría</string>
     <string name="finance_stats_monthly">Evolución Mensual</string>
+    <string name="finance_stats_category_label">%1$s: %2$.2f %3$s</string>
 
     <!-- Errors -->
     <string name="finance_error_no_more_active">No hay más gastos para cargar</string>

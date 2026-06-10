@@ -56,6 +56,33 @@
     <string name="settings_profile_change_photo">Cambiar foto de perfil</string>
     <string name="settings_profile_name_hint">¿Cómo te llamas?</string>
 
+    <string name="settings_section_household">Mi Hogar e Invitaciones</string>
+    <string name="settings_section_appearance_full">Pantalla y Notificaciones</string>
+    <string name="settings_section_preferences_full">Preferencias de Uso</string>
+
+    <string name="settings_edit_name_title">Tu Nombre</string>
+    <string name="settings_profile_edit_hint">Toca para editar nombre o foto</string>
+    <string name="settings_hub_management">Gestión</string>
+    <string name="settings_hub_household_subtitle">Nombre de casa, código QR y pareja</string>
+    <string name="settings_hub_personalization">Personalización</string>
+    <string name="settings_hub_appearance_subtitle">Modo oscuro, notificaciones de pareja…</string>
+    <string name="settings_hub_preferences">Preferencias</string>
+    <string name="settings_hub_preferences_subtitle">Moneda, listas y modo tienda</string>
+    <string name="settings_hub_account">Cuenta</string>
+    <string name="settings_hub_logout">Cerrar Sesión</string>
+    <string name="settings_hub_logout_subtitle">Salir de este perfil familiar</string>
+    <string name="settings_version_footer">AppCasa %1$s | Con ❤️ para la familia</string>
+
+    <string name="settings_regenerate_code_title">¿Regenerar código?</string>
+    <string name="settings_regenerate_code_desc">El código actual dejará de funcionar para nuevas invitaciones.</string>
+    <string name="settings_confirm">Confirmar</string>
+    <string name="settings_qr_subtitle">Tu pareja puede escanear este código para unirse a la casa al instante.</string>
+    <string name="cd_qr">QR</string>
+    <string name="cd_back">Volver</string>
+
+    <string name="settings_partner_notifications_desc">Avisar cuando ella haga cambios</string>
+    <string name="settings_currency_current">Actual: %s</string>
+
     <!-- House Setup New Strings -->
     <string name="setup_qr_scan_title">Escanear Código de Casa</string>
     <string name="setup_qr_permission_error">Se requiere permiso de cámara para escanear el QR.</string>

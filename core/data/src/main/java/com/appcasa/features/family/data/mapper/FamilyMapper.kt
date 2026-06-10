@@ -27,7 +27,8 @@ fun MiembroEntity.toDomain(): FamilyMember {
         puntos = puntos,
         nivel = nivel,
         estadoAnimo = estadoAnimo,
-        estadoAnimoUpdatedAt = estadoAnimoUpdatedAt
+        estadoAnimoUpdatedAt = estadoAnimoUpdatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -52,6 +53,7 @@ fun FamilyMember.toEntity(): MiembroEntity {
         puntos = puntos,
         nivel = nivel,
         estadoAnimo = estadoAnimo,
-        estadoAnimoUpdatedAt = estadoAnimoUpdatedAt
+        estadoAnimoUpdatedAt = estadoAnimoUpdatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

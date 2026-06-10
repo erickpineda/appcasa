@@ -16,7 +16,8 @@ fun ExpenseEntity.toDomain(): Expense {
         updatedAt = updatedAt,
         createdById = createdById,
         archived = archived,
-        syncId = syncId
+        syncId = syncId,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -33,6 +34,7 @@ fun Expense.toEntity(): ExpenseEntity {
         updatedAt = updatedAt,
         createdById = createdById,
         archived = archived,
-        syncId = syncId
+        syncId = syncId,
+        lastSyncedAt = lastSyncedAt
     )
 }

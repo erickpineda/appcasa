@@ -34,5 +34,11 @@ data class RecompensaEntity(
     val icono: String = "card_giftcard", // Nombre del icono de Material
     
     @ColumnInfo(name = "sync_id")
-    val syncId: String? = null
+    val syncId: String? = null,
+
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "last_synced_at")
+    val lastSyncedAt: Long? = null
 )

@@ -2,6 +2,7 @@ package com.appcasa.features.family.data.repository
 
 import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
+import com.appcasa.core.data.remote.manager.SyncManager
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.repository.FamilyRepository
@@ -9,16 +10,14 @@ import com.appcasa.features.family.data.local.MiembroDao
 import com.appcasa.features.family.data.mapper.toDomain
 import com.appcasa.features.family.data.mapper.toEntity
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class FamilyRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val miembroDao: MiembroDao,
     private val firestoreDataSource: FirestoreDataSource,
+    private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler
 ) : FamilyRepository {
 
@@ -48,8 +47,23 @@ class FamilyRepositoryImpl @Inject constructor(
         syncScheduler.scheduleSync(member.hogarId)
     }
 
+    override suspend fun updateMemberSyncTimestamp(memberId: Long) {
+        miembroDao.updateSyncTimestamp(memberId, System.currentTimeMillis())
+    }
+
+    private var syncJob: Job? = null
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun startRemoteSync(hogarId: Long) {
-        firestoreDataSource.observeMembers(hogarId)
+        syncJob?.cancel()
+        syncJob = syncManager.isAppInForeground
+            .flatMapLatest { isInForeground ->
+                if (isInForeground) {
+                    firestoreDataSource.observeMembers(hogarId)
+                } else {
+                    emptyFlow()
+                }
+            }
             .onEach { remoteMembers ->
                 remoteMembers.forEach { remoteMember ->
                     val localMember = miembroDao.getMiembroById(remoteMember.id)

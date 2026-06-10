@@ -39,7 +39,6 @@ import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.feature.finance.R
 import com.appcasa.features.finance.presentation.viewmodel.FinanceViewModel
-import java.util.Locale
 import com.appcasa.core.ui.R as CoreR
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,7 +117,7 @@ fun CategoryPieChart(data: Map<String, Double>, currency: String) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(modifier = Modifier.size(12.dp).clip(MaterialTheme.shapes.extraSmall).background(colors[index % colors.size]))
                         Text(
-                            text = "${entry.key}: ${String.format(Locale.getDefault(), "%.2f", entry.value)} $currency",
+                            text = stringResource(R.string.finance_stats_category_label, entry.key, entry.value, currency),
                             modifier = Modifier.padding(start = 8.dp),
                             style = MaterialTheme.typography.labelSmall
                         )

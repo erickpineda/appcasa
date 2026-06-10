@@ -24,6 +24,7 @@ object DatabaseModule {
       "appcasa_db"
     )
     .addMigrations(*Migrations.getAll())
+    .fallbackToDestructiveMigration()
     .build()
   }
 

@@ -2,6 +2,7 @@ package com.appcasa.features.calendar.data.repository
 
 import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
+import com.appcasa.core.data.remote.manager.SyncManager
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.Event
 import com.appcasa.core.domain.repository.CalendarRepository
@@ -9,16 +10,14 @@ import com.appcasa.features.calendar.data.local.EventoDao
 import com.appcasa.features.calendar.data.mapper.toDomain
 import com.appcasa.features.calendar.data.mapper.toEntity
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class CalendarRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val eventoDao: EventoDao,
     private val firestoreDataSource: FirestoreDataSource,
+    private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler
 ) : CalendarRepository {
 
@@ -39,8 +38,23 @@ class CalendarRepositoryImpl @Inject constructor(
         syncScheduler.scheduleSync(event.hogarId)
     }
 
+    override suspend fun updateEventSyncTimestamp(eventId: Long) {
+        eventoDao.updateSyncTimestamp(eventId, System.currentTimeMillis())
+    }
+
+    private var syncJob: Job? = null
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun startRemoteSync(hogarId: Long) {
-        firestoreDataSource.observeEvents(hogarId)
+        syncJob?.cancel()
+        syncJob = syncManager.isAppInForeground
+            .flatMapLatest { isInForeground ->
+                if (isInForeground) {
+                    firestoreDataSource.observeEvents(hogarId)
+                } else {
+                    emptyFlow()
+                }
+            }
             .onEach { remoteItems ->
                 remoteItems.forEach { remoteItem ->
                     val localItem = eventoDao.getEventoById(remoteItem.id)

@@ -8,7 +8,9 @@ fun MascotaPesoEntity.toDomain(): PetWeight {
         id = id,
         mascotaId = mascotaId,
         pesoKg = pesoKg,
-        fecha = fecha
+        fecha = fecha,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -17,7 +19,9 @@ fun PetWeight.toEntity(): MascotaPesoEntity {
         id = id,
         mascotaId = mascotaId,
         pesoKg = pesoKg,
-        fecha = fecha
+        fecha = fecha,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -27,7 +31,9 @@ fun MascotaVacunaEntity.toDomain(): PetVaccine {
         mascotaId = mascotaId,
         nombre = nombre,
         fechaAplicacion = fechaAplicacion,
-        proximaDosis = fechaProxima
+        proximaDosis = fechaProxima,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -37,7 +43,9 @@ fun PetVaccine.toEntity(): MascotaVacunaEntity {
         mascotaId = mascotaId,
         nombre = nombre,
         fechaAplicacion = fechaAplicacion,
-        fechaProxima = proximaDosis
+        fechaProxima = proximaDosis,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -50,7 +58,9 @@ fun MascotaMedicacionEntity.toDomain(): PetMedication {
         frecuencia = frecuencia,
         fechaInicio = fechaInicio,
         fechaFin = fechaFin,
-        activa = activa
+        activa = activa,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -63,7 +73,9 @@ fun PetMedication.toEntity(): MascotaMedicacionEntity {
         frecuencia = frecuencia,
         fechaInicio = fechaInicio,
         fechaFin = fechaFin,
-        activa = activa
+        activa = activa,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -74,7 +86,9 @@ fun MascotaDesparasitacionEntity.toDomain(): PetDeworming {
         tipo = tipo,
         producto = producto ?: "",
         fechaAplicacion = fechaAplicacion,
-        proximaDosis = fechaProxima
+        proximaDosis = fechaProxima,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -85,6 +99,8 @@ fun PetDeworming.toEntity(): MascotaDesparasitacionEntity {
         tipo = tipo,
         producto = producto,
         fechaAplicacion = fechaAplicacion,
-        fechaProxima = proximaDosis
+        fechaProxima = proximaDosis,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

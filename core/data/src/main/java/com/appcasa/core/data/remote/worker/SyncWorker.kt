@@ -9,6 +9,7 @@ import com.appcasa.core.domain.repository.CalendarRepository
 import com.appcasa.core.domain.repository.DashboardRepository
 import com.appcasa.core.domain.repository.FamilyRepository
 import com.appcasa.core.domain.repository.FinanceRepository
+import com.appcasa.core.domain.repository.InventoryRepository
 import com.appcasa.core.domain.repository.TasksRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -21,6 +22,7 @@ class SyncWorker @AssistedInject constructor(
     private val tasksRepository: TasksRepository,
     private val financeRepository: FinanceRepository,
     private val familyRepository: FamilyRepository,
+    private val inventoryRepository: InventoryRepository,
     private val dashboardRepository: DashboardRepository,
     private val calendarRepository: CalendarRepository,
     private val firestoreDataSource: FirestoreDataSource
@@ -31,29 +33,52 @@ class SyncWorker @AssistedInject constructor(
         if (hogarId == -1L) return Result.failure()
 
         return try {
-            // Sincronizar Tareas
-            tasksRepository.getTasksByHogar(hogarId).first().forEach { 
-                firestoreDataSource.syncTask(it) 
+            // Sincronizar Tareas que han cambiado
+            tasksRepository.getTasksByHogar(hogarId).first().filter { 
+                it.updatedAt > (it.lastSyncedAt ?: 0L) 
+            }.forEach { task ->
+                firestoreDataSource.syncTask(task)
+                tasksRepository.updateTaskSyncTimestamp(task.id)
             }
             
-            // Sincronizar Gastos
-            financeRepository.getExpensesByHogar(hogarId).first().forEach {
-                firestoreDataSource.syncExpense(it)
+            // Sincronizar Gastos que han cambiado
+            financeRepository.getExpensesByHogar(hogarId).first().filter {
+                it.updatedAt > (it.lastSyncedAt ?: 0L)
+            }.forEach { expense ->
+                firestoreDataSource.syncExpense(expense)
+                financeRepository.updateExpenseSyncTimestamp(expense.id)
             }
 
-            // Sincronizar Miembros
-            familyRepository.getMembersByHogar(hogarId).first().forEach {
-                firestoreDataSource.syncMember(it)
+            // Sincronizar Miembros que han cambiado
+            familyRepository.getMembersByHogar(hogarId).first().filter {
+                it.updatedAt > (it.lastSyncedAt ?: 0L)
+            }.forEach { member ->
+                firestoreDataSource.syncMember(member)
+                familyRepository.updateMemberSyncTimestamp(member.id)
             }
 
-            // Sincronizar Post-its
-            dashboardRepository.getPostIts(hogarId).first().forEach {
-                firestoreDataSource.syncPostIt(it)
+            // Sincronizar Inventario que ha cambiado
+            inventoryRepository.getStockByHogar(hogarId).first().filter {
+                it.updatedAt > (it.lastSyncedAt ?: 0L)
+            }.forEach { item ->
+                firestoreDataSource.syncStock(item)
+                inventoryRepository.updateStockSyncTimestamp(item.id)
             }
 
-            // Sincronizar Eventos
-            calendarRepository.getEventsByHogar(hogarId).first().forEach {
-                firestoreDataSource.syncEvent(it)
+            // Sincronizar Post-its que han cambiado
+            dashboardRepository.getPostIts(hogarId).first().filter {
+                it.updatedAt > (it.lastSyncedAt ?: 0L)
+            }.forEach { postIt ->
+                firestoreDataSource.syncPostIt(postIt)
+                dashboardRepository.updatePostItSyncTimestamp(postIt.id)
+            }
+
+            // Sincronizar Eventos que han cambiado
+            calendarRepository.getEventsByHogar(hogarId).first().filter {
+                it.updatedAt > (it.lastSyncedAt ?: 0L)
+            }.forEach { event ->
+                firestoreDataSource.syncEvent(event)
+                calendarRepository.updateEventSyncTimestamp(event.id)
             }
             
             Result.success()

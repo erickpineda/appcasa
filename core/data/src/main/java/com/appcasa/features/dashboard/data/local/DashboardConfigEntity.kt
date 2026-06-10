@@ -27,5 +27,11 @@ data class DashboardConfigEntity(
     val hogarId: Long,
     
     @ColumnInfo(name = "orden_modulos")
-    val ordenModulos: String // Lista separada por comas: "TASKS,PETS,CALENDAR,EXPENSES,POSTITS"
+    val ordenModulos: String,
+
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "last_synced_at")
+    val lastSyncedAt: Long? = null
 )

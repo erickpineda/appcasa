@@ -59,8 +59,10 @@ fun RecompensaEntity.toDomain(): Reward {
         hogarId = hogarId,
         titulo = titulo,
         descripcion = descripcion,
-        costoPuntos = costePuntos,
-        icono = icono
+        costePuntos = costePuntos,
+        icono = icono,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -70,8 +72,10 @@ fun Reward.toEntity(): RecompensaEntity {
         hogarId = hogarId,
         titulo = titulo,
         descripcion = descripcion,
-        costePuntos = costoPuntos,
-        icono = icono
+        costePuntos = costePuntos,
+        icono = icono,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -82,7 +86,9 @@ fun CategoriaTareaEntity.toDomain(): TaskCategory {
         nombre = nombre,
         colorHex = colorHex,
         icono = icono,
-        orden = orden
+        orden = orden,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -93,7 +99,9 @@ fun TaskCategory.toEntity(): CategoriaTareaEntity {
         nombre = nombre,
         colorHex = colorHex,
         icono = icono,
-        orden = orden
+        orden = orden,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -101,7 +109,9 @@ fun TareaAsignacionEntity.toDomain(): TaskAssignment {
     return TaskAssignment(
         tareaId = tareaId,
         miembroId = miembroId,
-        createdAt = createdAt
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -109,7 +119,9 @@ fun TaskAssignment.toEntity(): TareaAsignacionEntity {
     return TareaAsignacionEntity(
         tareaId = tareaId,
         miembroId = miembroId,
-        createdAt = createdAt
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -120,7 +132,9 @@ fun TareaCheckItemEntity.toDomain(): TaskCheckItem {
         texto = texto,
         completado = completado,
         orden = orden,
-        createdAt = createdAt
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -131,6 +145,8 @@ fun TaskCheckItem.toEntity(): TareaCheckItemEntity {
         texto = texto,
         completado = completado,
         orden = orden,
-        createdAt = createdAt
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

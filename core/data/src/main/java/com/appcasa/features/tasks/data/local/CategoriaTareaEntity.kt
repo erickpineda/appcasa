@@ -37,5 +37,11 @@ data class CategoriaTareaEntity(
   val icono: String? = null,
 
   @ColumnInfo(name = "orden")
-  val orden: Int = 0
+  val orden: Int = 0,
+
+  @ColumnInfo(name = "updated_at")
+  val updatedAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "last_synced_at")
+  val lastSyncedAt: Long? = null
 )

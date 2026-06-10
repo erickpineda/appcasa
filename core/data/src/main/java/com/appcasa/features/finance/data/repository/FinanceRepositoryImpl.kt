@@ -2,6 +2,7 @@ package com.appcasa.features.finance.data.repository
 
 import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
+import com.appcasa.core.data.remote.manager.SyncManager
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.Expense
 import com.appcasa.core.domain.repository.FinanceRepository
@@ -9,16 +10,14 @@ import com.appcasa.features.finance.data.local.ExpenseDao
 import com.appcasa.features.finance.data.mapper.toDomain
 import com.appcasa.features.finance.data.mapper.toEntity
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class FinanceRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val expenseDao: ExpenseDao,
     private val firestoreDataSource: FirestoreDataSource,
+    private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler
 ) : FinanceRepository {
 
@@ -74,8 +73,23 @@ class FinanceRepositoryImpl @Inject constructor(
         expenseDao.purgeOldExpensePhotos(hogarId, threshold)
     }
 
+    override suspend fun updateExpenseSyncTimestamp(expenseId: Long) {
+        expenseDao.updateSyncTimestamp(expenseId, System.currentTimeMillis())
+    }
+
+    private var syncJob: Job? = null
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun startRemoteSync(hogarId: Long) {
-        firestoreDataSource.observeExpenses(hogarId)
+        syncJob?.cancel()
+        syncJob = syncManager.isAppInForeground
+            .flatMapLatest { isInForeground ->
+                if (isInForeground) {
+                    firestoreDataSource.observeExpenses(hogarId)
+                } else {
+                    emptyFlow()
+                }
+            }
             .onEach { remoteExpenses ->
                 remoteExpenses.forEach { remoteExpense ->
                     val localExpense = expenseDao.getExpenseById(remoteExpense.id)

@@ -4,7 +4,9 @@ data class PetWeight(
     val id: Long = 0,
     val mascotaId: Long,
     val pesoKg: Double,
-    val fecha: Long = System.currentTimeMillis()
+    val fecha: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )
 
 data class PetVaccine(
@@ -12,7 +14,9 @@ data class PetVaccine(
     val mascotaId: Long,
     val nombre: String,
     val fechaAplicacion: Long = System.currentTimeMillis(),
-    val proximaDosis: Long? = null
+    val proximaDosis: Long? = null,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )
 
 data class PetMedication(
@@ -23,7 +27,9 @@ data class PetMedication(
     val frecuencia: String,
     val fechaInicio: Long = System.currentTimeMillis(),
     val fechaFin: Long? = null,
-    val activa: Boolean = true
+    val activa: Boolean = true,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )
 
 data class PetDeworming(
@@ -32,5 +38,7 @@ data class PetDeworming(
     val tipo: String, // Interna, Externa, Ambas
     val producto: String,
     val fechaAplicacion: Long = System.currentTimeMillis(),
-    val proximaDosis: Long? = null
+    val proximaDosis: Long? = null,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )

@@ -140,7 +140,8 @@ fun ListDetailScreen(
             }
           } else {
             IconButton(onClick = {
-              val shareText = "🛒 *Lista de AppCasa*:\n" + items.joinToString("\n") { 
+              val shareTitle = context.getString(R.string.lists_share_title)
+              val shareText = shareTitle + "\n" + items.joinToString("\n") {
                 (if (it.completado) "✅ " else "⬜ ") + it.texto + (if (!it.cantidad.isNullOrBlank()) " (${it.cantidad})" else "")
               }
               val sendIntent: Intent = Intent().apply {

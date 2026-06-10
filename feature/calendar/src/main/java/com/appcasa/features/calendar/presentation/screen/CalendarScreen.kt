@@ -256,7 +256,7 @@ fun CalendarContent(
                   TextField(
                       value = searchQuery,
                       onValueChange = onSearchQueryChange,
-                      placeholder = { Text("Buscar en la agenda...") },
+                      placeholder = { Text(stringResource(R.string.calendar_search_placeholder)) },
                       modifier = Modifier.fillMaxWidth(),
                       singleLine = true,
                       colors = TextFieldDefaults.colors(
@@ -296,7 +296,7 @@ fun CalendarContent(
             },
             actions = {
               IconButton(onClick = { isSearching = true }) {
-                  Icon(Icons.Default.Search, contentDescription = "Buscar")
+                  Icon(Icons.Default.Search, contentDescription = stringResource(R.string.cd_search))
               }
               IconButton(onClick = onImportClick) {
                 Icon(Icons.Default.UploadFile, contentDescription = stringResource(R.string.cd_import))
@@ -529,7 +529,7 @@ fun CalendarContent(
 
         item {
           GroupHeader(
-            title = "Mes actual",
+            title = stringResource(R.string.calendar_group_current_month),
             count = mesActualItems.size,
             isExpanded = currentMonthExpanded,
             onToggle = { currentMonthExpanded = !currentMonthExpanded }
@@ -569,7 +569,7 @@ fun CalendarContent(
 
         item {
           GroupHeader(
-            title = "Otros meses",
+            title = stringResource(R.string.calendar_group_other_months),
             count = otrosMesesItems.size,
             isExpanded = otherMonthsExpanded,
             onToggle = { otherMonthsExpanded = !otherMonthsExpanded }
@@ -654,8 +654,8 @@ fun CalendarContent(
                   ) {
                       Icon(Icons.Default.Inventory2, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                       Column(modifier = Modifier.weight(1f)) {
-                          Text("Archivo histórico", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                          Text("Hay registros antiguos ocultos. Usa la búsqueda para encontrarlos.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                          Text(stringResource(R.string.calendar_archive_title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                          Text(stringResource(R.string.calendar_archive_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                       }
                       Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
                   }

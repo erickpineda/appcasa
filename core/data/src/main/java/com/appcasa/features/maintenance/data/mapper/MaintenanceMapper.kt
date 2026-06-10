@@ -13,7 +13,9 @@ fun MaintenanceEntity.toDomain(): MaintenanceEvent {
         fechaRealizacion = fechaRealizacion,
         proximaRevision = proximaRevision,
         coste = coste,
-        archived = archived
+        archived = archived,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -27,6 +29,8 @@ fun MaintenanceEvent.toEntity(): MaintenanceEntity {
         fechaRealizacion = fechaRealizacion,
         proximaRevision = proximaRevision,
         coste = coste,
-        archived = archived
+        archived = archived,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

@@ -94,5 +94,8 @@ data class MiembroEntity(
   val estadoAnimo: String? = null,
 
   @ColumnInfo(name = "estado_animo_updated")
-  val estadoAnimoUpdatedAt: Long? = null
+  val estadoAnimoUpdatedAt: Long? = null,
+
+  @ColumnInfo(name = "last_synced_at")
+  val lastSyncedAt: Long? = null
 )

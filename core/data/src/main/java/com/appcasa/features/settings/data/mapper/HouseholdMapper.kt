@@ -12,7 +12,8 @@ fun HogarEntity.toDomain(): Household {
         estado = try { EstadoGeneral.valueOf(estado) } catch (e: Exception) { EstadoGeneral.ACTIVO },
         codigoHogar = codigoHogar,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -24,6 +25,7 @@ fun Household.toEntity(): HogarEntity {
         estado = estado.name,
         codigoHogar = codigoHogar,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

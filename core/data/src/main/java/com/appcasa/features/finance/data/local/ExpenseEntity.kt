@@ -64,5 +64,8 @@ data class ExpenseEntity(
     val syncId: String? = null,
 
     @ColumnInfo(name = "archived")
-    val archived: Boolean = false
+    val archived: Boolean = false,
+
+    @ColumnInfo(name = "last_synced_at")
+    val lastSyncedAt: Long? = null
 )

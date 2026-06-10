@@ -10,7 +10,11 @@ fun ConfiguracionEntity.toDomain(): Configuration {
         hogarId = hogarId,
         clave = clave,
         valor = valor,
-        tipo = try { TipoConfiguracion.valueOf(tipo) } catch (e: Exception) { TipoConfiguracion.STRING }
+        tipo = try { TipoConfiguracion.valueOf(tipo) } catch (e: Exception) { TipoConfiguracion.STRING },
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        syncId = syncId,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -20,6 +24,10 @@ fun Configuration.toEntity(): ConfiguracionEntity {
         hogarId = hogarId,
         clave = clave,
         valor = valor,
-        tipo = tipo.name
+        tipo = tipo.name,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        syncId = syncId,
+        lastSyncedAt = lastSyncedAt
     )
 }

@@ -12,5 +12,6 @@ data class Expense(
     val updatedAt: Long = System.currentTimeMillis(),
     val createdById: Long? = null,
     val archived: Boolean = false,
-    val syncId: String? = null
+    val syncId: String? = null,
+    val lastSyncedAt: Long? = null
 )

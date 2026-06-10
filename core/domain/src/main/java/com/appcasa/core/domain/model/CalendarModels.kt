@@ -13,5 +13,6 @@ data class Event(
     val repeticionAnual: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val syncId: String? = null
+    val syncId: String? = null,
+    val lastSyncedAt: Long? = null
 )

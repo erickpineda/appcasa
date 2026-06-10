@@ -18,7 +18,8 @@ fun RecordatorioEntity.toDomain(): Reminder {
         notificado = notificado,
         activo = activo,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -36,6 +37,7 @@ fun Reminder.toEntity(): RecordatorioEntity {
         notificado = notificado,
         activo = activo,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

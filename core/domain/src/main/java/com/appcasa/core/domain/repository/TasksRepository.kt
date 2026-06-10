@@ -34,5 +34,7 @@ interface TasksRepository {
     suspend fun updateCheckItem(item: TaskCheckItem)
     suspend fun deleteCheckItem(item: TaskCheckItem)
 
+    suspend fun updateTaskSyncTimestamp(taskId: Long)
+
     fun startRemoteSync(hogarId: Long)
 }

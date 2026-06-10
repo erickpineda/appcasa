@@ -2,6 +2,7 @@ package com.appcasa.features.tasks.data.repository
 
 import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
+import com.appcasa.core.data.remote.manager.SyncManager
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.repository.TasksRepository
@@ -10,10 +11,7 @@ import com.appcasa.features.tasks.data.local.TareaDao
 import com.appcasa.features.tasks.data.mapper.toDomain
 import com.appcasa.features.tasks.data.mapper.toEntity
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class TasksRepositoryImpl @Inject constructor(
@@ -21,6 +19,7 @@ class TasksRepositoryImpl @Inject constructor(
     private val tareaDao: TareaDao,
     private val recompensaDao: RecompensaDao,
     private val syncScheduler: SyncScheduler,
+    private val syncManager: SyncManager,
     private val firestoreDataSource: FirestoreDataSource
 ) : TasksRepository {
 
@@ -138,8 +137,22 @@ class TasksRepositoryImpl @Inject constructor(
         tareaDao.deleteCheckItem(item.toEntity())
     }
 
+    override suspend fun updateTaskSyncTimestamp(taskId: Long) {
+        tareaDao.updateSyncTimestamp(taskId, System.currentTimeMillis())
+    }
+
+    private var syncJob: Job? = null
+
     override fun startRemoteSync(hogarId: Long) {
-        firestoreDataSource.observeTasks(hogarId)
+        syncJob?.cancel()
+        syncJob = syncManager.isAppInForeground
+            .flatMapLatest { isInForeground ->
+                if (isInForeground) {
+                    firestoreDataSource.observeTasks(hogarId)
+                } else {
+                    emptyFlow()
+                }
+            }
             .onEach { remoteTasks ->
                 remoteTasks.forEach { remoteTask ->
                     val localTask = tareaDao.getTareaById(remoteTask.id)

@@ -18,7 +18,8 @@ fun UsuarioEntity.toDomain(): User {
         miembroId = miembroId,
         isActive = isActive,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -35,6 +36,7 @@ fun User.toEntity(): UsuarioEntity {
         miembroId = miembroId,
         isActive = isActive,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

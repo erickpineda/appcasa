@@ -9,5 +9,7 @@ data class MaintenanceEvent(
     val fechaRealizacion: Long = System.currentTimeMillis(),
     val proximaRevision: Long? = null,
     val coste: Double? = null,
-    val archived: Boolean = false
+    val archived: Boolean = false,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )

@@ -213,6 +213,10 @@
     <string name="util_dosage_result_title">DOSIS FINAL CALCULADA</string>
     <string name="util_dosage_equiv_mg">Equivale a %s mg</string>
     <string name="util_dosage_vet_notice">Aviso: Consulta siempre con tu veterinario antes de medicar.</string>
+    <string name="util_dosage_unit_mcg">(%s µg)</string>
+    <string name="util_dosage_unit_ml_format">%s ml</string>
+    <string name="util_dosage_unit_mg_format">%s mg</string>
+    <string name="util_dosage_unit_gr_format">%s gr</string>
     <string name="util_safe_delete_title">Eliminar Documento</string>
     <string name="util_safe_delete_confirm">¿Estás seguro de borrar \"%s\"? Esta acción es irreversible.</string>
     <string name="util_safe_new_doc_title">Nuevo Documento</string>
@@ -377,4 +381,9 @@
     <string name="maintenance_error_no_more_active">No hay más registros para cargar</string>
     <string name="maintenance_error_no_more_archived">No hay más registros en el archivo</string>
     <string name="archive_expense_format">%1$s (%2$.2f%3$s)</string>
+
+    <string name="util_unit_ml">%s ml</string>
+    <string name="util_unit_gr">%s gr</string>
+    <string name="util_unit_celsius">%s °C</string>
+    <string name="util_unit_fahrenheit">%s °F</string>
 </resources>

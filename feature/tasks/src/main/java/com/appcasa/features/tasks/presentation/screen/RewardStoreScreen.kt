@@ -109,7 +109,7 @@ fun RewardStoreScreen(
                             text = { 
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(member.nombre)
-                                    Text("${member.puntos} XP", style = MaterialTheme.typography.labelSmall)
+                                    Text(stringResource(R.string.rewards_xp_format, member.puntos), style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         )
@@ -135,7 +135,7 @@ fun RewardStoreScreen(
                 } else {
                     items(rewards) { reward ->
                         val currentMember = members.find { it.id == selectedMemberId }
-                        val canAfford = (currentMember?.puntos ?: 0) >= reward.costoPuntos
+                        val canAfford = (currentMember?.puntos ?: 0) >= reward.costePuntos
                         
                         RewardCard(
                             reward = reward,
@@ -164,7 +164,7 @@ fun RewardCard(
             leadingContent = { Icon(Icons.Default.CardGiftcard, null, tint = MaterialTheme.colorScheme.primary) },
             trailingContent = {
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("${reward.costoPuntos} XP", color = if (canAfford) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.rewards_xp_format, reward.costePuntos), color = if (canAfford) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black)
                     Button(
                         onClick = onRedeem,
                         enabled = canAfford,

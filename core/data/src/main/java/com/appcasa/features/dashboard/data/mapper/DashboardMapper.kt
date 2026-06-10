@@ -13,7 +13,8 @@ fun PostItEntity.toDomain(): PostIt {
         colorHex = colorHex,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        syncId = syncId
+        syncId = syncId,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
@@ -25,20 +26,25 @@ fun PostIt.toEntity(): PostItEntity {
         colorHex = colorHex,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        syncId = syncId
+        syncId = syncId,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
 fun DashboardConfigEntity.toDomain(): DashboardConfig {
     return DashboardConfig(
         hogarId = hogarId,
-        ordenModulos = ordenModulos
+        ordenModulos = ordenModulos,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }
 
 fun DashboardConfig.toEntity(): DashboardConfigEntity {
     return DashboardConfigEntity(
         hogarId = hogarId,
-        ordenModulos = ordenModulos
+        ordenModulos = ordenModulos,
+        updatedAt = updatedAt,
+        lastSyncedAt = lastSyncedAt
     )
 }

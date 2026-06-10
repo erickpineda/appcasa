@@ -7,5 +7,6 @@ interface CalendarRepository {
     fun getEventsByHogar(hogarId: Long): Flow<List<Event>>
     suspend fun insertEvent(event: Event): Long
     suspend fun deleteEvent(event: Event)
+    suspend fun updateEventSyncTimestamp(eventId: Long)
     fun startRemoteSync(hogarId: Long)
 }

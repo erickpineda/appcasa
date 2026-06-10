@@ -33,5 +33,17 @@ data class ConfiguracionEntity(
   val valor: String,
 
   @ColumnInfo(name = "tipo")
-  val tipo: String = TipoConfiguracion.STRING.name
+  val tipo: String = TipoConfiguracion.STRING.name,
+
+  @ColumnInfo(name = "created_at")
+  val createdAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "updated_at")
+  val updatedAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "sync_id")
+  val syncId: String? = null,
+
+  @ColumnInfo(name = "last_synced_at")
+  val lastSyncedAt: Long? = null
 )

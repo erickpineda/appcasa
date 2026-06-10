@@ -70,19 +70,19 @@ fun CocinaConverterScreen(
         }
         item {
           ConversionGroup(stringResource(R.string.util_kitchen_group_liquids))
-          ConversionRow(stringResource(R.string.util_kitchen_cups_ml), "${String.format("%.1f", numValue * 240)} ml")
-          ConversionRow(stringResource(R.string.util_kitchen_tbsp_ml), "${String.format("%.1f", numValue * 15)} ml")
-          ConversionRow(stringResource(R.string.util_kitchen_tsp_ml), "${String.format("%.1f", numValue * 5)} ml")
+          ConversionRow(stringResource(R.string.util_kitchen_cups_ml), stringResource(R.string.util_unit_ml, String.format("%.1f", numValue * 240)))
+          ConversionRow(stringResource(R.string.util_kitchen_tbsp_ml), stringResource(R.string.util_unit_ml, String.format("%.1f", numValue * 15)))
+          ConversionRow(stringResource(R.string.util_kitchen_tsp_ml), stringResource(R.string.util_unit_ml, String.format("%.1f", numValue * 5)))
         }
         item {
           ConversionGroup(stringResource(R.string.util_kitchen_group_weight))
-          ConversionRow(stringResource(R.string.util_kitchen_flour_gr), "${String.format("%.1f", numValue * 120)} gr")
-          ConversionRow(stringResource(R.string.util_kitchen_sugar_gr), "${String.format("%.1f", numValue * 200)} gr")
+          ConversionRow(stringResource(R.string.util_kitchen_flour_gr), stringResource(R.string.util_unit_gr, String.format("%.1f", numValue * 120)))
+          ConversionRow(stringResource(R.string.util_kitchen_sugar_gr), stringResource(R.string.util_unit_gr, String.format("%.1f", numValue * 200)))
         }
         item {
           ConversionGroup(stringResource(R.string.util_kitchen_group_temp))
-          ConversionRow(stringResource(R.string.util_kitchen_f_to_c), "${String.format("%.1f", (numValue - 32) * 5/9)} °C")
-          ConversionRow(stringResource(R.string.util_kitchen_c_to_f), "${String.format("%.1f", (numValue * 9/5) + 32)} °F")
+          ConversionRow(stringResource(R.string.util_kitchen_f_to_c), stringResource(R.string.util_unit_celsius, String.format("%.1f", (numValue - 32) * 5/9)))
+          ConversionRow(stringResource(R.string.util_kitchen_c_to_f), stringResource(R.string.util_unit_fahrenheit, String.format("%.1f", (numValue * 9/5) + 32)))
         }
       }
     }

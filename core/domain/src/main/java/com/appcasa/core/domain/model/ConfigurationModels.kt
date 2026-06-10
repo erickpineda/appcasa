@@ -5,5 +5,9 @@ data class Configuration(
     val hogarId: Long,
     val clave: String,
     val valor: String,
-    val tipo: TipoConfiguracion = TipoConfiguracion.STRING
+    val tipo: TipoConfiguracion = TipoConfiguracion.STRING,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val syncId: String? = null,
+    val lastSyncedAt: Long? = null
 )

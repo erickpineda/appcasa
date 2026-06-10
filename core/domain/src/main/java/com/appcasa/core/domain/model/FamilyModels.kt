@@ -20,7 +20,8 @@ data class FamilyMember(
     val puntos: Int = 0,
     val nivel: Int = 1,
     val estadoAnimo: String? = null,
-    val estadoAnimoUpdatedAt: Long? = null
+    val estadoAnimoUpdatedAt: Long? = null,
+    val lastSyncedAt: Long? = null
 )
 
 val FamilyMember.isPet: Boolean

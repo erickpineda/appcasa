@@ -19,6 +19,7 @@
     <string name="lists_archive_confirm">Se moverá esta lista al Cajón de Archivo. Podrás recuperarla desde allí si la necesitas.</string>
     <string name="lists_load_more">Cargar más listas antiguas…</string>
     <string name="lists_type_custom">PERSONALIZADA</string>
+    <string name="lists_share_title">🛒 *Lista de AppCasa*:</string>
 
     <string name="cd_back">Atrás</string>
     <string name="cd_edit">Editar</string>

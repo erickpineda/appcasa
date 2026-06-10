@@ -9,5 +9,6 @@ data class StockItem(
     val cantidadMinima: Double,
     val unidad: String,
     val autoComprar: Boolean = true,
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncedAt: Long? = null
 )
