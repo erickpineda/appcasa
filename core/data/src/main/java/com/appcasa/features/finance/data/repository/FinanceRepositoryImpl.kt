@@ -1,5 +1,6 @@
 package com.appcasa.features.finance.data.repository
 
+import com.appcasa.core.data.R
 import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.data.remote.manager.SyncManager
 import com.appcasa.core.data.remote.source.FinanceRemoteDataSource
@@ -116,8 +117,8 @@ class FinanceRepositoryImpl @Inject constructor(
                         NotificationHelper.showNotification(
                             context,
                             remoteExpense.id.toInt() + 5000,
-                            "Nuevo Gasto",
-                            "${remoteExpense.concepto}: ${remoteExpense.importe} €"
+                            context.getString(R.string.notif_new_expense_title),
+                            context.getString(R.string.notif_new_expense_msg, remoteExpense.concepto, remoteExpense.importe, "€")
                         )
                     } else if (remoteExpense.updatedAt > localExpense.updatedAt) {
                         expenseDao.insertExpense(remoteExpense.toEntity())

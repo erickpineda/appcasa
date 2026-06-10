@@ -1,5 +1,6 @@
 package com.appcasa.features.tasks.data.repository
 
+import com.appcasa.core.data.R
 import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.data.remote.manager.SyncManager
 import com.appcasa.core.data.remote.source.TaskRemoteDataSource
@@ -193,7 +194,7 @@ class TasksRepositoryImpl @Inject constructor(
                         NotificationHelper.showNotification(
                             context,
                             remoteTask.id.toInt() + 3000,
-                            "Nueva Tarea",
+                            context.getString(R.string.notif_new_task_title),
                             remoteTask.titulo
                         )
                     } else {
@@ -201,8 +202,8 @@ class TasksRepositoryImpl @Inject constructor(
                             NotificationHelper.showNotification(
                                 context,
                                 remoteTask.id.toInt() + 4000,
-                                "Tarea Completada",
-                                "¡${remoteTask.titulo} ha sido terminada!"
+                                context.getString(R.string.notif_task_completed_title),
+                                context.getString(R.string.notif_task_completed_msg, remoteTask.titulo)
                             )
                         }
                         

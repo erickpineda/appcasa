@@ -109,16 +109,16 @@ fun SettingsScreen(
     settingsViewModel.settingsEvent.collect { event ->
       when (event) {
         is SettingsUiEvent.ShowToast -> {
-          Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+          Toast.makeText(context, event.message.asString(context), Toast.LENGTH_SHORT).show()
         }
         is SettingsUiEvent.ExportReady -> {
-          Toast.makeText(context, "Copia de seguridad generada", Toast.LENGTH_SHORT).show()
+          Toast.makeText(context, context.getString(R.string.settings_export_done), Toast.LENGTH_SHORT).show()
           val sendIntent: Intent = Intent().apply {
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_TEXT, event.content)
             type = "text/plain"
           }
-          val shareIntent = Intent.createChooser(sendIntent, "Exportar datos de AppCasa")
+          val shareIntent = Intent.createChooser(sendIntent, context.getString(R.string.settings_export_chooser_title))
           context.startActivity(shareIntent)
         }
       }
@@ -732,7 +732,7 @@ fun SistemaSection(
             SettingsItem(
                 icon = Icons.Default.Refresh,
                 title = "Forzar Sincronización",
-                subtitle = if (isSyncing) "Sincronización en curso..." else "Sube todos los datos locales a la nube ahora",
+                subtitle = if (isSyncing) stringResource(R.string.settings_sync_in_progress) else "Sube todos los datos locales a la nube ahora",
                 enabled = !isSyncing,
                 onClick = onForceSync
             )
@@ -741,7 +741,7 @@ fun SistemaSection(
             SettingsItem(
                 icon = Icons.Default.FileUpload,
                 title = "Exportar Datos (JSON)",
-                subtitle = if (isExporting) "Generando copia..." else "Crea una copia de seguridad externa de tu hogar",
+                subtitle = if (isExporting) stringResource(R.string.settings_export_in_progress) else "Crea una copia de seguridad externa de tu hogar",
                 enabled = !isExporting,
                 onClick = onExportData
             )

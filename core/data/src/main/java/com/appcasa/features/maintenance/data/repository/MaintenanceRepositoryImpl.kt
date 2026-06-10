@@ -41,6 +41,11 @@ class MaintenanceRepositoryImpl @Inject constructor(
 
     override suspend fun deleteEvent(event: MaintenanceEvent) {
         maintenanceDao.deleteEvent(event.toEntity())
+        try {
+            remoteDataSource.deleteMaintenance(event)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         syncScheduler.scheduleSync(event.hogarId)
     }
 
@@ -74,6 +79,15 @@ class MaintenanceRepositoryImpl @Inject constructor(
                 }
             }
             .onEach { remoteItems ->
+                val remoteIds = remoteItems.map { it.id }.toSet()
+                val localItems = maintenanceDao.getEventsPaged(hogarId, 1000, 0).first()
+                
+                localItems.forEach { local ->
+                    if (local.id !in remoteIds) {
+                        maintenanceDao.deleteEvent(local)
+                    }
+                }
+
                 remoteItems.forEach { remoteEvent ->
                     val localEvent = maintenanceDao.getEventById(remoteEvent.id)
                     if (localEvent == null || remoteEvent.updatedAt > localEvent.updatedAt) {

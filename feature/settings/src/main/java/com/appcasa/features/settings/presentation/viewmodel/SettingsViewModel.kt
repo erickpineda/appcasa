@@ -9,6 +9,8 @@ import com.appcasa.core.domain.usecase.config.UpdateConfigurationUseCase
 import com.appcasa.core.domain.usecase.user.GetCurrentUserUseCase
 import com.appcasa.features.settings.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.appcasa.core.ui.utils.UiText
+import com.appcasa.feature.settings.R
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -102,7 +104,7 @@ class SettingsViewModel @Inject constructor(
             val hogar = hogarActual.value ?: return@launch
             _isSyncing.value = true
             forceSyncUseCase(hogar.id)
-            _settingsEvent.emit(SettingsUiEvent.ShowToast("Sincronización iniciada"))
+            _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_sync_started)))
             // Simulamos un tiempo de "proceso" para dar feedback y evitar spam
             kotlinx.coroutines.delay(3000)
             _isSyncing.value = false
@@ -128,6 +130,6 @@ class SettingsViewModel @Inject constructor(
 }
 
 sealed interface SettingsUiEvent {
-    data class ShowToast(val message: String) : SettingsUiEvent
+    data class ShowToast(val message: UiText) : SettingsUiEvent
     data class ExportReady(val content: String) : SettingsUiEvent
 }

@@ -1,4 +1,15 @@
 <resources>
     <string name="location_reminder_title">Recordatorio de ubicación</string>
     <string name="location_reminder_desc">¡Estás cerca de un punto de interés!</string>
+
+    <string name="notif_new_postit_title">Nuevo Post-it</string>
+    <string name="notif_new_task_title">Nueva Tarea</string>
+    <string name="notif_task_completed_title">Tarea Completada</string>
+    <string name="notif_task_completed_msg">¡%s ha sido terminada!</string>
+    <string name="notif_new_expense_title">Nuevo Gasto</string>
+    <string name="notif_new_expense_msg">%1$s: %2$.2f %3$s</string>
+    <string name="notif_maintenance_reminder_title">Mantenimiento: %s</string>
+    <string name="notif_maintenance_reminder_msg">Tienes una revisión de mantenimiento pendiente próximamente.</string>
+    <string name="notif_generic_reminder_title">Recordatorio AppCasa</string>
+    <string name="notif_generic_reminder_msg">Tienes una tarea pendiente</string>
 </resources>

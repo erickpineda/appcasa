@@ -7,6 +7,7 @@ import android.content.Intent
 import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.data.remote.manager.SyncManager
 import com.appcasa.core.data.remote.source.DashboardRemoteDataSource
+import com.appcasa.core.data.R
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.DashboardConfig
 import com.appcasa.core.domain.model.PostIt
@@ -111,7 +112,7 @@ class DashboardRepositoryImpl @Inject constructor(
                         NotificationHelper.showNotification(
                             context,
                             remoteItem.id.toInt() + 2000,
-                            "Nuevo Post-it",
+                            context.getString(R.string.notif_new_postit_title),
                             remoteItem.contenido.take(50)
                         )
                     } else if (remoteItem.updatedAt > localItem.updatedAt) {

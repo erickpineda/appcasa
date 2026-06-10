@@ -12,8 +12,8 @@ class ReminderWorker(
 ) : Worker(context, workerParams) {
 
   override fun doWork(): Result {
-    val title = inputData.getString("title") ?: "Recordatorio AppCasa"
-    val message = inputData.getString("message") ?: "Tienes una tarea pendiente"
+    val title = inputData.getString("title") ?: context.getString(com.appcasa.core.data.R.string.notif_generic_reminder_title)
+    val message = inputData.getString("message") ?: context.getString(com.appcasa.core.data.R.string.notif_generic_reminder_msg)
     val id = inputData.getInt("id", 0)
     val timeMillis = inputData.getLong("timeMillis", 0L)
 

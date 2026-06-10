@@ -8,6 +8,7 @@ import androidx.work.ListenableWorker.Result
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.repository.MaintenanceRepository
 import com.appcasa.core.utils.NotificationHelper
+import com.appcasa.feature.dashboard.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -37,8 +38,8 @@ class MaintenanceWorker @AssistedInject constructor(
                   NotificationHelper.showNotification(
                       applicationContext,
                       event.id.toInt() + 1000, // Offset para no colisionar con otros IDs
-                      "Mantenimiento: ${event.titulo}",
-                      "Tienes una revisión de mantenimiento pendiente próximamente."
+                      applicationContext.getString(com.appcasa.core.data.R.string.notif_maintenance_reminder_title, event.titulo),
+                      applicationContext.getString(com.appcasa.core.data.R.string.notif_maintenance_reminder_msg)
                   )
               }
         

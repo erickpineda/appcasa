@@ -117,4 +117,10 @@
     <string name="auth_btn_goto_login">¿Ya tienes cuenta? Inicia sesión</string>
     <string name="auth_btn_goto_register">¿No tienes cuenta? Regístrate</string>
     <string name="auth_error_unknown">Error desconocido</string>
+
+    <string name="settings_sync_started">Sincronización iniciada</string>
+    <string name="settings_sync_in_progress">Sincronización en curso…</string>
+    <string name="settings_export_done">Copia de seguridad generada</string>
+    <string name="settings_export_in_progress">Generando copia…</string>
+    <string name="settings_export_chooser_title">Exportar datos de AppCasa</string>
 </resources>
