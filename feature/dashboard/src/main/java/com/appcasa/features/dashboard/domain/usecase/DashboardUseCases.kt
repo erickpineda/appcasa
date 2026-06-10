@@ -122,7 +122,7 @@ class GetNextEventUseCase @Inject constructor(
     private val tasksRepository: TasksRepository,
     private val familyRepository: FamilyRepository
 ) {
-    operator fun invoke(hogarId: Long): Flow<Pair<String, String>> {
+    operator fun invoke(hogarId: Long): Flow<NextEventSummary?> {
         return combine(
             calendarRepository.getEventsByHogar(hogarId), 
             reminderRepository.getRemindersByHogar(hogarId),
@@ -130,22 +130,18 @@ class GetNextEventUseCase @Inject constructor(
             familyRepository.getMembersByHogar(hogarId)
         ) { eventos, recordatorios, tareas, miembros ->
             val birthdays = miembros.filter { it.fechaNacimiento != null }.map { 
-              "Cumpleaños: ${it.nombre} 🎂" to calculateBirthdayOccurrence(it.fechaNacimiento!!)
+              NextEventSummary(it.nombre, calculateBirthdayOccurrence(it.fechaNacimiento!!), true)
             }
             
-            val proximo = (eventos.map { it.titulo to it.fecha } + 
-             recordatorios.map { it.titulo to it.fechaHora } +
-             tareas.filter { it.fechaLimite != null && it.estado != EstadoTarea.COMPLETADA }.map { it.titulo to it.fechaLimite!! } +
+            val proximo = (eventos.map { NextEventSummary(it.titulo, it.fecha) } + 
+             recordatorios.map { NextEventSummary(it.titulo, it.fechaHora) } +
+             tareas.filter { it.fechaLimite != null && it.estado != EstadoTarea.COMPLETADA }.map { NextEventSummary(it.titulo, it.fechaLimite!!) } +
              birthdays)
-              .filter { it.second >= System.currentTimeMillis() }
-              .sortedBy { it.second }
+              .filter { it.timestamp >= System.currentTimeMillis() }
+              .sortedBy { it.timestamp }
               .firstOrNull()
 
-            if (proximo != null) {
-                proximo.first to formatDate(proximo.second)
-            } else {
-                "Sin eventos próximos" to ""
-            }
+            proximo
         }
     }
 

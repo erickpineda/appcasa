@@ -72,7 +72,7 @@ fun AuthScreen(
 
             if (uiState is AuthViewModel.AuthUiState.Error) {
                 Text(
-                    text = (uiState as AuthViewModel.AuthUiState.Error).message,
+                    text = (uiState as AuthViewModel.AuthUiState.Error).message.asString(),
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 8.dp)
                 )

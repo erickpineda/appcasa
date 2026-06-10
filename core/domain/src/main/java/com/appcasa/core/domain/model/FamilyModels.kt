@@ -24,5 +24,10 @@ data class FamilyMember(
     val lastSyncedAt: Long? = null
 )
 
+data class PetSummary(
+    val totalCount: Int,
+    val typeCounts: Map<TipoMiembro, Int>
+)
+
 val FamilyMember.isPet: Boolean
     get() = tipo != TipoMiembro.PERSONA

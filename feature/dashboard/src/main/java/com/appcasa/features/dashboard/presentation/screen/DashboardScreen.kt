@@ -85,6 +85,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -93,6 +94,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.FamilyMember
+import com.appcasa.core.domain.model.NextEventSummary
+import com.appcasa.core.domain.model.PetSummary
 import com.appcasa.core.domain.model.PostIt
 import com.appcasa.core.domain.model.TipoMiembro
 import com.appcasa.core.domain.model.User
@@ -105,6 +108,9 @@ import com.appcasa.feature.dashboard.R
 import com.appcasa.features.dashboard.presentation.model.SearchItem
 import com.appcasa.features.dashboard.presentation.viewmodel.DashboardViewModel
 import com.appcasa.navigation.Screen
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -239,11 +245,11 @@ fun DashboardContent(
   quickActions: List<String>,
   navController: NavController,
   familyMembers: List<FamilyMember>,
-  petData: Pair<String, String>,
+  petData: PetSummary,
   pendingTasksCount: String,
   monthlyExpense: String,
   lowStockCount: Int,
-  nextEvent: Pair<String, String>,
+  nextEvent: NextEventSummary?,
   postIts: List<PostIt>,
   userPoints: Int,
   userLevel: Int,
@@ -277,14 +283,12 @@ fun DashboardContent(
                 modifier = itemModifier
             )
             Constants.Modules.PETS -> DashboardPetCard(
-                count = petData.first,
-                summary = petData.second,
+                petSummary = petData,
                 onClick = { navController.navigate(Screen.Family) },
                 modifier = itemModifier
             )
             Constants.Modules.CALENDAR -> DashboardCalendarCard(
-                eventTitle = nextEvent.first,
-                eventDate = nextEvent.second,
+                eventSummary = nextEvent,
                 onClick = { navController.navigate(Screen.Calendar) },
                 modifier = itemModifier
             )
@@ -561,7 +565,21 @@ fun DashboardTaskCard(pendingCount: String, onClick: () -> Unit, modifier: Modif
 }
 
 @Composable
-fun DashboardPetCard(count: String, summary: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun DashboardPetCard(petSummary: PetSummary, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val summary = if (petSummary.totalCount == 0) {
+        stringResource(R.string.dashboard_no_pets)
+    } else {
+        val detail = petSummary.typeCounts.mapNotNull { (tipo, count) ->
+            when (tipo) {
+                TipoMiembro.PERRO -> pluralStringResource(R.plurals.dashboard_pets_summary_dogs, count, count)
+                TipoMiembro.GATO -> pluralStringResource(R.plurals.dashboard_pets_summary_cats, count, count)
+                TipoMiembro.TORTUGA -> pluralStringResource(R.plurals.dashboard_pets_summary_turtles, count, count)
+                else -> null
+            }
+        }.joinToString(" · ")
+        detail.ifEmpty { stringResource(R.string.dashboard_pet_fallback) }
+    }
+
     AppCasaCard(onClick = onClick, useGlassmorphism = true, modifier = modifier) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)) {
@@ -579,7 +597,19 @@ fun DashboardPetCard(count: String, summary: String, onClick: () -> Unit, modifi
 }
 
 @Composable
-fun DashboardCalendarCard(eventTitle: String, eventDate: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun DashboardCalendarCard(eventSummary: NextEventSummary?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val text = if (eventSummary != null) {
+        val dateStr = formatEventDate(eventSummary.timestamp)
+        val title = if (eventSummary.isBirthday) {
+            stringResource(R.string.dashboard_birthday_event_format, eventSummary.title)
+        } else {
+            eventSummary.title
+        }
+        "$title · $dateStr"
+    } else {
+        stringResource(R.string.dashboard_no_events_upcoming)
+    }
+
     AppCasaCard(onClick = onClick, useGlassmorphism = true, modifier = modifier) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)) {
@@ -589,7 +619,7 @@ fun DashboardCalendarCard(eventTitle: String, eventDate: String, onClick: () -> 
             Column {
                 Text(stringResource(R.string.module_calendar), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(
-                    text = if (eventTitle.isNotEmpty()) "$eventTitle · $eventDate" else stringResource(R.string.dashboard_no_events_upcoming),
+                    text = text,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -597,6 +627,23 @@ fun DashboardCalendarCard(eventTitle: String, eventDate: String, onClick: () -> 
             Spacer(Modifier.weight(1f))
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
         }
+    }
+}
+
+@Composable
+private fun formatEventDate(timestamp: Long): String {
+    val date = java.util.Date(timestamp)
+    val cal = Calendar.getInstance().apply { time = date }
+    val isAllDay = cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0
+    
+    val pattern = if (isAllDay) {
+        stringResource(R.string.dashboard_event_date_all_day_format, stringResource(R.string.dashboard_event_all_day))
+    } else {
+        stringResource(R.string.dashboard_event_date_time_format)
+    }
+    
+    return remember(timestamp, pattern) {
+        SimpleDateFormat(pattern, Locale("es", "ES")).format(date)
     }
 }
 

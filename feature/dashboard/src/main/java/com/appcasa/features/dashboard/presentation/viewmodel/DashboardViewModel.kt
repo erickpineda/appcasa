@@ -11,9 +11,11 @@ import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.utils.Constants
 import com.appcasa.core.domain.repository.DashboardRepository
+import com.appcasa.core.domain.repository.DocumentRepository
 import com.appcasa.core.domain.repository.FamilyRepository
 import com.appcasa.core.domain.repository.FinanceRepository
 import com.appcasa.core.domain.repository.InventoryRepository
+import com.appcasa.core.domain.repository.MaintenanceRepository
 import com.appcasa.core.domain.repository.TasksRepository
 import com.appcasa.core.domain.usecase.config.GetConfigurationUseCase
 import com.appcasa.core.domain.usecase.config.UpdateConfigurationUseCase
@@ -68,6 +70,8 @@ class DashboardViewModel @Inject constructor(
   private val familyRepository: FamilyRepository,
   private val inventoryRepository: InventoryRepository,
   private val dashboardRepository: DashboardRepository,
+  private val maintenanceRepository: MaintenanceRepository,
+  private val documentRepository: DocumentRepository,
   private val currentHouseholdProvider: CurrentHouseholdProvider,
 ) : ViewModel() {
 
@@ -157,9 +161,9 @@ class DashboardViewModel @Inject constructor(
     members.find { it.id == user?.miembroId }?.nivel ?: 1
   }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1)
 
-  val petData: StateFlow<Pair<String, String>> = familyMembers
+  val petData: StateFlow<PetSummary> = familyMembers
     .map { miembros -> getPetDataSummaryUseCase(miembros) }
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "0" to "Sin mascotas registradas")
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PetSummary(0, emptyMap()))
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val pendingTasksCount: StateFlow<String> = currentHouseholdProvider.householdId
@@ -180,9 +184,9 @@ class DashboardViewModel @Inject constructor(
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val nextEventData: StateFlow<Pair<String, String>> = currentHouseholdProvider.householdId
+  val nextEventData: StateFlow<NextEventSummary?> = currentHouseholdProvider.householdId
     .flatMapLatest { id -> getNextEventUseCase(id) }
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "No hay eventos" to "")
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
   private val _searchQuery = MutableStateFlow("")
   val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -203,14 +207,20 @@ class DashboardViewModel @Inject constructor(
     }
     setupSearch()
     
-    // Iniciar sincronización remota en tiempo real
+    // Iniciar sincronización remota en tiempo real solo si hay hogar
     viewModelScope.launch {
-        currentHouseholdProvider.householdId.collect { id ->
-            tasksRepository.startRemoteSync(id)
-            financeRepository.startRemoteSync(id)
-            familyRepository.startRemoteSync(id)
-            inventoryRepository.startRemoteSync(id)
-            dashboardRepository.startRemoteSync(id)
+        combine(currentHouseholdProvider.householdId, currentUser) { id, user ->
+            id to user
+        }.collect { (id, user) ->
+            if (id != 0L && user != null) {
+                tasksRepository.startRemoteSync(id)
+                financeRepository.startRemoteSync(id)
+                familyRepository.startRemoteSync(id)
+                inventoryRepository.startRemoteSync(id)
+                dashboardRepository.startRemoteSync(id)
+                maintenanceRepository.startRemoteSync(id)
+                documentRepository.startRemoteSync(id)
+            }
         }
     }
   }

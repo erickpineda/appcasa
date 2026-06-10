@@ -35,4 +35,10 @@ interface MaintenanceDao {
 
     @Query("SELECT * FROM mantenimiento_hogar WHERE proxima_revision IS NOT NULL AND proxima_revision > :currentTime AND hogar_id = :hogarId ORDER BY proxima_revision ASC")
     fun getUpcomingRevisions(hogarId: Long, currentTime: Long): Flow<List<MaintenanceEntity>>
+
+    @Query("SELECT * FROM mantenimiento_hogar WHERE id = :id")
+    suspend fun getEventById(id: Long): MaintenanceEntity?
+
+    @Query("UPDATE mantenimiento_hogar SET last_synced_at = :timestamp WHERE id = :id")
+    suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
 }

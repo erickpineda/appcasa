@@ -41,7 +41,7 @@ class PostItWidgetProvider : AppWidgetProvider() {
             val hogarId = hogar?.id ?: 0L
             
             val postIts = if (hogarId != 0L) dashboardDao.getPostIts(hogarId).first() else emptyList()
-            val lastPostIt = postIts.lastOrNull()?.contenido ?: "Sin notas"
+            val lastPostIt = postIts.firstOrNull()?.contenido ?: context.getString(R.string.widget_no_notes)
             
             views.setTextViewText(R.id.widget_text, lastPostIt)
             

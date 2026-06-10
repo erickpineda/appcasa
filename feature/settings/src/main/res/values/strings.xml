@@ -116,4 +116,5 @@
     <string name="auth_btn_login">Entrar</string>
     <string name="auth_btn_goto_login">¿Ya tienes cuenta? Inicia sesión</string>
     <string name="auth_btn_goto_register">¿No tienes cuenta? Regístrate</string>
+    <string name="auth_error_unknown">Error desconocido</string>
 </resources>

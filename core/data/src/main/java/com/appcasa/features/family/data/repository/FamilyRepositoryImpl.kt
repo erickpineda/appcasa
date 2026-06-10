@@ -1,8 +1,8 @@
 package com.appcasa.features.family.data.repository
 
-import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.data.remote.manager.SyncManager
+import com.appcasa.core.data.remote.source.FamilyRemoteDataSource
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.repository.FamilyRepository
@@ -16,7 +16,7 @@ import javax.inject.Inject
 class FamilyRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val miembroDao: MiembroDao,
-    private val firestoreDataSource: FirestoreDataSource,
+    private val remoteDataSource: FamilyRemoteDataSource,
     private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler
 ) : FamilyRepository {
@@ -59,7 +59,7 @@ class FamilyRepositoryImpl @Inject constructor(
         syncJob = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
                 if (isInForeground) {
-                    firestoreDataSource.observeMembers(hogarId)
+                    remoteDataSource.observeMembers(hogarId)
                 } else {
                     emptyFlow()
                 }

@@ -7,4 +7,6 @@ interface DocumentRepository {
     fun getDocumentosByHogar(hogarId: Long): Flow<List<Document>>
     suspend fun insertDocumento(documento: Document): Long
     suspend fun deleteDocumento(documento: Document)
+    suspend fun updateDocumentSyncTimestamp(docId: Long)
+    fun startRemoteSync(hogarId: Long)
 }

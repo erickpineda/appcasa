@@ -1,0 +1,4 @@
+<resources>
+    <string name="location_reminder_title">Recordatorio de ubicación</string>
+    <string name="location_reminder_desc">¡Estás cerca de un punto de interés!</string>
+</resources>

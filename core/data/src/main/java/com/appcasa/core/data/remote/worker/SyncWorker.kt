@@ -4,13 +4,8 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.appcasa.core.data.remote.FirestoreDataSource
-import com.appcasa.core.domain.repository.CalendarRepository
-import com.appcasa.core.domain.repository.DashboardRepository
-import com.appcasa.core.domain.repository.FamilyRepository
-import com.appcasa.core.domain.repository.FinanceRepository
-import com.appcasa.core.domain.repository.InventoryRepository
-import com.appcasa.core.domain.repository.TasksRepository
+import com.appcasa.core.data.remote.source.*
+import com.appcasa.core.domain.repository.*
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -25,7 +20,20 @@ class SyncWorker @AssistedInject constructor(
     private val inventoryRepository: InventoryRepository,
     private val dashboardRepository: DashboardRepository,
     private val calendarRepository: CalendarRepository,
-    private val firestoreDataSource: FirestoreDataSource
+    private val maintenanceRepository: MaintenanceRepository,
+    private val documentRepository: DocumentRepository,
+    private val listsRepository: ListsRepository,
+    private val petRepository: PetRepository,
+    private val taskRemoteDataSource: TaskRemoteDataSource,
+    private val financeRemoteDataSource: FinanceRemoteDataSource,
+    private val familyRemoteDataSource: FamilyRemoteDataSource,
+    private val inventoryRemoteDataSource: InventoryRemoteDataSource,
+    private val dashboardRemoteDataSource: DashboardRemoteDataSource,
+    private val calendarRemoteDataSource: CalendarRemoteDataSource,
+    private val maintenanceRemoteDataSource: MaintenanceRemoteDataSource,
+    private val documentRemoteDataSource: DocumentRemoteDataSource,
+    private val listRemoteDataSource: ListRemoteDataSource,
+    private val petRemoteDataSource: PetRemoteDataSource
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -37,7 +45,7 @@ class SyncWorker @AssistedInject constructor(
             tasksRepository.getTasksByHogar(hogarId).first().filter { 
                 it.updatedAt > (it.lastSyncedAt ?: 0L) 
             }.forEach { task ->
-                firestoreDataSource.syncTask(task)
+                taskRemoteDataSource.syncTask(task)
                 tasksRepository.updateTaskSyncTimestamp(task.id)
             }
             
@@ -45,7 +53,7 @@ class SyncWorker @AssistedInject constructor(
             financeRepository.getExpensesByHogar(hogarId).first().filter {
                 it.updatedAt > (it.lastSyncedAt ?: 0L)
             }.forEach { expense ->
-                firestoreDataSource.syncExpense(expense)
+                financeRemoteDataSource.syncExpense(expense)
                 financeRepository.updateExpenseSyncTimestamp(expense.id)
             }
 
@@ -53,7 +61,7 @@ class SyncWorker @AssistedInject constructor(
             familyRepository.getMembersByHogar(hogarId).first().filter {
                 it.updatedAt > (it.lastSyncedAt ?: 0L)
             }.forEach { member ->
-                firestoreDataSource.syncMember(member)
+                familyRemoteDataSource.syncMember(member)
                 familyRepository.updateMemberSyncTimestamp(member.id)
             }
 
@@ -61,7 +69,7 @@ class SyncWorker @AssistedInject constructor(
             inventoryRepository.getStockByHogar(hogarId).first().filter {
                 it.updatedAt > (it.lastSyncedAt ?: 0L)
             }.forEach { item ->
-                firestoreDataSource.syncStock(item)
+                inventoryRemoteDataSource.syncStock(item)
                 inventoryRepository.updateStockSyncTimestamp(item.id)
             }
 
@@ -69,7 +77,7 @@ class SyncWorker @AssistedInject constructor(
             dashboardRepository.getPostIts(hogarId).first().filter {
                 it.updatedAt > (it.lastSyncedAt ?: 0L)
             }.forEach { postIt ->
-                firestoreDataSource.syncPostIt(postIt)
+                dashboardRemoteDataSource.syncPostIt(postIt)
                 dashboardRepository.updatePostItSyncTimestamp(postIt.id)
             }
 
@@ -77,8 +85,33 @@ class SyncWorker @AssistedInject constructor(
             calendarRepository.getEventsByHogar(hogarId).first().filter {
                 it.updatedAt > (it.lastSyncedAt ?: 0L)
             }.forEach { event ->
-                firestoreDataSource.syncEvent(event)
+                calendarRemoteDataSource.syncEvent(event)
                 calendarRepository.updateEventSyncTimestamp(event.id)
+            }
+
+            // Sincronizar Mantenimiento que ha cambiado
+            maintenanceRepository.getEventsPaged(hogarId, 100, 0).first().filter {
+                it.updatedAt > (it.lastSyncedAt ?: 0L)
+            }.forEach { event ->
+                maintenanceRemoteDataSource.syncMaintenance(event)
+                maintenanceRepository.updateMaintenanceSyncTimestamp(event.id)
+            }
+
+            // Sincronizar Documentos que han cambiado
+            documentRepository.getDocumentosByHogar(hogarId).first().filter {
+                it.updatedAt > (it.lastSyncedAt ?: 0L)
+            }.forEach { doc ->
+                documentRemoteDataSource.syncDocument(doc)
+                documentRepository.updateDocumentSyncTimestamp(doc.id)
+            }
+
+            // Sincronizar Listas que han cambiado
+            listsRepository.getListasPaged(hogarId, 100, 0).first().filter {
+                it.updatedAt > (it.lastSyncedAt ?: 0L)
+            }.forEach { list ->
+                listRemoteDataSource.syncList(list)
+                listsRepository.updateListSyncTimestamp(list.id)
+                // Note: items could also be synced here if needed
             }
             
             Result.success()

@@ -2,6 +2,8 @@ package com.appcasa.features.settings.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appcasa.core.ui.utils.UiText
+import com.appcasa.feature.settings.R
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -30,7 +32,9 @@ class AuthViewModel @Inject constructor(
                 auth.signInWithEmailAndPassword(email, pass).await()
                 _authEvent.emit(AuthEvent.Success)
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(e.message ?: "Error desconocido")
+                val error = e.message?.let { UiText.DynamicString(it) } 
+                    ?: UiText.StringResource(R.string.auth_error_unknown)
+                _uiState.value = AuthUiState.Error(error)
             }
         }
     }
@@ -42,7 +46,9 @@ class AuthViewModel @Inject constructor(
                 auth.createUserWithEmailAndPassword(email, pass).await()
                 _authEvent.emit(AuthEvent.Success)
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(e.message ?: "Error desconocido")
+                val error = e.message?.let { UiText.DynamicString(it) } 
+                    ?: UiText.StringResource(R.string.auth_error_unknown)
+                _uiState.value = AuthUiState.Error(error)
             }
         }
     }
@@ -50,7 +56,7 @@ class AuthViewModel @Inject constructor(
     sealed interface AuthUiState {
         data object Idle : AuthUiState
         data object Loading : AuthUiState
-        data class Error(val message: String) : AuthUiState
+        data class Error(val message: UiText) : AuthUiState
     }
 
     sealed interface AuthEvent {

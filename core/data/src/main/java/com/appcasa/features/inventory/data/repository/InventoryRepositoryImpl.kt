@@ -1,8 +1,8 @@
 package com.appcasa.features.inventory.data.repository
 
-import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.data.remote.manager.SyncManager
+import com.appcasa.core.data.remote.source.InventoryRemoteDataSource
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.StockItem
 import com.appcasa.core.domain.repository.InventoryRepository
@@ -16,7 +16,7 @@ import javax.inject.Inject
 class InventoryRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val stockDao: StockDao,
-    private val firestoreDataSource: FirestoreDataSource,
+    private val remoteDataSource: InventoryRemoteDataSource,
     private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler
 ) : InventoryRepository {
@@ -62,7 +62,7 @@ class InventoryRepositoryImpl @Inject constructor(
         syncJob = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
                 if (isInForeground) {
-                    firestoreDataSource.observeStock(hogarId)
+                    remoteDataSource.observeStock(hogarId)
                 } else {
                     emptyFlow()
                 }

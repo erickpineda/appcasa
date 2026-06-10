@@ -1,8 +1,8 @@
 package com.appcasa.features.calendar.data.repository
 
-import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.data.remote.manager.SyncManager
+import com.appcasa.core.data.remote.source.CalendarRemoteDataSource
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.Event
 import com.appcasa.core.domain.repository.CalendarRepository
@@ -16,7 +16,7 @@ import javax.inject.Inject
 class CalendarRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val eventoDao: EventoDao,
-    private val firestoreDataSource: FirestoreDataSource,
+    private val remoteDataSource: CalendarRemoteDataSource,
     private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler
 ) : CalendarRepository {
@@ -50,7 +50,7 @@ class CalendarRepositoryImpl @Inject constructor(
         syncJob = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
                 if (isInForeground) {
-                    firestoreDataSource.observeEvents(hogarId)
+                    remoteDataSource.observeEvents(hogarId)
                 } else {
                     emptyFlow()
                 }

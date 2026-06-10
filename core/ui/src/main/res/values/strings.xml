@@ -37,4 +37,6 @@
     <string name="archive_auto_archive_cd">Auto-archivar</string>
     <string name="archive_delete_section_cd">Borrar sección</string>
     <string name="archive_empty_vault_cd">Vaciar todo</string>
+    <string name="location_reminder_title">Recordatorio de ubicación</string>
+    <string name="location_reminder_desc">¡Estás cerca de un punto de interés!</string>
 </resources>

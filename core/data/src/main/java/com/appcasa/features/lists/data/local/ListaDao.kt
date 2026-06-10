@@ -55,6 +55,15 @@ interface ListaDao {
     @Delete
     suspend fun deleteLista(lista: ListaEntity)
 
+    @Query("SELECT * FROM listas WHERE id = :id")
+    suspend fun getListById(id: Long): ListaEntity?
+
+    @Query("UPDATE listas SET last_synced_at = :timestamp WHERE id = :id")
+    suspend fun updateListSyncTimestamp(id: Long, timestamp: Long)
+
+    @Query("UPDATE lista_items SET last_synced_at = :timestamp WHERE id = :id")
+    suspend fun updateListItemSyncTimestamp(id: Long, timestamp: Long)
+
     @Query("DELETE FROM listas")
     suspend fun deleteAll()
 }

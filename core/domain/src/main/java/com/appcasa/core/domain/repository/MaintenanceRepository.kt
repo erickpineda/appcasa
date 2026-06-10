@@ -11,4 +11,6 @@ interface MaintenanceRepository {
     suspend fun unarchiveEvent(id: Long)
     suspend fun deleteAllArchivedEvents(hogarId: Long)
     suspend fun archiveOldEvents(hogarId: Long, threshold: Long)
+    suspend fun updateMaintenanceSyncTimestamp(eventId: Long)
+    fun startRemoteSync(hogarId: Long)
 }

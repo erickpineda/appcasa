@@ -1,8 +1,8 @@
 package com.appcasa.features.tasks.data.repository
 
-import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.data.remote.manager.SyncManager
+import com.appcasa.core.data.remote.source.TaskRemoteDataSource
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.repository.TasksRepository
@@ -20,7 +20,7 @@ class TasksRepositoryImpl @Inject constructor(
     private val recompensaDao: RecompensaDao,
     private val syncScheduler: SyncScheduler,
     private val syncManager: SyncManager,
-    private val firestoreDataSource: FirestoreDataSource
+    private val remoteDataSource: TaskRemoteDataSource
 ) : TasksRepository {
 
     override fun getTasksByHogar(hogarId: Long): Flow<List<Task>> {
@@ -148,7 +148,7 @@ class TasksRepositoryImpl @Inject constructor(
         syncJob = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
                 if (isInForeground) {
-                    firestoreDataSource.observeTasks(hogarId)
+                    remoteDataSource.observeTasks(hogarId)
                 } else {
                     emptyFlow()
                 }

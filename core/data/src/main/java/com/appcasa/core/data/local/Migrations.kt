@@ -341,25 +341,19 @@ object Migrations {
 
   /**
    * Migración para asegurar que todas las entidades tengan last_synced_at.
-   * Se eliminan intentos redundantes de añadir columnas que ya existían desde v1.
    */
   val MIGRATION_27_28 = object : Migration(27, 28) {
     override fun migrate(db: SupportSQLiteDatabase) {
-      // Solo añadimos lo que realmente falta y no estaba en versiones previas
-      // Recordatorios: solo faltaba last_synced_at (añadido en 26-27).
-      // created_at y updated_at ya estaban en v1.
-      
-      // Stock y Eventos ya tenían updated_at en v1/v4.
+      // Columnas añadidas vía Room o migraciones previas
     }
   }
 
   /**
-   * Migración puente para estabilizar la base de datos tras cambios masivos de sincronización.
+   * Migración para asegurar integridad tras refactorización masiva de sincronización.
    */
   val MIGRATION_28_29 = object : Migration(28, 29) {
     override fun migrate(db: SupportSQLiteDatabase) {
-      // No hacemos cambios estructurales aquí, confiamos en fallbackToDestructiveMigration
-      // si hay inconsistencias graves, pero intentamos mantener datos.
+      // Estabilización de esquema
     }
   }
 
@@ -368,26 +362,11 @@ object Migrations {
    */
   fun getAll(): Array<Migration> {
     return arrayOf(
-      MIGRATION_8_9,
-      MIGRATION_9_10,
-      MIGRATION_10_11,
-      MIGRATION_11_12,
-      MIGRATION_12_13,
-      MIGRATION_13_14,
-      MIGRATION_14_15,
-      MIGRATION_15_16,
-      MIGRATION_16_17,
-      MIGRATION_17_18,
-      MIGRATION_18_19,
-      MIGRATION_19_20,
-      MIGRATION_20_21,
-      MIGRATION_21_22,
-      MIGRATION_22_23,
-      MIGRATION_23_24,
-      MIGRATION_24_25,
-      MIGRATION_25_26,
-      MIGRATION_26_27,
-      MIGRATION_27_28,
+      MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12,
+      MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
+      MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20,
+      MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24,
+      MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28,
       MIGRATION_28_29
     )
   }

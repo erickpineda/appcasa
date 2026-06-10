@@ -16,3 +16,9 @@ data class Event(
     val syncId: String? = null,
     val lastSyncedAt: Long? = null
 )
+
+data class NextEventSummary(
+    val title: String,
+    val timestamp: Long,
+    val isBirthday: Boolean = false
+)

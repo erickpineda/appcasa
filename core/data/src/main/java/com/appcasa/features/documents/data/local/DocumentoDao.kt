@@ -11,6 +11,12 @@ interface DocumentoDao {
   @Query("SELECT * FROM documentos WHERE id = :id")
   suspend fun getDocumentoById(id: Long): DocumentoEntity?
 
+  @Query("SELECT * FROM documentos WHERE id = :id")
+  suspend fun getDocumentById(id: Long): DocumentoEntity?
+
+  @Query("UPDATE documentos SET last_synced_at = :timestamp WHERE id = :id")
+  suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
+
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun insertDocumento(documento: DocumentoEntity): Long
 

@@ -1,3 +1,4 @@
 <resources>
   <string name="app_name">AppCasa</string>
+  <string name="widget_no_notes">Sin notas</string>
 </resources>

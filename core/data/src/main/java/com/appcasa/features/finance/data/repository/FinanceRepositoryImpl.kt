@@ -1,8 +1,8 @@
 package com.appcasa.features.finance.data.repository
 
-import com.appcasa.core.data.remote.FirestoreDataSource
 import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.data.remote.manager.SyncManager
+import com.appcasa.core.data.remote.source.FinanceRemoteDataSource
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.Expense
 import com.appcasa.core.domain.repository.FinanceRepository
@@ -16,7 +16,7 @@ import javax.inject.Inject
 class FinanceRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val expenseDao: ExpenseDao,
-    private val firestoreDataSource: FirestoreDataSource,
+    private val remoteDataSource: FinanceRemoteDataSource,
     private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler
 ) : FinanceRepository {
@@ -85,7 +85,7 @@ class FinanceRepositoryImpl @Inject constructor(
         syncJob = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
                 if (isInForeground) {
-                    firestoreDataSource.observeExpenses(hogarId)
+                    remoteDataSource.observeExpenses(hogarId)
                 } else {
                     emptyFlow()
                 }

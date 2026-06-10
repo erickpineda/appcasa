@@ -75,9 +75,18 @@
     <string name="dashboard_no_pets">Sin mascotas registradas</string>
     <string name="dashboard_no_events">No hay eventos</string>
     <string name="dashboard_no_events_upcoming">Sin eventos próximos</string>
-    <string name="dashboard_pets_summary_dogs">%d perro%s</string>
-    <string name="dashboard_pets_summary_cats">%d gato%s</string>
-    <string name="dashboard_pets_summary_turtles">%d tortuga%s</string>
+    <plurals name="dashboard_pets_summary_dogs">
+        <item quantity="one">%d perro</item>
+        <item quantity="other">%d perros</item>
+    </plurals>
+    <plurals name="dashboard_pets_summary_cats">
+        <item quantity="one">%d gato</item>
+        <item quantity="other">%d gatos</item>
+    </plurals>
+    <plurals name="dashboard_pets_summary_turtles">
+        <item quantity="one">%d tortuga</item>
+        <item quantity="other">%d tortugas</item>
+    </plurals>
     <string name="utilities_title">Utilidades</string>
     <string name="utilities_collapse_all">Contraer todo</string>
     <string name="utilities_expand_all">Expandir todo</string>
@@ -118,6 +127,10 @@
     <string name="family_btn_add_first">Añadir primer miembro</string>
     <string name="family_label_add_birthday">Añadir Cumpleaños</string>
     <string name="family_label_birthday_format">Cumpleaños: %s</string>
+    <string name="dashboard_birthday_event_format">Cumpleaños: %s 🎂</string>
+    <string name="dashboard_event_all_day">(Todo el día)</string>
+    <string name="dashboard_event_date_all_day_format">d \'de\' MMMM \'%s\'</string>
+    <string name="dashboard_event_date_time_format">d \'de\' MMMM HH:mm</string>
 
     <string name="dashboard_member_fallback">Miembro</string>
     <string name="dashboard_family_member_label">Miembro de la Familia</string>

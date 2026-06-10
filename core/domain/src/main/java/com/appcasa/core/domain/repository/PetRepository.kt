@@ -19,4 +19,5 @@ interface PetRepository {
     fun getDesparasitaciones(mascotaId: Long): Flow<List<PetDeworming>>
     suspend fun insertDesparasitacion(item: PetDeworming): Long
     suspend fun deleteDesparasitacion(item: PetDeworming)
+    fun startRemoteSync(hogarId: Long, mascotaId: Long)
 }

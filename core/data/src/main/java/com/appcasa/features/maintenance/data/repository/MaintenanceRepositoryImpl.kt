@@ -1,16 +1,24 @@
 package com.appcasa.features.maintenance.data.repository
 
+import com.appcasa.core.data.remote.SyncScheduler
+import com.appcasa.core.data.remote.manager.SyncManager
+import com.appcasa.core.data.remote.source.MaintenanceRemoteDataSource
+import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.MaintenanceEvent
 import com.appcasa.core.domain.repository.MaintenanceRepository
 import com.appcasa.features.maintenance.data.local.MaintenanceDao
 import com.appcasa.features.maintenance.data.mapper.toDomain
 import com.appcasa.features.maintenance.data.mapper.toEntity
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class MaintenanceRepositoryImpl @Inject constructor(
-    private val maintenanceDao: MaintenanceDao
+    @ApplicationScope private val appScope: CoroutineScope,
+    private val maintenanceDao: MaintenanceDao,
+    private val remoteDataSource: MaintenanceRemoteDataSource,
+    private val syncManager: SyncManager,
+    private val syncScheduler: SyncScheduler
 ) : MaintenanceRepository {
 
     override fun getEventsPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<MaintenanceEvent>> {
@@ -26,11 +34,14 @@ class MaintenanceRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertEvent(event: MaintenanceEvent): Long {
-        return maintenanceDao.insertEvent(event.toEntity())
+        val id = maintenanceDao.insertEvent(event.toEntity())
+        syncScheduler.scheduleSync(event.hogarId)
+        return id
     }
 
     override suspend fun deleteEvent(event: MaintenanceEvent) {
         maintenanceDao.deleteEvent(event.toEntity())
+        syncScheduler.scheduleSync(event.hogarId)
     }
 
     override suspend fun unarchiveEvent(id: Long) {
@@ -43,5 +54,33 @@ class MaintenanceRepositoryImpl @Inject constructor(
 
     override suspend fun archiveOldEvents(hogarId: Long, threshold: Long) {
         maintenanceDao.archiveOldMaintenanceEvents(hogarId, threshold)
+    }
+
+    override suspend fun updateMaintenanceSyncTimestamp(eventId: Long) {
+        maintenanceDao.updateSyncTimestamp(eventId, System.currentTimeMillis())
+    }
+
+    private var syncJob: Job? = null
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun startRemoteSync(hogarId: Long) {
+        syncJob?.cancel()
+        syncJob = syncManager.isAppInForeground
+            .flatMapLatest { isInForeground ->
+                if (isInForeground) {
+                    remoteDataSource.observeMaintenance(hogarId)
+                } else {
+                    emptyFlow()
+                }
+            }
+            .onEach { remoteItems ->
+                remoteItems.forEach { remoteEvent ->
+                    val localEvent = maintenanceDao.getEventById(remoteEvent.id)
+                    if (localEvent == null || remoteEvent.updatedAt > localEvent.updatedAt) {
+                        maintenanceDao.insertEvent(remoteEvent.toEntity())
+                    }
+                }
+            }
+            .launchIn(appScope)
     }
 }
