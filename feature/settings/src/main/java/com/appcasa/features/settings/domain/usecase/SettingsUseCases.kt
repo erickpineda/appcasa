@@ -208,17 +208,22 @@ class SelectMemberUseCase @Inject constructor(
     private val firebaseAuth: FirebaseAuth
 ) {
     suspend operator fun invoke(member: FamilyMember) {
+        // Obtenemos el usuario de Firebase más fresco posible
         val currentUser = firebaseAuth.currentUser
+        val emailToUse = currentUser?.email ?: member.email ?: "user_${member.id}@appcasa.local"
+        
         userRepository.deactivateAllUsers()
         userRepository.insertUser(
             User(
                 hogarId = member.hogarId,
                 miembroId = member.id,
                 nombre = member.nombre,
-                email = currentUser?.email ?: "user_${member.id}@appcasa.local",
+                email = emailToUse,
+                authId = currentUser?.uid ?: member.firebaseUid, // GUARDAMOS EL ID DE SEGURIDAD
                 rol = member.rol,
                 avatarUrl = member.fotoUri,
-                isActive = true
+                isActive = true,
+                lastSyncedAt = if (currentUser != null || member.firebaseUid != null) System.currentTimeMillis() else null
             )
         )
         householdProvider.setHouseholdId(member.hogarId)
@@ -356,7 +361,9 @@ class LinkAccountUseCase @Inject constructor(
         
         // 2. Actualizar el usuario local Room
         userRepository.insertUser(user.copy(
-            email = currentUser.email ?: user.email
+            email = currentUser.email ?: user.email,
+            authId = currentUser.uid, // ASEGURAMOS EL ID DE SEGURIDAD
+            lastSyncedAt = System.currentTimeMillis()
         ))
         
         // 3. Forzar sincronización inmediata para reclamar la casa en la nube

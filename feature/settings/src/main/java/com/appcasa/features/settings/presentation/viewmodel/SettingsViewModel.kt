@@ -13,6 +13,7 @@ import com.appcasa.feature.settings.R
 import com.appcasa.features.settings.domain.usecase.*
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -37,6 +38,14 @@ class SettingsViewModel @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val sharedPrefs: SharedPreferences
 ) : ViewModel() {
+
+    val isLoggedIn: StateFlow<Boolean> = callbackFlow {
+        val listener = FirebaseAuth.AuthStateListener { auth ->
+            trySend(auth.currentUser != null)
+        }
+        firebaseAuth.addAuthStateListener(listener)
+        awaitClose { firebaseAuth.removeAuthStateListener(listener) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), firebaseAuth.currentUser != null)
 
     private val _settingsEvent = MutableSharedFlow<SettingsUiEvent>()
     val settingsEvent = _settingsEvent.asSharedFlow()
@@ -74,6 +83,17 @@ class SettingsViewModel @Inject constructor(
                     getConfigurationUseCase(it.id).collect { configs ->
                         _configuraciones.value = configs.associate { it.clave to it.valor }
                     }
+                }
+            }
+        }
+        
+        // Auto-vinculación si el usuario está logueado pero el perfil local es temporal
+        viewModelScope.launch {
+            combine(isLoggedIn, usuarioActual) { logged, user -> 
+                logged && user?.email?.contains("@appcasa.local") == true
+            }.collect { shouldLink ->
+                if (shouldLink) {
+                    linkAccount()
                 }
             }
         }

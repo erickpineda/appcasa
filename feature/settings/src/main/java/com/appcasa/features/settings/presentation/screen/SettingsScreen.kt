@@ -59,6 +59,7 @@ fun SettingsScreen(
   val listas by settingsViewModel.todasLasListas.collectAsState()
   val todosLosHogares by settingsViewModel.todosLosHogares.collectAsState()
   val isAdmin by settingsViewModel.isAdmin.collectAsState()
+  val isLoggedIn by settingsViewModel.isLoggedIn.collectAsState()
   val isSyncing by settingsViewModel.isSyncing.collectAsState()
   val isExporting by settingsViewModel.isExporting.collectAsState()
 
@@ -115,19 +116,13 @@ fun SettingsScreen(
     onRegenerateCode = { settingsViewModel.regenerateHouseCode() },
     onUpdateEmail = { settingsViewModel.updateEmail(it) },
     onUpdatePassword = { settingsViewModel.updatePassword(it) },
-    onLinkAccount = {
-        if (settingsViewModel.isUserLoggedIn()) {
-            settingsViewModel.linkAccount()
-        } else {
-            navController.navigate(Screen.Auth)
-        }
-    },
+    onLinkAccount = { settingsViewModel.linkAccount() },
     onSwitchHogar = { settingsViewModel.switchHogar(it) },
     onForceSync = { settingsViewModel.forceSync() },
     onExportData = { settingsViewModel.exportData() },
     onLogout = { settingsViewModel.logout() },
-    isUserLoggedIn = settingsViewModel.isUserLoggedIn(),
-    isAccountLinked = settingsViewModel.isUserLoggedIn() || (usuario?.email?.contains("@appcasa.local") == false)
+    isUserLoggedIn = isLoggedIn,
+    isAccountLinked = isLoggedIn || usuario?.authId != null || (usuario?.email?.contains("@appcasa.local") == false)
   )
 }
 
