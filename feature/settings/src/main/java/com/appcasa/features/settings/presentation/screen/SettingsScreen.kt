@@ -122,7 +122,7 @@ fun SettingsScreen(
     onExportData = { settingsViewModel.exportData() },
     onLogout = { settingsViewModel.logout() },
     isUserLoggedIn = isLoggedIn,
-    isAccountLinked = isLoggedIn || usuario?.authId != null || (usuario?.email?.contains("@appcasa.local") == false)
+    isAccountLinked = usuario == null || isLoggedIn || usuario?.authId != null || (usuario?.email?.contains("@appcasa.local") == false)
   )
 }
 
