@@ -50,9 +50,22 @@ class SettingsViewModel @Inject constructor(
     val isLoggedIn: StateFlow<Boolean> = _firebaseUser.map { it != null }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), firebaseAuth.currentUser != null)
 
-    val isGoogleAccount: StateFlow<Boolean> = _firebaseUser.map { user ->
-        user?.providerData?.any { it.providerId == "google.com" } ?: false
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val hogarActual: StateFlow<Household?> = getCurrentHouseholdUseCase()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val usuarioActual: StateFlow<User?> = getCurrentUserUseCase()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val isGoogleAccount: StateFlow<Boolean> = combine(_firebaseUser, usuarioActual) { firebaseUser, user ->
+        val hasGoogleInFirebase = firebaseUser?.providerData?.any { it.providerId.contains("google") } ?: false
+        val isLinkedWithGoogleId = user?.authId?.isNotBlank() == true && user.email.contains("@appcasa.local") == false
+        
+        hasGoogleInFirebase || isLinkedWithGoogleId
+    }.stateIn(
+        viewModelScope, 
+        SharingStarted.WhileSubscribed(5000), 
+        firebaseAuth.currentUser?.providerData?.any { it.providerId.contains("google") } ?: false
+    )
 
     private val _settingsEvent = MutableSharedFlow<SettingsUiEvent>()
     val settingsEvent = _settingsEvent.asSharedFlow()
@@ -62,12 +75,6 @@ class SettingsViewModel @Inject constructor(
 
     private val _isExporting = MutableStateFlow(false)
     val isExporting = _isExporting.asStateFlow()
-
-    val hogarActual: StateFlow<Household?> = getCurrentHouseholdUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val usuarioActual: StateFlow<User?> = getCurrentUserUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val isAdmin: StateFlow<Boolean> = usuarioActual.map { it?.rol == RolHogar.ADMIN }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
