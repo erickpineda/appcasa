@@ -55,7 +55,7 @@ class TasksRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertTask(task: Task): Long {
-        val id = tareaDao.insertTarea(task.toEntity())
+        val id = tareaDao.insertTarea(task.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(task.hogarId)
         return id
     }
@@ -150,19 +150,34 @@ class TasksRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertCheckItem(item: TaskCheckItem): Long {
-        return tareaDao.insertCheckItem(item.toEntity())
+        val id = tareaDao.insertCheckItem(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        val task = tareaDao.getTareaById(item.tareaId)
+        task?.let { syncScheduler.scheduleSync(it.hogarId) }
+        return id
     }
 
     override suspend fun updateCheckItem(item: TaskCheckItem) {
-        tareaDao.updateCheckItem(item.toEntity())
+        tareaDao.updateCheckItem(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        val task = tareaDao.getTareaById(item.tareaId)
+        task?.let { syncScheduler.scheduleSync(it.hogarId) }
     }
 
     override suspend fun deleteCheckItem(item: TaskCheckItem) {
         tareaDao.deleteCheckItem(item.toEntity())
+        val task = tareaDao.getTareaById(item.tareaId)
+        task?.let { syncScheduler.scheduleSync(it.hogarId) }
     }
 
     override suspend fun updateTaskSyncTimestamp(taskId: Long) {
         tareaDao.updateSyncTimestamp(taskId, System.currentTimeMillis())
+    }
+
+    override suspend fun updateCheckItemSyncTimestamp(itemId: Long) {
+        tareaDao.updateCheckItemSyncTimestamp(itemId, System.currentTimeMillis())
+    }
+
+    override suspend fun getCheckItemsToSync(hogarId: Long): List<TaskCheckItem> {
+        return tareaDao.getCheckItemsToSync(hogarId).map { it.toDomain() }
     }
 
     private var syncJob: Job? = null
@@ -217,6 +232,7 @@ class TasksRepositoryImpl @Inject constructor(
                     observeAndSyncAssignments(hogarId, remoteTask.id)
                 }
             }
+            .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
     }
 
@@ -239,6 +255,7 @@ class TasksRepositoryImpl @Inject constructor(
                     }
                 }
             }
+            .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
     }
 
@@ -261,6 +278,7 @@ class TasksRepositoryImpl @Inject constructor(
                     }
                 }
             }
+            .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
     }
 }

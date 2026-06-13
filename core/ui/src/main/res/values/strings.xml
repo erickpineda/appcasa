@@ -8,6 +8,7 @@
 
     <!-- Common UI Strings -->
     <string name="common_ok">OK</string>
+    <string name="common_oops">¡Ups!</string>
     <string name="common_cancel">Cancelar</string>
     <string name="common_save">Guardar</string>
     <string name="common_delete">Borrar</string>
@@ -16,6 +17,17 @@
     <string name="common_loading">Cargando...</string>
     <string name="common_load_more">Cargar más...</string>
     <string name="common_no_more_data">No hay más registros para cargar</string>
+
+    <!-- Bloqueos Biométricos -->
+    <string name="lock_finance_title">Finanzas Bloqueadas</string>
+    <string name="lock_finance_stats_title">Estadísticas Bloqueadas</string>
+    <string name="lock_btn_unlock">Desbloquear con huella</string>
+    <string name="lock_prompt_finance_title">Acceso a Finanzas</string>
+    <string name="lock_prompt_finance_subtitle">Usa tu huella para ver los gastos</string>
+    <string name="lock_prompt_safe_title">Acceso al Baúl</string>
+    <string name="lock_prompt_safe_subtitle">Usa tu huella o cara para entrar</string>
+    <string name="lock_app_title">AppCasa Bloqueada</string>
+    <string name="lock_app_subtitle">Usa tu biometría para entrar</string>
 
     <!-- Archive Screen -->
     <string name="archive_title">Cajón de Archivo</string>
@@ -39,4 +51,5 @@
     <string name="archive_empty_vault_cd">Vaciar todo</string>
     <string name="location_reminder_title">Recordatorio de ubicación</string>
     <string name="location_reminder_desc">¡Estás cerca de un punto de interés!</string>
+    <string name="cd_qr">Código QR</string>
 </resources>

@@ -63,26 +63,42 @@ interface MascotaDao {
   suspend fun getMiembroById(id: Long): com.appcasa.features.family.data.local.MiembroEntity?
 
   // Sync helpers
-  @Query("SELECT * FROM mascota_pesos WHERE updated_at > COALESCE(last_synced_at, 0)")
-  suspend fun getWeightsToSync(): List<MascotaPesoEntity>
+  @Query("""
+      SELECT p.* FROM mascota_pesos p 
+      JOIN miembros m ON p.mascota_id = m.id 
+      WHERE m.hogar_id = :hogarId AND p.updated_at > COALESCE(p.last_synced_at, 0)
+  """)
+  suspend fun getWeightsToSync(hogarId: Long): List<MascotaPesoEntity>
 
   @Query("UPDATE mascota_pesos SET last_synced_at = :timestamp WHERE id = :id")
   suspend fun updateWeightSyncTimestamp(id: Long, timestamp: Long)
 
-  @Query("SELECT * FROM mascota_vacunas WHERE updated_at > COALESCE(last_synced_at, 0)")
-  suspend fun getVaccinesToSync(): List<MascotaVacunaEntity>
+  @Query("""
+      SELECT v.* FROM mascota_vacunas v 
+      JOIN miembros m ON v.mascota_id = m.id 
+      WHERE m.hogar_id = :hogarId AND v.updated_at > COALESCE(v.last_synced_at, 0)
+  """)
+  suspend fun getVaccinesToSync(hogarId: Long): List<MascotaVacunaEntity>
 
   @Query("UPDATE mascota_vacunas SET last_synced_at = :timestamp WHERE id = :id")
   suspend fun updateVaccineSyncTimestamp(id: Long, timestamp: Long)
 
-  @Query("SELECT * FROM mascota_medicaciones WHERE updated_at > COALESCE(last_synced_at, 0)")
-  suspend fun getMedicationsToSync(): List<MascotaMedicacionEntity>
+  @Query("""
+      SELECT med.* FROM mascota_medicaciones med 
+      JOIN miembros m ON med.mascota_id = m.id 
+      WHERE m.hogar_id = :hogarId AND med.updated_at > COALESCE(med.last_synced_at, 0)
+  """)
+  suspend fun getMedicationsToSync(hogarId: Long): List<MascotaMedicacionEntity>
 
   @Query("UPDATE mascota_medicaciones SET last_synced_at = :timestamp WHERE id = :id")
   suspend fun updateMedicationSyncTimestamp(id: Long, timestamp: Long)
 
-  @Query("SELECT * FROM mascota_desparasitaciones WHERE updated_at > COALESCE(last_synced_at, 0)")
-  suspend fun getDewormingsToSync(): List<MascotaDesparasitacionEntity>
+  @Query("""
+      SELECT d.* FROM mascota_desparasitaciones d 
+      JOIN miembros m ON d.mascota_id = m.id 
+      WHERE m.hogar_id = :hogarId AND d.updated_at > COALESCE(d.last_synced_at, 0)
+  """)
+  suspend fun getDewormingsToSync(hogarId: Long): List<MascotaDesparasitacionEntity>
 
   @Query("UPDATE mascota_desparasitaciones SET last_synced_at = :timestamp WHERE id = :id")
   suspend fun updateDewormingSyncTimestamp(id: Long, timestamp: Long)

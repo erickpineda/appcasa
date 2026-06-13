@@ -85,4 +85,5 @@
     <string name="rewards_label_desc">Descripción (opcional)</string>
     <string name="rewards_btn_redeem">Canjear</string>
     <string name="rewards_xp_format">%d XP</string>
+    <string name="rewards_congrats_msg">¡Disfruta tu recompensa!</string>
 </resources>

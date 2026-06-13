@@ -11,6 +11,9 @@ interface ConfiguracionDao {
     @Query("SELECT h.* FROM hogares h JOIN usuarios u ON h.id = u.hogar_id WHERE u.is_active = 1 LIMIT 1")
     fun getHogarActual(): Flow<HogarEntity?>
 
+    @Query("SELECT * FROM hogares WHERE id = :id LIMIT 1")
+    fun getHogarById(id: Long): Flow<HogarEntity?>
+
     @Query("SELECT * FROM hogares")
     fun getAllHogares(): Flow<List<HogarEntity>>
 

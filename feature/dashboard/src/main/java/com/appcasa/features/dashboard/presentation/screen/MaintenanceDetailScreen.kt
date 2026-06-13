@@ -80,17 +80,18 @@ fun MaintenanceDetailScreen(
                 Text(stringResource(R.string.maintenance_qr_ident_label), style = MaterialTheme.typography.labelLarge)
                 AppCasaCard(useGlassmorphism = true, modifier = Modifier.size(240.dp).align(Alignment.CenterHorizontally)) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        val qrBitmap = remember(id) { QRUtils.generateQRCode("maintenance/$id", 400) }
+                        val qrContent = "appcasa://maintenance/$id"
+                        val qrBitmap = remember(id) { QRUtils.generateQRCode(qrContent, 400) }
                         if (qrBitmap != null) {
                             Image(
                                 bitmap = qrBitmap.asImageBitmap(),
-                                contentDescription = "QR Code",
+                                contentDescription = stringResource(CoreR.string.cd_qr),
                                 modifier = Modifier.size(200.dp)
                             )
                         } else {
                             Icon(Icons.Default.Build, null, modifier = Modifier.size(100.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
                         }
-                        Text("maintenance/$id", style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp))
+                        Text(qrContent, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp))
                     }
                 }
             }

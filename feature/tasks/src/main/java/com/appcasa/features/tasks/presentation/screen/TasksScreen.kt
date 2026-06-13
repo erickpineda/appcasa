@@ -37,6 +37,7 @@ import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.CelebrationOverlay
 import com.appcasa.core.ui.components.PullToRefreshWrapper
+import com.appcasa.core.ui.components.SyncStatusBadge
 import com.appcasa.feature.tasks.R
 import com.appcasa.features.tasks.presentation.viewmodel.TasksViewModel
 import com.appcasa.navigation.Screen
@@ -283,13 +284,17 @@ fun TaskItem(
           )
       } else {
           Column(modifier = Modifier.weight(1f).padding(vertical = if (isCompact) 4.dp else 0.dp)) {
-            Text(
-              text = tarea.titulo,
-              style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
-              fontWeight = FontWeight.Medium,
-              textDecoration = if (isCompleted) TextDecoration.LineThrough else null,
-              modifier = Modifier.clickable(enabled = !isCompleted) { isEditing = true }
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Text(
+                text = tarea.titulo,
+                style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                textDecoration = if (isCompleted) TextDecoration.LineThrough else null,
+                modifier = Modifier.clickable(enabled = !isCompleted) { isEditing = true }
+              )
+              Spacer(Modifier.width(6.dp))
+              SyncStatusBadge(isSynced = tarea.lastSyncedAt != null && tarea.lastSyncedAt!! >= tarea.updatedAt)
+            }
             
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (tarea.prioridad != Prioridad.MEDIA && !isCompleted) {

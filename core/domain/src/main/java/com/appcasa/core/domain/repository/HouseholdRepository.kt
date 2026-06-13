@@ -5,10 +5,14 @@ import kotlinx.coroutines.flow.Flow
 
 interface HouseholdRepository {
     fun getHogarActual(): Flow<Household?>
+    fun getHogarById(id: Long): Flow<Household?>
     fun getAllHogares(): Flow<List<Household>>
     suspend fun getHogarByCodigo(code: String): Household?
     suspend fun insertHogar(hogar: Household): Long
     suspend fun findHouseholdRemotely(code: String): Household?
+    suspend fun findHouseholdsByUserEmail(email: String): List<Household>
+    suspend fun findHouseholdsByUserUid(uid: String): List<Household>
     suspend fun updateCodigoHogar(hogarId: Long, newCode: String)
     suspend fun deleteAllHogares()
+    suspend fun clearAllLocalData()
 }

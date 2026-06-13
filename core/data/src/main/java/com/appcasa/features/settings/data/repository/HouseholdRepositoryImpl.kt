@@ -1,5 +1,6 @@
 package com.appcasa.features.settings.data.repository
 
+import com.appcasa.core.data.local.AppCasaDatabase
 import com.appcasa.core.data.remote.source.HouseholdRemoteDataSource
 import com.appcasa.core.domain.model.Household
 import com.appcasa.core.domain.repository.HouseholdRepository
@@ -12,6 +13,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 class HouseholdRepositoryImpl @Inject constructor(
+    private val database: AppCasaDatabase,
     private val configuracionDao: ConfiguracionDao,
     private val remoteDataSource: HouseholdRemoteDataSource
 ) : HouseholdRepository {
@@ -20,6 +22,10 @@ class HouseholdRepositoryImpl @Inject constructor(
         return configuracionDao.getHogarActual().map { entity ->
             entity?.toDomain()
         }
+    }
+
+    override fun getHogarById(id: Long): Flow<Household?> {
+        return configuracionDao.getHogarById(id).map { it?.toDomain() }
     }
 
     override fun getAllHogares(): Flow<List<Household>> {
@@ -47,11 +53,25 @@ class HouseholdRepositoryImpl @Inject constructor(
         return remoteDataSource.getHouseholdByCode(code)
     }
 
+    override suspend fun findHouseholdsByUserEmail(email: String): List<Household> {
+        return remoteDataSource.findHouseholdsByUserEmail(email)
+    }
+
+    override suspend fun findHouseholdsByUserUid(uid: String): List<Household> {
+        return remoteDataSource.findHouseholdsByUserUid(uid)
+    }
+
     override suspend fun updateCodigoHogar(hogarId: Long, newCode: String) {
         configuracionDao.updateCodigoHogar(hogarId, newCode)
     }
 
     override suspend fun deleteAllHogares() {
         configuracionDao.deleteAllHogares()
+    }
+
+    override suspend fun clearAllLocalData() {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            database.clearAllTables()
+        }
     }
 }

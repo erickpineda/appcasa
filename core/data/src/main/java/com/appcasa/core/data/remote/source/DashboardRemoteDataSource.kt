@@ -1,6 +1,7 @@
 package com.appcasa.core.data.remote.source
 
 import com.appcasa.core.data.remote.model.PostItDto
+import com.appcasa.core.data.utils.FirestoreConstants
 import com.appcasa.core.domain.model.PostIt
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
@@ -15,7 +16,7 @@ class DashboardRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     private fun getPostItCollection(hogarId: Long) = 
-        firestore.collection("households").document(hogarId.toString()).collection("postits")
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_POSTITS)
 
     suspend fun syncPostIt(postIt: PostIt) {
         getPostItCollection(postIt.hogarId).document(postIt.id.toString())

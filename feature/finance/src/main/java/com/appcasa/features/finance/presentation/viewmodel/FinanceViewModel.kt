@@ -1,6 +1,10 @@
 package com.appcasa.features.finance.presentation.viewmodel
 
 import android.graphics.Bitmap
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.Expense
@@ -24,22 +28,53 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FinanceViewModel @Inject constructor(
-  private val getExpensesUseCase: GetExpensesUseCase,
-  private val getArchivedExpensesUseCase: GetArchivedExpensesUseCase,
-  private val getTotalMonthlyExpenseUseCase: GetTotalMonthlyExpenseUseCase,
-  private val addExpenseUseCase: AddExpenseUseCase,
-  private val deleteExpenseUseCase: DeleteExpenseUseCase,
-  private val unarchiveExpenseUseCase: UnarchiveExpenseUseCase,
-  private val clearAllArchivedExpensesUseCase: ClearAllArchivedExpensesUseCase,
-  private val archiveOldExpensesUseCase: ArchiveOldExpensesUseCase,
-  private val purgeOldPhotosUseCase: PurgeOldPhotosUseCase,
-  private val updateExpenseUseCase: UpdateExpenseUseCase,
-  private val getExpensesByCategoryUseCase: GetExpensesByCategoryUseCase,
-  private val getMonthlyEvolutionUseCase: GetMonthlyEvolutionUseCase,
-  private val getCurrencySymbolUseCase: GetCurrencySymbolUseCase,
-  private val processTicketUseCase: ProcessTicketUseCase,
-  private val currentHouseholdProvider: CurrentHouseholdProvider
+    private val getExpensesUseCase: GetExpensesUseCase,
+    private val getArchivedExpensesUseCase: GetArchivedExpensesUseCase,
+    private val getTotalMonthlyExpenseUseCase: GetTotalMonthlyExpenseUseCase,
+    private val addExpenseUseCase: AddExpenseUseCase,
+    private val deleteExpenseUseCase: DeleteExpenseUseCase,
+    private val unarchiveExpenseUseCase: UnarchiveExpenseUseCase,
+    private val clearAllArchivedExpensesUseCase: ClearAllArchivedExpensesUseCase,
+    private val archiveOldExpensesUseCase: ArchiveOldExpensesUseCase,
+    private val purgeOldPhotosUseCase: PurgeOldPhotosUseCase,
+    private val updateExpenseUseCase: UpdateExpenseUseCase,
+    private val getExpensesByCategoryUseCase: GetExpensesByCategoryUseCase,
+    private val getMonthlyEvolutionUseCase: GetMonthlyEvolutionUseCase,
+    private val getCurrencySymbolUseCase: GetCurrencySymbolUseCase,
+    private val processTicketUseCase: ProcessTicketUseCase,
+    private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
+
+    private val _isUnlocked = MutableStateFlow(false)
+    val isUnlocked: StateFlow<Boolean> = _isUnlocked.asStateFlow()
+
+    fun authenticate(activity: FragmentActivity) {
+        try {
+            val biometricManager = BiometricManager.from(activity)
+            val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            
+            if (biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS) {
+                val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                    .setTitle(activity.getString(com.appcasa.core.ui.R.string.lock_prompt_finance_title))
+                    .setSubtitle(activity.getString(com.appcasa.core.ui.R.string.lock_prompt_finance_subtitle))
+                    .setAllowedAuthenticators(authenticators)
+                    .build()
+
+                val executor = ContextCompat.getMainExecutor(activity)
+                val biometricPrompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        super.onAuthenticationSucceeded(result)
+                        _isUnlocked.value = true
+                    }
+                })
+                biometricPrompt.authenticate(promptInfo)
+            } else {
+                _isUnlocked.value = true
+            }
+        } catch (e: Exception) {
+            _isUnlocked.value = true
+        }
+    }
 
   private val _ocrResult = MutableStateFlow<Double?>(null)
   val ocrResult = _ocrResult.asStateFlow()

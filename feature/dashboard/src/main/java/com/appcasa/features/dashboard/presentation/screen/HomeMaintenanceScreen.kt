@@ -72,6 +72,7 @@ import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.PullToRefreshWrapper
+import com.appcasa.core.utils.Constants
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.dashboard.presentation.viewmodel.HomeMaintenanceViewModel
 import com.appcasa.navigation.Screen
@@ -395,5 +396,5 @@ fun MaintenanceActionDialog(
 }
 
 private fun formatDate(timestamp: Long): String {
-    return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(timestamp))
+    return SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Locale.getDefault()).format(Date(timestamp))
 }

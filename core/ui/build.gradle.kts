@@ -42,4 +42,7 @@ dependencies {
     implementation(libs.lottie.compose)
     implementation(libs.zxing.core)
     debugImplementation(libs.compose.ui.tooling)
+
+    // Domain
+    implementation(project(":core:domain"))
 }

@@ -20,6 +20,7 @@
     <string name="calendar_type_event">Evento</string>
     <string name="calendar_type_task">Tarea</string>
     <string name="calendar_type_reminder">Recordatorio</string>
+    <string name="calendar_birthday_title">Cumpleaños: %s 🎂</string>
 
     <!-- Dialogs -->
     <string name="calendar_add_reminder_title">Nuevo Recordatorio</string>

@@ -11,6 +11,7 @@ fun MiembroEntity.toDomain(): FamilyMember {
         id = id,
         hogarId = hogarId,
         nombre = nombre,
+        email = email,
         tipo = try { TipoMiembro.valueOf(tipo) } catch (e: Exception) { TipoMiembro.PERSONA },
         fechaNacimiento = fechaNacimiento,
         fotoUri = fotoUri,
@@ -28,6 +29,8 @@ fun MiembroEntity.toDomain(): FamilyMember {
         nivel = nivel,
         estadoAnimo = estadoAnimo,
         estadoAnimoUpdatedAt = estadoAnimoUpdatedAt,
+        urlNube = urlNube,
+        firebaseUid = firebaseUid,
         lastSyncedAt = lastSyncedAt
     )
 }
@@ -37,6 +40,7 @@ fun FamilyMember.toEntity(): MiembroEntity {
         id = id,
         hogarId = hogarId,
         nombre = nombre,
+        email = email,
         tipo = tipo.name,
         fechaNacimiento = fechaNacimiento,
         fotoUri = fotoUri,
@@ -54,6 +58,8 @@ fun FamilyMember.toEntity(): MiembroEntity {
         nivel = nivel,
         estadoAnimo = estadoAnimo,
         estadoAnimoUpdatedAt = estadoAnimoUpdatedAt,
+        urlNube = urlNube,
+        firebaseUid = firebaseUid,
         lastSyncedAt = lastSyncedAt
     )
 }

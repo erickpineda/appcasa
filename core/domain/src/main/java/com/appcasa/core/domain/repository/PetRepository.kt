@@ -21,16 +21,16 @@ interface PetRepository {
     suspend fun deleteDesparasitacion(item: PetDeworming)
 
     // Sync methods
-    suspend fun getWeightsToSync(): List<PetWeight>
+    suspend fun getWeightsToSync(hogarId: Long): List<PetWeight>
     suspend fun updateWeightSyncTimestamp(id: Long)
     
-    suspend fun getVaccinesToSync(): List<PetVaccine>
+    suspend fun getVaccinesToSync(hogarId: Long): List<PetVaccine>
     suspend fun updateVaccineSyncTimestamp(id: Long)
     
-    suspend fun getMedicationsToSync(): List<PetMedication>
+    suspend fun getMedicationsToSync(hogarId: Long): List<PetMedication>
     suspend fun updateMedicationSyncTimestamp(id: Long)
     
-    suspend fun getDewormingsToSync(): List<PetDeworming>
+    suspend fun getDewormingsToSync(hogarId: Long): List<PetDeworming>
     suspend fun updateDewormingSyncTimestamp(id: Long)
 
     fun startRemoteSync(hogarId: Long, mascotaId: Long)

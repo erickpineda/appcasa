@@ -45,7 +45,7 @@ class FinanceRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertExpense(expense: Expense): Long {
-        val id = expenseDao.insertExpense(expense.toEntity())
+        val id = expenseDao.insertExpense(expense.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(expense.hogarId)
         return id
     }
@@ -125,6 +125,7 @@ class FinanceRepositoryImpl @Inject constructor(
                     }
                 }
             }
+            .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
     }
 }

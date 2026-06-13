@@ -28,7 +28,7 @@ class DocumentRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertDocumento(documento: Document): Long {
-        val id = documentoDao.insertDocumento(documento.toEntity())
+        val id = documentoDao.insertDocumento(documento.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(documento.hogarId)
         return id
     }
@@ -81,6 +81,7 @@ class DocumentRepositoryImpl @Inject constructor(
                     }
                 }
             }
+            .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
     }
 }

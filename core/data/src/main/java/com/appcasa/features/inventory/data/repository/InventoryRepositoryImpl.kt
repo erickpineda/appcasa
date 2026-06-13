@@ -40,7 +40,7 @@ class InventoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertStockItem(item: StockItem): Long {
-        val id = stockDao.insertItem(item.toEntity())
+        val id = stockDao.insertItem(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(item.hogarId)
         return id
     }
@@ -89,6 +89,7 @@ class InventoryRepositoryImpl @Inject constructor(
                     }
                 }
             }
+            .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
     }
 }

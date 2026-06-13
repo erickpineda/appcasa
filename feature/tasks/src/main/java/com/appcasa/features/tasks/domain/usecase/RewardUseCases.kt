@@ -32,14 +32,16 @@ class AddRewardUseCase @Inject constructor(
 class RedeemRewardUseCase @Inject constructor(
     private val familyRepository: FamilyRepository
 ) {
-    suspend operator fun invoke(memberId: Long, reward: Reward) {
+    suspend operator fun invoke(memberId: Long, reward: Reward): Boolean {
         val member = familyRepository.getMemberById(memberId)
         if (member != null && member.puntos >= reward.costePuntos) {
             familyRepository.updateMember(member.copy(
                 puntos = member.puntos - reward.costePuntos,
                 updatedAt = System.currentTimeMillis()
             ))
+            return true
         }
+        return false
     }
 }
 

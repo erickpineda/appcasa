@@ -11,8 +11,10 @@ import com.appcasa.core.domain.repository.HouseholdRepository
 import com.appcasa.core.domain.repository.SettingsRepository
 import com.appcasa.core.domain.repository.UserRepository
 import com.appcasa.core.ui.utils.HouseCodeUtils
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class GetCurrentHouseholdUseCase @Inject constructor(
@@ -20,6 +22,14 @@ class GetCurrentHouseholdUseCase @Inject constructor(
 ) {
     operator fun invoke(): Flow<Household?> {
         return repository.getHogarActual()
+    }
+}
+
+class GetHouseholdByIdUseCase @Inject constructor(
+    private val repository: HouseholdRepository
+) {
+    operator fun invoke(id: Long): Flow<Household?> {
+        return repository.getHogarById(id)
     }
 }
 
@@ -70,40 +80,49 @@ class CreateHouseholdUseCase @Inject constructor(
     private val userRepository: UserRepository,
     private val familyRepository: FamilyRepository,
     private val householdProvider: CurrentHouseholdProvider,
-    private val firebaseMessaging: FirebaseMessaging
+    private val firebaseMessaging: FirebaseMessaging,
+    private val firebaseAuth: FirebaseAuth
 ) {
     suspend operator fun invoke(houseName: String, userName: String, photoUri: String?) {
         val code = HouseCodeUtils.generateHouseCode()
+        val currentUser = firebaseAuth.currentUser
         
+        // 1. Insertar Hogar
         val hogarId = householdRepository.insertHogar(
             Household(nombre = houseName, codigoHogar = code)
         )
 
-        firebaseMessaging.subscribeToTopic("household_$hogarId")
-        
-        val miembroId = familyRepository.insertMember(
-            FamilyMember(
-                hogarId = hogarId,
-                nombre = userName,
-                tipo = TipoMiembro.PERSONA,
-                rol = RolHogar.ADMIN,
-                fotoUri = photoUri
-            )
+        // 2. Insertar Miembro (ADMIN) vinculado al hogar
+        val member = FamilyMember(
+            hogarId = hogarId,
+            nombre = userName,
+            tipo = TipoMiembro.PERSONA,
+            rol = RolHogar.ADMIN,
+            fotoUri = photoUri,
+            firebaseUid = currentUser?.uid,
+            email = currentUser?.email
         )
+        val miembroId = familyRepository.insertMember(member)
+        
+        // 3. Sincronización inmediata del primer miembro para desbloquear seguridad
+        familyRepository.syncMember(member.copy(id = miembroId))
 
+        // 4. Desactivar usuarios previos e insertar el nuevo Usuario local vinculado
         userRepository.deactivateAllUsers()
         userRepository.insertUser(
             User(
                 hogarId = hogarId,
                 miembroId = miembroId,
                 nombre = userName,
-                email = "admin_${System.currentTimeMillis()}@appcasa.local",
+                email = currentUser?.email ?: "admin_${System.currentTimeMillis()}@appcasa.local",
                 rol = RolHogar.ADMIN,
                 avatarUrl = photoUri,
                 isActive = true
             )
         )
 
+        // 4. Suscribir y establecer sesión
+        firebaseMessaging.subscribeToTopic("household_$hogarId")
         householdProvider.setHouseholdId(hogarId)
     }
 }
@@ -113,64 +132,90 @@ class JoinHouseholdUseCase @Inject constructor(
     private val userRepository: UserRepository,
     private val familyRepository: FamilyRepository,
     private val householdProvider: CurrentHouseholdProvider,
-    private val firebaseMessaging: FirebaseMessaging
+    private val firebaseMessaging: FirebaseMessaging,
+    private val firebaseAuth: FirebaseAuth
 ) {
     suspend operator fun invoke(code: String, userName: String, photoUri: String?): Boolean {
-        // Primero intentamos buscarlo localmente
-        var hogar = householdRepository.getHogarByCodigo(code)
-        
-        // Si no está local, lo buscamos en Firebase
-        if (hogar == null) {
-            hogar = householdRepository.findHouseholdRemotely(code)
-            // Si lo encontramos en la nube, lo guardamos localmente para empezar
-            hogar?.let { householdRepository.insertHogar(it) }
-        }
-
+        // ... (el invoke original sigue siendo util para cuando creamos perfil nuevo al unirnos)
+        var hogar = householdRepository.getHogarByCodigo(code) ?: householdRepository.findHouseholdRemotely(code)
         if (hogar == null) return false
-        val hogarId = hogar.id
         
-        firebaseMessaging.subscribeToTopic("household_$hogarId")
+        val localId = householdRepository.insertHogar(hogar)
+        val currentUser = firebaseAuth.currentUser
         
-        val miembroId = familyRepository.insertMember(
-            FamilyMember(
-                hogarId = hogarId,
-                nombre = userName,
-                tipo = TipoMiembro.PERSONA,
-                rol = RolHogar.COLABORADOR,
-                fotoUri = photoUri
-            )
+        val member = FamilyMember(
+            hogarId = localId,
+            nombre = userName,
+            tipo = TipoMiembro.PERSONA,
+            rol = RolHogar.COLABORADOR,
+            fotoUri = photoUri,
+            firebaseUid = currentUser?.uid,
+            email = currentUser?.email
         )
+        val miembroId = familyRepository.insertMember(member)
+
+        // Sincronización inmediata del nuevo miembro
+        familyRepository.syncMember(member.copy(id = miembroId))
 
         userRepository.deactivateAllUsers()
         userRepository.insertUser(
             User(
-                hogarId = hogarId,
+                hogarId = localId,
                 miembroId = miembroId,
                 nombre = userName,
-                email = "colab_${System.currentTimeMillis()}@appcasa.local",
+                email = currentUser?.email ?: "user_${miembroId}@appcasa.local",
                 rol = RolHogar.COLABORADOR,
                 avatarUrl = photoUri,
                 isActive = true
             )
         )
 
-        householdProvider.setHouseholdId(hogarId)
+        householdProvider.setHouseholdId(localId)
         return true
+    }
+
+    /**
+     * Descubre una casa y la descarga localmente con sus miembros, 
+     * pero no activa ningun usuario todavía.
+     */
+    suspend fun discoverHousehold(code: String): Boolean {
+        var hogar = householdRepository.getHogarByCodigo(code)
+        if (hogar == null) {
+            hogar = householdRepository.findHouseholdRemotely(code)
+            if (hogar != null) {
+                val localId = householdRepository.insertHogar(hogar)
+                // Forzamos descarga de miembros
+                familyRepository.startRemoteSync(localId)
+                kotlinx.coroutines.delay(1000)
+                householdProvider.setHouseholdId(localId) // Establecemos ID para que los flows de miembros funcionen
+                return true
+            }
+        } else {
+            householdProvider.setHouseholdId(hogar.id)
+            return true
+        }
+        return false
+    }
+
+    suspend fun findHousehold(code: String): Household? {
+        return householdRepository.getHogarByCodigo(code) ?: householdRepository.findHouseholdRemotely(code)
     }
 }
 
 class SelectMemberUseCase @Inject constructor(
     private val userRepository: UserRepository,
-    private val householdProvider: CurrentHouseholdProvider
+    private val householdProvider: CurrentHouseholdProvider,
+    private val firebaseAuth: FirebaseAuth
 ) {
     suspend operator fun invoke(member: FamilyMember) {
+        val currentUser = firebaseAuth.currentUser
         userRepository.deactivateAllUsers()
         userRepository.insertUser(
             User(
                 hogarId = member.hogarId,
                 miembroId = member.id,
                 nombre = member.nombre,
-                email = "user_${member.id}@appcasa.local",
+                email = currentUser?.email ?: "user_${member.id}@appcasa.local",
                 rol = member.rol,
                 avatarUrl = member.fotoUri,
                 isActive = true
@@ -194,11 +239,21 @@ class ResetHouseholdUseCase @Inject constructor(
 
 class LogoutUseCase @Inject constructor(
     private val userRepository: UserRepository,
-    private val householdProvider: CurrentHouseholdProvider
+    private val householdProvider: CurrentHouseholdProvider,
+    private val firebaseAuth: FirebaseAuth
 ) {
     suspend operator fun invoke() {
-        userRepository.deactivateAllUsers()
+        // 1. Cerrar sesión en Firebase inmediatamente
+        firebaseAuth.signOut()
+        
+        // 2. Borramos los usuarios locales para que no haya nada que re-activar automáticamente
+        userRepository.deleteUsers()
+        
+        // 3. Resetear el estado de la sesión activa
         householdProvider.setHouseholdId(0L)
+
+        // Delay técnico para asegurar que los listeners de Auth reaccionen antes que la UI
+        kotlinx.coroutines.delay(300)
     }
 }
 
@@ -216,10 +271,17 @@ class SwitchHouseholdUseCase @Inject constructor(
     private val firebaseMessaging: FirebaseMessaging
 ) {
     suspend operator fun invoke(householdId: Long) {
+        // Al cambiar de hogar, desactivamos cualquier sesión anterior
         userRepository.deactivateAllUsers()
-        userRepository.activateUserByHousehold(householdId)
+        
+        // Establecemos el ID del hogar seleccionado
         householdProvider.setHouseholdId(householdId)
+        
+        // Nos suscribimos a las notificaciones de ese hogar
         firebaseMessaging.subscribeToTopic("household_$householdId")
+        
+        // IMPORTANTE: NO activamos ningún usuario aquí. 
+        // La activación real ocurrirá en SelectMemberUseCase cuando el usuario elija su perfil.
     }
 }
 
@@ -236,5 +298,68 @@ class ExportHouseholdDataUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(hogarId: Long): String {
         return repository.exportData(hogarId)
+    }
+}
+
+class RecoverHouseholdsUseCase @Inject constructor(
+    private val repository: HouseholdRepository,
+    private val familyRepository: FamilyRepository,
+    private val firebaseAuth: FirebaseAuth
+) {
+    suspend operator fun invoke(email: String): List<Household> {
+        val currentUser = firebaseAuth.currentUser
+        val cloudHouses = if (currentUser != null) {
+            repository.findHouseholdsByUserUid(currentUser.uid)
+        } else {
+            repository.findHouseholdsByUserEmail(email)
+        }
+
+        // Guardamos localmente para que aparezcan en la lista de Switch
+        for (house in cloudHouses) {
+            val localId = repository.insertHogar(house)
+            // IMPORTANTE: Descargamos también los miembros para que la pantalla "¿Quién eres?" funcione
+            familyRepository.startRemoteSync(localId)
+        }
+
+        // Delay técnico para que Room consolide las transacciones antes de que la UI refresque
+        kotlinx.coroutines.delay(600)
+
+        return cloudHouses
+    }
+}
+
+class LinkAccountUseCase @Inject constructor(
+    private val userRepository: UserRepository,
+    private val familyRepository: FamilyRepository,
+    private val firebaseAuth: FirebaseAuth,
+    private val settingsRepository: SettingsRepository
+) {
+    suspend operator fun invoke() {
+        val currentUser = firebaseAuth.currentUser ?: return
+        val user = userRepository.getCurrentUser().first() ?: return
+        
+        // Evitamos vincular si el usuario Room es "synthetic" (ID -1) o inválido (ID 0)
+        if (user.id <= 0L || user.hogarId <= 0L) return
+        
+        // 1. Vincular el miembro local con el UID de Firebase
+        user.miembroId?.let { memberId ->
+            if (memberId > 0L) {
+                val member = familyRepository.getMemberById(memberId)
+                member?.let {
+                    familyRepository.updateMember(it.copy(
+                        firebaseUid = currentUser.uid,
+                        email = currentUser.email
+                    ))
+                }
+            }
+        }
+        
+        // 2. Actualizar el usuario local Room
+        userRepository.insertUser(user.copy(
+            email = currentUser.email ?: user.email
+        ))
+        
+        // 3. Forzar sincronización inmediata para reclamar la casa en la nube
+        settingsRepository.triggerManualSync(user.hogarId)
     }
 }

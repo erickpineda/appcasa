@@ -21,6 +21,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun CelebrationOverlay(
     xp: Int,
+    title: String = "¡Tarea completada!",
     onDismiss: () -> Unit
 ) {
     // 1. Carga de Lottie con fallback
@@ -93,23 +94,25 @@ fun CelebrationOverlay(
                 modifier = Modifier.padding(top = 180.dp)
             ) {
                 Text(
-                    text = "¡Tarea completada!",
+                    text = title,
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Black
                 )
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Text(
-                        text = "+$xp XP para el equipo",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                    )
+                if (xp > 0) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) {
+                        Text(
+                            text = "+$xp XP para el equipo",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

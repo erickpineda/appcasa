@@ -1,6 +1,7 @@
 package com.appcasa.core.data.remote.source
 
 import com.appcasa.core.data.remote.model.DocumentDto
+import com.appcasa.core.data.utils.FirestoreConstants
 import com.appcasa.core.domain.model.Document
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -18,10 +19,10 @@ class DocumentRemoteDataSource @Inject constructor(
     private val storage: FirebaseStorage
 ) {
     private fun getDocumentCollection(hogarId: Long) = 
-        firestore.collection("households").document(hogarId.toString()).collection("documents")
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_DOCUMENTS)
 
     private fun getStorageRef(hogarId: Long, docId: Long) = 
-        storage.reference.child("households/$hogarId/documents/$docId.pdf")
+        storage.reference.child("${FirestoreConstants.COL_HOUSEHOLDS}/$hogarId/${FirestoreConstants.COL_DOCUMENTS}/$docId.pdf")
 
     suspend fun syncDocument(doc: Document) {
         // 1. Sincronizar metadatos en Firestore

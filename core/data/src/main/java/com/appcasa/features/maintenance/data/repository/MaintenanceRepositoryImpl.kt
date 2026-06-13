@@ -34,7 +34,7 @@ class MaintenanceRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertEvent(event: MaintenanceEvent): Long {
-        val id = maintenanceDao.insertEvent(event.toEntity())
+        val id = maintenanceDao.insertEvent(event.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(event.hogarId)
         return id
     }
@@ -95,6 +95,7 @@ class MaintenanceRepositoryImpl @Inject constructor(
                     }
                 }
             }
+            .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
     }
 }

@@ -61,6 +61,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.auth)
+    implementation(libs.google.play.auth)
 
     // ML Kit Barcode
     implementation(libs.mlkit.barcode.scanning)

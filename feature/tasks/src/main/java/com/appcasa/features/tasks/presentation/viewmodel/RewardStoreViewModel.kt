@@ -9,8 +9,12 @@ import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.usecase.household.GetFamilyMembersUseCase
 import com.appcasa.features.tasks.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -28,6 +32,9 @@ class RewardStoreViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+
+    private val _events = MutableSharedFlow<RewardEvent>()
+    val events = _events.asSharedFlow()
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val recompensas: StateFlow<List<Reward>> = currentHouseholdProvider.householdId
@@ -48,7 +55,12 @@ class RewardStoreViewModel @Inject constructor(
 
     fun redeemReward(memberId: Long, recompensa: Reward) {
         viewModelScope.launch {
-            redeemRewardUseCase(memberId, recompensa)
+            val success = redeemRewardUseCase(memberId, recompensa)
+            if (success) {
+                _events.emit(RewardEvent.Success)
+            } else {
+                _events.emit(RewardEvent.Error("Puntos insuficientes"))
+            }
         }
     }
     
@@ -56,5 +68,10 @@ class RewardStoreViewModel @Inject constructor(
         viewModelScope.launch {
             deleteRewardUseCase(recompensa)
         }
+    }
+
+    sealed interface RewardEvent {
+        data object Success : RewardEvent
+        data class Error(val message: String) : RewardEvent
     }
 }

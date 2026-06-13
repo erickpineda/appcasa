@@ -80,6 +80,7 @@ import com.appcasa.core.domain.model.Document
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
+import com.appcasa.core.utils.Constants
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.utilities.presentation.viewmodel.SmartSafeViewModel
 import java.text.SimpleDateFormat
@@ -94,7 +95,6 @@ fun SmartSafeScreen(
 ) {
   val isUnlocked by viewModel.isUnlocked.collectAsState()
   val context = LocalContext.current
-  
   fun Context.findActivity(): FragmentActivity? {
     var context = this
     while (context is ContextWrapper) {
@@ -256,7 +256,7 @@ fun DocumentCard(
         Column {
           Text(documento.categoria, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
           documento.fechaVencimiento?.let { fecha ->
-            val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(fecha))
+            val date = SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Locale.getDefault()).format(Date(fecha))
             Text(stringResource(R.string.util_safe_expiry, date), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
           }
         }

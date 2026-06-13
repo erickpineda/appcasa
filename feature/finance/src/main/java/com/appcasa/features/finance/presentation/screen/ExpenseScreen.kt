@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.ReceiptLong
@@ -75,6 +76,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -84,8 +86,11 @@ import com.appcasa.core.ui.components.AppCasaConfirmDialog
 import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.AppCasaSutilToast
 import com.appcasa.core.ui.components.PullToRefreshWrapper
+import com.appcasa.core.ui.components.SyncStatusBadge
+import com.appcasa.core.ui.R as CoreR
 import com.appcasa.feature.finance.R
 import com.appcasa.core.domain.model.Expense
+import com.appcasa.core.utils.Constants
 import com.appcasa.features.finance.presentation.viewmodel.FinanceViewModel
 import com.appcasa.navigation.Screen
 import kotlinx.coroutines.delay
@@ -99,6 +104,41 @@ fun ExpenseScreen(
   navController: NavController,
   viewModel: FinanceViewModel = hiltViewModel()
 ) {
+  val isUnlocked by viewModel.isUnlocked.collectAsState()
+  val context = LocalContext.current
+
+  fun android.content.Context.findActivity(): FragmentActivity? {
+      var context = this
+      while (context is android.content.ContextWrapper) {
+          if (context is FragmentActivity) return context
+          context = context.baseContext
+      }
+      return null
+  }
+
+  LaunchedEffect(Unit) {
+      if (!isUnlocked) {
+          delay(300)
+          context.findActivity()?.let { viewModel.authenticate(it) }
+      }
+  }
+
+  if (!isUnlocked) {
+      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          Column(horizontalAlignment = Alignment.CenterHorizontally) {
+              Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+              Spacer(Modifier.height(16.dp))
+              Text(stringResource(CoreR.string.lock_finance_title), style = MaterialTheme.typography.titleLarge)
+              TextButton(onClick = { 
+                  context.findActivity()?.let { viewModel.authenticate(it) }
+              }) {
+                  Text(stringResource(CoreR.string.lock_btn_unlock))
+              }
+          }
+      }
+      return
+  }
+
   val expenses by viewModel.expenses.collectAsState()
   val currency by viewModel.currencySymbol.collectAsState()
   val ocrResult by viewModel.ocrResult.collectAsState()
@@ -106,7 +146,6 @@ fun ExpenseScreen(
   var showAddDialog by remember { mutableStateOf(false) }
   var editingExpense by remember { mutableStateOf<Expense?>(null) }
   var expenseToDelete by remember { mutableStateOf<Expense?>(null) }
-  val context = LocalContext.current
   var toastMessage by remember { mutableStateOf<String?>(null) }
 
   LaunchedEffect(Unit) {
@@ -304,7 +343,13 @@ fun ExpenseCard(expense: Expense, currency: String, onEdit: () -> Unit, onDelete
     modifier = Modifier.fillMaxWidth()
   ) {
     ListItem(
-      headlineContent = { Text(expense.concepto) },
+      headlineContent = {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Text(expense.concepto)
+          Spacer(Modifier.width(6.dp))
+          SyncStatusBadge(isSynced = expense.lastSyncedAt != null && expense.lastSyncedAt!! >= expense.updatedAt)
+        }
+      },
       supportingContent = { Text("${expense.categoria} · ${formatDate(expense.fecha)}") },
       leadingContent = {
           if (expense.fotoUri != null) {
@@ -484,6 +529,6 @@ fun ExpenseActionDialog(
 }
 
 private fun formatDate(timestamp: Long): String {
-  val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+  val sdf = SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Locale.getDefault())
   return sdf.format(Date(timestamp))
 }

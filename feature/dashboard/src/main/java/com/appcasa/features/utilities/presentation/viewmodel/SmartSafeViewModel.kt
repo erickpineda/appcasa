@@ -49,8 +49,8 @@ class SmartSafeViewModel @Inject constructor(
         
         if (canAuth == BiometricManager.BIOMETRIC_SUCCESS) {
             val promptInfo = BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Acceso al Baúl")
-                .setSubtitle("Usa tu huella o cara para entrar")
+                .setTitle(activity.getString(com.appcasa.core.ui.R.string.lock_prompt_safe_title))
+                .setSubtitle(activity.getString(com.appcasa.core.ui.R.string.lock_prompt_safe_subtitle))
                 .setAllowedAuthenticators(authenticators)
                 .build()
 

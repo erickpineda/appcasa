@@ -42,11 +42,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.Reward
 import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaEmptyState
+import com.appcasa.core.ui.components.CelebrationOverlay
 import com.appcasa.feature.tasks.R
 import com.appcasa.features.tasks.presentation.viewmodel.RewardStoreViewModel
 import com.appcasa.core.ui.R as CoreR
@@ -59,8 +62,23 @@ fun RewardStoreScreen(
 ) {
     val rewards by viewModel.recompensas.collectAsState()
     val members by viewModel.members.collectAsState()
+    val context = LocalContext.current
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedMemberId by remember { mutableStateOf<Long?>(null) }
+    var showCelebration by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is RewardStoreViewModel.RewardEvent.Success -> {
+                    showCelebration = true
+                }
+                is RewardStoreViewModel.RewardEvent.Error -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     LaunchedEffect(members) {
         if (selectedMemberId == null && members.isNotEmpty()) {
@@ -75,6 +93,14 @@ fun RewardStoreScreen(
                 viewModel.addRecompensa(t, p, d)
                 showAddDialog = false
             }
+        )
+    }
+
+    if (showCelebration) {
+        CelebrationOverlay(
+            xp = 0, 
+            title = stringResource(R.string.rewards_congrats_msg),
+            onDismiss = { showCelebration = false }
         )
     }
 

@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -31,9 +33,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaCard
@@ -47,6 +51,41 @@ fun FinanceStatsScreen(
     navController: NavController,
     viewModel: FinanceViewModel = hiltViewModel()
 ) {
+    val isUnlocked by viewModel.isUnlocked.collectAsState()
+    val context = LocalContext.current
+
+    fun android.content.Context.findActivity(): FragmentActivity? {
+        var context = this
+        while (context is android.content.ContextWrapper) {
+            if (context is FragmentActivity) return context
+            context = context.baseContext
+        }
+        return null
+    }
+
+    LaunchedEffect(Unit) {
+        if (!isUnlocked) {
+            kotlinx.coroutines.delay(300)
+            context.findActivity()?.let { viewModel.authenticate(it) }
+        }
+    }
+
+    if (!isUnlocked) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                androidx.compose.foundation.layout.Spacer(Modifier.height(16.dp))
+                Text(stringResource(CoreR.string.lock_finance_stats_title), style = MaterialTheme.typography.titleLarge)
+                androidx.compose.material3.TextButton(onClick = { 
+                    context.findActivity()?.let { viewModel.authenticate(it) }
+                }) {
+                    Text(stringResource(CoreR.string.lock_btn_unlock))
+                }
+            }
+        }
+        return
+    }
+
     val expensesByCategory by viewModel.expensesByCategory.collectAsState()
     val monthlyEvolution by viewModel.monthlyEvolution.collectAsState()
     val currency by viewModel.currencySymbol.collectAsState()

@@ -1,6 +1,7 @@
 package com.appcasa.core.data.remote.source
 
 import com.appcasa.core.data.remote.model.EventDto
+import com.appcasa.core.data.utils.FirestoreConstants
 import com.appcasa.core.domain.model.Event
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
@@ -15,7 +16,7 @@ class CalendarRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     private fun getEventCollection(hogarId: Long) = 
-        firestore.collection("households").document(hogarId.toString()).collection("events")
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_EVENTS)
 
     suspend fun syncEvent(event: Event) {
         getEventCollection(event.hogarId).document(event.id.toString())

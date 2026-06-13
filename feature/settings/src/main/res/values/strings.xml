@@ -1,126 +1,172 @@
 <resources>
-    <!-- Settings Screen -->
     <string name="settings_title">Ajustes</string>
-    <string name="settings_footer">Hecho con ❤️ para la familia</string>
-
-    <!-- Sections -->
-    <string name="settings_section_profile">Perfil del Hogar</string>
-    <string name="settings_section_appearance">Apariencia y Notificaciones</string>
-    <string name="settings_section_preferences">Preferencias de Uso</string>
-    <string name="settings_section_system">Sistema</string>
-
-    <!-- Items -->
-    <string name="settings_user_name_title">Nombre del Usuario</string>
+    <string name="settings_user_name_title">Tu nombre</string>
+    <string name="settings_profile_edit_hint">Toca para editar tu nombre o foto</string>
+    <string name="settings_section_household">Hogar e Invitaciones</string>
+    <string name="settings_hub_household_subtitle">Gestiona tu casa y quién puede entrar</string>
+    <string name="settings_section_appearance">Apariencia</string>
+    <string name="settings_section_appearance_full">Pantalla y Notificaciones</string>
+    <string name="settings_hub_appearance_subtitle">Tema oscuro, sonidos y avisos</string>
+    <string name="settings_hub_preferences">Preferencias de Uso</string>
+    <string name="settings_hub_preferences_subtitle">Moneda, listas y modo tienda</string>
+    <string name="settings_hub_account">Cuenta y Privacidad</string>
+    <string name="settings_hub_logout">Cerrar Sesión</string>
+    <string name="settings_hub_logout_subtitle">Salir de tu cuenta de forma segura</string>
+    <string name="settings_version_footer">AppCasa %s • Hecho con ❤️ para tu hogar</string>
     <string name="settings_household_name_title">Nombre del Hogar</string>
-    <string name="settings_dark_mode_title">Modo Oscuro</string>
-    <string name="settings_dark_mode_subtitle">Cambiar el tema de la aplicación</string>
+    <string name="settings_regenerate_code_title">Regenerar Código</string>
+    <string name="settings_regenerate_code_desc">Si regeneras el código, las invitaciones antiguas dejarán de funcionar. ¿Estás seguro?</string>
+    <string name="settings_confirm">Confirmar</string>
+    <string name="settings_qr_subtitle">Muestra este QR a los miembros de tu familia para que se unan a tu hogar.</string>
+    <string name="settings_dark_mode_title">Tema Oscuro</string>
+    <string name="settings_dark_mode_subtitle">Cambia entre modo claro y oscuro</string>
     <string name="settings_notifications_title">Notificaciones</string>
-    <string name="settings_notifications_subtitle">Recibir avisos de tareas y eventos</string>
-    <string name="settings_partner_notifications_title">Notificaciones de Pareja</string>
-    <string name="settings_partner_notifications_subtitle">Avisar cuando mi pareja haga cambios</string>
+    <string name="settings_notifications_subtitle">Recibe avisos de tareas y eventos</string>
+    <string name="settings_partner_notifications_title">Actividad familiar</string>
+    <string name="settings_partner_notifications_desc">Avisar cuando otros completen tareas</string>
     <string name="settings_compact_view_title">Vista Compacta</string>
-    <string name="settings_compact_view_subtitle">Mostrar listas con menos espacio</string>
-    <string name="settings_currency_title">Moneda Local</string>
-    <string name="settings_currency_subtitle">Símbolo: %s</string>
+    <string name="settings_compact_view_subtitle">Muestra más elementos en pantalla</string>
+    <string name="settings_currency_title">Moneda</string>
+    <string name="settings_currency_current">Actual: %s</string>
     <string name="settings_main_list_title">Lista de la Compra Principal</string>
     <string name="settings_shop_mode_title">Modo Tienda</string>
-    <string name="settings_shop_mode_subtitle">Mantener pantalla encendida en listas</string>
-    <string name="settings_about_title">Acerca de AppCasa</string>
-    <string name="settings_about_subtitle">Versión 1.0.0-Beta</string>
-
-    <!-- Dialogs -->
-    <string name="settings_dialog_currency_title">Seleccionar Moneda</string>
-    <string name="settings_dialog_list_title">Lista de la Compra</string>
-    <string name="settings_dialog_no_lists">No hay listas creadas. Crea una en la sección de Listas.</string>
+    <string name="settings_shop_mode_subtitle">Mantener pantalla encendida en la lista</string>
     <string name="settings_btn_save">Guardar</string>
     <string name="settings_btn_cancel">Cancelar</string>
     <string name="settings_btn_close">Cerrar</string>
-    <string name="settings_list_not_selected">No seleccionada</string>
-
-    <!-- House Setup Screen -->
-    <string name="setup_welcome_title">Bienvenido a AppCasa</string>
-    <string name="setup_welcome_desc">La aplicación para gestionar tu hogar en pareja de forma colaborativa y divertida.</string>
-    <string name="setup_btn_create_house">Crear un Nuevo Hogar</string>
-    <string name="setup_btn_join_house">Unirme a un Hogar</string>
-    <string name="setup_join_title">Unirse con Código</string>
-    <string name="setup_join_desc">Introduce el código que te ha facilitado tu pareja (ej: CASA-7X2W).</string>
-    <string name="setup_label_code">Código de Invitación</string>
-    <string name="setup_placeholder_code">CASA-XXXX</string>
-    <string name="setup_btn_join">Vincular mi cuenta</string>
-    <string name="setup_create_title">Nombre de tu Hogar</string>
-    <string name="setup_create_desc">Este nombre será visible para todos los miembros de la casa.</string>
-    <string name="setup_label_house_name">Ej: Villa Alegría, Nuestra Casa…</string>
-    <string name="setup_btn_finish">Empezar a colaborar</string>
-    <string name="setup_error_invalid_code">Código no válido o no encontrado.</string>
-    <string name="setup_success_linked">¡Hogar vinculado con éxito!</string>
-    <string name="settings_profile_change_photo">Cambiar foto de perfil</string>
-    <string name="settings_profile_name_hint">¿Cómo te llamas?</string>
-
-    <string name="settings_section_household">Mi Hogar e Invitaciones</string>
-    <string name="settings_section_appearance_full">Pantalla y Notificaciones</string>
-    <string name="settings_section_preferences_full">Preferencias de Uso</string>
-
-    <string name="settings_edit_name_title">Tu Nombre</string>
-    <string name="settings_profile_edit_hint">Toca para editar nombre o foto</string>
-    <string name="settings_hub_management">Gestión</string>
-    <string name="settings_hub_household_subtitle">Nombre de casa, código QR y pareja</string>
-    <string name="settings_hub_personalization">Personalización</string>
-    <string name="settings_hub_appearance_subtitle">Modo oscuro, notificaciones de pareja…</string>
-    <string name="settings_hub_preferences">Preferencias</string>
-    <string name="settings_hub_preferences_subtitle">Moneda, listas y modo tienda</string>
-    <string name="settings_hub_account">Cuenta</string>
-    <string name="settings_hub_logout">Cerrar Sesión</string>
-    <string name="settings_hub_logout_subtitle">Salir de este perfil familiar</string>
-    <string name="settings_version_footer">AppCasa %1$s | Con ❤️ para la familia</string>
-
-    <string name="settings_regenerate_code_title">¿Regenerar código?</string>
-    <string name="settings_regenerate_code_desc">El código actual dejará de funcionar para nuevas invitaciones.</string>
-    <string name="settings_confirm">Confirmar</string>
-    <string name="settings_qr_subtitle">Tu pareja puede escanear este código para unirse a la casa al instante.</string>
-    <string name="cd_qr">QR</string>
     <string name="cd_back">Volver</string>
+    <string name="cd_qr">Código QR de invitación</string>
+    <string name="settings_dialog_currency_title">Selecciona Moneda</string>
+    <string name="settings_dialog_list_title">Selecciona Lista</string>
+    <string name="settings_dialog_no_lists">No tienes listas activas para seleccionar</string>
+    <string name="settings_edit_name_title">Editar Nombre</string>
+    <string name="settings_hub_management">Gestión</string>
+    <string name="settings_hub_personalization">Personalización</string>
 
-    <string name="settings_partner_notifications_desc">Avisar cuando ella haga cambios</string>
-    <string name="settings_currency_current">Actual: %s</string>
+    <!-- Secciones Mi Cuenta -->
+    <string name="settings_account_title">Mi Cuenta</string>
+    <string name="settings_account_subtitle">Email, contraseña y seguridad</string>
+    <string name="settings_update_email_title">Actualizar Email</string>
+    <string name="settings_update_password_title">Nueva Contraseña</string>
+    <string name="settings_change_email_label">Cambiar Email</string>
+    <string name="settings_change_email_desc">Se enviará un correo de verificación</string>
+    <string name="settings_change_password_label">Cambiar Contraseña</string>
+    <string name="settings_change_password_desc">Actualiza tu clave de acceso</string>
+    <string name="settings_app_lock_label">Bloqueo de Aplicación</string>
+    <string name="settings_app_lock_desc">Pedir huella al abrir AppCasa</string>
 
-    <!-- House Setup New Strings -->
-    <string name="setup_qr_scan_title">Escanear Código de Casa</string>
-    <string name="setup_qr_permission_error">Se requiere permiso de cámara para escanear el QR.</string>
+    <!-- Sistema y Backup -->
+    <string name="settings_system_title">Sistema y Seguridad</string>
+    <string name="settings_system_subtitle">Sincronización forzada y backups</string>
+    <string name="settings_force_sync_label">Forzar Sincronización</string>
+    <string name="settings_force_sync_desc">Sube todos los datos locales a la nube ahora</string>
+    <string name="settings_export_json_label">Exportar Datos (JSON)</string>
+    <string name="settings_export_json_desc">Crea una copia de seguridad externa de tu hogar</string>
+
+    <!-- Toasts de Configuración -->
+    <string name="settings_email_updated">Email actualizado</string>
+    <string name="settings_email_verification_sent">Email de verificación enviado</string>
+    <string name="settings_reauth_required_email">Por seguridad, debes iniciar sesión de nuevo para cambiar el email</string>
+    <string name="settings_password_too_short">Contraseña demasiado corta (mín. 8 caracteres)</string>
+    <string name="settings_password_updated">Contraseña actualizada</string>
+    <string name="settings_reauth_required_password">Por seguridad, debes iniciar sesión de nuevo para cambiar la contraseña</string>
+    <string name="settings_error_generic">Error al procesar la solicitud</string>
+
+    <string name="setup_welcome_title">AppCasa</string>
+    <string name="setup_welcome_desc">Tu hogar, organizado y en la palma de tu mano.</string>
+    <string name="setup_household_detected">¡Hogar detectado! Bienvenido de nuevo a %s</string>
+    <string name="setup_btn_create_house">Crear un Hogar</string>
+    <string name="setup_btn_join_house">Tengo un Código</string>
+    <string name="setup_btn_enter_my_house">Usar mi Cuenta</string>
+    <string name="setup_create_title">Crea tu Hogar</string>
+    <string name="setup_create_desc">Dale un nombre a tu casa y empieza a organizarte.</string>
+    <string name="setup_label_house_name">Nombre de tu casa</string>
+    <string name="setup_btn_finish">Terminar</string>
+    <string name="setup_profile_your_photo">Tu foto</string>
+    <string name="setup_join_title">Unirme al Hogar</string>
+    <string name="setup_join_desc">Escanea el QR de un familiar o introduce el código de invitación.</string>
+    <string name="setup_cd_scan_qr">Escanear código QR</string>
+    <string name="setup_label_code">Código de Hogar</string>
+    <string name="setup_placeholder_code">CASA-XXXX</string>
+    <string name="setup_btn_join">Unirme</string>
+    <string name="setup_qr_scan_title">Escáner de Hogar</string>
+    <string name="setup_qr_permission_error">Se necesita permiso de cámara para escanear.</string>
     <string name="setup_profile_who_are_you">¿Quién eres?</string>
-    <string name="setup_profile_desc">Introduce tu nombre para entrar al hogar</string>
-    <string name="setup_profile_your_photo">Tu Foto</string>
+    <string name="setup_profile_desc">Personaliza tu perfil familiar</string>
     <string name="setup_btn_enter">Entrar</string>
-    <string name="setup_household_detected">Hogar detectado: %s</string>
-    <string name="setup_btn_enter_my_house">Entrar en mi Hogar</string>
-    <string name="setup_cd_scan_qr">Escanear QR</string>
     <string name="setup_switch_title">Tus Hogares</string>
-    <string name="setup_switch_desc">Selecciona una casa para entrar</string>
+    <string name="setup_switch_desc">Selecciona la casa a la que quieres entrar hoy.</string>
     <string name="setup_btn_create_new">Crear Nueva</string>
-    <string name="setup_btn_join_another">Unirse a otra</string>
+    <string name="setup_btn_join_another">Unirme a Otra</string>
     <string name="setup_select_profile_desc">Selecciona tu perfil para entrar</string>
     <string name="setup_info_household">Hogar: %s</string>
     <string name="setup_btn_change">Cambiar</string>
     <string name="setup_btn_new_profile">Nuevo</string>
     <string name="setup_no_members_error">No hay miembros registrados todavía.</string>
     <string name="setup_reset_title">¿Borrar todo?</string>
-    <string name="setup_reset_desc">Esta acción eliminará permanentemente este hogar y todos sus datos (tareas, gastos, etc.) de este dispositivo.</string>
+    <string name="setup_reset_desc">Esta acción eliminará permanentemente este hogar y todos sus datos de este dispositivo.</string>
     <string name="setup_btn_reset_confirm">Borrar permanentemente</string>
     <string name="setup_btn_reset_all">Empezar de cero (Borrar hogar)</string>
+    <string name="setup_household_found_label">Hogar encontrado: %s</string>
+    <string name="setup_btn_continue">Continuar</string>
+    <string name="setup_btn_recover_house">Recuperar mi Hogar</string>
+    <string name="setup_selected_household_label">Hogar seleccionado</string>
+    <string name="setup_error_recover_generic">Error al recuperar hogares: %s</string>
 
     <!-- Auth Strings -->
     <string name="auth_create_account">Crear Cuenta</string>
     <string name="auth_welcome">Bienvenido</string>
+    <string name="auth_subtitle_register">Únete a la familia AppCasa</string>
+    <string name="auth_subtitle_login">Inicia sesión para acceder a tu hogar</string>
+    <string name="auth_forgot_password_title">Recuperar Contraseña</string>
+    <string name="auth_forgot_password_subtitle">Introduce tu email para recibir un enlace de recuperación</string>
     <string name="auth_label_email">Email</string>
     <string name="auth_label_password">Contraseña</string>
     <string name="auth_btn_register">Registrarse</string>
     <string name="auth_btn_login">Entrar</string>
+    <string name="auth_btn_send_link">Enviar enlace</string>
+    <string name="auth_btn_google">Continuar con Google</string>
+    <string name="auth_btn_forgot_password">Olvidé mi contraseña</string>
+    <string name="auth_btn_back_to_login">Volver al login</string>
     <string name="auth_btn_goto_login">¿Ya tienes cuenta? Inicia sesión</string>
     <string name="auth_btn_goto_register">¿No tienes cuenta? Regístrate</string>
-    <string name="auth_error_unknown">Error desconocido</string>
+    <string name="default_web_client_id">1090125768411-t0p7ioit3rpijgpore8gu9lhjho20feg.apps.googleusercontent.com</string>
 
+    <!-- Sincronización y Sistema -->
     <string name="settings_sync_started">Sincronización iniciada</string>
     <string name="settings_sync_in_progress">Sincronización en curso…</string>
     <string name="settings_export_done">Copia de seguridad generada</string>
     <string name="settings_export_in_progress">Generando copia…</string>
     <string name="settings_export_chooser_title">Exportar datos de AppCasa</string>
+
+    <!-- Errores de Autenticación (Naturales) -->
+    <string name="auth_error_invalid_email">El formato del email no es correcto.</string>
+    <string name="auth_error_user_not_found">No existe ninguna cuenta con este email.</string>
+    <string name="auth_error_wrong_password">La contraseña es incorrecta.</string>
+    <string name="auth_error_email_already_in_use">Este correo ya está registrado en otra cuenta.</string>
+    <string name="auth_error_weak_password">La contraseña es demasiado débil (mín. 8 caracteres).</string>
+    <string name="auth_error_network">No hay conexión a internet. Es necesaria para esta acción.</string>
+    <string name="auth_error_too_many_requests">Demasiados intentos. Por seguridad, la cuenta se ha bloqueado temporalmente.</string>
+    <string name="auth_error_reauth_required">Debes re-autenticarte para esta acción</string>
+    <string name="auth_error_config_missing">Error: El método de entrada por email no está activado en la consola de Firebase.</string>
+    <string name="auth_error_unknown">Ha ocurrido un error inesperado. Inténtalo de nuevo.</string>
+    <string name="auth_error_google_no_token">Error: Google no devolvió la identidad. Revisa el SHA-1 en Firebase.</string>
+    <string name="auth_error_google_api">Error de Google (%1$d): Revisa la configuración de Firebase y el SHA-1.</string>
+
+    <string name="setup_error_no_houses_found">No se encontraron hogares para este email</string>
+    <string name="setup_error_recover_failed">Error al recuperar hogares</string>
+    <string name="setup_error_invalid_code">Código de hogar no encontrado</string>
+
+    <!-- Bloqueos Biométricos -->
+    <string name="lock_finance_title">Finanzas Bloqueadas</string>
+    <string name="lock_finance_stats_title">Estadísticas Bloqueadas</string>
+    <string name="lock_btn_unlock">Desbloquear con huella</string>
+    <string name="lock_prompt_finance_title">Acceso a Finanzas</string>
+    <string name="lock_prompt_finance_subtitle">Usa tu huella para ver los gastos</string>
+
+    <string name="settings_link_account_warning">Tus datos solo están en este móvil. Vincula tu cuenta para no perderlos si cambias de dispositivo.</string>
+    <string name="settings_link_account_title">Proteger mi Hogar</string>
+    <string name="settings_link_account_email_btn">Vincular Email y Contraseña</string>
+    <string name="settings_link_account_google_btn">Vincular con Google</string>
+    <string name="settings_link_account_btn">Vincular con Google o Email</string>
 </resources>

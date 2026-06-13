@@ -83,6 +83,16 @@ interface TareaDao {
     @Query("UPDATE tareas SET last_synced_at = :timestamp WHERE id = :id")
     suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
 
+    @Query("UPDATE tarea_check_items SET last_synced_at = :timestamp WHERE id = :id")
+    suspend fun updateCheckItemSyncTimestamp(id: Long, timestamp: Long)
+
+    @Query("""
+        SELECT i.* FROM tarea_check_items i
+        JOIN tareas t ON i.tarea_id = t.id
+        WHERE t.hogar_id = :hogarId AND i.updated_at > COALESCE(i.last_synced_at, 0)
+    """)
+    suspend fun getCheckItemsToSync(hogarId: Long): List<TareaCheckItemEntity>
+
     @Query("""
         SELECT tarea_id as taskId, COUNT(*) as total, SUM(CASE WHEN completado THEN 1 ELSE 0 END) as completed 
         FROM tarea_check_items 

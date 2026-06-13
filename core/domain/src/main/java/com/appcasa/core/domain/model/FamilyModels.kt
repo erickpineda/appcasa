@@ -4,6 +4,7 @@ data class FamilyMember(
     val id: Long = 0,
     val hogarId: Long,
     val nombre: String,
+    val email: String? = null,
     val tipo: TipoMiembro = TipoMiembro.PERSONA,
     val fechaNacimiento: Long? = null,
     val fotoUri: String? = null,
@@ -21,6 +22,8 @@ data class FamilyMember(
     val nivel: Int = 1,
     val estadoAnimo: String? = null,
     val estadoAnimoUpdatedAt: Long? = null,
+    val urlNube: String? = null,
+    val firebaseUid: String? = null,
     val lastSyncedAt: Long? = null
 )
 

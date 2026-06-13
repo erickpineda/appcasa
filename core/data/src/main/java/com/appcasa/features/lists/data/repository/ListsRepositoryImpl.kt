@@ -35,7 +35,7 @@ class ListsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertLista(lista: Lista) {
-        listaDao.insertLista(lista.toEntity())
+        listaDao.insertLista(lista.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(lista.hogarId)
     }
 
@@ -67,33 +67,50 @@ class ListsRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun getHogarId(listaId: Long): Long {
+        return listaDao.getListById(listaId)?.hogarId ?: 0L
+    }
+
     override suspend fun insertItem(item: ListaItem) {
-        listaDao.insertItem(item.toEntity())
-        // trigger sync for the list
+        listaDao.insertItem(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(getHogarId(item.listaId))
     }
 
     override suspend fun updateItem(item: ListaItem) {
-        listaDao.updateItem(item.toEntity())
+        listaDao.updateItem(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(getHogarId(item.listaId))
     }
 
     override suspend fun updateItems(items: List<ListaItem>) {
-        listaDao.updateItems(items.map { it.toEntity() })
-    }
-
-    override suspend fun deleteItem(item: ListaItem) {
-        listaDao.deleteItem(item.toEntity())
-        try {
-            val lista = listaDao.getListById(item.listaId)
-            lista?.let { 
-                remoteDataSource.deleteListItem(it.hogarId, item)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        val now = System.currentTimeMillis()
+        val updated = items.map { it.copy(updatedAt = now) }
+        listaDao.updateItems(updated.map { it.toEntity() })
+        if (updated.isNotEmpty()) {
+            syncScheduler.scheduleSync(getHogarId(updated.first().listaId))
         }
     }
 
+    override suspend fun deleteItem(item: ListaItem) {
+        val hogarId = getHogarId(item.listaId)
+        listaDao.deleteItem(item.toEntity())
+        try {
+            remoteDataSource.deleteListItem(hogarId, item)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        syncScheduler.scheduleSync(hogarId)
+    }
+
     override suspend fun deleteItems(items: List<ListaItem>) {
+        if (items.isEmpty()) return
+        val hogarId = getHogarId(items.first().listaId)
         listaDao.deleteItems(items.map { it.toEntity() })
+        items.forEach { item ->
+            try {
+                remoteDataSource.deleteListItem(hogarId, item)
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+        syncScheduler.scheduleSync(hogarId)
     }
 
     override suspend fun updateListSyncTimestamp(listaId: Long) {
@@ -102,6 +119,10 @@ class ListsRepositoryImpl @Inject constructor(
 
     override suspend fun updateListItemSyncTimestamp(itemId: Long) {
         listaDao.updateListItemSyncTimestamp(itemId, System.currentTimeMillis())
+    }
+
+    override suspend fun getItemsToSync(hogarId: Long): List<ListaItem> {
+        return listaDao.getItemsToSync(hogarId).map { it.toDomain() }
     }
 
     private var syncJob: Job? = null
@@ -137,6 +158,7 @@ class ListsRepositoryImpl @Inject constructor(
                     observeAndSyncItems(hogarId, remoteList.id)
                 }
             }
+            .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
     }
 
@@ -168,6 +190,7 @@ class ListsRepositoryImpl @Inject constructor(
                     }
                 }
             }
+            .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
     }
 }

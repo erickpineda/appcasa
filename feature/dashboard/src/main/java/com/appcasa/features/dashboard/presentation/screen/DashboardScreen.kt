@@ -105,6 +105,7 @@ import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PremiumProgressBar
 import com.appcasa.core.ui.components.PullToRefreshWrapper
+import com.appcasa.core.ui.components.SyncStatusBadge
 import com.appcasa.core.utils.Constants
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.dashboard.presentation.model.SearchItem
@@ -393,9 +394,10 @@ fun DashboardTopBar(
                 Icon(Icons.Default.DashboardCustomize, contentDescription = stringResource(R.string.cd_customize), tint = MaterialTheme.colorScheme.primary)
             }
             IconButton(onClick = onSettingsClick) {
-                if (user?.avatarUrl != null) {
+                val avatarUrl = user?.avatarUrl
+                if (avatarUrl != null) {
                     AsyncImage(
-                        model = user.avatarUrl,
+                        model = avatarUrl,
                         contentDescription = null,
                         modifier = Modifier.size(32.dp).clip(CircleShape),
                         contentScale = ContentScale.Crop
@@ -447,9 +449,10 @@ fun MoodAvatar(member: FamilyMember, onMoodClick: () -> Unit) {
         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
         border = if (member.estadoAnimo != null) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
       ) {
-        if (member.fotoUri != null) {
+        val imageModel = member.fotoUri ?: member.urlNube
+        if (imageModel != null) {
           AsyncImage(
-            model = member.fotoUri,
+            model = imageModel,
             contentDescription = null,
             modifier = Modifier.fillMaxSize().clip(CircleShape),
             contentScale = ContentScale.Crop
@@ -754,6 +757,10 @@ fun PostItCard(postIt: PostIt, rotation: Float, onDoubleClick: () -> Unit, onDel
         modifier = Modifier.size(24.dp).align(Alignment.BottomEnd)
       ) {
         Icon(Icons.Default.Close, contentDescription = null, tint = Color.Black.copy(alpha = 0.3f), modifier = Modifier.size(14.dp))
+      }
+
+      Box(modifier = Modifier.align(Alignment.BottomStart).padding(4.dp)) {
+        SyncStatusBadge(isSynced = postIt.lastSyncedAt != null && postIt.lastSyncedAt!! >= postIt.updatedAt)
       }
     }
   }

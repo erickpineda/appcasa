@@ -35,7 +35,7 @@ class PetRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertPeso(peso: PetWeight): Long {
-        val id = mascotaDao.insertPeso(peso.toEntity())
+        val id = mascotaDao.insertPeso(peso.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(getHogarId(peso.mascotaId))
         return id
     }
@@ -56,7 +56,7 @@ class PetRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertVacuna(vacuna: PetVaccine): Long {
-        val id = mascotaDao.insertVacuna(vacuna.toEntity())
+        val id = mascotaDao.insertVacuna(vacuna.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(getHogarId(vacuna.mascotaId))
         return id
     }
@@ -77,7 +77,7 @@ class PetRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertMedicacion(med: PetMedication): Long {
-        val id = mascotaDao.insertMedicacion(med.toEntity())
+        val id = mascotaDao.insertMedicacion(med.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(getHogarId(med.mascotaId))
         return id
     }
@@ -98,7 +98,7 @@ class PetRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertDesparasitacion(item: PetDeworming): Long {
-        val id = mascotaDao.insertDesparasitacion(item.toEntity())
+        val id = mascotaDao.insertDesparasitacion(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(getHogarId(item.mascotaId))
         return id
     }
@@ -112,32 +112,32 @@ class PetRepositoryImpl @Inject constructor(
         syncScheduler.scheduleSync(hogarId)
     }
 
-    override suspend fun getWeightsToSync(): List<PetWeight> {
-        return mascotaDao.getWeightsToSync().map { it.toDomain() }
+    override suspend fun getWeightsToSync(hogarId: Long): List<PetWeight> {
+        return mascotaDao.getWeightsToSync(hogarId).map { it.toDomain() }
     }
 
     override suspend fun updateWeightSyncTimestamp(id: Long) {
         mascotaDao.updateWeightSyncTimestamp(id, System.currentTimeMillis())
     }
 
-    override suspend fun getVaccinesToSync(): List<PetVaccine> {
-        return mascotaDao.getVaccinesToSync().map { it.toDomain() }
+    override suspend fun getVaccinesToSync(hogarId: Long): List<PetVaccine> {
+        return mascotaDao.getVaccinesToSync(hogarId).map { it.toDomain() }
     }
 
     override suspend fun updateVaccineSyncTimestamp(id: Long) {
         mascotaDao.updateVaccineSyncTimestamp(id, System.currentTimeMillis())
     }
 
-    override suspend fun getMedicationsToSync(): List<PetMedication> {
-        return mascotaDao.getMedicationsToSync().map { it.toDomain() }
+    override suspend fun getMedicationsToSync(hogarId: Long): List<PetMedication> {
+        return mascotaDao.getMedicationsToSync(hogarId).map { it.toDomain() }
     }
 
     override suspend fun updateMedicationSyncTimestamp(id: Long) {
         mascotaDao.updateMedicationSyncTimestamp(id, System.currentTimeMillis())
     }
 
-    override suspend fun getDewormingsToSync(): List<PetDeworming> {
-        return mascotaDao.getDewormingsToSync().map { it.toDomain() }
+    override suspend fun getDewormingsToSync(hogarId: Long): List<PetDeworming> {
+        return mascotaDao.getDewormingsToSync(hogarId).map { it.toDomain() }
     }
 
     override suspend fun updateDewormingSyncTimestamp(id: Long) {
@@ -190,6 +190,7 @@ class PetRepositoryImpl @Inject constructor(
                     }
                 }
             }
+            .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
     }
 

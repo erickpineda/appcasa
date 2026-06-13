@@ -1,6 +1,7 @@
 package com.appcasa.core.data.remote.source
 
 import com.appcasa.core.data.remote.model.ExpenseDto
+import com.appcasa.core.data.utils.FirestoreConstants
 import com.appcasa.core.domain.model.Expense
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
@@ -15,7 +16,7 @@ class FinanceRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     private fun getExpenseCollection(hogarId: Long) = 
-        firestore.collection("households").document(hogarId.toString()).collection("expenses")
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_EXPENSES)
 
     suspend fun syncExpense(expense: Expense) {
         getExpenseCollection(expense.hogarId).document(expense.id.toString())

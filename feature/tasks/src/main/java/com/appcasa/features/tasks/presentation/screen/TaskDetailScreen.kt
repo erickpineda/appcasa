@@ -97,6 +97,7 @@ import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.TaskCheckItem
 import com.appcasa.core.domain.model.TipoContenidoTarea
 import com.appcasa.core.ui.components.PullToRefreshWrapper
+import com.appcasa.core.utils.Constants
 import com.appcasa.feature.tasks.R
 import com.appcasa.features.tasks.presentation.viewmodel.TaskDetailViewModel
 import kotlinx.coroutines.delay
@@ -691,9 +692,9 @@ fun EditTaskMainDialog(
             } else {
               val cal = Calendar.getInstance().apply { timeInMillis = selectedFecha!! }
               if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-                SimpleDateFormat("dd/MM/yyyy '${stringResource(R.string.task_all_day)}'", Locale.getDefault()).format(Date(selectedFecha!!))
+                SimpleDateFormat("${Constants.Formatting.DATE_FORMAT_ES} '${stringResource(R.string.task_all_day)}'", Locale.getDefault()).format(Date(selectedFecha!!))
               } else {
-                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(selectedFecha!!))
+                SimpleDateFormat(Constants.Formatting.DATETIME_FORMAT_ES, Locale.getDefault()).format(Date(selectedFecha!!))
               }
             }
             Text(dateLabel)

@@ -47,10 +47,19 @@ class GlobalViewModel @Inject constructor(
 
   val isHouseholdSetup: StateFlow<Boolean?> = getCurrentHouseholdUseCase()
     .combine(getCurrentUserUseCase()) { hogar, usuario ->
-        hogar != null && usuario != null
+        // Un hogar está configurado si existe en Room Y el usuario persistido también existe.
+        // Si usuario.id es -1L, es un usuario de Firebase sin hogar local aún.
+        hogar != null && usuario != null && usuario.id != -1L
     }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
   val currentUser = getCurrentUserUseCase()
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+  private val _isSecureMode = MutableStateFlow(false)
+  val isSecureMode = _isSecureMode.asStateFlow()
+
+  fun setSecureMode(enabled: Boolean) {
+      _isSecureMode.value = enabled
+  }
 }

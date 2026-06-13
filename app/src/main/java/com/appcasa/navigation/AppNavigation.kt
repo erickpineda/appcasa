@@ -26,6 +26,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -91,6 +92,18 @@ fun AppNavigation(
   
   val isHouseholdSetup by globalViewModel.isHouseholdSetup.collectAsState()
   val isKeyboardVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() > 0.dp
+
+  // Manejo de Seguridad (FLAG_SECURE) basado en la ruta
+  LaunchedEffect(currentDestination) {
+      val isSensitiveScreen = currentDestination?.hasRoute(Screen.SmartSafe::class) == true ||
+                              currentDestination?.hasRoute(Screen.Expenses::class) == true ||
+                              currentDestination?.hasRoute(Screen.FinanceStats::class) == true ||
+                              currentDestination?.hasRoute(Screen.MortgageCalculator::class) == true ||
+                              currentDestination?.hasRoute(Screen.SavingsCalculator::class) == true ||
+                              currentDestination?.hasRoute(Screen.Archive::class) == true ||
+                              currentDestination?.hasRoute(Screen.Auth::class) == true
+      globalViewModel.setSecureMode(isSensitiveScreen)
+  }
 
   if (isHouseholdSetup == null) {
       Box(

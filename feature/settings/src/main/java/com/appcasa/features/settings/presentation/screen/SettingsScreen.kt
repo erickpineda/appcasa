@@ -6,19 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -26,44 +14,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Compress
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -81,13 +34,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.data.utils.FileUtils
+import com.appcasa.core.domain.model.Household
 import com.appcasa.core.domain.model.Lista
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.ui.components.GoogleIcon
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.core.ui.utils.QRUtils
 import com.appcasa.feature.settings.R
 import com.appcasa.features.settings.presentation.viewmodel.SettingsUiEvent
 import com.appcasa.features.settings.presentation.viewmodel.SettingsViewModel
+import com.appcasa.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,6 +57,7 @@ fun SettingsScreen(
   val hogar by settingsViewModel.hogarActual.collectAsState()
   val configs by settingsViewModel.configuraciones.collectAsState()
   val listas by settingsViewModel.todasLasListas.collectAsState()
+  val todosLosHogares by settingsViewModel.todosLosHogares.collectAsState()
   val isAdmin by settingsViewModel.isAdmin.collectAsState()
   val isSyncing by settingsViewModel.isSyncing.collectAsState()
   val isExporting by settingsViewModel.isExporting.collectAsState()
@@ -134,13 +91,20 @@ fun SettingsScreen(
     }
   }
 
+  LaunchedEffect(usuario) {
+      if (settingsViewModel.isUserLoggedIn() && (usuario?.email?.contains("@appcasa.local") == true)) {
+          settingsViewModel.linkAccount()
+      }
+  }
+
   SettingsContent(
-    userName = usuario?.nombre ?: "Usuario",
+    userName = usuario?.nombre ?: "",
     userAvatar = usuario?.avatarUrl,
     householdName = hogar?.nombre ?: "",
     householdCode = hogar?.codigoHogar ?: "---",
     configs = configs,
     listas = listas,
+    todosLosHogares = todosLosHogares,
     isAdmin = isAdmin,
     isSyncing = isSyncing,
     isExporting = isExporting,
@@ -149,9 +113,21 @@ fun SettingsScreen(
     onUpdateHouseholdName = { settingsViewModel.updateHogar(it) },
     onUpdateConfig = { k, v -> settingsViewModel.updateConfig(k, v) },
     onRegenerateCode = { settingsViewModel.regenerateHouseCode() },
+    onUpdateEmail = { settingsViewModel.updateEmail(it) },
+    onUpdatePassword = { settingsViewModel.updatePassword(it) },
+    onLinkAccount = {
+        if (settingsViewModel.isUserLoggedIn()) {
+            settingsViewModel.linkAccount()
+        } else {
+            navController.navigate(Screen.Auth)
+        }
+    },
+    onSwitchHogar = { settingsViewModel.switchHogar(it) },
     onForceSync = { settingsViewModel.forceSync() },
     onExportData = { settingsViewModel.exportData() },
-    onLogout = { settingsViewModel.logout() }
+    onLogout = { settingsViewModel.logout() },
+    isUserLoggedIn = settingsViewModel.isUserLoggedIn(),
+    isAccountLinked = settingsViewModel.isUserLoggedIn() || (usuario?.email?.contains("@appcasa.local") == false)
   )
 }
 
@@ -164,6 +140,7 @@ fun SettingsContent(
   householdCode: String,
   configs: Map<String, String>,
   listas: List<Lista>,
+  todosLosHogares: List<Household>,
   isAdmin: Boolean,
   isSyncing: Boolean,
   isExporting: Boolean,
@@ -172,15 +149,21 @@ fun SettingsContent(
   onUpdateHouseholdName: (String) -> Unit,
   onUpdateConfig: (String, String) -> Unit,
   onRegenerateCode: () -> Unit,
+  onUpdateEmail: (String) -> Unit,
+  onUpdatePassword: (String) -> Unit,
+  onLinkAccount: () -> Unit,
+  onSwitchHogar: (Long) -> Unit,
   onForceSync: () -> Unit,
   onExportData: () -> Unit,
-  onLogout: () -> Unit
+  onLogout: () -> Unit,
+  isUserLoggedIn: Boolean,
+  isAccountLinked: Boolean
 ) {
   var activeSection by remember { mutableStateOf<SettingsSection?>(null) }
 
   Column(modifier = Modifier.fillMaxSize()) {
     TopAppBar(
-      title = { Text(activeSection?.title ?: stringResource(R.string.settings_title)) },
+      title = { Text(if (activeSection != null) stringResource(activeSection!!.titleRes) else stringResource(R.string.settings_title)) },
       navigationIcon = {
         if (activeSection != null) {
           IconButton(onClick = { activeSection = null }) {
@@ -203,16 +186,21 @@ fun SettingsContent(
           onSectionClick = { activeSection = it },
           onUpdateAvatar = onUpdateAvatar,
           onUpdateName = onUpdateName,
-          onLogout = onLogout
+          onLinkAccount = onLinkAccount,
+          onLogout = onLogout,
+          isUserLoggedIn = isUserLoggedIn,
+          isAccountLinked = isAccountLinked
         )
       } else {
         when (activeSection!!) {
           SettingsSection.HOUSEHOLD -> HogarSection(
             householdName = householdName,
             householdCode = householdCode,
+            allHouseholds = todosLosHogares,
             isAdmin = isAdmin,
             onUpdateName = onUpdateHouseholdName,
-            onRegenerateCode = onRegenerateCode
+            onRegenerateCode = onRegenerateCode,
+            onSwitchHogar = onSwitchHogar
           )
           SettingsSection.APPEARANCE -> AparienciaSection(
             configs = configs,
@@ -221,6 +209,12 @@ fun SettingsContent(
           SettingsSection.PREFERENCES -> PreferenciasSection(
             configs = configs,
             listas = listas,
+            onUpdateConfig = onUpdateConfig
+          )
+          SettingsSection.ACCOUNT -> MiCuentaSection(
+            configs = configs,
+            onUpdateEmail = onUpdateEmail,
+            onUpdatePassword = onUpdatePassword,
             onUpdateConfig = onUpdateConfig
           )
           SettingsSection.SYSTEM -> SistemaSection(
@@ -235,11 +229,12 @@ fun SettingsContent(
   }
 }
 
-enum class SettingsSection(val title: String) {
-    HOUSEHOLD("Mi Hogar e Invitaciones"),
-    APPEARANCE("Pantalla y Notificaciones"),
-    PREFERENCES("Preferencias de Uso"),
-    SYSTEM("Sistema y Copias de Seguridad")
+enum class SettingsSection(val titleRes: Int) {
+    HOUSEHOLD(R.string.settings_section_household),
+    APPEARANCE(R.string.settings_section_appearance_full),
+    PREFERENCES(R.string.settings_hub_preferences),
+    ACCOUNT(R.string.settings_account_title),
+    SYSTEM(R.string.settings_system_title)
 }
 
 @Composable
@@ -249,7 +244,10 @@ fun SettingsHub(
     onSectionClick: (SettingsSection) -> Unit,
     onUpdateAvatar: () -> Unit,
     onUpdateName: (String) -> Unit,
-    onLogout: () -> Unit
+    onLinkAccount: () -> Unit,
+    onLogout: () -> Unit,
+    isUserLoggedIn: Boolean,
+    isAccountLinked: Boolean
 ) {
     var showNameDialog by remember { mutableStateOf(false) }
 
@@ -267,7 +265,6 @@ fun SettingsHub(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Perfil siempre visible y premium
         item(contentType = "profile") {
             AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
                 Row(
@@ -295,11 +292,60 @@ fun SettingsHub(
                         }
                     }
                     Column(modifier = Modifier.weight(1f).clickable { showNameDialog = true }) {
-                        Text(userName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Text(userName.ifBlank { stringResource(R.string.settings_user_name_title) }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         Text(stringResource(R.string.settings_profile_edit_hint), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     }
                     IconButton(onClick = onUpdateAvatar) {
                         Icon(Icons.Default.PhotoCamera, null, tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+        }
+
+        if (!isAccountLinked) {
+            item(contentType = "link_account") {
+                AppCasaCard(
+                    useGlassmorphism = true,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            stringResource(R.string.settings_link_account_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            stringResource(R.string.settings_link_account_warning),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        
+                        Button(
+                            onClick = onLinkAccount,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(Icons.Default.VpnKey, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.settings_link_account_email_btn))
+                        }
+                        
+                        Spacer(Modifier.height(8.dp))
+                        
+                        OutlinedButton(
+                            onClick = onLinkAccount,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+                        ) {
+                            GoogleIcon()
+                            Spacer(Modifier.width(12.dp))
+                            Text(stringResource(R.string.settings_link_account_google_btn))
+                        }
                     }
                 }
             }
@@ -336,8 +382,16 @@ fun SettingsHub(
         item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_account)) }
         item(contentType = "category") {
             CategoryItem(
-                title = "Sistema y Seguridad",
-                subtitle = "Sincronización forzada y backups",
+                title = stringResource(R.string.settings_account_title),
+                subtitle = stringResource(R.string.settings_account_subtitle),
+                icon = Icons.Default.Security,
+                onClick = { onSectionClick(SettingsSection.ACCOUNT) }
+            )
+        }
+        item(contentType = "category") {
+            CategoryItem(
+                title = stringResource(R.string.settings_system_title),
+                subtitle = stringResource(R.string.settings_system_subtitle),
                 icon = Icons.Default.Compress,
                 onClick = { onSectionClick(SettingsSection.SYSTEM) }
             )
@@ -369,9 +423,11 @@ fun SettingsHub(
 fun HogarSection(
     householdName: String,
     householdCode: String,
+    allHouseholds: List<Household>,
     isAdmin: Boolean,
     onUpdateName: (String) -> Unit,
-    onRegenerateCode: () -> Unit
+    onRegenerateCode: () -> Unit,
+    onSwitchHogar: (Long) -> Unit
 ) {
     var showNameDialog by remember { mutableStateOf(false) }
     var showRegenerateConfirm by remember { mutableStateOf(false) }
@@ -400,6 +456,51 @@ fun HogarSection(
     }
 
     LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        if (allHouseholds.size > 1) {
+            item(contentType = "switch") {
+                Text(
+                    text = stringResource(R.string.setup_switch_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                AppCasaCard(useGlassmorphism = false) {
+                    Column {
+                        allHouseholds.forEach { house ->
+                            val actuallyCurrent = house.nombre == householdName 
+                            ListItem(
+                                headlineContent = { 
+                                    Text(
+                                        house.nombre, 
+                                        fontWeight = if (actuallyCurrent) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (actuallyCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    ) 
+                                },
+                                leadingContent = { 
+                                    Icon(
+                                        Icons.Default.Home, 
+                                        null, 
+                                        tint = if (actuallyCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline 
+                                    ) 
+                                },
+                                trailingContent = {
+                                    if (actuallyCurrent) {
+                                        Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.primary)
+                                    }
+                                },
+                                modifier = Modifier.clickable(!actuallyCurrent) { onSwitchHogar(house.id) },
+                                colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
+                            )
+                            if (house != allHouseholds.last()) {
+                                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         item(contentType = "item") {
             AppCasaCard(onClick = { if (isAdmin) showNameDialog = true }, useGlassmorphism = false) {
                 ListItem(
@@ -548,6 +649,95 @@ fun PreferenciasSection(
                 subtitle = stringResource(R.string.settings_shop_mode_subtitle),
                 checked = shopMode,
                 onCheckedChange = { onUpdateConfig("modo_tienda", it.toString()) }
+            )
+        }
+    }
+}
+
+@Composable
+fun MiCuentaSection(
+    configs: Map<String, String>,
+    onUpdateEmail: (String) -> Unit,
+    onUpdatePassword: (String) -> Unit,
+    onUpdateConfig: (String, String) -> Unit
+) {
+    val biometricAppLock = configs["biometric_lock_app"] == "true"
+    var showEmailDialog by remember { mutableStateOf(false) }
+    var showPassDialog by remember { mutableStateOf(false) }
+
+    if (showEmailDialog) {
+        EditValueDialog(
+            title = stringResource(R.string.settings_update_email_title),
+            initialValue = "",
+            onDismiss = { showEmailDialog = false },
+            onConfirm = { onUpdateEmail(it); showEmailDialog = false }
+        )
+    }
+
+    if (showPassDialog) {
+        EditValueDialog(
+            title = stringResource(R.string.settings_update_password_title),
+            initialValue = "",
+            onDismiss = { showPassDialog = false },
+            onConfirm = { onUpdatePassword(it); showPassDialog = false }
+        )
+    }
+
+    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
+            SettingsItem(
+                icon = Icons.Default.Person,
+                title = stringResource(R.string.settings_change_email_label),
+                subtitle = stringResource(R.string.settings_change_email_desc),
+                onClick = { showEmailDialog = true }
+            )
+        }
+        item {
+            SettingsItem(
+                icon = Icons.Default.Security,
+                title = stringResource(R.string.settings_change_password_label),
+                subtitle = stringResource(R.string.settings_change_password_desc),
+                onClick = { showPassDialog = true }
+            )
+        }
+        item {
+            SettingsToggleItem(
+                icon = Icons.Default.Lock,
+                title = stringResource(R.string.settings_app_lock_label),
+                subtitle = stringResource(R.string.settings_app_lock_desc),
+                checked = biometricAppLock,
+                onCheckedChange = { 
+                    onUpdateConfig("biometric_lock_app", it.toString())
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun SistemaSection(
+    isSyncing: Boolean,
+    isExporting: Boolean,
+    onForceSync: () -> Unit,
+    onExportData: () -> Unit
+) {
+    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
+            SettingsItem(
+                icon = Icons.Default.Refresh,
+                title = stringResource(R.string.settings_force_sync_label),
+                subtitle = if (isSyncing) stringResource(R.string.settings_sync_in_progress) else stringResource(R.string.settings_force_sync_desc),
+                enabled = !isSyncing,
+                onClick = onForceSync
+            )
+        }
+        item {
+            SettingsItem(
+                icon = Icons.Default.FileUpload,
+                title = stringResource(R.string.settings_export_json_label),
+                subtitle = if (isExporting) stringResource(R.string.settings_export_in_progress) else stringResource(R.string.settings_export_json_desc),
+                enabled = !isExporting,
+                onClick = onExportData
             )
         }
     }
@@ -720,35 +910,6 @@ fun SettingsToggleItem(
   }
 }
 
-@Composable
-fun SistemaSection(
-    isSyncing: Boolean,
-    isExporting: Boolean,
-    onForceSync: () -> Unit,
-    onExportData: () -> Unit
-) {
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item {
-            SettingsItem(
-                icon = Icons.Default.Refresh,
-                title = "Forzar Sincronización",
-                subtitle = if (isSyncing) stringResource(R.string.settings_sync_in_progress) else "Sube todos los datos locales a la nube ahora",
-                enabled = !isSyncing,
-                onClick = onForceSync
-            )
-        }
-        item {
-            SettingsItem(
-                icon = Icons.Default.FileUpload,
-                title = "Exportar Datos (JSON)",
-                subtitle = if (isExporting) stringResource(R.string.settings_export_in_progress) else "Crea una copia de seguridad externa de tu hogar",
-                enabled = !isExporting,
-                onClick = onExportData
-            )
-        }
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun SettingsPreview() {
@@ -760,6 +921,7 @@ fun SettingsPreview() {
       householdCode = "CASA-1234",
       configs = emptyMap(),
       listas = emptyList(),
+      todosLosHogares = emptyList(),
       isAdmin = true,
       isSyncing = false,
       isExporting = false,
@@ -768,9 +930,15 @@ fun SettingsPreview() {
       onUpdateHouseholdName = {},
       onUpdateConfig = { _, _ -> },
       onRegenerateCode = {},
+      onUpdateEmail = {},
+      onUpdatePassword = {},
+      onLinkAccount = {},
+      onSwitchHogar = {},
       onForceSync = {},
       onExportData = {},
-      onLogout = {}
+      onLogout = {},
+      isUserLoggedIn = true,
+      isAccountLinked = true
     )
   }
 }

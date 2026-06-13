@@ -1,5 +1,6 @@
 package com.appcasa.features.settings.presentation.viewmodel
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.*
@@ -7,12 +8,14 @@ import com.appcasa.core.domain.usecase.lists.GetActiveListsUseCase
 import com.appcasa.core.domain.usecase.config.GetConfigurationUseCase
 import com.appcasa.core.domain.usecase.config.UpdateConfigurationUseCase
 import com.appcasa.core.domain.usecase.user.GetCurrentUserUseCase
-import com.appcasa.features.settings.domain.usecase.*
-import dagger.hilt.android.lifecycle.HiltViewModel
 import com.appcasa.core.ui.utils.UiText
 import com.appcasa.feature.settings.R
+import com.appcasa.features.settings.domain.usecase.*
+import com.google.firebase.auth.FirebaseAuth
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,7 +30,12 @@ class SettingsViewModel @Inject constructor(
     private val updateHouseholdUseCase: UpdateHouseholdUseCase,
     private val forceSyncUseCase: ForceSyncUseCase,
     private val exportHouseholdDataUseCase: ExportHouseholdDataUseCase,
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    private val linkAccountUseCase: LinkAccountUseCase,
+    private val getAllHouseholdsUseCase: GetAllHouseholdsUseCase,
+    private val switchHouseholdUseCase: SwitchHouseholdUseCase,
+    private val firebaseAuth: FirebaseAuth,
+    private val sharedPrefs: SharedPreferences
 ) : ViewModel() {
 
     private val _settingsEvent = MutableSharedFlow<SettingsUiEvent>()
@@ -53,6 +61,9 @@ class SettingsViewModel @Inject constructor(
         hogar?.let { getActiveListsUseCase(it.id, 1) } ?: flowOf(emptyList())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val todosLosHogares: StateFlow<List<Household>> = getAllHouseholdsUseCase()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     private val _configuraciones = MutableStateFlow<Map<String, String>>(emptyMap())
     val configuraciones: StateFlow<Map<String, String>> = _configuraciones.asStateFlow()
 
@@ -72,6 +83,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val hogar = hogarActual.value ?: return@launch
             updateConfigurationUseCase(hogar.id, clave, valor)
+            
+            if (clave == "biometric_lock_app") {
+                sharedPrefs.edit().putBoolean("biometric_lock_app", valor == "true").apply()
+            }
         }
     }
 
@@ -98,6 +113,30 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun switchHogar(id: Long) {
+        viewModelScope.launch {
+            switchHouseholdUseCase(id)
+        }
+    }
+
+    fun isUserLoggedIn(): Boolean = firebaseAuth.currentUser != null
+
+    fun linkAccount() {
+        viewModelScope.launch {
+            try {
+                _isSyncing.value = true
+                linkAccountUseCase()
+                _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_sync_started)))
+                // Damos tiempo a la sync inicial
+                kotlinx.coroutines.delay(2000)
+                _isSyncing.value = false
+            } catch (e: Exception) {
+                _isSyncing.value = false
+                _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.DynamicString("Error al vincular: ${e.message}")))
+            }
+        }
+    }
+
     fun forceSync() {
         if (_isSyncing.value) return
         viewModelScope.launch {
@@ -105,7 +144,6 @@ class SettingsViewModel @Inject constructor(
             _isSyncing.value = true
             forceSyncUseCase(hogar.id)
             _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_sync_started)))
-            // Simulamos un tiempo de "proceso" para dar feedback y evitar spam
             kotlinx.coroutines.delay(3000)
             _isSyncing.value = false
         }
@@ -125,6 +163,36 @@ class SettingsViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             logoutUseCase()
+        }
+    }
+
+    fun updateEmail(newEmail: String) {
+        viewModelScope.launch {
+            try {
+                firebaseAuth.currentUser?.verifyBeforeUpdateEmail(newEmail)?.await()
+                _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_email_verification_sent)))
+            } catch (e: com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException) {
+                _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_reauth_required_email)))
+            } catch (e: Exception) {
+                _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_error_generic)))
+            }
+        }
+    }
+
+    fun updatePassword(newPass: String) {
+        if (newPass.length < 8) {
+            viewModelScope.launch { _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_password_too_short))) }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                firebaseAuth.currentUser?.updatePassword(newPass)?.await()
+                _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_password_updated)))
+            } catch (e: com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException) {
+                _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_reauth_required_password)))
+            } catch (e: Exception) {
+                _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_error_generic)))
+            }
         }
     }
 }

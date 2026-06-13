@@ -115,9 +115,10 @@ fun MemberDetailScreen(
               shadowElevation = 4.dp
             ) {
               Box(contentAlignment = Alignment.Center) {
-                if (member.fotoUri != null) {
+                val imageModel = member.fotoUri ?: member.urlNube
+                if (imageModel != null) {
                   AsyncImage(
-                    model = member.fotoUri,
+                    model = imageModel,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize().clip(CircleShape),
                     contentScale = ContentScale.Crop

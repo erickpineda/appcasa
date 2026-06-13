@@ -37,7 +37,7 @@ class DashboardRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertPostIt(postIt: PostIt): Long {
-        val id = dashboardDao.insertPostIt(postIt.toEntity())
+        val id = dashboardDao.insertPostIt(postIt.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(postIt.hogarId)
         updateWidget()
         return id
@@ -121,6 +121,7 @@ class DashboardRepositoryImpl @Inject constructor(
                     }
                 }
             }
+            .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
     }
 }

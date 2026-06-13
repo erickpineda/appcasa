@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.domain.model.Expense
@@ -39,6 +40,24 @@ fun ArchiveScreen(
   maintenanceViewModel: HomeMaintenanceViewModel = hiltViewModel()
 ) {
   var selectedTab by remember { mutableStateOf(0) }
+  val context = androidx.compose.ui.platform.LocalContext.current
+  val isFinanceUnlocked by financeViewModel.isUnlocked.collectAsState()
+
+  fun android.content.Context.findActivity(): FragmentActivity? {
+      var context = this
+      while (context is android.content.ContextWrapper) {
+          if (context is FragmentActivity) return context
+          context = context.baseContext
+      }
+      return null
+  }
+
+  LaunchedEffect(selectedTab) {
+      if (selectedTab == 2 && !isFinanceUnlocked) {
+          kotlinx.coroutines.delay(300)
+          context.findActivity()?.let { financeViewModel.authenticate(it) }
+      }
+  }
   var itemToDelete by remember { mutableStateOf<Any?>(null) }
   var toastMessage by remember { mutableStateOf<String?>(null) }
   var showClearSectionConfirm by remember { mutableStateOf(false) }
@@ -152,7 +171,21 @@ fun ArchiveScreen(
           when (selectedTab) {
             0 -> ArchivedTasksList(tasksViewModel, onDelete = { itemToDelete = it })
             1 -> ArchivedListsList(listsViewModel, onDelete = { itemToDelete = it })
-            2 -> ArchivedExpensesList(financeViewModel, onDelete = { itemToDelete = it })
+            2 -> {
+                if (isFinanceUnlocked) {
+                    ArchivedExpensesList(financeViewModel, onDelete = { itemToDelete = it })
+                } else {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.Lock, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(com.appcasa.core.ui.R.string.lock_finance_title))
+                            TextButton(onClick = { context.findActivity()?.let { financeViewModel.authenticate(it) } }) {
+                                Text(stringResource(com.appcasa.core.ui.R.string.lock_btn_unlock))
+                            }
+                        }
+                    }
+                }
+            }
             3 -> ArchivedMaintenanceList(maintenanceViewModel, onDelete = { itemToDelete = it })
           }
         }

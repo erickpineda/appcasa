@@ -12,7 +12,12 @@
           "package_name": "com.appcasa"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1090125768411-t0p7ioit3rpijgpore8gu9lhjho20feg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBHmtK2IjLXqZH2TDh9KHHgCu6xJ6I6ZEA"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1090125768411-t0p7ioit3rpijgpore8gu9lhjho20feg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

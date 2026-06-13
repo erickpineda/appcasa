@@ -40,6 +40,9 @@ data class MiembroEntity(
   @ColumnInfo(name = "nombre")
   val nombre: String,
 
+  @ColumnInfo(name = "email")
+  val email: String? = null,
+
   // TipoMiembro: PERSONA, PERRO, GATO, TORTUGA...
   @ColumnInfo(name = "tipo")
   val tipo: String = TipoMiembro.PERSONA.name,
@@ -95,6 +98,12 @@ data class MiembroEntity(
 
   @ColumnInfo(name = "estado_animo_updated")
   val estadoAnimoUpdatedAt: Long? = null,
+
+  @ColumnInfo(name = "url_nube")
+  val urlNube: String? = null,
+
+  @ColumnInfo(name = "firebase_uid")
+  val firebaseUid: String? = null,
 
   @ColumnInfo(name = "last_synced_at")
   val lastSyncedAt: Long? = null

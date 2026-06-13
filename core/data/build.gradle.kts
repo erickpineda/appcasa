@@ -26,6 +26,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.security.crypto)
     implementation(libs.coroutines.android)
     
     // Room

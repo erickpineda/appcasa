@@ -47,16 +47,16 @@ class SyncWorker @AssistedInject constructor(
             }.forEach { task ->
                 taskRemoteDataSource.syncTask(task)
                 tasksRepository.updateTaskSyncTimestamp(task.id)
+            }
+
+            // Sincronizar check-items de tareas que han cambiado
+            tasksRepository.getCheckItemsToSync(hogarId).forEach { item ->
+                taskRemoteDataSource.syncCheckItem(hogarId, item)
+                tasksRepository.updateCheckItemSyncTimestamp(item.id)
+            }
                 
-                // Sincronizar check-items de esta tarea
-                tasksRepository.getCheckItemsForTask(task.id).first().filter {
-                    it.updatedAt > (it.lastSyncedAt ?: 0L)
-                }.forEach { item ->
-                    taskRemoteDataSource.syncCheckItem(hogarId, item)
-                    // Note: need to add updateCheckItemSyncTimestamp if desired
-                }
-                
-                // Sincronizar asignaciones
+            // Sincronizar asignaciones
+            tasksRepository.getTasksByHogar(hogarId).first().forEach { task ->
                 tasksRepository.getAssignmentsForTask(task.id).first().filter {
                     it.updatedAt > (it.lastSyncedAt ?: 0L)
                 }.forEach { assignment ->
@@ -126,34 +126,32 @@ class SyncWorker @AssistedInject constructor(
             }.forEach { list ->
                 listRemoteDataSource.syncList(list)
                 listsRepository.updateListSyncTimestamp(list.id)
-                
-                // Sincronizar ítems de esta lista
-                listsRepository.getItemsByLista(list.id).first().filter {
-                    it.updatedAt > (it.lastSyncedAt ?: 0L)
-                }.forEach { item ->
-                    listRemoteDataSource.syncListItem(hogarId, item)
-                    listsRepository.updateListItemSyncTimestamp(item.id)
-                }
+            }
+
+            // Sincronizar ítems de listas que han cambiado
+            listsRepository.getItemsToSync(hogarId).forEach { item ->
+                listRemoteDataSource.syncListItem(hogarId, item)
+                listsRepository.updateListItemSyncTimestamp(item.id)
             }
 
             // --- Sincronización de Mascotas (Pesos, Vacunas, Medicinas, Desparasitaciones) ---
             
-            petRepository.getWeightsToSync().forEach { weight ->
+            petRepository.getWeightsToSync(hogarId).forEach { weight ->
                 petRemoteDataSource.syncWeight(hogarId, weight)
                 petRepository.updateWeightSyncTimestamp(weight.id)
             }
             
-            petRepository.getVaccinesToSync().forEach { vaccine ->
+            petRepository.getVaccinesToSync(hogarId).forEach { vaccine ->
                 petRemoteDataSource.syncVaccine(hogarId, vaccine)
                 petRepository.updateVaccineSyncTimestamp(vaccine.id)
             }
             
-            petRepository.getMedicationsToSync().forEach { med ->
+            petRepository.getMedicationsToSync(hogarId).forEach { med ->
                 petRemoteDataSource.syncMedication(hogarId, med)
                 petRepository.updateMedicationSyncTimestamp(med.id)
             }
             
-            petRepository.getDewormingsToSync().forEach { deworming ->
+            petRepository.getDewormingsToSync(hogarId).forEach { deworming ->
                 petRemoteDataSource.syncDeworming(hogarId, deworming)
                 petRepository.updateDewormingSyncTimestamp(deworming.id)
             }

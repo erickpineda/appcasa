@@ -18,8 +18,25 @@ class UserRepositoryImpl @Inject constructor(
     override fun getCurrentUser(): Flow<User?> {
         return configuracionDao.getUsuarioActual().map { entity ->
             val domain = entity?.toDomain()
-            // Podríamos vincular con firebaseAuth.currentUser?.uid aquí si fuera necesario
-            domain
+            if (domain != null) return@map domain
+
+            // Si no hay usuario en Room, comprobamos Firebase
+            val firebaseUser = firebaseAuth.currentUser
+            if (firebaseUser != null) {
+                // Devolvemos un objeto de dominio VOLÁTIL (no está en la DB local aún)
+                // Esto permite que el GlobalViewModel sepa que hay alguien "logueado"
+                // pero que aún tiene que completar el setup del hogar.
+                User(
+                    id = -1L, // ID negativo indica que es volátil/no persistido
+                    hogarId = 0L,
+                    miembroId = 0L,
+                    nombre = firebaseUser.displayName ?: "Usuario",
+                    email = firebaseUser.email ?: "",
+                    isActive = true
+                )
+            } else {
+                null
+            }
         }
     }
 

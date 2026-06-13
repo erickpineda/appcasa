@@ -32,12 +32,12 @@ class FamilyRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateMember(member: FamilyMember) {
-        miembroDao.updateMiembro(member.toEntity())
+        miembroDao.updateMiembro(member.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(member.hogarId)
     }
 
     override suspend fun insertMember(member: FamilyMember): Long {
-        val id = miembroDao.insertMiembro(member.toEntity())
+        val id = miembroDao.insertMiembro(member.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(member.hogarId)
         return id
     }
@@ -71,6 +71,15 @@ class FamilyRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun syncMember(member: FamilyMember) {
+        try {
+            remoteDataSource.syncMember(member)
+            updateMemberSyncTimestamp(member.id)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     private var syncJob: Job? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -91,6 +100,10 @@ class FamilyRepositoryImpl @Inject constructor(
                         miembroDao.insertMiembro(remoteMember.toEntity())
                     }
                 }
+            }
+            .catch { e ->
+                e.printStackTrace()
+                // Evitamos que el error de permisos (PERMISSION_DENIED) cierre la app
             }
             .launchIn(appScope)
     }

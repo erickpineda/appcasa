@@ -15,4 +15,12 @@ object Constants {
         const val TIME_FORMAT_ES = "HH:mm"
         const val DATETIME_FORMAT_ES = "dd/MM/yyyy HH:mm"
     }
+
+    object Media {
+        const val MIME_TYPE_IMAGE = "image/*"
+    }
+
+    object UI {
+        const val LOADING_OVERLAY_ALPHA = 0.3f
+    }
 }

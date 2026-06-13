@@ -43,6 +43,7 @@ import com.appcasa.core.ui.components.AppCasaEmptyState
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.core.ui.theme.Birthday
+import com.appcasa.core.utils.Constants
 import com.appcasa.feature.calendar.R
 import com.appcasa.features.calendar.domain.usecase.CalendarItem
 import com.appcasa.features.calendar.domain.usecase.CalendarState
@@ -912,9 +913,9 @@ fun AddReminderDialog(
           val date = Date(selectedDateMillis)
           val cal = Calendar.getInstance().apply { time = date }
           val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-            "dd/MM/yyyy '${stringResource(R.string.calendar_all_day_suffix)}'"
+            "${Constants.Formatting.DATE_FORMAT_ES} '${stringResource(R.string.calendar_all_day_suffix)}'"
           } else {
-            "dd/MM/yyyy HH:mm"
+            Constants.Formatting.DATETIME_FORMAT_ES
           }
           val sdf = SimpleDateFormat(format, Locale.getDefault())
           Text(stringResource(R.string.calendar_label_date, sdf.format(date)))
@@ -1025,9 +1026,9 @@ fun EditCalendarItemDialog(
           val date = Date(selectedDateMillis)
           val cal = Calendar.getInstance().apply { time = date }
           val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-            "dd/MM/yyyy '${stringResource(R.string.calendar_all_day_suffix)}'"
+            "${Constants.Formatting.DATE_FORMAT_ES} '${stringResource(R.string.calendar_all_day_suffix)}'"
           } else {
-            "dd/MM/yyyy HH:mm"
+            Constants.Formatting.DATETIME_FORMAT_ES
           }
           val sdf = SimpleDateFormat(format, Locale.getDefault())
           Text(stringResource(R.string.calendar_label_datetime, sdf.format(date)))

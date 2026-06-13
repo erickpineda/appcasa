@@ -76,6 +76,7 @@ import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.ui.components.PullToRefreshWrapper
 import com.appcasa.core.ui.components.skeletonShimmer
+import com.appcasa.core.utils.Constants
 import com.appcasa.features.family.R
 import com.appcasa.features.pets.presentation.viewmodel.PetDetailViewModel
 import com.appcasa.navigation.Screen
@@ -191,9 +192,10 @@ fun PetDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
           ) {
             // Foto de cabecera con Parallax
-            if (pet!!.fotoUri != null) {
+            val imageModel = pet!!.fotoUri ?: pet!!.urlNube
+            if (imageModel != null) {
               AsyncImage(
-                model = pet!!.fotoUri,
+                model = imageModel,
                 contentDescription = null,
                 modifier = Modifier
                   .fillMaxWidth()
@@ -539,6 +541,6 @@ fun WeightDialog(
 }
 
 private fun formatDate(timestamp: Long): String {
-  val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+  val sdf = SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Locale.getDefault())
   return sdf.format(Date(timestamp))
 }

@@ -22,5 +22,6 @@ interface ListsRepository {
     suspend fun deleteItems(items: List<ListaItem>)
     suspend fun updateListSyncTimestamp(listaId: Long)
     suspend fun updateListItemSyncTimestamp(itemId: Long)
+    suspend fun getItemsToSync(hogarId: Long): List<ListaItem>
     fun startRemoteSync(hogarId: Long)
 }

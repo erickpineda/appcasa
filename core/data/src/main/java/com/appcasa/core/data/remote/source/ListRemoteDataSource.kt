@@ -1,6 +1,7 @@
 package com.appcasa.core.data.remote.source
 
 import com.appcasa.core.data.remote.model.*
+import com.appcasa.core.data.utils.FirestoreConstants
 import com.appcasa.core.domain.model.*
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
@@ -15,7 +16,7 @@ class ListRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     private fun getListCollection(hogarId: Long) = 
-        firestore.collection("households").document(hogarId.toString()).collection("lists")
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_LISTS)
 
     suspend fun syncList(list: Lista) {
         getListCollection(list.hogarId).document(list.id.toString())
@@ -36,7 +37,7 @@ class ListRemoteDataSource @Inject constructor(
 
     // Items
     private fun getItemCollection(hogarId: Long, listaId: Long) = 
-        getListCollection(hogarId).document(listaId.toString()).collection("items")
+        getListCollection(hogarId).document(listaId.toString()).collection(FirestoreConstants.COL_ITEMS)
 
     suspend fun syncListItem(hogarId: Long, item: ListaItem) {
         getItemCollection(hogarId, item.listaId).document(item.id.toString())

@@ -3,6 +3,7 @@ package com.appcasa.core.data.remote.source
 import com.appcasa.core.data.remote.model.TaskAssignmentDto
 import com.appcasa.core.data.remote.model.TaskCheckItemDto
 import com.appcasa.core.data.remote.model.TaskDto
+import com.appcasa.core.data.utils.FirestoreConstants
 import com.appcasa.core.domain.model.Task
 import com.appcasa.core.domain.model.TaskAssignment
 import com.appcasa.core.domain.model.TaskCheckItem
@@ -19,7 +20,7 @@ class TaskRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     private fun getTaskCollection(hogarId: Long) = 
-        firestore.collection("households").document(hogarId.toString()).collection("tasks")
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_TASKS)
 
     suspend fun syncTask(task: Task) {
         getTaskCollection(task.hogarId).document(task.id.toString())
@@ -44,7 +45,7 @@ class TaskRemoteDataSource @Inject constructor(
 
     // Check Items
     private fun getCheckItemCollection(hogarId: Long, taskId: Long) = 
-        getTaskCollection(hogarId).document(taskId.toString()).collection("check_items")
+        getTaskCollection(hogarId).document(taskId.toString()).collection(FirestoreConstants.COL_CHECK_ITEMS)
 
     suspend fun syncCheckItem(hogarId: Long, item: TaskCheckItem) {
         getCheckItemCollection(hogarId, item.tareaId).document(item.id.toString())
@@ -65,7 +66,7 @@ class TaskRemoteDataSource @Inject constructor(
 
     // Assignments
     private fun getAssignmentCollection(hogarId: Long, taskId: Long) = 
-        getTaskCollection(hogarId).document(taskId.toString()).collection("assignments")
+        getTaskCollection(hogarId).document(taskId.toString()).collection(FirestoreConstants.COL_ASSIGNMENTS)
 
     suspend fun syncAssignment(hogarId: Long, item: TaskAssignment) {
         getAssignmentCollection(hogarId, item.tareaId).document(item.miembroId.toString())

@@ -73,6 +73,7 @@ import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.TipoContenidoTarea
+import com.appcasa.core.utils.Constants
 import com.appcasa.feature.tasks.R
 import com.appcasa.features.tasks.presentation.viewmodel.AddTaskViewModel
 import kotlinx.coroutines.delay
@@ -274,9 +275,9 @@ fun AddTaskScreen(
           val date = Date(selectedDateMillis!!)
           val cal = Calendar.getInstance().apply { time = date }
           val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-            "dd/MM/yyyy '${stringResource(R.string.task_all_day)}'"
+            "${Constants.Formatting.DATE_FORMAT_ES} '${stringResource(R.string.task_all_day)}'"
           } else {
-            "dd/MM/yyyy HH:mm"
+            Constants.Formatting.DATETIME_FORMAT_ES
           }
           stringResource(R.string.task_label_vence, SimpleDateFormat(format, Locale.getDefault()).format(date))
         }

@@ -1,6 +1,7 @@
 package com.appcasa.core.data.remote.source
 
 import com.appcasa.core.data.remote.model.StockDto
+import com.appcasa.core.data.utils.FirestoreConstants
 import com.appcasa.core.domain.model.StockItem
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
@@ -15,7 +16,7 @@ class InventoryRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     private fun getStockCollection(hogarId: Long) = 
-        firestore.collection("households").document(hogarId.toString()).collection("stock")
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_ITEMS)
 
     suspend fun syncStock(item: StockItem) {
         getStockCollection(item.hogarId).document(item.id.toString())

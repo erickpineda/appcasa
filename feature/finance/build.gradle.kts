@@ -31,6 +31,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.biometric)
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.coroutines.android)
 

@@ -68,6 +68,7 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.data.utils.FileUtils
 import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.utils.Constants
 import com.appcasa.features.family.R
 import com.appcasa.features.family.presentation.viewmodel.EditMemberViewModel
 import kotlinx.coroutines.delay
@@ -239,7 +240,7 @@ fun EditMemberScreen(
           Icon(Icons.Default.Cake, contentDescription = null)
           Spacer(Modifier.width(8.dp))
           val label = if (selectedBirthDate == null) stringResource(R.string.family_label_add_birthday) 
-                      else stringResource(R.string.family_label_birthday_format, SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(selectedBirthDate!!)))
+                      else stringResource(R.string.family_label_birthday_format, SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Locale.getDefault()).format(Date(selectedBirthDate!!)))
           Text(label)
         }
 
