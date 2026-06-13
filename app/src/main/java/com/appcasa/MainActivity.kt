@@ -13,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -62,7 +63,7 @@ class MainActivity : FragmentActivity() {
       val isLockEnabled = remember(sharedPrefs) { sharedPrefs.getBoolean("biometric_lock_app", false) }
 
       // Manejo de Bloqueo Biométrico
-      LaunchedEffect(isHouseholdSetup) {
+      LaunchedEffect(isHouseholdSetup, isLockEnabled) {
           if (isHouseholdSetup == true && isLockEnabled && !isAuthenticated) {
               triggerBiometricPrompt {
                   isAuthenticated = true
@@ -70,7 +71,9 @@ class MainActivity : FragmentActivity() {
           }
       }
 
-      val shouldShowContent = !isLockEnabled || isAuthenticated || isHouseholdSetup == false
+      // Solo bloqueamos si el hogar está configurado y el bloqueo está activo
+      val shouldShowLockScreen = isHouseholdSetup == true && isLockEnabled && !isAuthenticated
+      val shouldShowContent = isHouseholdSetup != null && !shouldShowLockScreen
 
       // Manejo de Modo Seguro (Protección de pantalla)
       LaunchedEffect(isSecureMode) {
@@ -100,43 +103,47 @@ class MainActivity : FragmentActivity() {
       }
 
       AppCasaTheme(darkTheme = isDarkMode) {
-          if (shouldShowContent) {
-              AppNavigation(globalViewModel = globalViewModel)
-          } else {
-              // Pantalla de bloqueo sólida para no ver el contenido de atrás
-              Box(
-                  modifier = Modifier
-                      .fillMaxSize()
-                      .background(MaterialTheme.colorScheme.primary),
-                  contentAlignment = Alignment.Center
-              ) {
-                  Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                      Icon(
-                          imageVector = androidx.compose.material.icons.Icons.Default.Lock,
-                          contentDescription = null,
-                          modifier = Modifier.size(64.dp),
-                          tint = MaterialTheme.colorScheme.onPrimary
-                      )
-                      Spacer(modifier = Modifier.height(16.dp))
-                      Text(
-                          text = getString(com.appcasa.core.ui.R.string.lock_app_title),
-                          color = MaterialTheme.colorScheme.onPrimary,
-                          style = MaterialTheme.typography.titleLarge
-                      )
-                      Spacer(modifier = Modifier.height(24.dp))
-                      Button(
-                          onClick = { 
-                              triggerBiometricPrompt { isAuthenticated = true }
-                          },
-                          colors = ButtonDefaults.buttonColors(
-                              containerColor = MaterialTheme.colorScheme.onPrimary,
-                              contentColor = MaterialTheme.colorScheme.primary
+          Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+              if (shouldShowContent) {
+                  AppNavigation(globalViewModel = globalViewModel)
+              } else if (shouldShowLockScreen) {
+                  // Pantalla de bloqueo sólida para no ver el contenido de atrás
+                  Box(
+                      modifier = Modifier
+                          .fillMaxSize()
+                          .background(MaterialTheme.colorScheme.primary),
+                      contentAlignment = Alignment.Center
+                  ) {
+                      Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                          Icon(
+                              imageVector = Icons.Default.Lock,
+                              contentDescription = null,
+                              modifier = Modifier.size(64.dp),
+                              tint = MaterialTheme.colorScheme.onPrimary
                           )
-                      ) {
-                          Text(getString(com.appcasa.core.ui.R.string.lock_btn_unlock))
+                          Spacer(modifier = Modifier.height(16.dp))
+                          Text(
+                              text = getString(com.appcasa.core.ui.R.string.lock_app_title),
+                              color = MaterialTheme.colorScheme.onPrimary,
+                              style = MaterialTheme.typography.titleLarge
+                          )
+                          Spacer(modifier = Modifier.height(24.dp))
+                          Button(
+                              onClick = { 
+                                  triggerBiometricPrompt { isAuthenticated = true }
+                              },
+                              colors = ButtonDefaults.buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.onPrimary,
+                                  contentColor = MaterialTheme.colorScheme.primary
+                              )
+                          ) {
+                              Text(getString(com.appcasa.core.ui.R.string.lock_btn_unlock))
+                          }
                       }
                   }
               }
+              // Si isHouseholdSetup es null, no mostramos nada (Box vacío con fondo de sistema), 
+              // evitando el parpadeo de la pantalla de bloqueo o de bienvenida antes de tiempo.
           }
       }
     }
