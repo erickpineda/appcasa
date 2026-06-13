@@ -39,13 +39,20 @@ class SettingsViewModel @Inject constructor(
     private val sharedPrefs: SharedPreferences
 ) : ViewModel() {
 
-    val isLoggedIn: StateFlow<Boolean> = callbackFlow {
+    private val _firebaseUser = callbackFlow {
         val listener = FirebaseAuth.AuthStateListener { auth ->
-            trySend(auth.currentUser != null)
+            trySend(auth.currentUser)
         }
         firebaseAuth.addAuthStateListener(listener)
         awaitClose { firebaseAuth.removeAuthStateListener(listener) }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), firebaseAuth.currentUser != null)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), firebaseAuth.currentUser)
+
+    val isLoggedIn: StateFlow<Boolean> = _firebaseUser.map { it != null }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), firebaseAuth.currentUser != null)
+
+    val isGoogleAccount: StateFlow<Boolean> = _firebaseUser.map { user ->
+        user?.providerData?.any { it.providerId == "google.com" } ?: false
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     private val _settingsEvent = MutableSharedFlow<SettingsUiEvent>()
     val settingsEvent = _settingsEvent.asSharedFlow()

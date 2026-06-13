@@ -169,4 +169,6 @@
     <string name="settings_link_account_email_btn">Vincular Email y Contraseña</string>
     <string name="settings_link_account_google_btn">Vincular con Google</string>
     <string name="settings_link_account_btn">Vincular con Google o Email</string>
+    <string name="settings_google_managed_title">Gestionado por Google</string>
+    <string name="settings_google_managed_desc">Tu cuenta usa Google para iniciar sesión. El email y la contraseña se gestionan desde tu cuenta de Google.</string>
 </resources>

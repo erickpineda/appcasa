@@ -60,6 +60,7 @@ fun SettingsScreen(
   val todosLosHogares by settingsViewModel.todosLosHogares.collectAsState()
   val isAdmin by settingsViewModel.isAdmin.collectAsState()
   val isLoggedIn by settingsViewModel.isLoggedIn.collectAsState()
+  val isGoogleAccount by settingsViewModel.isGoogleAccount.collectAsState()
   val isSyncing by settingsViewModel.isSyncing.collectAsState()
   val isExporting by settingsViewModel.isExporting.collectAsState()
 
@@ -122,7 +123,8 @@ fun SettingsScreen(
     onExportData = { settingsViewModel.exportData() },
     onLogout = { settingsViewModel.logout() },
     isUserLoggedIn = isLoggedIn,
-    isAccountLinked = usuario == null || isLoggedIn || usuario?.authId != null || (usuario?.email?.contains("@appcasa.local") == false)
+    isAccountLinked = usuario == null || isLoggedIn || usuario?.authId != null || (usuario?.email?.contains("@appcasa.local") == false),
+    isGoogleAccount = isGoogleAccount
   )
 }
 
@@ -152,7 +154,8 @@ fun SettingsContent(
   onExportData: () -> Unit,
   onLogout: () -> Unit,
   isUserLoggedIn: Boolean,
-  isAccountLinked: Boolean
+  isAccountLinked: Boolean,
+  isGoogleAccount: Boolean
 ) {
   var activeSection by remember { mutableStateOf<SettingsSection?>(null) }
 
@@ -184,7 +187,8 @@ fun SettingsContent(
           onLinkAccount = onLinkAccount,
           onLogout = onLogout,
           isUserLoggedIn = isUserLoggedIn,
-          isAccountLinked = isAccountLinked
+          isAccountLinked = isAccountLinked,
+          isGoogleAccount = isGoogleAccount
         )
       } else {
         when (activeSection!!) {
@@ -208,6 +212,7 @@ fun SettingsContent(
           )
           SettingsSection.ACCOUNT -> MiCuentaSection(
             configs = configs,
+            isGoogleAccount = isGoogleAccount,
             onUpdateEmail = onUpdateEmail,
             onUpdatePassword = onUpdatePassword,
             onUpdateConfig = onUpdateConfig
@@ -225,10 +230,10 @@ fun SettingsContent(
 }
 
 enum class SettingsSection(val titleRes: Int) {
-    HOUSEHOLD(R.string.settings_section_household),
+    ACCOUNT(R.string.settings_account_title),
     APPEARANCE(R.string.settings_section_appearance_full),
     PREFERENCES(R.string.settings_hub_preferences),
-    ACCOUNT(R.string.settings_account_title),
+    HOUSEHOLD(R.string.settings_section_household),
     SYSTEM(R.string.settings_system_title)
 }
 
@@ -242,7 +247,8 @@ fun SettingsHub(
     onLinkAccount: () -> Unit,
     onLogout: () -> Unit,
     isUserLoggedIn: Boolean,
-    isAccountLinked: Boolean
+    isAccountLinked: Boolean,
+    isGoogleAccount: Boolean
 ) {
     var showNameDialog by remember { mutableStateOf(false) }
 
@@ -346,13 +352,13 @@ fun SettingsHub(
             }
         }
 
-        item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_management)) }
+        item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_account)) }
         item(contentType = "category") {
             CategoryItem(
-                title = stringResource(R.string.settings_section_household),
-                subtitle = stringResource(R.string.settings_hub_household_subtitle),
-                icon = Icons.Default.Home,
-                onClick = { onSectionClick(SettingsSection.HOUSEHOLD) }
+                title = stringResource(R.string.settings_account_title),
+                subtitle = if (isGoogleAccount) stringResource(R.string.settings_google_managed_title) else stringResource(R.string.settings_account_subtitle),
+                icon = Icons.Default.Security,
+                onClick = { onSectionClick(SettingsSection.ACCOUNT) }
             )
         }
 
@@ -374,13 +380,13 @@ fun SettingsHub(
             )
         }
 
-        item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_account)) }
+        item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_management)) }
         item(contentType = "category") {
             CategoryItem(
-                title = stringResource(R.string.settings_account_title),
-                subtitle = stringResource(R.string.settings_account_subtitle),
-                icon = Icons.Default.Security,
-                onClick = { onSectionClick(SettingsSection.ACCOUNT) }
+                title = stringResource(R.string.settings_section_household),
+                subtitle = stringResource(R.string.settings_hub_household_subtitle),
+                icon = Icons.Default.Home,
+                onClick = { onSectionClick(SettingsSection.HOUSEHOLD) }
             )
         }
         item(contentType = "category") {
@@ -652,6 +658,7 @@ fun PreferenciasSection(
 @Composable
 fun MiCuentaSection(
     configs: Map<String, String>,
+    isGoogleAccount: Boolean,
     onUpdateEmail: (String) -> Unit,
     onUpdatePassword: (String) -> Unit,
     onUpdateConfig: (String, String) -> Unit
@@ -679,22 +686,51 @@ fun MiCuentaSection(
     }
 
     LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item {
-            SettingsItem(
-                icon = Icons.Default.Person,
-                title = stringResource(R.string.settings_change_email_label),
-                subtitle = stringResource(R.string.settings_change_email_desc),
-                onClick = { showEmailDialog = true }
-            )
+        if (isGoogleAccount) {
+            item {
+                AppCasaCard(useGlassmorphism = false, modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        GoogleIcon(size = 24.dp)
+                        Column {
+                            Text(
+                                stringResource(R.string.settings_google_managed_title),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                stringResource(R.string.settings_google_managed_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
         }
-        item {
-            SettingsItem(
-                icon = Icons.Default.Security,
-                title = stringResource(R.string.settings_change_password_label),
-                subtitle = stringResource(R.string.settings_change_password_desc),
-                onClick = { showPassDialog = true }
-            )
+
+        if (!isGoogleAccount) {
+            item {
+                SettingsItem(
+                    icon = Icons.Default.Person,
+                    title = stringResource(R.string.settings_change_email_label),
+                    subtitle = stringResource(R.string.settings_change_email_desc),
+                    onClick = { showEmailDialog = true }
+                )
+            }
+            item {
+                SettingsItem(
+                    icon = Icons.Default.Security,
+                    title = stringResource(R.string.settings_change_password_label),
+                    subtitle = stringResource(R.string.settings_change_password_desc),
+                    onClick = { showPassDialog = true }
+                )
+            }
         }
+
         item {
             SettingsToggleItem(
                 icon = Icons.Default.Lock,
@@ -933,7 +969,8 @@ fun SettingsPreview() {
       onExportData = {},
       onLogout = {},
       isUserLoggedIn = true,
-      isAccountLinked = true
+      isAccountLinked = true,
+      isGoogleAccount = false
     )
   }
 }

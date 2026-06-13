@@ -86,12 +86,12 @@ class DashboardViewModel @Inject constructor(
       getDashboardConfigUseCase(id).map { config ->
         val rawOrder = config?.ordenModulos?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
         val defaultModules = listOf(
+          Constants.Modules.POSTITS,
           Constants.Modules.TASKS,
           Constants.Modules.PETS,
           Constants.Modules.CALENDAR,
           Constants.Modules.EXPENSES,
           Constants.Modules.REWARDS,
-          Constants.Modules.POSTITS,
         )
         
         val finalOrder = if (rawOrder.isEmpty()) {
@@ -119,12 +119,12 @@ class DashboardViewModel @Inject constructor(
         getDashboardConfigUseCase(id).map { config ->
             val rawOrder = config?.ordenModulos?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
             val defaultModules = listOf(
+              Constants.Modules.POSTITS,
               Constants.Modules.TASKS,
               Constants.Modules.PETS,
               Constants.Modules.CALENDAR,
               Constants.Modules.EXPENSES,
               Constants.Modules.REWARDS,
-              Constants.Modules.POSTITS,
             )
             if (rawOrder.isEmpty()) defaultModules
             else {
