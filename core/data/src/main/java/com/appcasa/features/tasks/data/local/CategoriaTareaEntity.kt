@@ -15,7 +15,10 @@ import com.appcasa.features.settings.data.local.HogarEntity
     childColumns  = ["hogar_id"],
     onDelete      = ForeignKey.CASCADE
   )],
-  indices = [Index("hogar_id")]
+  indices = [
+    Index("hogar_id"),
+    Index("sync_id")
+  ]
 )
 data class CategoriaTareaEntity(
 
@@ -24,6 +27,9 @@ data class CategoriaTareaEntity(
 
   @ColumnInfo(name = "hogar_id")
   val hogarId: Long,
+
+  @ColumnInfo(name = "hogar_sync_id")
+  val hogarSyncId: String? = null,
 
   @ColumnInfo(name = "nombre")
   val nombre: String,
@@ -38,6 +44,9 @@ data class CategoriaTareaEntity(
 
   @ColumnInfo(name = "orden")
   val orden: Int = 0,
+
+  @ColumnInfo(name = "sync_id")
+  val syncId: String? = null,
 
   @ColumnInfo(name = "updated_at")
   val updatedAt: Long = System.currentTimeMillis(),

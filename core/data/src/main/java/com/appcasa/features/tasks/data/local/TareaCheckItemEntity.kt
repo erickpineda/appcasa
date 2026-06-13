@@ -18,7 +18,10 @@ import androidx.room.PrimaryKey
     childColumns  = ["tarea_id"],
     onDelete      = ForeignKey.CASCADE
   )],
-  indices = [Index("tarea_id")]
+  indices = [
+    Index("tarea_id"),
+    Index("sync_id")
+  ]
 )
 data class TareaCheckItemEntity(
 
@@ -27,6 +30,9 @@ data class TareaCheckItemEntity(
 
   @ColumnInfo(name = "tarea_id")
   val tareaId: Long,
+
+  @ColumnInfo(name = "tarea_sync_id")
+  val tareaSyncId: String? = null,
 
   @ColumnInfo(name = "texto")
   val texto: String,
@@ -37,6 +43,9 @@ data class TareaCheckItemEntity(
   // Posición del item dentro del checklist
   @ColumnInfo(name = "orden")
   val orden: Int = 0,
+
+  @ColumnInfo(name = "sync_id")
+  val syncId: String? = null,
 
   @ColumnInfo(name = "created_at")
   val createdAt: Long = System.currentTimeMillis(),

@@ -50,14 +50,26 @@ interface MascotaDao {
   @Query("SELECT * FROM mascota_pesos WHERE id = :id")
   suspend fun getPesoById(id: Long): MascotaPesoEntity?
 
+  @Query("SELECT * FROM mascota_pesos WHERE sync_id = :syncId LIMIT 1")
+  suspend fun getPesoBySyncId(syncId: String): MascotaPesoEntity?
+
   @Query("SELECT * FROM mascota_vacunas WHERE id = :id")
   suspend fun getVacunaById(id: Long): MascotaVacunaEntity?
+
+  @Query("SELECT * FROM mascota_vacunas WHERE sync_id = :syncId LIMIT 1")
+  suspend fun getVacunaBySyncId(syncId: String): MascotaVacunaEntity?
 
   @Query("SELECT * FROM mascota_medicaciones WHERE id = :id")
   suspend fun getMedicacionById(id: Long): MascotaMedicacionEntity?
 
+  @Query("SELECT * FROM mascota_medicaciones WHERE sync_id = :syncId LIMIT 1")
+  suspend fun getMedicacionBySyncId(syncId: String): MascotaMedicacionEntity?
+
   @Query("SELECT * FROM mascota_desparasitaciones WHERE id = :id")
   suspend fun getDesparasitacionById(id: Long): MascotaDesparasitacionEntity?
+
+  @Query("SELECT * FROM mascota_desparasitaciones WHERE sync_id = :syncId LIMIT 1")
+  suspend fun getDesparasitacionBySyncId(syncId: String): MascotaDesparasitacionEntity?
 
   @Query("SELECT * FROM miembros WHERE id = :id")
   suspend fun getMiembroById(id: Long): com.appcasa.features.family.data.local.MiembroEntity?

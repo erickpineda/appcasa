@@ -3,8 +3,8 @@ package com.appcasa.core.data.remote.model
 import com.appcasa.core.domain.model.*
 
 data class MemberDto(
-    val id: Long = 0,
-    val hogarId: Long = 0,
+    val syncId: String? = null,
+    val hogarSyncId: String? = null,
     val nombre: String = "",
     val email: String? = null,
     val tipo: String = "PERSONA",
@@ -28,8 +28,10 @@ data class MemberDto(
     val firebaseUid: String? = null
 ) {
     fun toDomain(): FamilyMember = FamilyMember(
-        id = id,
-        hogarId = hogarId,
+        id = 0, // Generar localmente
+        syncId = syncId,
+        hogarId = 0, // Se debe resolver por hogarSyncId
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         email = email,
         tipo = runCatching { TipoMiembro.valueOf(tipo) }.getOrDefault(TipoMiembro.PERSONA),
@@ -55,8 +57,8 @@ data class MemberDto(
 
     companion object {
         fun fromDomain(member: FamilyMember): MemberDto = MemberDto(
-            id = member.id,
-            hogarId = member.hogarId,
+            syncId = member.syncId,
+            hogarSyncId = member.hogarSyncId,
             nombre = member.nombre,
             email = member.email,
             tipo = member.tipo.name,

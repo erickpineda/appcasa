@@ -9,7 +9,9 @@ import com.appcasa.features.family.data.local.MiembroEntity
 fun MiembroEntity.toDomain(): FamilyMember {
     return FamilyMember(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         email = email,
         tipo = try { TipoMiembro.valueOf(tipo) } catch (e: Exception) { TipoMiembro.PERSONA },
@@ -38,7 +40,9 @@ fun MiembroEntity.toDomain(): FamilyMember {
 fun FamilyMember.toEntity(): MiembroEntity {
     return MiembroEntity(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         email = email,
         tipo = tipo.name,

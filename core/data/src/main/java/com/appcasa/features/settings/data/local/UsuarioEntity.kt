@@ -31,6 +31,9 @@ data class UsuarioEntity(
   @ColumnInfo(name = "hogar_id")
   val hogarId: Long,
 
+  @ColumnInfo(name = "hogar_sync_id")
+  val hogarSyncId: String? = null,
+
   @ColumnInfo(name = "nombre")
   val nombre: String,
 

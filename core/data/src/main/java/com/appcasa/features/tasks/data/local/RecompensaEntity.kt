@@ -27,6 +27,8 @@ data class RecompensaEntity(
     val id: Long = 0,
     @ColumnInfo(name = "hogar_id")
     val hogarId: Long,
+    @ColumnInfo(name = "hogar_sync_id")
+    val hogarSyncId: String? = null,
     val titulo: String,
     val descripcion: String? = null,
     @ColumnInfo(name = "coste_puntos")

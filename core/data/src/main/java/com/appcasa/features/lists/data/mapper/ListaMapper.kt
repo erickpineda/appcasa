@@ -9,7 +9,9 @@ import com.appcasa.features.lists.data.local.ListaItemEntity
 fun ListaEntity.toDomain(): Lista {
     return Lista(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         tipo = try { TipoLista.valueOf(tipo) } catch (e: Exception) { TipoLista.PERSONALIZADA },
         completada = completada,
@@ -23,7 +25,9 @@ fun ListaEntity.toDomain(): Lista {
 fun Lista.toEntity(): ListaEntity {
     return ListaEntity(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         tipo = tipo.name,
         completada = completada,
@@ -37,7 +41,9 @@ fun Lista.toEntity(): ListaEntity {
 fun ListaItemEntity.toDomain(): ListaItem {
     return ListaItem(
         id = id,
+        syncId = syncId,
         listaId = listaId,
+        listaSyncId = listaSyncId,
         texto = texto,
         cantidad = cantidad,
         completado = completado,
@@ -51,7 +57,9 @@ fun ListaItemEntity.toDomain(): ListaItem {
 fun ListaItem.toEntity(): ListaItemEntity {
     return ListaItemEntity(
         id = id,
+        syncId = syncId,
         listaId = listaId,
+        listaSyncId = listaSyncId,
         texto = texto,
         cantidad = cantidad,
         completado = completado,

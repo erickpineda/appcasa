@@ -4,7 +4,7 @@ import com.appcasa.core.domain.model.EstadoGeneral
 import com.appcasa.core.domain.model.Household
 
 data class HouseholdDto(
-    val id: Long = 0,
+    val syncId: String? = null,
     val nombre: String = "",
     val descripcion: String? = null,
     val estado: String = "ACTIVO",
@@ -13,7 +13,8 @@ data class HouseholdDto(
     val updatedAt: Long = 0
 ) {
     fun toDomain(): Household = Household(
-        id = id,
+        id = 0, // Siempre 0 para que Room genere un ID local nuevo
+        syncId = syncId,
         nombre = nombre,
         descripcion = descripcion,
         estado = runCatching { EstadoGeneral.valueOf(estado) }.getOrDefault(EstadoGeneral.ACTIVO),
@@ -24,7 +25,7 @@ data class HouseholdDto(
 
     companion object {
         fun fromDomain(household: Household): HouseholdDto = HouseholdDto(
-            id = household.id,
+            syncId = household.syncId,
             nombre = household.nombre,
             descripcion = household.descripcion,
             estado = household.estado.name,

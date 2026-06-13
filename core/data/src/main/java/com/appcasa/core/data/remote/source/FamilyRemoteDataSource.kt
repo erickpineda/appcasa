@@ -18,13 +18,15 @@ class FamilyRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) {
-    private fun getMemberCollection(hogarId: Long) = 
-        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_MEMBERS)
+    private fun getMemberCollection(hogarSyncId: String) = 
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_MEMBERS)
 
-    private fun getStorageRef(hogarId: Long, memberId: Long) = 
-        storage.reference.child("${FirestoreConstants.COL_HOUSEHOLDS}/$hogarId/${FirestoreConstants.COL_MEMBERS}/$memberId.jpg")
+    private fun getStorageRef(hogarSyncId: String, memberSyncId: String) = 
+        storage.reference.child("${FirestoreConstants.COL_HOUSEHOLDS}/$hogarSyncId/${FirestoreConstants.COL_MEMBERS}/$memberSyncId.jpg")
 
     suspend fun syncMember(member: FamilyMember) {
+        val hogarSyncId = member.hogarSyncId ?: return
+        val syncId = member.syncId ?: return
         var updatedMember = member
         
         // Si hay una foto local, subirla a Storage
@@ -32,7 +34,7 @@ class FamilyRemoteDataSource @Inject constructor(
             if (uri.startsWith("/") || uri.startsWith("file://")) {
                 val file = File(uri.replace("file://", ""))
                 if (file.exists()) {
-                    val ref = getStorageRef(member.hogarId, member.id)
+                    val ref = getStorageRef(hogarSyncId, syncId)
                     ref.putFile(android.net.Uri.fromFile(file)).await()
                     val downloadUrl = ref.downloadUrl.await().toString()
                     updatedMember = member.copy(urlNube = downloadUrl)
@@ -40,21 +42,25 @@ class FamilyRemoteDataSource @Inject constructor(
             }
         }
 
-        getMemberCollection(member.hogarId).document(member.id.toString())
+        getMemberCollection(hogarSyncId).document(syncId)
             .set(MemberDto.fromDomain(updatedMember)).await()
     }
 
     suspend fun deleteMember(member: FamilyMember) {
-        getMemberCollection(member.hogarId).document(member.id.toString()).delete().await()
+        val hogarSyncId = member.hogarSyncId ?: return
+        val syncId = member.syncId ?: return
+        getMemberCollection(hogarSyncId).document(syncId).delete().await()
     }
 
-    fun observeMembers(hogarId: Long): Flow<List<FamilyMember>> = callbackFlow {
-        val reg = getMemberCollection(hogarId).addSnapshotListener { snapshot, error ->
+    fun observeMembers(hogarSyncId: String): Flow<List<FamilyMember>> = callbackFlow {
+        val reg = getMemberCollection(hogarSyncId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
-            val members = snapshot?.documents?.mapNotNull { it.toObject(MemberDto::class.java)?.toDomain() } ?: emptyList()
+            val members = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(MemberDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
             trySend(members)
         }
         awaitClose { reg.remove() }

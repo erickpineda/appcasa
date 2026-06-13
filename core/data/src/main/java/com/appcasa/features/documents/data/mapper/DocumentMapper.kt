@@ -6,7 +6,9 @@ import com.appcasa.features.documents.data.local.DocumentoEntity
 fun DocumentoEntity.toDomain(): Document {
     return Document(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         categoria = categoria,
         uriPdf = uriPdf,
@@ -22,7 +24,9 @@ fun DocumentoEntity.toDomain(): Document {
 fun Document.toEntity(): DocumentoEntity {
     return DocumentoEntity(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         categoria = categoria,
         uriPdf = uriPdf,

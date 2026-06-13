@@ -17,7 +17,8 @@ import com.appcasa.features.family.data.local.MiembroEntity
   )],
   indices = [
     Index("mascota_id"),
-    Index("fecha")
+    Index("fecha"),
+    Index("sync_id")
   ]
 )
 data class MascotaPesoEntity(
@@ -28,6 +29,9 @@ data class MascotaPesoEntity(
   @ColumnInfo(name = "mascota_id")
   val mascotaId: Long,
 
+  @ColumnInfo(name = "mascota_sync_id")
+  val mascotaSyncId: String? = null,
+
   @ColumnInfo(name = "peso_kg")
   val pesoKg: Double,
 
@@ -36,6 +40,9 @@ data class MascotaPesoEntity(
 
   @ColumnInfo(name = "notas")
   val notas: String? = null,
+
+  @ColumnInfo(name = "sync_id")
+  val syncId: String? = null,
 
   @ColumnInfo(name = "created_at")
   val createdAt: Long = System.currentTimeMillis(),

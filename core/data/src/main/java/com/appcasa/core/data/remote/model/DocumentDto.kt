@@ -3,8 +3,8 @@ package com.appcasa.core.data.remote.model
 import com.appcasa.core.domain.model.Document
 
 data class DocumentDto(
-    val id: Long = 0,
-    val hogarId: Long = 0,
+    val syncId: String? = null,
+    val hogarSyncId: String? = null,
     val nombre: String = "",
     val categoria: String = "",
     val uriPdf: String = "",
@@ -15,8 +15,10 @@ data class DocumentDto(
     val updatedAt: Long = 0
 ) {
     fun toDomain(): Document = Document(
-        id = id,
-        hogarId = hogarId,
+        id = 0,
+        syncId = syncId,
+        hogarId = 0,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         categoria = categoria,
         uriPdf = uriPdf,
@@ -29,8 +31,8 @@ data class DocumentDto(
 
     companion object {
         fun fromDomain(doc: Document): DocumentDto = DocumentDto(
-            id = doc.id,
-            hogarId = doc.hogarId,
+            syncId = doc.syncId,
+            hogarSyncId = doc.hogarSyncId,
             nombre = doc.nombre,
             categoria = doc.categoria,
             uriPdf = doc.uriPdf,

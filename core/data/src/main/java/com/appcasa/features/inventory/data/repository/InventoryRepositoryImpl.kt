@@ -5,6 +5,7 @@ import com.appcasa.core.data.remote.manager.SyncManager
 import com.appcasa.core.data.remote.source.InventoryRemoteDataSource
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.StockItem
+import com.appcasa.core.domain.repository.HouseholdRepository
 import com.appcasa.core.domain.repository.InventoryRepository
 import com.appcasa.features.inventory.data.local.StockDao
 import com.appcasa.features.inventory.data.mapper.toDomain
@@ -12,10 +13,12 @@ import com.appcasa.features.inventory.data.mapper.toEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import java.util.UUID
 
 class InventoryRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val stockDao: StockDao,
+    private val householdRepository: HouseholdRepository,
     private val remoteDataSource: InventoryRemoteDataSource,
     private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler
@@ -40,8 +43,20 @@ class InventoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertStockItem(item: StockItem): Long {
-        val id = stockDao.insertItem(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(item.hogarId)
+        var itemToInsert = item
+        if (itemToInsert.hogarSyncId == null && itemToInsert.hogarId > 0) {
+            val hogar = householdRepository.getHogarById(itemToInsert.hogarId).first()
+            itemToInsert = itemToInsert.copy(hogarSyncId = hogar?.syncId)
+        }
+        if (itemToInsert.syncId == null) {
+            itemToInsert = itemToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+        val existing = itemToInsert.syncId?.let { stockDao.getItemBySyncId(it) }
+        if (existing != null) {
+            itemToInsert = itemToInsert.copy(id = existing.id)
+        }
+        val id = stockDao.insertItem(itemToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(itemToInsert.hogarId)
         return id
     }
 
@@ -67,25 +82,25 @@ class InventoryRepositoryImpl @Inject constructor(
         syncJob = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
                 if (isInForeground) {
-                    remoteDataSource.observeStock(hogarId)
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    hogar?.syncId?.let { remoteDataSource.observeStock(it) } ?: emptyFlow()
                 } else {
                     emptyFlow()
                 }
             }
             .onEach { remoteItems ->
-                val remoteIds = remoteItems.map { it.id }.toSet()
-                val localItems = stockDao.getStockByHogar(hogarId).first()
-                
-                localItems.forEach { local ->
-                    if (local.id !in remoteIds) {
-                        stockDao.deleteItem(local)
-                    }
-                }
-
                 remoteItems.forEach { remoteItem ->
-                    val localItem = stockDao.getItemById(remoteItem.id)
-                    if (localItem == null || remoteItem.updatedAt > localItem.updatedAt) {
-                        stockDao.insertItem(remoteItem.toEntity())
+                    val existing = remoteItem.syncId?.let { stockDao.getItemBySyncId(it) }
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+
+                    val itemToSave = remoteItem.copy(
+                        id = existing?.id ?: 0L,
+                        hogarId = hogarId,
+                        hogarSyncId = hogar?.syncId
+                    )
+
+                    if (existing == null || remoteItem.updatedAt > existing.updatedAt) {
+                        stockDao.insertItem(itemToSave.toEntity())
                     }
                 }
             }

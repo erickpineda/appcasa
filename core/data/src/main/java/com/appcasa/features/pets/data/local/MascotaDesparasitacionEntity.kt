@@ -18,7 +18,8 @@ import com.appcasa.features.family.data.local.MiembroEntity
   )],
   indices = [
     Index("mascota_id"),
-    Index("fecha_proxima")
+    Index("fecha_proxima"),
+    Index("sync_id")
   ]
 )
 data class MascotaDesparasitacionEntity(
@@ -28,6 +29,9 @@ data class MascotaDesparasitacionEntity(
 
   @ColumnInfo(name = "mascota_id")
   val mascotaId: Long,
+
+  @ColumnInfo(name = "mascota_sync_id")
+  val mascotaSyncId: String? = null,
 
   // TipoDesparasitacion: INTERNA, EXTERNA, AMBAS
   @ColumnInfo(name = "tipo")
@@ -45,6 +49,9 @@ data class MascotaDesparasitacionEntity(
 
   @ColumnInfo(name = "notas")
   val notas: String? = null,
+
+  @ColumnInfo(name = "sync_id")
+  val syncId: String? = null,
 
   @ColumnInfo(name = "created_at")
   val createdAt: Long = System.currentTimeMillis(),

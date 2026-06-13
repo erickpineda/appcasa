@@ -15,25 +15,31 @@ import javax.inject.Singleton
 class DashboardRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
-    private fun getPostItCollection(hogarId: Long) = 
-        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_POSTITS)
+    private fun getPostItCollection(hogarSyncId: String) = 
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_POSTITS)
 
     suspend fun syncPostIt(postIt: PostIt) {
-        getPostItCollection(postIt.hogarId).document(postIt.id.toString())
+        val hogarSyncId = postIt.hogarSyncId ?: return
+        val syncId = postIt.syncId ?: return
+        getPostItCollection(hogarSyncId).document(syncId)
             .set(PostItDto.fromDomain(postIt)).await()
     }
 
     suspend fun deletePostIt(postIt: PostIt) {
-        getPostItCollection(postIt.hogarId).document(postIt.id.toString()).delete().await()
+        val hogarSyncId = postIt.hogarSyncId ?: return
+        val syncId = postIt.syncId ?: return
+        getPostItCollection(hogarSyncId).document(syncId).delete().await()
     }
 
-    fun observePostIts(hogarId: Long): Flow<List<PostIt>> = callbackFlow {
-        val reg = getPostItCollection(hogarId).addSnapshotListener { snapshot, error ->
+    fun observePostIts(hogarSyncId: String): Flow<List<PostIt>> = callbackFlow {
+        val reg = getPostItCollection(hogarSyncId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
-            val postIts = snapshot?.documents?.mapNotNull { it.toObject(PostItDto::class.java)?.toDomain() } ?: emptyList()
+            val postIts = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(PostItDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
             trySend(postIts)
         }
         awaitClose { reg.remove() }

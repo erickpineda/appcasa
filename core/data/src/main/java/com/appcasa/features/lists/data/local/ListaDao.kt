@@ -61,6 +61,12 @@ interface ListaDao {
   @Query("SELECT * FROM listas WHERE id = :id")
   suspend fun getListById(id: Long): ListaEntity?
 
+  @Query("SELECT * FROM listas WHERE sync_id = :syncId LIMIT 1")
+  suspend fun getListBySyncId(syncId: String): ListaEntity?
+
+  @Query("SELECT * FROM lista_items WHERE sync_id = :syncId LIMIT 1")
+  suspend fun getItemBySyncId(syncId: String): ListaItemEntity?
+
   @Query("UPDATE listas SET last_synced_at = :timestamp WHERE id = :id")
   suspend fun updateListSyncTimestamp(id: Long, timestamp: Long)
 

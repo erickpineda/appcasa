@@ -6,7 +6,9 @@ import com.appcasa.features.inventory.data.local.StockEntity
 fun StockEntity.toDomain(): StockItem {
     return StockItem(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         categoria = categoria,
         cantidadActual = cantidadActual,
@@ -21,7 +23,9 @@ fun StockEntity.toDomain(): StockItem {
 fun StockItem.toEntity(): StockEntity {
     return StockEntity(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         categoria = categoria,
         cantidadActual = cantidadActual,

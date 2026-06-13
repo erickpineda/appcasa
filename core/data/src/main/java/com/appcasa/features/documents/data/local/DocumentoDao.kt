@@ -11,6 +11,9 @@ interface DocumentoDao {
   @Query("SELECT * FROM documentos WHERE id = :id")
   suspend fun getDocumentoById(id: Long): DocumentoEntity?
 
+  @Query("SELECT * FROM documentos WHERE sync_id = :syncId LIMIT 1")
+  suspend fun getDocumentoBySyncId(syncId: String): DocumentoEntity?
+
   @Query("SELECT * FROM documentos WHERE id = :id")
   suspend fun getDocumentById(id: Long): DocumentoEntity?
 

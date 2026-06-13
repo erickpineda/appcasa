@@ -15,25 +15,31 @@ import javax.inject.Singleton
 class FinanceRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
-    private fun getExpenseCollection(hogarId: Long) = 
-        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_EXPENSES)
+    private fun getExpenseCollection(hogarSyncId: String) = 
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_EXPENSES)
 
     suspend fun syncExpense(expense: Expense) {
-        getExpenseCollection(expense.hogarId).document(expense.id.toString())
+        val hogarSyncId = expense.hogarSyncId ?: return
+        val syncId = expense.syncId ?: return
+        getExpenseCollection(hogarSyncId).document(syncId)
             .set(ExpenseDto.fromDomain(expense)).await()
     }
 
     suspend fun deleteExpense(expense: Expense) {
-        getExpenseCollection(expense.hogarId).document(expense.id.toString()).delete().await()
+        val hogarSyncId = expense.hogarSyncId ?: return
+        val syncId = expense.syncId ?: return
+        getExpenseCollection(hogarSyncId).document(syncId).delete().await()
     }
 
-    fun observeExpenses(hogarId: Long): Flow<List<Expense>> = callbackFlow {
-        val reg = getExpenseCollection(hogarId).addSnapshotListener { snapshot, error ->
+    fun observeExpenses(hogarSyncId: String): Flow<List<Expense>> = callbackFlow {
+        val reg = getExpenseCollection(hogarSyncId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
-            val expenses = snapshot?.documents?.mapNotNull { it.toObject(ExpenseDto::class.java)?.toDomain() } ?: emptyList()
+            val expenses = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(ExpenseDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
             trySend(expenses)
         }
         awaitClose { reg.remove() }

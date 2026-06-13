@@ -11,6 +11,9 @@ interface MiembroDao {
     @Query("SELECT * FROM miembros WHERE id = :id")
     suspend fun getMiembroById(id: Long): MiembroEntity?
 
+    @Query("SELECT * FROM miembros WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getMiembroBySyncId(syncId: String): MiembroEntity?
+
     @Query("UPDATE miembros SET last_synced_at = :timestamp WHERE id = :id")
     suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
 

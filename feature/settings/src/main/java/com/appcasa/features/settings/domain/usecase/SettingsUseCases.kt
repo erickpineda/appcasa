@@ -85,11 +85,12 @@ class CreateHouseholdUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(houseName: String, userName: String, photoUri: String?) {
         val code = HouseCodeUtils.generateHouseCode()
+        val syncId = java.util.UUID.randomUUID().toString()
         val currentUser = firebaseAuth.currentUser
         
         // 1. Insertar Hogar
         val hogarId = householdRepository.insertHogar(
-            Household(nombre = houseName, codigoHogar = code)
+            Household(nombre = houseName, codigoHogar = code, syncId = syncId)
         )
 
         // 2. Insertar Miembro (ADMIN) vinculado al hogar

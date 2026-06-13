@@ -37,11 +37,21 @@ class HouseholdRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertHogar(hogar: Household): Long {
-        val id = configuracionDao.insertHogar(hogar.toEntity())
+        // Antes de insertar, comprobamos si ya existe por syncId para no duplicar localmente
+        val existingEntity = hogar.syncId?.let { configuracionDao.getHogarBySyncId(it) }
+
+        val hogartoInsert = if (existingEntity != null) {
+            hogar.copy(id = existingEntity.id) // Mantenemos el ID local para Room
+        } else {
+            hogar
+        }
+
+        val id = configuracionDao.insertHogar(hogartoInsert.toEntity())
         try {
             // Ponemos un timeout de 3 segundos para que no bloquee la creación local si falla la nube
+            val syncedHogar = hogartoInsert.copy(id = id)
             withTimeoutOrNull(3000) {
-                remoteDataSource.syncHousehold(hogar.copy(id = id))
+                remoteDataSource.syncHousehold(syncedHogar)
             }
         } catch (e: Exception) {
             e.printStackTrace()

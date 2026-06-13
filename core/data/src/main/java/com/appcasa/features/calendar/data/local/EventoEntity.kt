@@ -31,6 +31,9 @@ data class EventoEntity(
   @ColumnInfo(name = "hogar_id")
   val hogarId: Long,
 
+  @ColumnInfo(name = "hogar_sync_id")
+  val hogarSyncId: String? = null,
+
   @ColumnInfo(name = "titulo")
   val titulo: String,
 
@@ -50,6 +53,9 @@ data class EventoEntity(
   // ID del miembro asociado al evento (ej: cumpleaños del hijo, vacuna de Luna)
   @ColumnInfo(name = "miembro_id")
   val miembroId: Long? = null,
+
+  @ColumnInfo(name = "miembro_sync_id")
+  val miembroSyncId: String? = null,
 
   @ColumnInfo(name = "todo_el_dia")
   val todoElDia: Boolean = true,

@@ -15,43 +15,55 @@ import javax.inject.Singleton
 class ListRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
-    private fun getListCollection(hogarId: Long) = 
-        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_LISTS)
+    private fun getListCollection(hogarSyncId: String) = 
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_LISTS)
 
     suspend fun syncList(list: Lista) {
-        getListCollection(list.hogarId).document(list.id.toString())
+        val hogarSyncId = list.hogarSyncId ?: return
+        val syncId = list.syncId ?: return
+        getListCollection(hogarSyncId).document(syncId)
             .set(ListDto.fromDomain(list)).await()
     }
 
     suspend fun deleteList(list: Lista) {
-        getListCollection(list.hogarId).document(list.id.toString()).delete().await()
+        val hogarSyncId = list.hogarSyncId ?: return
+        val syncId = list.syncId ?: return
+        getListCollection(hogarSyncId).document(syncId).delete().await()
     }
 
-    fun observeLists(hogarId: Long): Flow<List<Lista>> = callbackFlow {
-        val reg = getListCollection(hogarId).addSnapshotListener { s, e ->
+    fun observeLists(hogarSyncId: String): Flow<List<Lista>> = callbackFlow {
+        val reg = getListCollection(hogarSyncId).addSnapshotListener { s, e ->
             if (e != null) { close(e); return@addSnapshotListener }
-            trySend(s?.documents?.mapNotNull { it.toObject(ListDto::class.java)?.toDomain() } ?: emptyList())
+            trySend(s?.documents?.mapNotNull { doc -> 
+                doc.toObject(ListDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList())
         }
         awaitClose { reg.remove() }
     }
 
     // Items
-    private fun getItemCollection(hogarId: Long, listaId: Long) = 
-        getListCollection(hogarId).document(listaId.toString()).collection(FirestoreConstants.COL_ITEMS)
+    private fun getItemCollection(hogarSyncId: String, listSyncId: String) = 
+        getListCollection(hogarSyncId).document(listSyncId).collection(FirestoreConstants.COL_ITEMS)
 
-    suspend fun syncListItem(hogarId: Long, item: ListaItem) {
-        getItemCollection(hogarId, item.listaId).document(item.id.toString())
+    suspend fun syncListItem(hogarSyncId: String, item: ListaItem) {
+        val listSyncId = item.listaSyncId ?: return
+        val syncId = item.syncId ?: return
+        getItemCollection(hogarSyncId, listSyncId).document(syncId)
             .set(ListItemDto.fromDomain(item)).await()
     }
 
-    suspend fun deleteListItem(hogarId: Long, item: ListaItem) {
-        getItemCollection(hogarId, item.listaId).document(item.id.toString()).delete().await()
+    suspend fun deleteListItem(hogarSyncId: String, item: ListaItem) {
+        val listSyncId = item.listaSyncId ?: return
+        val syncId = item.syncId ?: return
+        getItemCollection(hogarSyncId, listSyncId).document(syncId).delete().await()
     }
 
-    fun observeListItems(hogarId: Long, listaId: Long): Flow<List<ListaItem>> = callbackFlow {
-        val reg = getItemCollection(hogarId, listaId).addSnapshotListener { s, e ->
+    fun observeListItems(hogarSyncId: String, listSyncId: String): Flow<List<ListaItem>> = callbackFlow {
+        val reg = getItemCollection(hogarSyncId, listSyncId).addSnapshotListener { s, e ->
             if (e != null) { close(e); return@addSnapshotListener }
-            trySend(s?.documents?.mapNotNull { it.toObject(ListItemDto::class.java)?.toDomain() } ?: emptyList())
+            trySend(s?.documents?.mapNotNull { doc -> 
+                doc.toObject(ListItemDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList())
         }
         awaitClose { reg.remove() }
     }

@@ -2,7 +2,9 @@ package com.appcasa.core.domain.model
 
 data class MaintenanceEvent(
     val id: Long = 0,
+    val syncId: String? = null,
     val hogarId: Long,
+    val hogarSyncId: String? = null,
     val titulo: String,
     val descripcion: String? = null,
     val categoria: String,

@@ -6,16 +6,19 @@ import com.appcasa.core.data.remote.source.MaintenanceRemoteDataSource
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.MaintenanceEvent
 import com.appcasa.core.domain.repository.MaintenanceRepository
+import com.appcasa.core.domain.repository.HouseholdRepository
 import com.appcasa.features.maintenance.data.local.MaintenanceDao
 import com.appcasa.features.maintenance.data.mapper.toDomain
 import com.appcasa.features.maintenance.data.mapper.toEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import java.util.UUID
 
 class MaintenanceRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val maintenanceDao: MaintenanceDao,
+    private val householdRepository: HouseholdRepository,
     private val remoteDataSource: MaintenanceRemoteDataSource,
     private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler
@@ -34,8 +37,20 @@ class MaintenanceRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertEvent(event: MaintenanceEvent): Long {
-        val id = maintenanceDao.insertEvent(event.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(event.hogarId)
+        var eventToInsert = event
+        if (eventToInsert.hogarSyncId == null && eventToInsert.hogarId > 0) {
+            val hogar = householdRepository.getHogarById(eventToInsert.hogarId).first()
+            eventToInsert = eventToInsert.copy(hogarSyncId = hogar?.syncId)
+        }
+        if (eventToInsert.syncId == null) {
+            eventToInsert = eventToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+        val existing = eventToInsert.syncId?.let { maintenanceDao.getEventBySyncId(it) }
+        if (existing != null) {
+            eventToInsert = eventToInsert.copy(id = existing.id)
+        }
+        val id = maintenanceDao.insertEvent(eventToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(eventToInsert.hogarId)
         return id
     }
 
@@ -73,25 +88,25 @@ class MaintenanceRepositoryImpl @Inject constructor(
         syncJob = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
                 if (isInForeground) {
-                    remoteDataSource.observeMaintenance(hogarId)
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    hogar?.syncId?.let { remoteDataSource.observeMaintenance(it) } ?: emptyFlow()
                 } else {
                     emptyFlow()
                 }
             }
             .onEach { remoteItems ->
-                val remoteIds = remoteItems.map { it.id }.toSet()
-                val localItems = maintenanceDao.getEventsPaged(hogarId, 1000, 0).first()
-                
-                localItems.forEach { local ->
-                    if (local.id !in remoteIds) {
-                        maintenanceDao.deleteEvent(local)
-                    }
-                }
-
                 remoteItems.forEach { remoteEvent ->
-                    val localEvent = maintenanceDao.getEventById(remoteEvent.id)
-                    if (localEvent == null || remoteEvent.updatedAt > localEvent.updatedAt) {
-                        maintenanceDao.insertEvent(remoteEvent.toEntity())
+                    val existing = remoteEvent.syncId?.let { maintenanceDao.getEventBySyncId(it) }
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+
+                    val eventToSave = remoteEvent.copy(
+                        id = existing?.id ?: 0L,
+                        hogarId = hogarId,
+                        hogarSyncId = hogar?.syncId
+                    )
+
+                    if (existing == null || remoteEvent.updatedAt > existing.updatedAt) {
+                        maintenanceDao.insertEvent(eventToSave.toEntity())
                     }
                 }
             }

@@ -20,6 +20,9 @@ interface ConfiguracionDao {
     @Query("SELECT * FROM hogares WHERE codigo_hogar = :code LIMIT 1")
     suspend fun getHogarByCodigo(code: String): HogarEntity?
 
+    @Query("SELECT * FROM hogares WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getHogarBySyncId(syncId: String): HogarEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHogar(hogar: HogarEntity): Long
 

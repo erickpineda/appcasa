@@ -44,6 +44,9 @@ data class TareaEntity(
   @ColumnInfo(name = "hogar_id")
   val hogarId: Long,
 
+  @ColumnInfo(name = "hogar_sync_id")
+  val hogarSyncId: String? = null,
+
   @ColumnInfo(name = "titulo")
   val titulo: String,
 
@@ -64,6 +67,9 @@ data class TareaEntity(
 
   @ColumnInfo(name = "categoria_id")
   val categoriaId: Long? = null,
+
+  @ColumnInfo(name = "categoria_sync_id")
+  val categoriaSyncId: String? = null,
 
   @ColumnInfo(name = "fecha_limite")
   val fechaLimite: Long? = null,
@@ -104,6 +110,9 @@ data class TareaEntity(
 
   @ColumnInfo(name = "created_by_id")
   val createdById: Long? = null,
+
+  @ColumnInfo(name = "created_by_sync_id")
+  val createdBySyncId: String? = null,
 
   @ColumnInfo(name = "archived")
   val archived: Boolean = false,

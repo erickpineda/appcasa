@@ -15,25 +15,31 @@ import javax.inject.Singleton
 class CalendarRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
-    private fun getEventCollection(hogarId: Long) = 
-        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_EVENTS)
+    private fun getEventCollection(hogarSyncId: String) = 
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_EVENTS)
 
     suspend fun syncEvent(event: Event) {
-        getEventCollection(event.hogarId).document(event.id.toString())
+        val hogarSyncId = event.hogarSyncId ?: return
+        val syncId = event.syncId ?: return
+        getEventCollection(hogarSyncId).document(syncId)
             .set(EventDto.fromDomain(event)).await()
     }
 
     suspend fun deleteEvent(event: Event) {
-        getEventCollection(event.hogarId).document(event.id.toString()).delete().await()
+        val hogarSyncId = event.hogarSyncId ?: return
+        val syncId = event.syncId ?: return
+        getEventCollection(hogarSyncId).document(syncId).delete().await()
     }
 
-    fun observeEvents(hogarId: Long): Flow<List<Event>> = callbackFlow {
-        val reg = getEventCollection(hogarId).addSnapshotListener { snapshot, error ->
+    fun observeEvents(hogarSyncId: String): Flow<List<Event>> = callbackFlow {
+        val reg = getEventCollection(hogarSyncId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
-            val events = snapshot?.documents?.mapNotNull { it.toObject(EventDto::class.java)?.toDomain() } ?: emptyList()
+            val events = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(EventDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
             trySend(events)
         }
         awaitClose { reg.remove() }

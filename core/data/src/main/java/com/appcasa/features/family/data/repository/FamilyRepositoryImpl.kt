@@ -6,16 +6,19 @@ import com.appcasa.core.data.remote.source.FamilyRemoteDataSource
 import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.repository.FamilyRepository
+import com.appcasa.core.domain.repository.HouseholdRepository
 import com.appcasa.features.family.data.local.MiembroDao
 import com.appcasa.features.family.data.mapper.toDomain
 import com.appcasa.features.family.data.mapper.toEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import java.util.UUID
 
 class FamilyRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val miembroDao: MiembroDao,
+    private val householdRepository: HouseholdRepository,
     private val remoteDataSource: FamilyRemoteDataSource,
     private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler
@@ -31,14 +34,37 @@ class FamilyRepositoryImpl @Inject constructor(
         return miembroDao.getMiembroById(id)?.toDomain()
     }
 
+    override suspend fun getMemberBySyncId(syncId: String): FamilyMember? {
+        return miembroDao.getMiembroBySyncId(syncId)?.toDomain()
+    }
+
     override suspend fun updateMember(member: FamilyMember) {
         miembroDao.updateMiembro(member.copy(updatedAt = System.currentTimeMillis()).toEntity())
         syncScheduler.scheduleSync(member.hogarId)
     }
 
     override suspend fun insertMember(member: FamilyMember): Long {
-        val id = miembroDao.insertMiembro(member.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(member.hogarId)
+        var memberToInsert = member
+
+        // Resolve hogarSyncId
+        if (memberToInsert.hogarSyncId == null && memberToInsert.hogarId > 0) {
+            val hogar = householdRepository.getHogarById(memberToInsert.hogarId).first()
+            memberToInsert = memberToInsert.copy(hogarSyncId = hogar?.syncId)
+        }
+
+        // Offline-first syncId
+        if (memberToInsert.syncId == null) {
+            memberToInsert = memberToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+
+        // Avoid duplicates
+        val existing = memberToInsert.syncId?.let { miembroDao.getMiembroBySyncId(it) }
+        if (existing != null) {
+            memberToInsert = memberToInsert.copy(id = existing.id)
+        }
+
+        val id = miembroDao.insertMiembro(memberToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(memberToInsert.hogarId)
         return id
     }
 
@@ -60,7 +86,6 @@ class FamilyRepositoryImpl @Inject constructor(
         val member = miembroDao.getMiembroById(memberId)
         member?.let {
             val newPoints = it.puntos + points
-            // Lógica simple de niveles: cada 100 puntos sube de nivel
             val newLevel = (newPoints / 100) + 1
             miembroDao.updateMiembro(it.copy(
                 puntos = newPoints, 
@@ -88,22 +113,30 @@ class FamilyRepositoryImpl @Inject constructor(
         syncJob = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
                 if (isInForeground) {
-                    remoteDataSource.observeMembers(hogarId)
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    hogar?.syncId?.let { remoteDataSource.observeMembers(it) } ?: emptyFlow()
                 } else {
                     emptyFlow()
                 }
             }
             .onEach { remoteMembers ->
                 remoteMembers.forEach { remoteMember ->
-                    val localMember = miembroDao.getMiembroById(remoteMember.id)
-                    if (localMember == null || remoteMember.updatedAt > localMember.updatedAt) {
-                        miembroDao.insertMiembro(remoteMember.toEntity())
+                    val existing = remoteMember.syncId?.let { miembroDao.getMiembroBySyncId(it) }
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+
+                    val memberToSave = remoteMember.copy(
+                        id = existing?.id ?: 0L,
+                        hogarId = hogarId,
+                        hogarSyncId = hogar?.syncId
+                    )
+
+                    if (existing == null || remoteMember.updatedAt > existing.updatedAt) {
+                        miembroDao.insertMiembro(memberToSave.toEntity())
                     }
                 }
             }
             .catch { e ->
                 e.printStackTrace()
-                // Evitamos que el error de permisos (PERMISSION_DENIED) cierre la app
             }
             .launchIn(appScope)
     }

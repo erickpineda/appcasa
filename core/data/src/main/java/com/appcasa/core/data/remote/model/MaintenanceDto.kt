@@ -3,8 +3,8 @@ package com.appcasa.core.data.remote.model
 import com.appcasa.core.domain.model.MaintenanceEvent
 
 data class MaintenanceDto(
-    val id: Long = 0,
-    val hogarId: Long = 0,
+    val syncId: String? = null,
+    val hogarSyncId: String? = null,
     val titulo: String = "",
     val descripcion: String? = null,
     val categoria: String = "",
@@ -15,8 +15,10 @@ data class MaintenanceDto(
     val updatedAt: Long = 0
 ) {
     fun toDomain(): MaintenanceEvent = MaintenanceEvent(
-        id = id,
-        hogarId = hogarId,
+        id = 0,
+        syncId = syncId,
+        hogarId = 0,
+        hogarSyncId = hogarSyncId,
         titulo = titulo,
         descripcion = descripcion,
         categoria = categoria,
@@ -29,8 +31,8 @@ data class MaintenanceDto(
 
     companion object {
         fun fromDomain(event: MaintenanceEvent): MaintenanceDto = MaintenanceDto(
-            id = event.id,
-            hogarId = event.hogarId,
+            syncId = event.syncId,
+            hogarSyncId = event.hogarSyncId,
             titulo = event.titulo,
             descripcion = event.descripcion,
             categoria = event.categoria,

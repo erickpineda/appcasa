@@ -62,7 +62,12 @@ class UpdateDashboardOrderUseCase @Inject constructor(
     private val repository: DashboardRepository
 ) {
     suspend operator fun invoke(hogarId: Long, newOrder: List<String>) {
-        repository.saveDashboardConfig(DashboardConfig(hogarId, newOrder.joinToString(",")))
+        repository.saveDashboardConfig(
+            DashboardConfig(
+                hogarId = hogarId,
+                ordenModulos = newOrder.joinToString(",")
+            )
+        )
     }
 }
 

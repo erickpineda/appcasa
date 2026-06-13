@@ -6,7 +6,9 @@ import com.appcasa.features.pets.data.local.*
 fun MascotaPesoEntity.toDomain(): PetWeight {
     return PetWeight(
         id = id,
+        syncId = syncId,
         mascotaId = mascotaId,
+        mascotaSyncId = mascotaSyncId,
         pesoKg = pesoKg,
         fecha = fecha,
         updatedAt = updatedAt,
@@ -17,7 +19,9 @@ fun MascotaPesoEntity.toDomain(): PetWeight {
 fun PetWeight.toEntity(): MascotaPesoEntity {
     return MascotaPesoEntity(
         id = id,
+        syncId = syncId,
         mascotaId = mascotaId,
+        mascotaSyncId = mascotaSyncId,
         pesoKg = pesoKg,
         fecha = fecha,
         updatedAt = updatedAt,
@@ -28,7 +32,9 @@ fun PetWeight.toEntity(): MascotaPesoEntity {
 fun MascotaVacunaEntity.toDomain(): PetVaccine {
     return PetVaccine(
         id = id,
+        syncId = syncId,
         mascotaId = mascotaId,
+        mascotaSyncId = mascotaSyncId,
         nombre = nombre,
         fechaAplicacion = fechaAplicacion,
         proximaDosis = fechaProxima,
@@ -40,7 +46,9 @@ fun MascotaVacunaEntity.toDomain(): PetVaccine {
 fun PetVaccine.toEntity(): MascotaVacunaEntity {
     return MascotaVacunaEntity(
         id = id,
+        syncId = syncId,
         mascotaId = mascotaId,
+        mascotaSyncId = mascotaSyncId,
         nombre = nombre,
         fechaAplicacion = fechaAplicacion,
         fechaProxima = proximaDosis,
@@ -52,7 +60,9 @@ fun PetVaccine.toEntity(): MascotaVacunaEntity {
 fun MascotaMedicacionEntity.toDomain(): PetMedication {
     return PetMedication(
         id = id,
+        syncId = syncId,
         mascotaId = mascotaId,
+        mascotaSyncId = mascotaSyncId,
         nombre = nombre,
         dosis = dosis,
         frecuencia = frecuencia,
@@ -67,7 +77,9 @@ fun MascotaMedicacionEntity.toDomain(): PetMedication {
 fun PetMedication.toEntity(): MascotaMedicacionEntity {
     return MascotaMedicacionEntity(
         id = id,
+        syncId = syncId,
         mascotaId = mascotaId,
+        mascotaSyncId = mascotaSyncId,
         nombre = nombre,
         dosis = dosis,
         frecuencia = frecuencia,
@@ -82,7 +94,9 @@ fun PetMedication.toEntity(): MascotaMedicacionEntity {
 fun MascotaDesparasitacionEntity.toDomain(): PetDeworming {
     return PetDeworming(
         id = id,
+        syncId = syncId,
         mascotaId = mascotaId,
+        mascotaSyncId = mascotaSyncId,
         tipo = tipo,
         producto = producto ?: "",
         fechaAplicacion = fechaAplicacion,
@@ -95,7 +109,9 @@ fun MascotaDesparasitacionEntity.toDomain(): PetDeworming {
 fun PetDeworming.toEntity(): MascotaDesparasitacionEntity {
     return MascotaDesparasitacionEntity(
         id = id,
+        syncId = syncId,
         mascotaId = mascotaId,
+        mascotaSyncId = mascotaSyncId,
         tipo = tipo,
         producto = producto,
         fechaAplicacion = fechaAplicacion,

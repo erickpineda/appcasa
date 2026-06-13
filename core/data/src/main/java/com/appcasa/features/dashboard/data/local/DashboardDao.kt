@@ -14,6 +14,9 @@ interface DashboardDao {
     @Query("SELECT * FROM post_its WHERE id = :id")
     suspend fun getPostItById(id: Long): PostItEntity?
 
+    @Query("SELECT * FROM post_its WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getPostItBySyncId(syncId: String): PostItEntity?
+
     @Query("UPDATE post_its SET last_synced_at = :timestamp WHERE id = :id")
     suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
 

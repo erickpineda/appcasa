@@ -36,6 +36,9 @@ data class ExpenseEntity(
     @ColumnInfo(name = "hogar_id")
     val hogarId: Long,
 
+    @ColumnInfo(name = "hogar_sync_id")
+    val hogarSyncId: String? = null,
+
     @ColumnInfo(name = "concepto")
     val concepto: String,
 
@@ -59,6 +62,9 @@ data class ExpenseEntity(
 
     @ColumnInfo(name = "created_by_id")
     val createdById: Long? = null,
+
+    @ColumnInfo(name = "created_by_sync_id")
+    val createdBySyncId: String? = null,
 
     @ColumnInfo(name = "sync_id")
     val syncId: String? = null,

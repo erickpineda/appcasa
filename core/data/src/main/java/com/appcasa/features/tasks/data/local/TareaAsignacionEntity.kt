@@ -29,16 +29,26 @@ import com.appcasa.features.family.data.local.MiembroEntity
   ],
   indices = [
     Index("tarea_id"),
-    Index("miembro_id")
+    Index("miembro_id"),
+    Index("sync_id")
   ]
 )
 data class TareaAsignacionEntity(
 
+  @ColumnInfo(name = "sync_id")
+  val syncId: String? = null,
+
   @ColumnInfo(name = "tarea_id")
   val tareaId: Long,
 
+  @ColumnInfo(name = "tarea_sync_id")
+  val tareaSyncId: String? = null,
+
   @ColumnInfo(name = "miembro_id")
   val miembroId: Long,
+
+  @ColumnInfo(name = "miembro_sync_id")
+  val miembroSyncId: String? = null,
 
   @ColumnInfo(name = "created_at")
   val createdAt: Long = System.currentTimeMillis(),

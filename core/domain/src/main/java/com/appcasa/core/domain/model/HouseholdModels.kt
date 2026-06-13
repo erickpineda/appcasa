@@ -2,6 +2,7 @@ package com.appcasa.core.domain.model
 
 data class Household(
     val id: Long = 0,
+    val syncId: String? = null,
     val nombre: String,
     val descripcion: String? = null,
     val estado: EstadoGeneral = EstadoGeneral.ACTIVO,

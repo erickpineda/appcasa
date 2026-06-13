@@ -42,6 +42,9 @@ interface ExpenseDao {
     @Query("SELECT * FROM gastos WHERE id = :id")
     suspend fun getExpenseById(id: Long): ExpenseEntity?
 
+    @Query("SELECT * FROM gastos WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getExpenseBySyncId(syncId: String): ExpenseEntity?
+
     @Query("UPDATE gastos SET last_synced_at = :timestamp WHERE id = :id")
     suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
 

@@ -14,7 +14,10 @@ import androidx.room.PrimaryKey
     childColumns  = ["lista_id"],
     onDelete      = ForeignKey.CASCADE
   )],
-  indices = [Index("lista_id")]
+  indices = [
+    Index("lista_id"),
+    Index("sync_id")
+  ]
 )
 data class ListaItemEntity(
 
@@ -23,6 +26,9 @@ data class ListaItemEntity(
 
   @ColumnInfo(name = "lista_id")
   val listaId: Long,
+
+  @ColumnInfo(name = "lista_sync_id")
+  val listaSyncId: String? = null,
 
   @ColumnInfo(name = "texto")
   val texto: String,
@@ -37,6 +43,9 @@ data class ListaItemEntity(
   // Orden de visualización dentro de la lista
   @ColumnInfo(name = "orden")
   val orden: Int = 0,
+
+  @ColumnInfo(name = "sync_id")
+  val syncId: String? = null,
 
   @ColumnInfo(name = "created_at")
   val createdAt: Long = System.currentTimeMillis(),

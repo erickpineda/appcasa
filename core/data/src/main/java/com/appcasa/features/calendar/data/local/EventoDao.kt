@@ -14,6 +14,9 @@ interface EventoDao {
     @Query("SELECT * FROM eventos WHERE id = :id")
     suspend fun getEventoById(id: Long): EventoEntity?
 
+    @Query("SELECT * FROM eventos WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getEventoBySyncId(syncId: String): EventoEntity?
+
     @Query("UPDATE eventos SET last_synced_at = :timestamp WHERE id = :id")
     suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
 

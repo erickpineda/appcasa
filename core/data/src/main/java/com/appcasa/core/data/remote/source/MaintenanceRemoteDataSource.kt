@@ -15,25 +15,31 @@ import javax.inject.Singleton
 class MaintenanceRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
-    private fun getMaintenanceCollection(hogarId: Long) = 
-        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_MAINTENANCE)
+    private fun getMaintenanceCollection(hogarSyncId: String) = 
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_MAINTENANCE)
 
     suspend fun syncMaintenance(event: MaintenanceEvent) {
-        getMaintenanceCollection(event.hogarId).document(event.id.toString())
+        val hogarSyncId = event.hogarSyncId ?: return
+        val syncId = event.syncId ?: return
+        getMaintenanceCollection(hogarSyncId).document(syncId)
             .set(MaintenanceDto.fromDomain(event)).await()
     }
 
     suspend fun deleteMaintenance(event: MaintenanceEvent) {
-        getMaintenanceCollection(event.hogarId).document(event.id.toString()).delete().await()
+        val hogarSyncId = event.hogarSyncId ?: return
+        val syncId = event.syncId ?: return
+        getMaintenanceCollection(hogarSyncId).document(syncId).delete().await()
     }
 
-    fun observeMaintenance(hogarId: Long): Flow<List<MaintenanceEvent>> = callbackFlow {
-        val reg = getMaintenanceCollection(hogarId).addSnapshotListener { snapshot, error ->
+    fun observeMaintenance(hogarSyncId: String): Flow<List<MaintenanceEvent>> = callbackFlow {
+        val reg = getMaintenanceCollection(hogarSyncId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
-            val events = snapshot?.documents?.mapNotNull { it.toObject(MaintenanceDto::class.java)?.toDomain() } ?: emptyList()
+            val events = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(MaintenanceDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
             trySend(events)
         }
         awaitClose { reg.remove() }

@@ -18,15 +18,18 @@ class DocumentRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) {
-    private fun getDocumentCollection(hogarId: Long) = 
-        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_DOCUMENTS)
+    private fun getDocumentCollection(hogarSyncId: String) = 
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_DOCUMENTS)
 
-    private fun getStorageRef(hogarId: Long, docId: Long) = 
-        storage.reference.child("${FirestoreConstants.COL_HOUSEHOLDS}/$hogarId/${FirestoreConstants.COL_DOCUMENTS}/$docId.pdf")
+    private fun getStorageRef(hogarSyncId: String, docSyncId: String) = 
+        storage.reference.child("${FirestoreConstants.COL_HOUSEHOLDS}/$hogarSyncId/${FirestoreConstants.COL_DOCUMENTS}/$docSyncId.pdf")
 
     suspend fun syncDocument(doc: Document) {
+        val hogarSyncId = doc.hogarSyncId ?: return
+        val syncId = doc.syncId ?: return
+        
         // 1. Sincronizar metadatos en Firestore
-        getDocumentCollection(doc.hogarId).document(doc.id.toString())
+        getDocumentCollection(hogarSyncId).document(syncId)
             .set(DocumentDto.fromDomain(doc)).await()
             
         // 2. Si hay un archivo local, subirlo a Storage si no está sincronizado
@@ -34,37 +37,41 @@ class DocumentRemoteDataSource @Inject constructor(
             if (uri.startsWith("/") || uri.startsWith("file://")) {
                 val file = java.io.File(uri.replace("file://", ""))
                 if (file.exists()) {
-                    getStorageRef(doc.hogarId, doc.id).putFile(android.net.Uri.fromFile(file)).await()
+                    getStorageRef(hogarSyncId, syncId).putFile(android.net.Uri.fromFile(file)).await()
                 }
             }
         }
     }
 
     suspend fun deleteDocument(doc: Document) {
-        getDocumentCollection(doc.hogarId).document(doc.id.toString()).delete().await()
+        val hogarSyncId = doc.hogarSyncId ?: return
+        val syncId = doc.syncId ?: return
+        getDocumentCollection(hogarSyncId).document(syncId).delete().await()
         try {
-            getStorageRef(doc.hogarId, doc.id).delete().await()
+            getStorageRef(hogarSyncId, syncId).delete().await()
         } catch (e: Exception) {
             // Ignorar si el archivo no existe en storage
         }
     }
     
-    suspend fun downloadDocument(hogarId: Long, docId: Long, localFile: File): Boolean {
+    suspend fun downloadDocument(hogarSyncId: String, docSyncId: String, localFile: File): Boolean {
         return try {
-            getStorageRef(hogarId, docId).getFile(localFile).await()
+            getStorageRef(hogarSyncId, docSyncId).getFile(localFile).await()
             true
         } catch (e: Exception) {
             false
         }
     }
 
-    fun observeDocuments(hogarId: Long): Flow<List<Document>> = callbackFlow {
-        val reg = getDocumentCollection(hogarId).addSnapshotListener { snapshot, error ->
+    fun observeDocuments(hogarSyncId: String): Flow<List<Document>> = callbackFlow {
+        val reg = getDocumentCollection(hogarSyncId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
-            val docs = snapshot?.documents?.mapNotNull { it.toObject(DocumentDto::class.java)?.toDomain() } ?: emptyList()
+            val docs = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(DocumentDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
             trySend(docs)
         }
         awaitClose { reg.remove() }

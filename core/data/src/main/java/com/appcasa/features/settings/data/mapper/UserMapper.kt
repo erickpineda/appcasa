@@ -8,7 +8,9 @@ import com.appcasa.features.settings.data.local.UsuarioEntity
 fun UsuarioEntity.toDomain(): User {
     return User(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         email = email,
         avatarUrl = avatarUrl,
@@ -26,7 +28,9 @@ fun UsuarioEntity.toDomain(): User {
 fun User.toEntity(): UsuarioEntity {
     return UsuarioEntity(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         email = email,
         avatarUrl = avatarUrl,

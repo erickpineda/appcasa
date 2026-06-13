@@ -2,7 +2,9 @@ package com.appcasa.core.domain.model
 
 data class ListaItem(
     val id: Long = 0,
+    val syncId: String? = null,
     val listaId: Long,
+    val listaSyncId: String? = null,
     val texto: String,
     val cantidad: String? = null,
     val completado: Boolean = false,

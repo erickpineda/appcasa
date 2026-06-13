@@ -19,67 +19,82 @@ import javax.inject.Singleton
 class TaskRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
-    private fun getTaskCollection(hogarId: Long) = 
-        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_TASKS)
+    private fun getTaskCollection(hogarSyncId: String) = 
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_TASKS)
 
     suspend fun syncTask(task: Task) {
-        getTaskCollection(task.hogarId).document(task.id.toString())
+        val hogarSyncId = task.hogarSyncId ?: return
+        val syncId = task.syncId ?: return
+        getTaskCollection(hogarSyncId).document(syncId)
             .set(TaskDto.fromDomain(task)).await()
     }
 
     suspend fun deleteTask(task: Task) {
-        getTaskCollection(task.hogarId).document(task.id.toString()).delete().await()
+        val hogarSyncId = task.hogarSyncId ?: return
+        val syncId = task.syncId ?: return
+        getTaskCollection(hogarSyncId).document(syncId).delete().await()
     }
 
-    fun observeTasks(hogarId: Long): Flow<List<Task>> = callbackFlow {
-        val reg = getTaskCollection(hogarId).addSnapshotListener { snapshot, error ->
+    fun observeTasks(hogarSyncId: String): Flow<List<Task>> = callbackFlow {
+        val reg = getTaskCollection(hogarSyncId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
-            val tasks = snapshot?.documents?.mapNotNull { it.toObject(TaskDto::class.java)?.toDomain() } ?: emptyList()
+            val tasks = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(TaskDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
             trySend(tasks)
         }
         awaitClose { reg.remove() }
     }
 
     // Check Items
-    private fun getCheckItemCollection(hogarId: Long, taskId: Long) = 
-        getTaskCollection(hogarId).document(taskId.toString()).collection(FirestoreConstants.COL_CHECK_ITEMS)
+    private fun getCheckItemCollection(hogarSyncId: String, taskSyncId: String) = 
+        getTaskCollection(hogarSyncId).document(taskSyncId).collection(FirestoreConstants.COL_CHECK_ITEMS)
 
-    suspend fun syncCheckItem(hogarId: Long, item: TaskCheckItem) {
-        getCheckItemCollection(hogarId, item.tareaId).document(item.id.toString())
+    suspend fun syncCheckItem(hogarSyncId: String, item: TaskCheckItem) {
+        val taskSyncId = item.tareaSyncId ?: return
+        val syncId = item.syncId ?: return
+        getCheckItemCollection(hogarSyncId, taskSyncId).document(syncId)
             .set(TaskCheckItemDto.fromDomain(item)).await()
     }
 
-    fun observeCheckItems(hogarId: Long, taskId: Long): Flow<List<TaskCheckItem>> = callbackFlow {
-        val reg = getCheckItemCollection(hogarId, taskId).addSnapshotListener { snapshot, error ->
+    fun observeCheckItems(hogarSyncId: String, taskSyncId: String): Flow<List<TaskCheckItem>> = callbackFlow {
+        val reg = getCheckItemCollection(hogarSyncId, taskSyncId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
-            val items = snapshot?.documents?.mapNotNull { it.toObject(TaskCheckItemDto::class.java)?.toDomain() } ?: emptyList()
+            val items = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(TaskCheckItemDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
             trySend(items)
         }
         awaitClose { reg.remove() }
     }
 
     // Assignments
-    private fun getAssignmentCollection(hogarId: Long, taskId: Long) = 
-        getTaskCollection(hogarId).document(taskId.toString()).collection(FirestoreConstants.COL_ASSIGNMENTS)
+    private fun getAssignmentCollection(hogarSyncId: String, taskSyncId: String) = 
+        getTaskCollection(hogarSyncId).document(taskSyncId).collection(FirestoreConstants.COL_ASSIGNMENTS)
 
-    suspend fun syncAssignment(hogarId: Long, item: TaskAssignment) {
-        getAssignmentCollection(hogarId, item.tareaId).document(item.miembroId.toString())
-            .set(TaskAssignmentDto.fromDomain(item)).await()
+    suspend fun syncAssignment(hogarSyncId: String, item: TaskAssignment) {
+        val taskSyncId = item.tareaSyncId ?: return
+        val memberSyncId = item.miembroSyncId ?: return
+        val syncId = item.syncId ?: "${taskSyncId}_${memberSyncId}"
+        getAssignmentCollection(hogarSyncId, taskSyncId).document(syncId)
+            .set(TaskAssignmentDto.fromDomain(item.copy(syncId = syncId))).await()
     }
 
-    fun observeAssignments(hogarId: Long, taskId: Long): Flow<List<TaskAssignment>> = callbackFlow {
-        val reg = getAssignmentCollection(hogarId, taskId).addSnapshotListener { snapshot, error ->
+    fun observeAssignments(hogarSyncId: String, taskSyncId: String): Flow<List<TaskAssignment>> = callbackFlow {
+        val reg = getAssignmentCollection(hogarSyncId, taskSyncId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
-            val items = snapshot?.documents?.mapNotNull { it.toObject(TaskAssignmentDto::class.java)?.toDomain() } ?: emptyList()
+            val items = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(TaskAssignmentDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
             trySend(items)
         }
         awaitClose { reg.remove() }

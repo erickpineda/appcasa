@@ -17,7 +17,8 @@ import com.appcasa.features.family.data.local.MiembroEntity
   )],
   indices = [
     Index("mascota_id"),
-    Index("activa")
+    Index("activa"),
+    Index("sync_id")
   ]
 )
 data class MascotaMedicacionEntity(
@@ -27,6 +28,9 @@ data class MascotaMedicacionEntity(
 
   @ColumnInfo(name = "mascota_id")
   val mascotaId: Long,
+
+  @ColumnInfo(name = "mascota_sync_id")
+  val mascotaSyncId: String? = null,
 
   // Nombre del medicamento — ej: "Apoquel", "Atopica"
   @ColumnInfo(name = "nombre")
@@ -52,6 +56,9 @@ data class MascotaMedicacionEntity(
 
   @ColumnInfo(name = "notas")
   val notas: String? = null,
+
+  @ColumnInfo(name = "sync_id")
+  val syncId: String? = null,
 
   @ColumnInfo(name = "created_at")
   val createdAt: Long = System.currentTimeMillis(),

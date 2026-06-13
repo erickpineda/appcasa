@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.first
 class SyncWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
+    private val householdRepository: HouseholdRepository,
     private val tasksRepository: TasksRepository,
     private val financeRepository: FinanceRepository,
     private val familyRepository: FamilyRepository,
@@ -40,6 +41,9 @@ class SyncWorker @AssistedInject constructor(
         val hogarId = inputData.getLong("hogarId", -1L)
         if (hogarId == -1L) return Result.failure()
 
+        val hogar = householdRepository.getHogarById(hogarId).first()
+        val hogarSyncId = hogar?.syncId ?: return Result.failure()
+
         return try {
             // Sincronizar Tareas que han cambiado
             tasksRepository.getTasksByHogar(hogarId).first().filter { 
@@ -51,7 +55,7 @@ class SyncWorker @AssistedInject constructor(
 
             // Sincronizar check-items de tareas que han cambiado
             tasksRepository.getCheckItemsToSync(hogarId).forEach { item ->
-                taskRemoteDataSource.syncCheckItem(hogarId, item)
+                taskRemoteDataSource.syncCheckItem(hogarSyncId, item)
                 tasksRepository.updateCheckItemSyncTimestamp(item.id)
             }
                 
@@ -60,7 +64,7 @@ class SyncWorker @AssistedInject constructor(
                 tasksRepository.getAssignmentsForTask(task.id).first().filter {
                     it.updatedAt > (it.lastSyncedAt ?: 0L)
                 }.forEach { assignment ->
-                    taskRemoteDataSource.syncAssignment(hogarId, assignment)
+                    taskRemoteDataSource.syncAssignment(hogarSyncId, assignment)
                 }
             }
             
@@ -130,29 +134,29 @@ class SyncWorker @AssistedInject constructor(
 
             // Sincronizar ítems de listas que han cambiado
             listsRepository.getItemsToSync(hogarId).forEach { item ->
-                listRemoteDataSource.syncListItem(hogarId, item)
+                listRemoteDataSource.syncListItem(hogarSyncId, item)
                 listsRepository.updateListItemSyncTimestamp(item.id)
             }
 
             // --- Sincronización de Mascotas (Pesos, Vacunas, Medicinas, Desparasitaciones) ---
             
             petRepository.getWeightsToSync(hogarId).forEach { weight ->
-                petRemoteDataSource.syncWeight(hogarId, weight)
+                petRemoteDataSource.syncWeight(hogarSyncId, weight)
                 petRepository.updateWeightSyncTimestamp(weight.id)
             }
             
             petRepository.getVaccinesToSync(hogarId).forEach { vaccine ->
-                petRemoteDataSource.syncVaccine(hogarId, vaccine)
+                petRemoteDataSource.syncVaccine(hogarSyncId, vaccine)
                 petRepository.updateVaccineSyncTimestamp(vaccine.id)
             }
             
             petRepository.getMedicationsToSync(hogarId).forEach { med ->
-                petRemoteDataSource.syncMedication(hogarId, med)
+                petRemoteDataSource.syncMedication(hogarSyncId, med)
                 petRepository.updateMedicationSyncTimestamp(med.id)
             }
             
             petRepository.getDewormingsToSync(hogarId).forEach { deworming ->
-                petRemoteDataSource.syncDeworming(hogarId, deworming)
+                petRemoteDataSource.syncDeworming(hogarSyncId, deworming)
                 petRepository.updateDewormingSyncTimestamp(deworming.id)
             }
             

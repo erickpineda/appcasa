@@ -6,7 +6,9 @@ import com.appcasa.features.maintenance.data.local.MaintenanceEntity
 fun MaintenanceEntity.toDomain(): MaintenanceEvent {
     return MaintenanceEvent(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         titulo = titulo,
         descripcion = descripcion,
         categoria = categoria,
@@ -22,7 +24,9 @@ fun MaintenanceEntity.toDomain(): MaintenanceEvent {
 fun MaintenanceEvent.toEntity(): MaintenanceEntity {
     return MaintenanceEntity(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         titulo = titulo,
         descripcion = descripcion,
         categoria = categoria,

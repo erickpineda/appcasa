@@ -8,6 +8,7 @@ import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.repository.FamilyRepository
 import com.appcasa.core.domain.repository.TasksRepository
+import com.appcasa.core.domain.repository.HouseholdRepository
 import com.appcasa.core.utils.NotificationHelper
 import com.appcasa.features.tasks.data.local.RecompensaDao
 import com.appcasa.features.tasks.data.local.TareaDao
@@ -18,6 +19,7 @@ import android.content.Context
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import java.util.UUID
 
 class TasksRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
@@ -25,6 +27,7 @@ class TasksRepositoryImpl @Inject constructor(
     private val tareaDao: TareaDao,
     private val recompensaDao: RecompensaDao,
     private val familyRepository: FamilyRepository,
+    private val householdRepository: HouseholdRepository,
     private val syncScheduler: SyncScheduler,
     private val syncManager: SyncManager,
     private val remoteDataSource: TaskRemoteDataSource
@@ -49,14 +52,29 @@ class TasksRepositoryImpl @Inject constructor(
     }
 
     override fun getTaskById(taskId: Long): Flow<Task?> {
-        return kotlinx.coroutines.flow.flow {
+        return flow {
             emit(tareaDao.getTareaById(taskId)?.toDomain())
         }
     }
 
     override suspend fun insertTask(task: Task): Long {
-        val id = tareaDao.insertTarea(task.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(task.hogarId)
+        var taskToInsert = task
+        if (taskToInsert.hogarSyncId == null && taskToInsert.hogarId > 0) {
+            val hogar = householdRepository.getHogarById(taskToInsert.hogarId).first()
+            taskToInsert = taskToInsert.copy(hogarSyncId = hogar?.syncId)
+        }
+
+        if (taskToInsert.syncId == null) {
+            taskToInsert = taskToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+
+        val existing = taskToInsert.syncId?.let { tareaDao.getTareaBySyncId(it) }
+        if (existing != null) {
+            taskToInsert = taskToInsert.copy(id = existing.id)
+        }
+
+        val id = tareaDao.insertTarea(taskToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(taskToInsert.hogarId)
         return id
     }
 
@@ -76,13 +94,11 @@ class TasksRepositoryImpl @Inject constructor(
             val oldStatus = it.estado
             tareaDao.updateTarea(it.copy(estado = status.name, updatedAt = System.currentTimeMillis()))
             
-            // Si la tarea se completa y no se han otorgado puntos todavía
             if (status == EstadoTarea.COMPLETADA && oldStatus != EstadoTarea.COMPLETADA.name && !it.puntosOtorgados) {
                 val assignments = tareaDao.getAsignacionesByTarea(taskId)
                 assignments.forEach { assignment ->
                     familyRepository.addPointsToMember(assignment.miembroId, it.points)
                 }
-                // Marcamos que los puntos ya han sido otorgados para esta tarea
                 tareaDao.updateTarea(it.copy(estado = status.name, puntosOtorgados = true, updatedAt = System.currentTimeMillis()))
             }
 
@@ -115,7 +131,11 @@ class TasksRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertReward(reward: Reward) {
-        recompensaDao.insertRecompensa(reward.toEntity())
+        var rewardToInsert = reward
+        if (rewardToInsert.syncId == null) {
+            rewardToInsert = rewardToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+        recompensaDao.insertRecompensa(rewardToInsert.toEntity())
     }
 
     override suspend fun deleteReward(reward: Reward) {
@@ -129,18 +149,30 @@ class TasksRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertCategory(category: TaskCategory) {
-        tareaDao.insertCategoria(category.toEntity())
+        var categoryToInsert = category
+        if (categoryToInsert.syncId == null) {
+            categoryToInsert = categoryToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+        tareaDao.insertCategoria(categoryToInsert.toEntity())
     }
 
     override fun getAssignmentsForTask(taskId: Long): Flow<List<TaskAssignment>> {
-        return kotlinx.coroutines.flow.flow {
+        return flow {
              val assignment = tareaDao.getAsignacionByTarea(taskId)
              emit(assignment?.let { listOf(it.toDomain()) } ?: emptyList())
         }
     }
 
     override suspend fun insertAssignment(assignment: TaskAssignment) {
-        tareaDao.insertAsignacion(assignment.toEntity())
+        val task = tareaDao.getTareaById(assignment.tareaId)
+        val member = familyRepository.getMemberById(assignment.miembroId)
+        
+        val assignmentToInsert = assignment.copy(
+            syncId = assignment.syncId ?: "${task?.syncId}_${member?.syncId}",
+            tareaSyncId = task?.syncId,
+            miembroSyncId = member?.syncId
+        )
+        tareaDao.insertAsignacion(assignmentToInsert.toEntity())
     }
 
     override fun getCheckItemsForTask(taskId: Long): Flow<List<TaskCheckItem>> {
@@ -150,8 +182,12 @@ class TasksRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertCheckItem(item: TaskCheckItem): Long {
-        val id = tareaDao.insertCheckItem(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        val task = tareaDao.getTareaById(item.tareaId)
+        var itemToInsert = item
+        if (itemToInsert.syncId == null) {
+            itemToInsert = itemToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+        val id = tareaDao.insertCheckItem(itemToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        val task = tareaDao.getTareaById(itemToInsert.tareaId)
         task?.let { syncScheduler.scheduleSync(it.hogarId) }
         return id
     }
@@ -182,54 +218,52 @@ class TasksRepositoryImpl @Inject constructor(
 
     private var syncJob: Job? = null
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun startRemoteSync(hogarId: Long) {
         syncJob?.cancel()
         syncJob = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
                 if (isInForeground) {
-                    remoteDataSource.observeTasks(hogarId)
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    hogar?.syncId?.let { remoteDataSource.observeTasks(it) } ?: emptyFlow()
                 } else {
                     emptyFlow()
                 }
             }
             .onEach { remoteTasks ->
-                val remoteIds = remoteTasks.map { it.id }.toSet()
-                val localTasks = tareaDao.getTareasByHogar(hogarId).first()
-                
-                localTasks.forEach { local ->
-                    if (local.id !in remoteIds) {
-                        tareaDao.deleteTarea(local)
-                    }
-                }
-
                 remoteTasks.forEach { remoteTask ->
-                    val localTask = tareaDao.getTareaById(remoteTask.id)
-                    if (localTask == null) {
-                        tareaDao.insertTarea(remoteTask.toEntity())
+                    val rSyncId = remoteTask.syncId ?: return@forEach
+                    val existing = tareaDao.getTareaBySyncId(rSyncId)
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    
+                    val taskToSave = remoteTask.copy(
+                        id = existing?.id ?: 0L,
+                        hogarId = hogarId,
+                        hogarSyncId = hogar?.syncId
+                    )
+
+                    if (existing == null) {
+                        tareaDao.insertTarea(taskToSave.toEntity())
                         NotificationHelper.showNotification(
                             context,
-                            remoteTask.id.toInt() + 3000,
+                            rSyncId.hashCode(),
                             context.getString(R.string.notif_new_task_title),
-                            remoteTask.titulo
+                            taskToSave.titulo
                         )
-                    } else {
-                        if (remoteTask.estado == EstadoTarea.COMPLETADA && localTask.estado != EstadoTarea.COMPLETADA.name) {
+                    } else if (remoteTask.updatedAt > existing.updatedAt) {
+                        if (remoteTask.estado == EstadoTarea.COMPLETADA && existing.estado != EstadoTarea.COMPLETADA.name) {
                             NotificationHelper.showNotification(
                                 context,
-                                remoteTask.id.toInt() + 4000,
+                                rSyncId.hashCode(),
                                 context.getString(R.string.notif_task_completed_title),
-                                context.getString(R.string.notif_task_completed_msg, remoteTask.titulo)
+                                context.getString(R.string.notif_task_completed_msg, taskToSave.titulo)
                             )
                         }
-                        
-                        if (remoteTask.updatedAt > localTask.updatedAt) {
-                            tareaDao.insertTarea(remoteTask.toEntity())
-                        }
+                        tareaDao.insertTarea(taskToSave.toEntity())
                     }
                     
-                    // Sincronizar sub-items
-                    observeAndSyncCheckItems(hogarId, remoteTask.id)
-                    observeAndSyncAssignments(hogarId, remoteTask.id)
+                    observeAndSyncCheckItems(hogarId, taskToSave.id, rSyncId) 
+                    observeAndSyncAssignments(hogarId, taskToSave.id, rSyncId)
                 }
             }
             .catch { e -> e.printStackTrace() }
@@ -239,19 +273,26 @@ class TasksRepositoryImpl @Inject constructor(
     private val assignmentSyncJobs = mutableMapOf<Long, Job>()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun observeAndSyncAssignments(hogarId: Long, taskId: Long) {
+    private fun observeAndSyncAssignments(hogarId: Long, taskId: Long, taskSyncId: String) {
         if (assignmentSyncJobs.containsKey(taskId)) return
         
         assignmentSyncJobs[taskId] = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
-                if (isInForeground) remoteDataSource.observeAssignments(hogarId, taskId)
+                if (isInForeground) {
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    hogar?.syncId?.let { remoteDataSource.observeAssignments(it, taskSyncId) } ?: emptyFlow()
+                }
                 else emptyFlow()
             }
             .onEach { remoteItems ->
                 remoteItems.forEach { remoteItem ->
-                    val localItem = tareaDao.getAsignacionByTareaAndMiembro(remoteItem.tareaId, remoteItem.miembroId)
-                    if (localItem == null || remoteItem.updatedAt > localItem.updatedAt) {
-                        tareaDao.insertAsignacion(remoteItem.toEntity())
+                    val memberSyncId = remoteItem.miembroSyncId ?: return@forEach
+                    val member = familyRepository.getMemberBySyncId(memberSyncId)
+                    if (member != null) {
+                        val localItem = tareaDao.getAsignacionByTareaAndMiembro(taskId, member.id)
+                        if (localItem == null || remoteItem.updatedAt > localItem.updatedAt) {
+                            tareaDao.insertAsignacion(remoteItem.copy(tareaId = taskId, miembroId = member.id).toEntity())
+                        }
                     }
                 }
             }
@@ -262,19 +303,27 @@ class TasksRepositoryImpl @Inject constructor(
     private val checkItemSyncJobs = mutableMapOf<Long, Job>()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun observeAndSyncCheckItems(hogarId: Long, taskId: Long) {
+    private fun observeAndSyncCheckItems(hogarId: Long, taskId: Long, taskSyncId: String) {
         if (checkItemSyncJobs.containsKey(taskId)) return
         
         checkItemSyncJobs[taskId] = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
-                if (isInForeground) remoteDataSource.observeCheckItems(hogarId, taskId)
+                if (isInForeground) {
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    hogar?.syncId?.let { remoteDataSource.observeCheckItems(it, taskSyncId) } ?: emptyFlow()
+                }
                 else emptyFlow()
             }
             .onEach { remoteItems ->
                 remoteItems.forEach { remoteItem ->
-                    val localItem = tareaDao.getCheckItemById(remoteItem.id)
-                    if (localItem == null || remoteItem.updatedAt > localItem.updatedAt) {
-                        tareaDao.insertCheckItem(remoteItem.toEntity())
+                    val existing = remoteItem.syncId?.let { tareaDao.getCheckItemBySyncId(it) }
+                    val itemToSave = remoteItem.copy(
+                        id = existing?.id ?: 0L,
+                        tareaId = taskId,
+                        tareaSyncId = taskSyncId
+                    )
+                    if (existing == null || remoteItem.updatedAt > existing.updatedAt) {
+                        tareaDao.insertCheckItem(itemToSave.toEntity())
                     }
                 }
             }

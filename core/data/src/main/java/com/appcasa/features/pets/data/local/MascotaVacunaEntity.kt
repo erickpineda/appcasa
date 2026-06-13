@@ -17,7 +17,8 @@ import com.appcasa.features.family.data.local.MiembroEntity
   )],
   indices = [
     Index("mascota_id"),
-    Index("fecha_proxima")
+    Index("fecha_proxima"),
+    Index("sync_id")
   ]
 )
 data class MascotaVacunaEntity(
@@ -27,6 +28,9 @@ data class MascotaVacunaEntity(
 
   @ColumnInfo(name = "mascota_id")
   val mascotaId: Long,
+
+  @ColumnInfo(name = "mascota_sync_id")
+  val mascotaSyncId: String? = null,
 
   // Nombre de la vacuna — ej: "Rabia", "Leucemia felina", "Parvovirus"
   @ColumnInfo(name = "nombre")
@@ -44,6 +48,9 @@ data class MascotaVacunaEntity(
 
   @ColumnInfo(name = "notas")
   val notas: String? = null,
+
+  @ColumnInfo(name = "sync_id")
+  val syncId: String? = null,
 
   @ColumnInfo(name = "created_at")
   val createdAt: Long = System.currentTimeMillis(),

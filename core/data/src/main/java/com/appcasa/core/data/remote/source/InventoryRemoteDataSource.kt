@@ -15,25 +15,31 @@ import javax.inject.Singleton
 class InventoryRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
-    private fun getStockCollection(hogarId: Long) = 
-        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarId.toString()).collection(FirestoreConstants.COL_ITEMS)
+    private fun getStockCollection(hogarSyncId: String) = 
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_ITEMS)
 
     suspend fun syncStock(item: StockItem) {
-        getStockCollection(item.hogarId).document(item.id.toString())
+        val hogarSyncId = item.hogarSyncId ?: return
+        val syncId = item.syncId ?: return
+        getStockCollection(hogarSyncId).document(syncId)
             .set(StockDto.fromDomain(item)).await()
     }
 
     suspend fun deleteStock(item: StockItem) {
-        getStockCollection(item.hogarId).document(item.id.toString()).delete().await()
+        val hogarSyncId = item.hogarSyncId ?: return
+        val syncId = item.syncId ?: return
+        getStockCollection(hogarSyncId).document(syncId).delete().await()
     }
 
-    fun observeStock(hogarId: Long): Flow<List<StockItem>> = callbackFlow {
-        val reg = getStockCollection(hogarId).addSnapshotListener { snapshot, error ->
+    fun observeStock(hogarSyncId: String): Flow<List<StockItem>> = callbackFlow {
+        val reg = getStockCollection(hogarSyncId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
-            val items = snapshot?.documents?.mapNotNull { it.toObject(StockDto::class.java)?.toDomain() } ?: emptyList()
+            val items = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(StockDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
             trySend(items)
         }
         awaitClose { reg.remove() }

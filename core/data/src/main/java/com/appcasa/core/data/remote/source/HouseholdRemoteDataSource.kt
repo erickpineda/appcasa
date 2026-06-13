@@ -15,7 +15,8 @@ class HouseholdRemoteDataSource @Inject constructor(
     private fun getHouseholdCollection() = firestore.collection(FirestoreConstants.COL_HOUSEHOLDS)
 
     suspend fun syncHousehold(household: Household) {
-        getHouseholdCollection().document(household.id.toString())
+        val syncId = household.syncId ?: return // No sincronizamos si no hay syncId (debería tenerlo)
+        getHouseholdCollection().document(syncId)
             .set(HouseholdDto.fromDomain(household)).await()
     }
 
@@ -25,7 +26,11 @@ class HouseholdRemoteDataSource @Inject constructor(
             .limit(1)
             .get().await()
         
-        return query.documents.firstOrNull()?.toObject(HouseholdDto::class.java)?.toDomain()
+        val doc = query.documents.firstOrNull()
+        return doc?.toObject(HouseholdDto::class.java)?.let { dto ->
+            // Aseguramos que el syncId se recupere del ID del documento si no está en el campo
+            dto.copy(syncId = dto.syncId ?: doc.id).toDomain()
+        }
     }
 
     suspend fun findHouseholdsByUserEmail(email: String): List<Household> {
@@ -38,7 +43,10 @@ class HouseholdRemoteDataSource @Inject constructor(
         
         for (id in houseIds) {
             val doc = getHouseholdCollection().document(id).get().await()
-            doc.toObject(HouseholdDto::class.java)?.toDomain()?.let { households.add(it) }
+            doc.toObject(HouseholdDto::class.java)?.let { dto ->
+                // Aseguramos que el syncId se recupere del ID del documento
+                households.add(dto.copy(syncId = dto.syncId ?: id).toDomain())
+            }
         }
         
         return households
@@ -54,7 +62,10 @@ class HouseholdRemoteDataSource @Inject constructor(
         
         for (id in houseIds) {
             val doc = getHouseholdCollection().document(id).get().await()
-            doc.toObject(HouseholdDto::class.java)?.toDomain()?.let { households.add(it) }
+            doc.toObject(HouseholdDto::class.java)?.let { dto ->
+                // Aseguramos que el syncId se recupere del ID del documento
+                households.add(dto.copy(syncId = dto.syncId ?: id).toDomain())
+            }
         }
         
         return households

@@ -2,7 +2,9 @@ package com.appcasa.core.domain.model
 
 data class User(
     val id: Long = 0,
+    val syncId: String? = null,
     val hogarId: Long,
+    val hogarSyncId: String? = null,
     val nombre: String,
     val email: String,
     val avatarUrl: String? = null,

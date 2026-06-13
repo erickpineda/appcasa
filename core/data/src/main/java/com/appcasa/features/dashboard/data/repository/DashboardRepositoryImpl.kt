@@ -12,6 +12,7 @@ import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.DashboardConfig
 import com.appcasa.core.domain.model.PostIt
 import com.appcasa.core.domain.repository.DashboardRepository
+import com.appcasa.core.domain.repository.HouseholdRepository
 import com.appcasa.core.utils.NotificationHelper
 import com.appcasa.features.dashboard.data.local.DashboardDao
 import com.appcasa.features.dashboard.data.mapper.toDomain
@@ -20,11 +21,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import java.util.UUID
 
 class DashboardRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     @ApplicationContext private val context: Context,
     private val dashboardDao: DashboardDao,
+    private val householdRepository: HouseholdRepository,
     private val remoteDataSource: DashboardRemoteDataSource,
     private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler
@@ -37,8 +40,20 @@ class DashboardRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertPostIt(postIt: PostIt): Long {
-        val id = dashboardDao.insertPostIt(postIt.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(postIt.hogarId)
+        var postItToInsert = postIt
+        if (postItToInsert.hogarSyncId == null && postItToInsert.hogarId > 0) {
+            val hogar = householdRepository.getHogarById(postItToInsert.hogarId).first()
+            postItToInsert = postItToInsert.copy(hogarSyncId = hogar?.syncId)
+        }
+        if (postItToInsert.syncId == null) {
+            postItToInsert = postItToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+        val existing = postItToInsert.syncId?.let { dashboardDao.getPostItBySyncId(it) }
+        if (existing != null) {
+            postItToInsert = postItToInsert.copy(id = existing.id)
+        }
+        val id = dashboardDao.insertPostIt(postItToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(postItToInsert.hogarId)
         updateWidget()
         return id
     }
@@ -72,7 +87,12 @@ class DashboardRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveDashboardConfig(config: DashboardConfig) {
-        dashboardDao.saveConfig(config.toEntity())
+        var configToSave = config
+        if (configToSave.hogarSyncId == null && configToSave.hogarId > 0) {
+            val hogar = householdRepository.getHogarById(configToSave.hogarId).first()
+            configToSave = configToSave.copy(hogarSyncId = hogar?.syncId)
+        }
+        dashboardDao.saveConfig(configToSave.toEntity())
     }
 
     override suspend fun updatePostItSyncTimestamp(postItId: Long) {
@@ -87,36 +107,34 @@ class DashboardRepositoryImpl @Inject constructor(
         syncJob = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
                 if (isInForeground) {
-                    remoteDataSource.observePostIts(hogarId)
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    hogar?.syncId?.let { remoteDataSource.observePostIts(it) } ?: emptyFlow()
                 } else {
                     emptyFlow()
                 }
             }
             .onEach { remoteItems ->
-                val remoteIds = remoteItems.map { it.id }.toSet()
-                val localItems = dashboardDao.getPostIts(hogarId).first()
-                
-                // Borrar locales que ya no existen en remoto
-                localItems.forEach { local ->
-                    if (local.id !in remoteIds) {
-                        dashboardDao.deletePostIt(local)
-                        updateWidget()
-                    }
-                }
-
                 remoteItems.forEach { remoteItem ->
-                    val localItem = dashboardDao.getPostItById(remoteItem.id)
-                    if (localItem == null) {
-                        dashboardDao.insertPostIt(remoteItem.toEntity())
+                    val existing = remoteItem.syncId?.let { dashboardDao.getPostItBySyncId(it) }
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+
+                    val postItToSave = remoteItem.copy(
+                        id = existing?.id ?: 0L,
+                        hogarId = hogarId,
+                        hogarSyncId = hogar?.syncId
+                    )
+
+                    if (existing == null) {
+                        dashboardDao.insertPostIt(postItToSave.toEntity())
                         updateWidget()
                         NotificationHelper.showNotification(
                             context,
-                            remoteItem.id.toInt() + 2000,
+                            postItToSave.syncId.hashCode(),
                             context.getString(R.string.notif_new_postit_title),
-                            remoteItem.contenido.take(50)
+                            postItToSave.contenido.take(50)
                         )
-                    } else if (remoteItem.updatedAt > localItem.updatedAt) {
-                        dashboardDao.insertPostIt(remoteItem.toEntity())
+                    } else if (remoteItem.updatedAt > existing.updatedAt) {
+                        dashboardDao.insertPostIt(postItToSave.toEntity())
                         updateWidget()
                     }
                 }

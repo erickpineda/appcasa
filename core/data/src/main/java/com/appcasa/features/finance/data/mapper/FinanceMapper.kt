@@ -6,7 +6,9 @@ import com.appcasa.features.finance.data.local.ExpenseEntity
 fun ExpenseEntity.toDomain(): Expense {
     return Expense(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         concepto = concepto,
         importe = importe,
         categoria = categoria,
@@ -15,8 +17,8 @@ fun ExpenseEntity.toDomain(): Expense {
         createdAt = createdAt,
         updatedAt = updatedAt,
         createdById = createdById,
+        createdBySyncId = createdBySyncId,
         archived = archived,
-        syncId = syncId,
         lastSyncedAt = lastSyncedAt
     )
 }
@@ -24,7 +26,9 @@ fun ExpenseEntity.toDomain(): Expense {
 fun Expense.toEntity(): ExpenseEntity {
     return ExpenseEntity(
         id = id,
+        syncId = syncId,
         hogarId = hogarId,
+        hogarSyncId = hogarSyncId,
         concepto = concepto,
         importe = importe,
         categoria = categoria,
@@ -33,8 +37,8 @@ fun Expense.toEntity(): ExpenseEntity {
         createdAt = createdAt,
         updatedAt = updatedAt,
         createdById = createdById,
+        createdBySyncId = createdBySyncId,
         archived = archived,
-        syncId = syncId,
         lastSyncedAt = lastSyncedAt
     )
 }

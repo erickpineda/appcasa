@@ -31,6 +31,15 @@ interface TareaDao {
     @Query("SELECT * FROM tareas WHERE id = :id")
     suspend fun getTareaById(id: Long): TareaEntity?
 
+    @Query("SELECT * FROM tareas WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getTareaBySyncId(syncId: String): TareaEntity?
+
+    @Query("SELECT * FROM categorias_tarea WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getCategoriaBySyncId(syncId: String): CategoriaTareaEntity?
+
+    @Query("SELECT * FROM tarea_check_items WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getCheckItemBySyncId(syncId: String): TareaCheckItemEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTarea(tarea: TareaEntity): Long
 

@@ -74,7 +74,7 @@ import com.appcasa.features.utilities.data.local.UtilidadEntity
     MaintenanceEntity::class,
     RecompensaEntity::class,
   ],
-  version      = 4,
+  version      = 5,
   exportSchema = true
 )
 abstract class AppCasaDatabase : RoomDatabase() {

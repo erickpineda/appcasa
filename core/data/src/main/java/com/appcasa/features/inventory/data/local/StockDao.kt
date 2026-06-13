@@ -31,6 +31,9 @@ interface StockDao {
     @Query("SELECT * FROM stock WHERE id = :id")
     suspend fun getItemById(id: Long): StockEntity?
 
+    @Query("SELECT * FROM stock WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getItemBySyncId(syncId: String): StockEntity?
+
     @Query("UPDATE stock SET last_synced_at = :timestamp WHERE id = :id")
     suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
 

@@ -3,8 +3,8 @@ package com.appcasa.core.data.remote.model
 import com.appcasa.core.domain.model.StockItem
 
 data class StockDto(
-    val id: Long = 0,
-    val hogarId: Long = 0,
+    val syncId: String? = null,
+    val hogarSyncId: String? = null,
     val nombre: String = "",
     val categoria: String = "",
     val cantidadActual: Double = 0.0,
@@ -14,8 +14,10 @@ data class StockDto(
     val updatedAt: Long = 0
 ) {
     fun toDomain(): StockItem = StockItem(
-        id = id,
-        hogarId = hogarId,
+        id = 0,
+        syncId = syncId,
+        hogarId = 0,
+        hogarSyncId = hogarSyncId,
         nombre = nombre,
         categoria = categoria,
         cantidadActual = cantidadActual,
@@ -27,8 +29,8 @@ data class StockDto(
 
     companion object {
         fun fromDomain(item: StockItem): StockDto = StockDto(
-            id = item.id,
-            hogarId = item.hogarId,
+            syncId = item.syncId,
+            hogarSyncId = item.hogarSyncId,
             nombre = item.nombre,
             categoria = item.categoria,
             cantidadActual = item.cantidadActual,

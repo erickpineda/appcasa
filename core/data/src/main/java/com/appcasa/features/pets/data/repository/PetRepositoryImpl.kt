@@ -7,16 +7,19 @@ import com.appcasa.core.domain.di.ApplicationScope
 import com.appcasa.core.domain.model.*
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.repository.PetRepository
+import com.appcasa.core.domain.repository.HouseholdRepository
 import com.appcasa.features.pets.data.local.MascotaDao
 import com.appcasa.features.pets.data.mapper.toDomain
 import com.appcasa.features.pets.data.mapper.toEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import java.util.UUID
 
 class PetRepositoryImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val mascotaDao: MascotaDao,
+    private val householdRepository: HouseholdRepository,
     private val remoteDataSource: PetRemoteDataSource,
     private val syncManager: SyncManager,
     private val syncScheduler: SyncScheduler,
@@ -35,8 +38,20 @@ class PetRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertPeso(peso: PetWeight): Long {
-        val id = mascotaDao.insertPeso(peso.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(getHogarId(peso.mascotaId))
+        var pesoToInsert = peso
+        if (pesoToInsert.mascotaSyncId == null && pesoToInsert.mascotaId > 0) {
+            val pet = mascotaDao.getMiembroById(pesoToInsert.mascotaId)
+            pesoToInsert = pesoToInsert.copy(mascotaSyncId = pet?.syncId)
+        }
+        if (pesoToInsert.syncId == null) {
+            pesoToInsert = pesoToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+        val existing = pesoToInsert.syncId?.let { mascotaDao.getPesoBySyncId(it) }
+        if (existing != null) {
+            pesoToInsert = pesoToInsert.copy(id = existing.id)
+        }
+        val id = mascotaDao.insertPeso(pesoToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(getHogarId(pesoToInsert.mascotaId))
         return id
     }
 
@@ -44,7 +59,8 @@ class PetRepositoryImpl @Inject constructor(
         val hogarId = getHogarId(peso.mascotaId)
         mascotaDao.deletePeso(peso.toEntity())
         try {
-            remoteDataSource.deleteWeight(hogarId, peso)
+            val hogar = householdRepository.getHogarById(hogarId).first()
+            hogar?.syncId?.let { remoteDataSource.deleteWeight(it, peso) }
         } catch (e: Exception) { e.printStackTrace() }
         syncScheduler.scheduleSync(hogarId)
     }
@@ -56,8 +72,20 @@ class PetRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertVacuna(vacuna: PetVaccine): Long {
-        val id = mascotaDao.insertVacuna(vacuna.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(getHogarId(vacuna.mascotaId))
+        var vacunaToInsert = vacuna
+        if (vacunaToInsert.mascotaSyncId == null && vacunaToInsert.mascotaId > 0) {
+            val pet = mascotaDao.getMiembroById(vacunaToInsert.mascotaId)
+            vacunaToInsert = vacunaToInsert.copy(mascotaSyncId = pet?.syncId)
+        }
+        if (vacunaToInsert.syncId == null) {
+            vacunaToInsert = vacunaToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+        val existing = vacunaToInsert.syncId?.let { mascotaDao.getVacunaBySyncId(it) }
+        if (existing != null) {
+            vacunaToInsert = vacunaToInsert.copy(id = existing.id)
+        }
+        val id = mascotaDao.insertVacuna(vacunaToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(getHogarId(vacunaToInsert.mascotaId))
         return id
     }
 
@@ -65,7 +93,8 @@ class PetRepositoryImpl @Inject constructor(
         val hogarId = getHogarId(vacuna.mascotaId)
         mascotaDao.deleteVacuna(vacuna.toEntity())
         try {
-            remoteDataSource.deleteVaccine(hogarId, vacuna)
+            val hogar = householdRepository.getHogarById(hogarId).first()
+            hogar?.syncId?.let { remoteDataSource.deleteVaccine(it, vacuna) }
         } catch (e: Exception) { e.printStackTrace() }
         syncScheduler.scheduleSync(hogarId)
     }
@@ -77,8 +106,20 @@ class PetRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertMedicacion(med: PetMedication): Long {
-        val id = mascotaDao.insertMedicacion(med.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(getHogarId(med.mascotaId))
+        var medToInsert = med
+        if (medToInsert.mascotaSyncId == null && medToInsert.mascotaId > 0) {
+            val pet = mascotaDao.getMiembroById(medToInsert.mascotaId)
+            medToInsert = medToInsert.copy(mascotaSyncId = pet?.syncId)
+        }
+        if (medToInsert.syncId == null) {
+            medToInsert = medToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+        val existing = medToInsert.syncId?.let { mascotaDao.getMedicacionBySyncId(it) }
+        if (existing != null) {
+            medToInsert = medToInsert.copy(id = existing.id)
+        }
+        val id = mascotaDao.insertMedicacion(medToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(getHogarId(medToInsert.mascotaId))
         return id
     }
 
@@ -86,7 +127,8 @@ class PetRepositoryImpl @Inject constructor(
         val hogarId = getHogarId(med.mascotaId)
         mascotaDao.deleteMedicacion(med.toEntity())
         try {
-            remoteDataSource.deleteMedication(hogarId, med)
+            val hogar = householdRepository.getHogarById(hogarId).first()
+            hogar?.syncId?.let { remoteDataSource.deleteMedication(it, med) }
         } catch (e: Exception) { e.printStackTrace() }
         syncScheduler.scheduleSync(hogarId)
     }
@@ -98,8 +140,20 @@ class PetRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertDesparasitacion(item: PetDeworming): Long {
-        val id = mascotaDao.insertDesparasitacion(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(getHogarId(item.mascotaId))
+        var itemToInsert = item
+        if (itemToInsert.mascotaSyncId == null && itemToInsert.mascotaId > 0) {
+            val pet = mascotaDao.getMiembroById(itemToInsert.mascotaId)
+            itemToInsert = itemToInsert.copy(mascotaSyncId = pet?.syncId)
+        }
+        if (itemToInsert.syncId == null) {
+            itemToInsert = itemToInsert.copy(syncId = UUID.randomUUID().toString())
+        }
+        val existing = itemToInsert.syncId?.let { mascotaDao.getDesparasitacionBySyncId(it) }
+        if (existing != null) {
+            itemToInsert = itemToInsert.copy(id = existing.id)
+        }
+        val id = mascotaDao.insertDesparasitacion(itemToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(getHogarId(itemToInsert.mascotaId))
         return id
     }
 
@@ -107,7 +161,8 @@ class PetRepositoryImpl @Inject constructor(
         val hogarId = getHogarId(item.mascotaId)
         mascotaDao.deleteDesparasitacion(item.toEntity())
         try {
-            remoteDataSource.deleteDeworming(hogarId, item)
+            val hogar = householdRepository.getHogarById(hogarId).first()
+            hogar?.syncId?.let { remoteDataSource.deleteDeworming(it, item) }
         } catch (e: Exception) { e.printStackTrace() }
         syncScheduler.scheduleSync(hogarId)
     }
@@ -152,41 +207,67 @@ class PetRepositoryImpl @Inject constructor(
         syncJob = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
                 if (isInForeground) {
-                    combine(
-                        remoteDataSource.observeWeights(hogarId, mascotaId),
-                        remoteDataSource.observeVaccines(hogarId, mascotaId),
-                        remoteDataSource.observeMedications(hogarId, mascotaId),
-                        remoteDataSource.observeDewormings(hogarId, mascotaId)
-                    ) { weights, vaccines, meds, dewormings ->
-                        PetDataUpdate(weights, vaccines, meds, dewormings)
-                    }
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    val pet = mascotaDao.getMiembroById(mascotaId)
+                    val hSyncId = hogar?.syncId
+                    val pSyncId = pet?.syncId
+                    if (hSyncId != null && pSyncId != null) {
+                        combine(
+                            remoteDataSource.observeWeights(hSyncId, pSyncId),
+                            remoteDataSource.observeVaccines(hSyncId, pSyncId),
+                            remoteDataSource.observeMedications(hSyncId, pSyncId),
+                            remoteDataSource.observeDewormings(hSyncId, pSyncId)
+                        ) { weights, vaccines, meds, dewormings ->
+                            PetDataUpdate(weights, vaccines, meds, dewormings)
+                        }
+                    } else emptyFlow()
                 } else {
                     emptyFlow()
                 }
             }
             .onEach { update ->
                 update.weights.forEach { remote ->
-                    val local = mascotaDao.getPesoById(remote.id)
-                    if (local == null || remote.updatedAt > local.updatedAt) {
-                        mascotaDao.insertPeso(remote.toEntity())
+                    val existing = remote.syncId?.let { mascotaDao.getPesoBySyncId(it) }
+                    val petToSave = remote.copy(
+                        id = existing?.id ?: 0L,
+                        mascotaId = mascotaId,
+                        mascotaSyncId = mascotaDao.getMiembroById(mascotaId)?.syncId
+                    )
+                    if (existing == null || remote.updatedAt > existing.updatedAt) {
+                        mascotaDao.insertPeso(petToSave.toEntity())
                     }
                 }
                 update.vaccines.forEach { remote ->
-                    val local = mascotaDao.getVacunaById(remote.id)
-                    if (local == null || remote.updatedAt > local.updatedAt) {
-                        mascotaDao.insertVacuna(remote.toEntity())
+                    val existing = remote.syncId?.let { mascotaDao.getVacunaBySyncId(it) }
+                    val petToSave = remote.copy(
+                        id = existing?.id ?: 0L,
+                        mascotaId = mascotaId,
+                        mascotaSyncId = mascotaDao.getMiembroById(mascotaId)?.syncId
+                    )
+                    if (existing == null || remote.updatedAt > existing.updatedAt) {
+                        mascotaDao.insertVacuna(petToSave.toEntity())
                     }
                 }
                 update.meds.forEach { remote ->
-                    val local = mascotaDao.getMedicacionById(remote.id)
-                    if (local == null || remote.updatedAt > local.updatedAt) {
-                        mascotaDao.insertMedicacion(remote.toEntity())
+                    val existing = remote.syncId?.let { mascotaDao.getMedicacionBySyncId(it) }
+                    val petToSave = remote.copy(
+                        id = existing?.id ?: 0L,
+                        mascotaId = mascotaId,
+                        mascotaSyncId = mascotaDao.getMiembroById(mascotaId)?.syncId
+                    )
+                    if (existing == null || remote.updatedAt > existing.updatedAt) {
+                        mascotaDao.insertMedicacion(petToSave.toEntity())
                     }
                 }
                 update.dewormings.forEach { remote ->
-                    val local = mascotaDao.getDesparasitacionById(remote.id)
-                    if (local == null || remote.updatedAt > local.updatedAt) {
-                        mascotaDao.insertDesparasitacion(remote.toEntity())
+                    val existing = remote.syncId?.let { mascotaDao.getDesparasitacionBySyncId(it) }
+                    val petToSave = remote.copy(
+                        id = existing?.id ?: 0L,
+                        mascotaId = mascotaId,
+                        mascotaSyncId = mascotaDao.getMiembroById(mascotaId)?.syncId
+                    )
+                    if (existing == null || remote.updatedAt > existing.updatedAt) {
+                        mascotaDao.insertDesparasitacion(petToSave.toEntity())
                     }
                 }
             }
