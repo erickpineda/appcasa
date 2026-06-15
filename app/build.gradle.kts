@@ -1,23 +1,19 @@
 plugins {
-  alias(libs.plugins.android.application)
-  alias(libs.plugins.kotlin.android)
-  alias(libs.plugins.kotlin.compose)
-  alias(libs.plugins.hilt)
-  alias(libs.plugins.ksp)
+  id("appcasa.android.application")
+  id("appcasa.android.compose")
+  id("appcasa.android.hilt")
+  id("appcasa.android.test")
   alias(libs.plugins.google.services)
   alias(libs.plugins.kotlin.serialization)
 }
 
 android {
-  namespace   = "com.appcasa"
-  compileSdk  = libs.versions.compileSdk.get().toInt()
+  namespace = "com.appcasa"
 
   defaultConfig {
-    applicationId    = "com.appcasa"
-    minSdk           = libs.versions.minSdk.get().toInt()
-    targetSdk        = libs.versions.targetSdk.get().toInt()
-    versionCode      = 1
-    versionName      = "1.0.0"
+    applicationId = "com.appcasa"
+    versionCode   = 1
+    versionName   = "1.0.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -29,19 +25,6 @@ android {
         "proguard-rules.pro"
       )
     }
-  }
-
-  compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-  }
-
-  kotlinOptions {
-    jvmTarget = "17"
-  }
-
-  buildFeatures {
-    compose = true
   }
 
   // Exportar esquema Room para control de versiones y tests
@@ -58,21 +41,14 @@ dependencies {
   implementation(libs.google.material)
   implementation(libs.androidx.biometric)
 
-  // ─── Compose BOM ──────────────────────────────────────
-  implementation(platform(libs.compose.bom))
-  implementation(libs.compose.ui)
-  implementation(libs.compose.ui.graphics)
-  implementation(libs.compose.ui.tooling.preview)
-  implementation(libs.compose.material3)
+  // ─── Compose Extras ───────────────────────────────────
   implementation(libs.compose.material.icons)
   debugImplementation(libs.compose.ui.tooling)
 
   // ─── Navigation ───────────────────────────────────────
   implementation(libs.navigation.compose)
 
-  // ─── Hilt ─────────────────────────────────────────────
-  implementation(libs.hilt.android)
-  ksp(libs.hilt.compiler)
+  // ─── Hilt Extras ──────────────────────────────────────
   implementation(libs.hilt.navigation.compose)
   implementation(libs.hilt.work)
   ksp(libs.hilt.work.compiler)

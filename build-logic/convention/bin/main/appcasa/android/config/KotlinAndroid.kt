@@ -1,20 +1,19 @@
 package appcasa.android.config
 
-import com.android.build.gradle.BaseExtension
+import com.android.build.api.dsl.CommonExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 internal fun Project.configureKotlinAndroid(
-    commonExtension: BaseExtension,
+    commonExtension: CommonExtension<*, *, *, *, *, *>,
 ) {
     commonExtension.apply {
-        compileSdkVersion(libs.findVersion("compileSdk").get().requiredVersion.toInt())
+        compileSdk = 35
 
         defaultConfig {
-            minSdk = libs.findVersion("minSdk").get().requiredVersion.toInt()
+            minSdk = 26
         }
 
         compileOptions {
@@ -24,8 +23,8 @@ internal fun Project.configureKotlinAndroid(
     }
 
     tasks.withType<KotlinCompile>().configureEach {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+        kotlinOptions {
+            jvmTarget = JavaVersion.VERSION_17.toString()
         }
     }
 }

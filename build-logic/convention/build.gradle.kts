@@ -30,5 +30,17 @@ gradlePlugin {
             id = "appcasa.android.hilt"
             implementationClass = "AndroidHiltConventionPlugin"
         }
+        register("androidCompose") {
+            id = "appcasa.android.compose"
+            implementationClass = "AndroidComposeConventionPlugin"
+        }
+        register("androidRoom") {
+            id = "appcasa.android.room"
+            implementationClass = "AndroidRoomConventionPlugin"
+        }
+        register("androidTest") {
+            id = "appcasa.android.test"
+            implementationClass = "AndroidTestConventionPlugin"
+        }
     }
 }
