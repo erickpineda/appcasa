@@ -7,21 +7,21 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 
 class AndroidApplicationConventionPlugin : Plugin<Project> {
-    override fun apply(target: Project) {
-        with(target) {
-            with(pluginManager) {
-                apply("com.android.application")
-                apply("org.jetbrains.kotlin.android")
-            }
+  override fun apply(target: Project) {
+    with(target) {
+      with(pluginManager) {
+        apply("com.android.application")
+        apply("org.jetbrains.kotlin.android")
+      }
 
-            extensions.configure<AppExtension> {
-                configureKotlinAndroid(this)
-                defaultConfig.targetSdk = libs.findVersion("targetSdk").get().requiredVersion.toInt()
-            }
+      extensions.configure<AppExtension> {
+        configureKotlinAndroid(this)
+        defaultConfig.targetSdk = libs.findVersion("targetSdk").get().requiredVersion.toInt()
+      }
 
-            dependencies {
-                add("implementation", libs.findLibrary("androidx-core-ktx").get())
-            }
-        }
+      dependencies {
+        add("implementation", libs.findLibrary("androidx-core-ktx").get())
+      }
     }
+  }
 }
