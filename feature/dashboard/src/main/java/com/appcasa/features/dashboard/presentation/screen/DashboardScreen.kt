@@ -648,7 +648,7 @@ private fun formatEventDate(timestamp: Long): String {
     }
     
     return remember(timestamp, pattern) {
-        SimpleDateFormat(pattern, Locale("es", "ES")).format(date)
+        SimpleDateFormat(pattern, Constants.Locales.SPAIN).format(date)
     }
 }
 

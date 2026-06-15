@@ -56,9 +56,9 @@ import com.appcasa.core.ui.components.skeletonShimmer
 import com.appcasa.features.family.R
 import com.appcasa.features.family.presentation.viewmodel.FamilyViewModel
 import com.appcasa.navigation.Screen
+import com.appcasa.core.utils.Constants
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -158,7 +158,7 @@ fun MemberDetailScreen(
                 DetailRow(icon = Icons.Default.Category, label = stringResource(R.string.family_label_type), value = member.tipo.name)
                 
                 if (member.fechaNacimiento != null) {
-                  val dateStr = SimpleDateFormat("dd 'de' MMMM", Locale("es", "ES")).format(Date(member.fechaNacimiento!!))
+                  val dateStr = SimpleDateFormat(Constants.Formatting.DAY_MONTH_FULL_ES, Constants.Locales.SPAIN).format(Date(member.fechaNacimiento!!))
                   DetailRow(icon = Icons.Default.Cake, label = stringResource(R.string.dashboard_birthday_label), value = dateStr)
                 }
 

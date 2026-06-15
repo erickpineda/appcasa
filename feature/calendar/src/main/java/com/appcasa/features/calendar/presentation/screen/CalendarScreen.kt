@@ -342,7 +342,7 @@ fun CalendarContent(
                   .padding(horizontal = 8.dp, vertical = 4.dp)
               ) {
                 Text(
-                  text = "${currentMonth.month.getDisplayName(TextStyle.FULL, Locale("es", "ES")).uppercase()} ${currentMonth.year}",
+                  text = "${currentMonth.month.getDisplayName(TextStyle.FULL, Constants.Locales.SPAIN).uppercase()} ${currentMonth.year}",
                   style = MaterialTheme.typography.titleMedium,
                   fontWeight = FontWeight.Bold
                 )
@@ -482,7 +482,7 @@ fun CalendarContent(
               verticalAlignment = Alignment.CenterVertically
             ) {
               Text(
-                text = stringResource(R.string.calendar_events_on_day, SimpleDateFormat("d 'de' MMMM", Locale("es", "ES")).format(Date.from(selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant()))),
+                text = stringResource(R.string.calendar_events_on_day, SimpleDateFormat(Constants.Formatting.DAY_MONTH_LONG, Constants.Locales.SPAIN).format(Date.from(selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant()))),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.secondary
@@ -812,7 +812,7 @@ private fun formatDateCompact(timestamp: Long, allDaySuffix: String): String {
   } else {
     "d MMM yyyy HH:mm"
   }
-  val sdf = SimpleDateFormat(format, Locale("es", "ES"))
+  val sdf = SimpleDateFormat(format, Constants.Locales.SPAIN)
   return sdf.format(date)
 }
 

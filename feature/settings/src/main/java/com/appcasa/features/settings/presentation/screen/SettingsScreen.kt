@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
+import com.appcasa.core.utils.Constants
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -111,7 +112,7 @@ fun SettingsScreen(
     isSyncing = isSyncing,
     isExporting = isExporting,
     onUpdateName = { settingsViewModel.updateUsuario(it) },
-    onUpdateAvatar = { imagePickerLauncher.launch("image/*") },
+    onUpdateAvatar = { imagePickerLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) },
     onUpdateHouseholdName = { settingsViewModel.updateHogar(it) },
     onUpdateConfig = { k, v -> settingsViewModel.updateConfig(k, v) },
     onRegenerateCode = { settingsViewModel.regenerateHouseCode() },

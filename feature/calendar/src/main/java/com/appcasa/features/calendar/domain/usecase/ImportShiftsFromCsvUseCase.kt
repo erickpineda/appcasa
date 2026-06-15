@@ -4,8 +4,8 @@ import com.appcasa.core.domain.model.Event
 import com.appcasa.core.domain.model.TipoEvento
 import com.appcasa.core.domain.repository.CalendarRepository
 import com.appcasa.core.domain.scheduler.ReminderScheduler
+import com.appcasa.core.utils.Constants
 import java.text.SimpleDateFormat
-import java.util.Locale
 import javax.inject.Inject
 
 class ImportShiftsFromCsvUseCase @Inject constructor(
@@ -15,7 +15,7 @@ class ImportShiftsFromCsvUseCase @Inject constructor(
     suspend operator fun invoke(hogarId: Long, content: String): Boolean {
         return try {
             val lines = content.lines()
-            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+      val dateFormat = SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Constants.Locales.SPAIN)
             lines.forEach { line ->
               val parts = line.split(",")
               if (parts.size >= 2) {

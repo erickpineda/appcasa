@@ -17,7 +17,11 @@ object Constants {
     const val TIME_FORMAT_ES = "HH:mm"
     const val DATETIME_FORMAT_ES = "dd/MM/yyyy HH:mm"
     const val DAY_MONTH_LONG = "d 'de' MMMM"
+    const val DAY_MONTH_FULL_ES = "dd 'de' MMMM"
+    const val DAY_MONTH_TIME_ES = "d 'de' MMMM HH:mm"
+    const val DAY_MONTH_ALL_DAY_ES = "d 'de' MMMM '(Todo el día)'"
     const val YEAR_MONTH_LONG = "MMMM yyyy"
+    const val DATE_TIME_FULL_ES = "d MMM yyyy HH:mm"
   }
 
   object Media {

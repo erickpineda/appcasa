@@ -81,320 +81,318 @@ import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeMaintenanceScreen(
-    navController: NavController,
-    viewModel: HomeMaintenanceViewModel = hiltViewModel()
+  navController: NavController,
+  viewModel: HomeMaintenanceViewModel = hiltViewModel()
 ) {
-    val events by viewModel.events.collectAsState()
-    var showAddDialog by remember { mutableStateOf(false) }
-    var eventToDelete by remember { mutableStateOf<MaintenanceEvent?>(null) }
-    val context = LocalContext.current
-    var toastMessage by remember { mutableStateOf<String?>(null) }
+  val events by viewModel.events.collectAsState()
+  var showAddDialog by remember { mutableStateOf(false) }
+  var eventToDelete by remember { mutableStateOf<MaintenanceEvent?>(null) }
+  val context = LocalContext.current
+  var toastMessage by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(Unit) {
-        viewModel.toastEvent.collect { message ->
-            toastMessage = message
-        }
+  LaunchedEffect(Unit) {
+    viewModel.toastEvent.collect { message ->
+      toastMessage = message
     }
+  }
 
-    val qrLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            val image = InputImage.fromFilePath(context, it)
-            val scanner = BarcodeScanning.getClient()
-            scanner.process(image).addOnSuccessListener { barcodes ->
-                barcodes.firstOrNull()?.rawValue?.let { code ->
-                    if (code.startsWith("maintenance/")) {
-                        val id = code.substringAfter("maintenance/").toLongOrNull()
-                        id?.let { navController.navigate(Screen.MaintenanceDetail(it)) }
-                    }
-                }
-            }
+  val qrLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.GetContent()
+  ) { uri: Uri? ->
+    uri?.let {
+      val image = InputImage.fromFilePath(context, it)
+      val scanner = BarcodeScanning.getClient()
+      scanner.process(image).addOnSuccessListener { barcodes ->
+        barcodes.firstOrNull()?.rawValue?.let { code ->
+          if (code.startsWith("maintenance/")) {
+            val id = code.substringAfter("maintenance/").toLongOrNull()
+            id?.let { navController.navigate(Screen.MaintenanceDetail(it)) }
+          }
         }
+      }
     }
+  }
 
-    AppCasaConfirmDialog(
-        show = eventToDelete != null,
-        title = stringResource(R.string.maintenance_delete_title),
-        text = stringResource(R.string.maintenance_delete_confirm, eventToDelete?.titulo ?: ""),
-        onConfirm = {
-            eventToDelete?.let { viewModel.archiveEvent(it) }
-            eventToDelete = null
-        },
-        onDismiss = { eventToDelete = null }
+  AppCasaConfirmDialog(
+    show = eventToDelete != null,
+    title = stringResource(R.string.maintenance_delete_title),
+    text = stringResource(R.string.maintenance_delete_confirm, eventToDelete?.titulo ?: ""),
+    onConfirm = {
+      eventToDelete?.let { viewModel.archiveEvent(it) }
+      eventToDelete = null
+    },
+    onDismiss = { eventToDelete = null }
+  )
+
+  if (showAddDialog) {
+    MaintenanceActionDialog(
+      onDismiss = { showAddDialog = false },
+      onConfirm = { title, cat, desc, date, nextDate, cost ->
+        viewModel.addEvent(title, cat, desc, date, nextDate, cost)
+        showAddDialog = false
+      }
     )
+  }
 
-    if (showAddDialog) {
-        MaintenanceActionDialog(
-            onDismiss = { showAddDialog = false },
-            onConfirm = { title, cat, desc, date, nextDate, cost ->
-                viewModel.addEvent(title, cat, desc, date, nextDate, cost)
-                showAddDialog = false
+  Box(modifier = Modifier.fillMaxSize()) {
+    PullToRefreshWrapper {
+      Scaffold(
+        topBar = {
+          TopAppBar(
+            title = { Text(stringResource(R.string.maintenance_title)) },
+            navigationIcon = {
+              IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+              }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+              containerColor = MaterialTheme.colorScheme.primary,
+              titleContentColor = MaterialTheme.colorScheme.onPrimary,
+              navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            actions = {
+              IconButton(onClick = { qrLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) }) {
+                Icon(Icons.Default.QrCodeScanner, contentDescription = null)
+              }
             }
-        )
-    }
+          )
+        },
+        floatingActionButton = {
+          FloatingActionButton(onClick = { showAddDialog = true }) {
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.maintenance_new_title))
+          }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+      ) { padding ->
+        LazyColumn(
+          modifier = Modifier
+            .padding(padding)
+            .fillMaxSize()
+            .imePadding(),
+          contentPadding = PaddingValues(16.dp),
+          verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+          if (events.isEmpty()) {
+            item {
+              AppCasaEmptyState(
+                title = stringResource(R.string.maintenance_empty_title),
+                description = stringResource(R.string.maintenance_empty_desc),
+                icon = Icons.Default.Build,
+                actionText = stringResource(R.string.maintenance_btn_add_first),
+                onActionClick = { showAddDialog = true },
+                modifier = Modifier.fillParentMaxSize()
+              )
+            }
+          } else {
+            items(events) { event ->
+              MaintenanceCard(
+                event = event,
+                onDelete = { eventToDelete = event },
+                onClick = { navController.navigate(Screen.MaintenanceDetail(event.id)) }
+              )
+            }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        PullToRefreshWrapper {
-            Scaffold(
-                topBar = {
-                    TopAppBar(
-                        title = { Text(stringResource(R.string.maintenance_title)) },
-                        navigationIcon = {
-                            IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        actions = {
-                            IconButton(onClick = { qrLauncher.launch("image/*") }) {
-                                Icon(Icons.Default.QrCodeScanner, contentDescription = null)
-                            }
-                        }
-                    )
-                },
-                floatingActionButton = {
-                    FloatingActionButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.maintenance_new_title))
-                    }
-                },
-                contentWindowInsets = WindowInsets(0, 0, 0, 0)
-            ) { padding ->
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(padding)
-                        .fillMaxSize()
-                        .imePadding(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    if (events.isEmpty()) {
-                        item {
-                            AppCasaEmptyState(
-                                title = stringResource(R.string.maintenance_empty_title),
-                                description = stringResource(R.string.maintenance_empty_desc),
-                                icon = Icons.Default.Build,
-                                actionText = stringResource(R.string.maintenance_btn_add_first),
-                                onActionClick = { showAddDialog = true },
-                                modifier = Modifier.fillParentMaxSize()
-                            )
-                        }
-                    }
-                    else {
-                        items(events) { event ->
-                            MaintenanceCard(
-                                event = event,
-                                onDelete = { eventToDelete = event },
-                                onClick = { navController.navigate(Screen.MaintenanceDetail(event.id)) }
-                            )
-                        }
-    
-                        item {
-                            TextButton(
-                                onClick = { viewModel.loadMoreActive() }, 
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(stringResource(R.string.maintenance_load_more))
-                            }
-                        }
-                    }
-                }
+            item {
+              TextButton(
+                onClick = { viewModel.loadMoreActive() },
+                modifier = Modifier.fillMaxWidth()
+              ) {
+                Text(stringResource(R.string.maintenance_load_more))
+              }
             }
+          }
         }
-        
-        AppCasaSutilToast(
-            message = toastMessage,
-            onDismiss = { toastMessage = null }
-        )
+      }
     }
+
+    AppCasaSutilToast(
+      message = toastMessage,
+      onDismiss = { toastMessage = null }
+    )
+  }
 }
 
 @Composable
 fun MaintenanceCard(
-    event: MaintenanceEvent,
-    onDelete: () -> Unit,
-    onClick: () -> Unit
+  event: MaintenanceEvent,
+  onDelete: () -> Unit,
+  onClick: () -> Unit
 ) {
-    AppCasaCard(useGlassmorphism = true, onClick = onClick) {
-        ListItem(
-            headlineContent = { Text(event.titulo, fontWeight = FontWeight.Bold) },
-            supportingContent = {
-                Column {
-                    Text(event.categoria, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                    Text(stringResource(R.string.maintenance_label_done, formatDate(event.fechaRealizacion)), style = MaterialTheme.typography.bodySmall)
-                    event.proximaRevision?.let {
-                        Text(stringResource(R.string.maintenance_label_next, formatDate(it)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                    }
-                    if (event.coste != null) {
-                        Text(stringResource(R.string.maintenance_label_cost, event.coste.toString()), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                    }
-                }
-            },
-            leadingContent = {
-                val icon = when (event.categoria) {
-                    stringResource(R.string.maintenance_cat_appliances) -> Icons.Default.Kitchen
-                    stringResource(R.string.maintenance_cat_plumbing) -> Icons.Default.WaterDrop
-                    stringResource(R.string.maintenance_cat_electricity) -> Icons.Default.ElectricBolt
-                    stringResource(R.string.maintenance_cat_painting) -> Icons.Default.FormatPaint
-                    stringResource(R.string.maintenance_cat_hvac) -> Icons.Default.Air
-                    else -> Icons.Default.Build
-                }
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            },
-            trailingContent = {
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
-                }
-            },
-            colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
-        )
-    }
+  AppCasaCard(useGlassmorphism = true, onClick = onClick) {
+    ListItem(
+      headlineContent = { Text(event.titulo, fontWeight = FontWeight.Bold) },
+      supportingContent = {
+        Column {
+          Text(event.categoria, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+          Text(stringResource(R.string.maintenance_label_done, formatDate(event.fechaRealizacion)), style = MaterialTheme.typography.bodySmall)
+          event.proximaRevision?.let {
+            Text(stringResource(R.string.maintenance_label_next, formatDate(it)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+          }
+          if (event.coste != null) {
+            Text(stringResource(R.string.maintenance_label_cost, event.coste.toString()), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+          }
+        }
+      },
+      leadingContent = {
+        val icon = when (event.categoria) {
+          stringResource(R.string.maintenance_cat_appliances) -> Icons.Default.Kitchen
+          stringResource(R.string.maintenance_cat_plumbing) -> Icons.Default.WaterDrop
+          stringResource(R.string.maintenance_cat_electricity) -> Icons.Default.ElectricBolt
+          stringResource(R.string.maintenance_cat_painting) -> Icons.Default.FormatPaint
+          stringResource(R.string.maintenance_cat_hvac) -> Icons.Default.Air
+          else -> Icons.Default.Build
+        }
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+      },
+      trailingContent = {
+        IconButton(onClick = onDelete) {
+          Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+        }
+      },
+      colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
+    )
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaintenanceActionDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (String, String, String?, Long, Long?, Double?) -> Unit
+  onDismiss: () -> Unit,
+  onConfirm: (String, String, String?, Long, Long?, Double?) -> Unit
 ) {
-    val catAppliances = stringResource(R.string.maintenance_cat_appliances)
-    val catPlumbing = stringResource(R.string.maintenance_cat_plumbing)
-    val catElectricity = stringResource(R.string.maintenance_cat_electricity)
-    val catPainting = stringResource(R.string.maintenance_cat_painting)
-    val catHvac = stringResource(R.string.maintenance_cat_hvac)
-    val catStructure = stringResource(R.string.maintenance_cat_structure)
-    val catOthers = stringResource(R.string.maintenance_cat_others)
+  val catAppliances = stringResource(R.string.maintenance_cat_appliances)
+  val catPlumbing = stringResource(R.string.maintenance_cat_plumbing)
+  val catElectricity = stringResource(R.string.maintenance_cat_electricity)
+  val catPainting = stringResource(R.string.maintenance_cat_painting)
+  val catHvac = stringResource(R.string.maintenance_cat_hvac)
+  val catStructure = stringResource(R.string.maintenance_cat_structure)
+  val catOthers = stringResource(R.string.maintenance_cat_others)
 
-    var title by remember { mutableStateOf("") }
-    var cat by remember { mutableStateOf(catAppliances) }
-    var desc by remember { mutableStateOf("") }
-    var cost by remember { mutableStateOf("") }
-    
-    var dateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
-    var nextDateMillis by remember { mutableStateOf<Long?>(null) }
-    
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showNextDatePicker by remember { mutableStateOf(false) }
-    
-    val categories = listOf(catAppliances, catPlumbing, catElectricity, catPainting, catHvac, catStructure, catOthers)
-    var expanded by remember { mutableStateOf(false) }
+  var title by remember { mutableStateOf("") }
+  var cat by remember { mutableStateOf(catAppliances) }
+  var desc by remember { mutableStateOf("") }
+  var cost by remember { mutableStateOf("") }
 
-    val focusRequester = remember { FocusRequester() }
-    val keyboardController = LocalSoftwareKeyboardController.current
+  var dateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
+  var nextDateMillis by remember { mutableStateOf<Long?>(null) }
 
-    LaunchedEffect(Unit) {
-        delay(300)
-        focusRequester.requestFocus()
-        keyboardController?.show()
-    }
+  var showDatePicker by remember { mutableStateOf(false) }
+  var showNextDatePicker by remember { mutableStateOf(false) }
 
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = dateMillis)
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    dateMillis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
-                    showDatePicker = false
-                }) { Text(stringResource(R.string.maintenance_btn_ok)) }
+  val categories = listOf(catAppliances, catPlumbing, catElectricity, catPainting, catHvac, catStructure, catOthers)
+  var expanded by remember { mutableStateOf(false) }
+
+  val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
+
+  LaunchedEffect(Unit) {
+    delay(300)
+    focusRequester.requestFocus()
+    keyboardController?.show()
+  }
+
+  if (showDatePicker) {
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = dateMillis)
+    DatePickerDialog(
+      onDismissRequest = { showDatePicker = false },
+      confirmButton = {
+        TextButton(onClick = {
+          dateMillis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
+          showDatePicker = false
+        }) { Text(stringResource(R.string.maintenance_btn_ok)) }
+      }
+    ) { DatePicker(state = datePickerState) }
+  }
+
+  if (showNextDatePicker) {
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = nextDateMillis ?: (System.currentTimeMillis() + 31536000000L))
+    DatePickerDialog(
+      onDismissRequest = { showNextDatePicker = false },
+      confirmButton = {
+        TextButton(onClick = {
+          nextDateMillis = datePickerState.selectedDateMillis
+          showNextDatePicker = false
+        }) { Text(stringResource(R.string.maintenance_btn_ok)) }
+      }
+    ) { DatePicker(state = datePickerState) }
+  }
+
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text(stringResource(R.string.maintenance_new_title)) },
+    text = {
+      LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item {
+          OutlinedTextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text(stringResource(R.string.maintenance_label_question)) },
+            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+          )
+        }
+        item {
+          ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+            OutlinedTextField(
+              value = cat, onValueChange = {}, readOnly = true, label = { Text(stringResource(R.string.family_label_category)) },
+              trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+              modifier = Modifier.menuAnchor().fillMaxWidth(),
+              keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+            )
+            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+              categories.forEach { c ->
+                DropdownMenuItem(text = { Text(c) }, onClick = { cat = c; expanded = false })
+              }
             }
-        ) { DatePicker(state = datePickerState) }
-    }
-
-    if (showNextDatePicker) {
-        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = nextDateMillis ?: (System.currentTimeMillis() + 31536000000L))
-        DatePickerDialog(
-            onDismissRequest = { showNextDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    nextDateMillis = datePickerState.selectedDateMillis
-                    showNextDatePicker = false
-                }) { Text(stringResource(R.string.maintenance_btn_ok)) }
+          }
+        }
+        item {
+          OutlinedTextField(
+            value = desc,
+            onValueChange = { desc = it },
+            label = { Text(stringResource(R.string.maintenance_label_details_optional)) },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 2,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+          )
+        }
+        item {
+          OutlinedTextField(
+            value = cost,
+            onValueChange = { cost = it },
+            label = { Text(stringResource(R.string.maintenance_label_cost_optional)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal)
+          )
+        }
+        item {
+          Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { showDatePicker = true }, modifier = Modifier.weight(1f)) {
+              Text(stringResource(R.string.maintenance_label_done, formatDate(dateMillis)))
             }
-        ) { DatePicker(state = datePickerState) }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.maintenance_new_title)) },
-        text = {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                item {
-                    OutlinedTextField(
-                        value = title, 
-                        onValueChange = { title = it }, 
-                        label = { Text(stringResource(R.string.maintenance_label_question)) }, 
-                        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
-                    )
-                }
-                item {
-                    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                        OutlinedTextField(
-                            value = cat, onValueChange = {}, readOnly = true, label = { Text(stringResource(R.string.family_label_category)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
-                        )
-                        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                            categories.forEach { c ->
-                                DropdownMenuItem(text = { Text(c) }, onClick = { cat = c; expanded = false })
-                            }
-                        }
-                    }
-                }
-                item {
-                    OutlinedTextField(
-                        value = desc, 
-                        onValueChange = { desc = it }, 
-                        label = { Text(stringResource(R.string.maintenance_label_details_optional)) }, 
-                        modifier = Modifier.fillMaxWidth(), 
-                        minLines = 2,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
-                    )
-                }
-                item {
-                    OutlinedTextField(
-                        value = cost, 
-                        onValueChange = { cost = it }, 
-                        label = { Text(stringResource(R.string.maintenance_label_cost_optional)) }, 
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal)
-                    )
-                }
-                item {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { showDatePicker = true }, modifier = Modifier.weight(1f)) {
-                            Text(stringResource(R.string.maintenance_label_done, formatDate(dateMillis)))
-                        }
-                        Button(onClick = { showNextDatePicker = true }, modifier = Modifier.weight(1f)) {
-                            Text(if (nextDateMillis == null) stringResource(R.string.maintenance_btn_add_revision) else stringResource(R.string.maintenance_label_next_format, formatDate(nextDateMillis!!)))
-                        }
-                    }
-                }
+            Button(onClick = { showNextDatePicker = true }, modifier = Modifier.weight(1f)) {
+              Text(if (nextDateMillis == null) stringResource(R.string.maintenance_btn_add_revision) else stringResource(R.string.maintenance_label_next_format, formatDate(nextDateMillis!!)))
             }
-        },
-        confirmButton = {
-            Button(onClick = {
-                if (title.isNotBlank()) {
-                    onConfirm(title, cat, desc.takeIf { it.isNotBlank() }, dateMillis, nextDateMillis, cost.toDoubleOrNull())
-                }
-            }) { Text(stringResource(R.string.dashboard_save)) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dashboard_cancel)) } }
-    )
+          }
+        }
+      }
+    },
+    confirmButton = {
+      Button(onClick = {
+        if (title.isNotBlank()) {
+          onConfirm(title, cat, desc.takeIf { it.isNotBlank() }, dateMillis, nextDateMillis, cost.toDoubleOrNull())
+        }
+      }) { Text(stringResource(R.string.dashboard_save)) }
+    },
+    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dashboard_cancel)) } }
+  )
 }
 
 private fun formatDate(timestamp: Long): String {
-    return SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Locale.getDefault()).format(Date(timestamp))
+  return SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Constants.Locales.SPAIN).format(Date(timestamp))
 }

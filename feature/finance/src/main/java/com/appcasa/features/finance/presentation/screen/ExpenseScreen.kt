@@ -234,7 +234,7 @@ fun ExpenseScreen(
                 IconButton(onClick = { navController.navigate(Screen.FinanceStats) }) {
                   Icon(Icons.Default.Assessment, contentDescription = stringResource(R.string.cd_stats))
                 }
-                IconButton(onClick = { galleryLauncher.launch("image/*") }) {
+                IconButton(onClick = { galleryLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) }) {
                     Icon(Icons.Default.DocumentScanner, contentDescription = stringResource(R.string.cd_scan_ticket))
                 }
                 if (expenses.isNotEmpty()) {
@@ -489,7 +489,7 @@ fun ExpenseActionDialog(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
-                onClick = { imagePickerLauncher.launch("image/*") },
+                onClick = { imagePickerLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) },
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
             ) {

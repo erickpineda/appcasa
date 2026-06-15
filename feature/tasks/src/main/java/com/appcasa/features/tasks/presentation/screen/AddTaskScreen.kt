@@ -344,7 +344,7 @@ fun AddTaskScreen(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
       ) {
         Button(
-          onClick = { imagePickerLauncher.launch("image/*") },
+          onClick = { imagePickerLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) },
           modifier = Modifier.weight(1f)
         ) {
           Icon(Icons.Default.PhotoCamera, contentDescription = null)

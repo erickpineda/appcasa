@@ -57,6 +57,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.appcasa.core.utils.Constants
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -156,7 +157,7 @@ fun PhotoToPdfScreen(
               )
               
               IconButton(
-                  onClick = { launcher.launch("image/*") },
+                  onClick = { launcher.launch(Constants.Media.MIME_TYPE_IMAGE) },
                   colors = IconButtonDefaults.filledIconButtonColors()
               ) {
                   Icon(Icons.Default.AddPhotoAlternate, contentDescription = stringResource(R.string.util_photo_pdf_cd_add_photos))
@@ -170,7 +171,7 @@ fun PhotoToPdfScreen(
                   Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline)
                   Spacer(Modifier.height(16.dp))
                   Text(stringResource(R.string.util_photo_pdf_no_photos), color = MaterialTheme.colorScheme.outline)
-                  TextButton(onClick = { launcher.launch("image/*") }) {
+                  TextButton(onClick = { launcher.launch(Constants.Media.MIME_TYPE_IMAGE) }) {
                       Text(stringResource(R.string.util_photo_pdf_add_photos_hint))
                   }
               }

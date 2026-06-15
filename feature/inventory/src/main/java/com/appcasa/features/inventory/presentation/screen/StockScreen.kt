@@ -57,6 +57,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.appcasa.core.utils.Constants
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -190,7 +191,7 @@ fun StockScreen(
                 titleContentColor = MaterialTheme.colorScheme.onPrimary
               ),
               actions = {
-                  IconButton(onClick = { barcodeLauncher.launch("image/*") }) {
+                  IconButton(onClick = { barcodeLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) }) {
                       Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.cd_scan))
                   }
               }

@@ -160,7 +160,7 @@ fun AddMemberScreen(
           .size(120.dp)
           .clip(CircleShape)
           .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-          .clickable { imagePickerLauncher.launch("image/*") },
+          .clickable { imagePickerLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) },
         contentAlignment = Alignment.Center
       ) {
         if (fotoUri != null) {

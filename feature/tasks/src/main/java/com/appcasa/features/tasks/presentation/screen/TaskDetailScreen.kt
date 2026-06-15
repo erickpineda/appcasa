@@ -288,13 +288,13 @@ fun TaskDetailScreen(
                       val date = Date(currentTask.fechaLimite!!)
                       val cal = Calendar.getInstance().apply { time = date }
                       val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-                        "d 'de' MMMM '(Todo el día)'"
+                        Constants.Formatting.DAY_MONTH_ALL_DAY_ES
                       } else {
-                        "d 'de' MMMM HH:mm"
+                        Constants.Formatting.DAY_MONTH_TIME_ES
                       }
                       
                       Text(
-                        text = stringResource(R.string.task_label_vence, SimpleDateFormat(format, Locale("es", "ES")).format(date)),
+                        text = stringResource(R.string.task_label_vence, SimpleDateFormat(format, Constants.Locales.SPAIN).format(date)),
                         style = MaterialTheme.typography.labelMedium,
                         color = if (isTaskCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -758,7 +758,7 @@ fun EditTaskMainDialog(
         }
 
         item {
-          OutlinedButton(onClick = { imagePickerLauncher.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
+          OutlinedButton(onClick = { imagePickerLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) }, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             Text(if (f == null) stringResource(R.string.task_btn_add_image) else stringResource(R.string.task_btn_change_image))
