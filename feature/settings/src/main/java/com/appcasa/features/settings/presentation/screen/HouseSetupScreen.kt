@@ -100,13 +100,17 @@ fun HouseSetupScreen(
   // Navegación/decisión inicial automática tras comprobar DB (si no estamos en onboarding)
   LaunchedEffect(uiState.isCheckingDb, uiState.existingHousehold, uiState.allHouseholds) {
     if (step == SetupStep.ONBOARDING) return@LaunchedEffect
+    // Evitar navegación automática si ya estamos interactuando en pasos profundos
+    if (step == SetupStep.CREATE || step == SetupStep.JOIN || step == SetupStep.BIOMETRIC_PROMPT || step == SetupStep.ADD_PROFILE) {
+        return@LaunchedEffect
+    }
     if (!uiState.isCheckingDb) {
       if (uiState.existingHousehold != null) {
         step = SetupStep.SELECT_PROFILE
-      } else if (uiState.allHouseholds.size == 1 && uiState.isLoggedIn) {
+      } else if (uiState.allHouseholds.size == 1) {
         viewModel.handleIntent(SetupIntent.SwitchHousehold(uiState.allHouseholds.first().id))
         step = SetupStep.SELECT_PROFILE
-      } else if (uiState.allHouseholds.size > 1 && uiState.isLoggedIn) {
+      } else if (uiState.allHouseholds.size > 1) {
         step = SetupStep.SWITCH_HOUSEHOLD
       } else if (step == SetupStep.ONBOARDING) {
         // mantener onboarding
