@@ -1,3 +1,4 @@
+import appcasa.android.config.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
@@ -13,7 +14,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
             dependencies {
                 add("implementation", project(":core:ui"))
                 add("implementation", project(":core:domain"))
-                // Add any common feature dependencies here if needed
+                add("implementation", libs.findLibrary("hilt-navigation-compose").get())
             }
         }
     }

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -97,26 +98,25 @@ fun HouseSetupScreen(
     lastStep = step
   }
 
+  var hasInitialNavigationDone by rememberSaveable { mutableStateOf(false) }
+
   // Navegación/decisión inicial automática tras comprobar DB (si no estamos en onboarding)
   LaunchedEffect(uiState.isCheckingDb, uiState.existingHousehold, uiState.allHouseholds) {
     if (step == SetupStep.ONBOARDING) return@LaunchedEffect
-    // Evitar navegación automática si ya estamos interactuando en pasos profundos
-    if (step == SetupStep.CREATE || step == SetupStep.JOIN || step == SetupStep.BIOMETRIC_PROMPT || step == SetupStep.ADD_PROFILE) {
-        return@LaunchedEffect
-    }
+    if (hasInitialNavigationDone) return@LaunchedEffect
+    
     if (!uiState.isCheckingDb) {
       if (uiState.existingHousehold != null) {
         step = SetupStep.SELECT_PROFILE
       } else if (uiState.allHouseholds.size == 1) {
         viewModel.handleIntent(SetupIntent.SwitchHousehold(uiState.allHouseholds.first().id))
         step = SetupStep.SELECT_PROFILE
-      } else if (uiState.allHouseholds.size > 1) {
+      } else if (uiState.allHouseholds.isNotEmpty()) {
         step = SetupStep.SWITCH_HOUSEHOLD
-      } else if (step == SetupStep.ONBOARDING) {
-        // mantener onboarding
       } else {
         step = SetupStep.WELCOME
       }
+      hasInitialNavigationDone = true
     }
   }
 
