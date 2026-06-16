@@ -9,6 +9,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import net.sqlcipher.database.SupportFactory
 import javax.inject.Singleton
 
 @Module
@@ -17,12 +18,17 @@ object DatabaseModule {
 
   @Provides
   @Singleton
-  fun provideDatabase(@ApplicationContext context: Context): AppCasaDatabase {
+  fun provideDatabase(
+    @ApplicationContext context: Context,
+    passphrase: String
+  ): AppCasaDatabase {
+    val factory = SupportFactory(passphrase.toByteArray())
     return Room.databaseBuilder(
       context,
       AppCasaDatabase::class.java,
-      "appcasa_db"
+      "appcasa_db_secure"
     )
+    .openHelperFactory(factory)
     .addMigrations(*Migrations.getAll())
     .fallbackToDestructiveMigration()
     .build()

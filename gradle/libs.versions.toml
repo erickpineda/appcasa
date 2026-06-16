@@ -25,6 +25,7 @@ biometric              = "1.1.0"
 google-location        = "21.3.0"
 google-services        = "4.4.2"
 google-auth            = "21.2.0"
+sqlcipher                = "4.5.4"
 security-crypto        = "1.1.0-alpha06"
 camerax                = "1.4.0"
 mlkit-barcode          = "17.3.0"
@@ -84,6 +85,8 @@ hilt-work-compiler          = { group = "androidx.hilt",       name = "hilt-comp
 room-runtime                = { group = "androidx.room",       name = "room-runtime",             version.ref = "room" }
 room-ktx                    = { group = "androidx.room",       name = "room-ktx",                 version.ref = "room" }
 room-compiler               = { group = "androidx.room",       name = "room-compiler",            version.ref = "room" }
+sqlcipher-android           = { group = "net.zetetic",        name = "android-database-sqlcipher", version.ref = "sqlcipher" }
+sqlite-ktx                  = { group = "androidx.sqlite",    name = "sqlite-ktx",              version = "2.4.0" }
 
 # DataStore
 datastore-preferences       = { group = "androidx.datastore",  name = "datastore-preferences",   version.ref = "datastore" }

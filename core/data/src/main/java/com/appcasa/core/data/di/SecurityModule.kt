@@ -32,4 +32,15 @@ object SecurityModule {
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideDatabasePassphrase(sharedPreferences: SharedPreferences): String {
+        val existingPassphrase = sharedPreferences.getString("db_passphrase", null)
+        if (existingPassphrase != null) return existingPassphrase
+
+        val newPassphrase = java.util.UUID.randomUUID().toString()
+        sharedPreferences.edit().putString("db_passphrase", newPassphrase).apply()
+        return newPassphrase
+    }
 }

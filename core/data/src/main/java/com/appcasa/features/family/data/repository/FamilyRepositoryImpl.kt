@@ -98,8 +98,15 @@ class FamilyRepositoryImpl @Inject constructor(
 
     override suspend fun syncMember(member: FamilyMember) {
         try {
-            remoteDataSource.syncMember(member)
-            updateMemberSyncTimestamp(member.id)
+            // Aseguramos que tenemos el objeto más completo posible antes de subirlo
+            val memberToSync = if (member.hogarSyncId == null || member.syncId == null) {
+                miembroDao.getMiembroById(member.id)?.toDomain() ?: member
+            } else {
+                member
+            }
+            
+            remoteDataSource.syncMember(memberToSync)
+            updateMemberSyncTimestamp(memberToSync.id)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -110,34 +117,42 @@ class FamilyRepositoryImpl @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun startRemoteSync(hogarId: Long) {
         syncJob?.cancel()
-        syncJob = syncManager.isAppInForeground
-            .flatMapLatest { isInForeground ->
-                if (isInForeground) {
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    hogar?.syncId?.let { remoteDataSource.observeMembers(it) } ?: emptyFlow()
-                } else {
-                    emptyFlow()
+        syncJob = combine(
+            syncManager.isAppInForeground,
+            householdRepository.getHogarById(hogarId).filterNotNull()
+        ) { isInForeground, hogar ->
+            if (isInForeground && hogar.syncId != null) {
+                hogar.syncId
+            } else {
+                null
+            }
+        }
+        .flatMapLatest { syncId ->
+            if (syncId != null) {
+                remoteDataSource.observeMembers(syncId)
+            } else {
+                emptyFlow()
+            }
+        }
+        .onEach { remoteMembers ->
+            val hogar = householdRepository.getHogarById(hogarId).first() ?: return@onEach
+            remoteMembers.forEach { remoteMember ->
+                val existing = remoteMember.syncId?.let { miembroDao.getMiembroBySyncId(it) }
+
+                val memberToSave = remoteMember.copy(
+                    id = existing?.id ?: 0L,
+                    hogarId = hogarId,
+                    hogarSyncId = hogar.syncId
+                )
+
+                if (existing == null || remoteMember.updatedAt > existing.updatedAt) {
+                    miembroDao.insertMiembro(memberToSave.toEntity())
                 }
             }
-            .onEach { remoteMembers ->
-                remoteMembers.forEach { remoteMember ->
-                    val existing = remoteMember.syncId?.let { miembroDao.getMiembroBySyncId(it) }
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-
-                    val memberToSave = remoteMember.copy(
-                        id = existing?.id ?: 0L,
-                        hogarId = hogarId,
-                        hogarSyncId = hogar?.syncId
-                    )
-
-                    if (existing == null || remoteMember.updatedAt > existing.updatedAt) {
-                        miembroDao.insertMiembro(memberToSave.toEntity())
-                    }
-                }
-            }
-            .catch { e ->
-                e.printStackTrace()
-            }
-            .launchIn(appScope)
+        }
+        .catch { e ->
+            e.printStackTrace()
+        }
+        .launchIn(appScope)
     }
 }

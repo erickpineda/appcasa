@@ -1,6 +1,7 @@
 package com.appcasa
 
 import android.app.Application
+import net.sqlcipher.database.SQLiteDatabase
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import androidx.work.Constraints
@@ -26,6 +27,7 @@ class AppCasaApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        SQLiteDatabase.loadLibs(this)
         scheduleMaintenanceWork()
     }
 

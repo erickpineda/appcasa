@@ -9,6 +9,11 @@ android {
 }
 
 dependencies {
+    // Room & Security
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    implementation(libs.sqlcipher.android)
+    implementation(libs.sqlite.ktx)
     implementation(libs.androidx.security.crypto)
     implementation(libs.coroutines.android)
     
