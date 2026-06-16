@@ -20,7 +20,8 @@ data class HouseholdDto(
         estado = runCatching { EstadoGeneral.valueOf(estado) }.getOrDefault(EstadoGeneral.ACTIVO),
         codigoHogar = codigoHogar,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        lastSyncedAt = System.currentTimeMillis()
     )
 
     companion object {

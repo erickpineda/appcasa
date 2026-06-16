@@ -169,8 +169,6 @@ class SettingsViewModel @Inject constructor(
                 _isSyncing.value = true
                 linkAccountUseCase()
                 _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_sync_started)))
-                // Damos tiempo a la sync inicial
-                kotlinx.coroutines.delay(2000)
                 _isSyncing.value = false
             } catch (e: Exception) {
                 _isSyncing.value = false
@@ -186,7 +184,6 @@ class SettingsViewModel @Inject constructor(
             _isSyncing.value = true
             forceSyncUseCase(hogar.id)
             _settingsEvent.emit(SettingsUiEvent.ShowToast(UiText.StringResource(R.string.settings_sync_started)))
-            kotlinx.coroutines.delay(3000)
             _isSyncing.value = false
         }
     }

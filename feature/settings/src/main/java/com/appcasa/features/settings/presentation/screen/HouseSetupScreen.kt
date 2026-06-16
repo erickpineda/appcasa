@@ -12,8 +12,12 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -206,7 +210,11 @@ fun HouseSetupScreen(
     Box(Modifier.fillMaxSize()) {
       AnimatedContent(
         targetState = step,
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        transitionSpec = {
+          (slideInHorizontally(animationSpec = tween(300)) { width -> width } + fadeIn()).togetherWith(
+            slideOutHorizontally(animationSpec = tween(300)) { width -> -width } + fadeOut()
+          )
+        },
         label = "setup_steps"
       ) { targetStep ->
         when (targetStep) {
@@ -346,7 +354,11 @@ fun HouseSetupScreen(
         }
       }
 
-      if (uiState.isLoading || uiState.isCheckingDb) {
+      AnimatedVisibility(
+        visible = uiState.isLoading || uiState.isCheckingDb,
+        enter = fadeIn(),
+        exit = fadeOut()
+      ) {
         Box(
           modifier = Modifier
             .fillMaxSize()
