@@ -11,7 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.SyncAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,10 +38,10 @@ fun SelectProfileStep(
     onMemberClick: (FamilyMember) -> Unit,
     onAddProfileClick: () -> Unit,
     onSwitchHouseClick: (() -> Unit)?,
-    onResetAll: () -> Unit,
+    onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showConfirmReset by remember { mutableStateOf(false) }
+    var showConfirmLogout by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -116,9 +116,7 @@ fun SelectProfileStep(
                 .heightIn(min = 120.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (isLoading) {
-                CircularProgressIndicator()
-            } else {
+            if (!isLoading) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp)
@@ -169,34 +167,34 @@ fun SelectProfileStep(
 
         Spacer(Modifier.height(48.dp))
 
-        if (showConfirmReset) {
+        if (showConfirmLogout) {
             AlertDialog(
-                onDismissRequest = { showConfirmReset = false },
-                title = { Text(stringResource(R.string.setup_reset_title)) },
-                text = { Text(stringResource(R.string.setup_reset_desc)) },
+                onDismissRequest = { showConfirmLogout = false },
+                title = { Text("Cerrar sesión") },
+                text = { Text("¿Seguro que quieres cerrar sesión? Volverás a la pantalla inicial.") },
                 confirmButton = {
                     Button(
                         onClick = {
-                            onResetAll()
-                            showConfirmReset = false
+                            onLogout()
+                            showConfirmLogout = false
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
-                        Text(stringResource(R.string.setup_btn_reset_confirm))
+                        Text("Cerrar sesión")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showConfirmReset = false }) {
+                    TextButton(onClick = { showConfirmLogout = false }) {
                         Text(stringResource(CoreR.string.common_cancel))
                     }
                 }
             )
         }
 
-        TextButton(onClick = { showConfirmReset = true }) {
-            Icon(Icons.Default.RestartAlt, null)
+        TextButton(onClick = { showConfirmLogout = true }) {
+            Icon(Icons.Default.Logout, null)
             Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.setup_btn_reset_all))
+            Text("Cerrar sesión")
         }
     }
 }

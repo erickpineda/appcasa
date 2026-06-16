@@ -121,7 +121,8 @@ class DashboardRepositoryImpl @Inject constructor(
                     val postItToSave = remoteItem.copy(
                         id = existing?.id ?: 0L,
                         hogarId = hogarId,
-                        hogarSyncId = hogar?.syncId
+                        hogarSyncId = hogar?.syncId,
+                        lastSyncedAt = System.currentTimeMillis()
                     )
 
                     if (existing == null) {

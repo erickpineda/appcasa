@@ -301,8 +301,8 @@ fun HouseSetupScreen(
               onSwitchHouseClick = if (uiState.allHouseholds.size > 1) {
                 { step = SetupStep.SWITCH_HOUSEHOLD }
               } else null,
-              onResetAll = {
-                viewModel.handleIntent(SetupIntent.ResetHousehold)
+              onLogout = {
+                viewModel.handleIntent(SetupIntent.Logout)
                 step = SetupStep.WELCOME
               }
             )

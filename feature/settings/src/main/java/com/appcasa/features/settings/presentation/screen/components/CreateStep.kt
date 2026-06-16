@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.R as CoreR
 import com.appcasa.feature.settings.R
 
@@ -35,15 +36,11 @@ fun CreateStep(
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    AppCasaCard(
+        useGlassmorphism = true,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
         Column(
             modifier = Modifier

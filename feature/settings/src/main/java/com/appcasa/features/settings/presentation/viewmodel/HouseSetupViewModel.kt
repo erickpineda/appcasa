@@ -29,7 +29,7 @@ class HouseSetupViewModel @Inject constructor(
   private val createHouseholdUseCase: CreateHouseholdUseCase,
   private val joinHouseholdUseCase: JoinHouseholdUseCase,
   private val selectMemberUseCase: SelectMemberUseCase,
-  private val resetHouseholdUseCase: ResetHouseholdUseCase,
+  private val logoutUseCase: LogoutUseCase,
   private val getAllHouseholdsUseCase: GetAllHouseholdsUseCase,
   private val switchHouseholdUseCase: SwitchHouseholdUseCase,
   private val recoverHouseholdsUseCase: RecoverHouseholdsUseCase,
@@ -117,7 +117,7 @@ class HouseSetupViewModel @Inject constructor(
       is SetupIntent.DiscoverAndJoin -> discoverAndJoin(intent.code)
       is SetupIntent.SelectMember -> selectMember(intent.member)
       is SetupIntent.SwitchHousehold -> switchHousehold(intent.id)
-      is SetupIntent.ResetHousehold -> resetHousehold()
+      is SetupIntent.Logout -> logout()
       is SetupIntent.SilentRecoverHouseholds -> silentRecoverHouseholds()
       is SetupIntent.RecoverHouseholdsManual -> recoverHouseholdsManual(intent.email)
       is SetupIntent.CheckNetworkStatus -> checkNetworkStatus()
@@ -264,9 +264,10 @@ class HouseSetupViewModel @Inject constructor(
     }
   }
 
-  private fun resetHousehold() {
+  private fun logout() {
     viewModelScope.launch {
-      resetHouseholdUseCase()
+      logoutUseCase()
+      _uiState.update { it.copy(allHouseholds = emptyList(), existingHousehold = null, householdMembers = emptyList()) }
     }
   }
 
@@ -400,7 +401,7 @@ sealed interface SetupIntent {
   data class DiscoverAndJoin(val code: String) : SetupIntent
   data class SelectMember(val member: FamilyMember) : SetupIntent
   data class SwitchHousehold(val id: Long) : SetupIntent
-  object ResetHousehold : SetupIntent
+  object Logout : SetupIntent
   object SilentRecoverHouseholds : SetupIntent
   data class RecoverHouseholdsManual(val email: String) : SetupIntent
   object CheckNetworkStatus : SetupIntent

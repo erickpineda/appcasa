@@ -320,17 +320,19 @@ class RecoverHouseholdsUseCase @Inject constructor(
             repository.findHouseholdsByUserEmail(email)
         }
 
+        val recovered = mutableListOf<Household>()
         // Guardamos localmente para que aparezcan en la lista de Switch
         for (house in cloudHouses) {
             val localId = repository.insertHogar(house)
             // IMPORTANTE: Descargamos también los miembros para que la pantalla "¿Quién eres?" funcione
             familyRepository.startRemoteSync(localId)
+            recovered.add(house.copy(id = localId))
         }
 
         // Delay técnico para que Room consolide las transacciones antes de que la UI refresque
         kotlinx.coroutines.delay(600)
 
-        return cloudHouses
+        return recovered
     }
 }
 
