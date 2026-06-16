@@ -191,4 +191,9 @@
     <string name="setup_onboarding_title_3">Acceso Multihogar</string>
     <string name="setup_onboarding_desc_3">Únete a varios hogares y cambia entre ellos con un solo toque.</string>
     <string name="setup_error_no_network">No hay conexión a Internet. Es necesaria para esta acción.</string>
+
+    <!-- Cerrar Sesión -->
+    <string name="logout_dialog_title">Cerrar sesión</string>
+    <string name="logout_dialog_text">¿Seguro que quieres cerrar sesión? Volverás a la pantalla inicial.</string>
+    <string name="logout_confirm_btn">Cerrar sesión</string>
 </resources>
