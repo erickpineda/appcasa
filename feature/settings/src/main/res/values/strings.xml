@@ -171,4 +171,24 @@
     <string name="settings_link_account_btn">Vincular con Google o Email</string>
     <string name="settings_google_managed_title">Gestionado por Google</string>
     <string name="settings_google_managed_desc">Tu cuenta usa Google para iniciar sesión. El email y la contraseña se gestionan desde tu cuenta de Google.</string>
+
+    <!-- Mejoras Setup, Onboarding y Biometría -->
+    <string name="setup_welcome_restore_desc">Inicia sesión con tu cuenta para recuperar todos tus hogares guardados en la nube.</string>
+    <string name="setup_welcome_join_desc">Introduce un código o escanea un QR para unirte a un hogar específico.</string>
+    <string name="setup_btn_restore_all">Restaurar todos mis hogares</string>
+    <string name="setup_loading_recovering">Sincronizando tus hogares desde la nube…</string>
+    <string name="setup_loading_joining">Uniéndote al hogar…</string>
+    <string name="setup_loading_creating">Creando tu nuevo hogar…</string>
+    <string name="setup_loading_checking_db">Verificando base de datos local…</string>
+    <string name="setup_biometric_title">Protege tu Hogar</string>
+    <string name="setup_biometric_desc">¿Deseas habilitar la autenticación biométrica (huella dactilar o reconocimiento facial) para proteger tus datos de finanzas y estadísticas?</string>
+    <string name="setup_biometric_enable">Habilitar Biometría</string>
+    <string name="setup_biometric_skip">Saltar por ahora</string>
+    <string name="setup_onboarding_title_1">Organiza tu Hogar</string>
+    <string name="setup_onboarding_desc_1">Gestiona tareas, compras y gastos de forma conjunta y en tiempo real.</string>
+    <string name="setup_onboarding_title_2">Sincronización Segura</string>
+    <string name="setup_onboarding_desc_2">Tus datos se almacenan localmente y se cifran de forma segura.</string>
+    <string name="setup_onboarding_title_3">Acceso Multihogar</string>
+    <string name="setup_onboarding_desc_3">Únete a varios hogares y cambia entre ellos con un solo toque.</string>
+    <string name="setup_error_no_network">No hay conexión a Internet. Es necesaria para esta acción.</string>
 </resources>

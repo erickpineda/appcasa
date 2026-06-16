@@ -13,7 +13,7 @@ sealed interface Screen {
 
   // ─── Flujo de Bienvenida y Colaboración ────────────
   @Serializable data object Auth : Screen
-  @Serializable data object HouseSetup : Screen
+  @Serializable data class HouseSetup(val code: String? = null) : Screen
 
   // ─── Grafos de Navegación ───────────────────────────
   @Serializable data object ManagementGraph

@@ -1,5 +1,9 @@
 package com.appcasa.features.settings.presentation.viewmodel
 
+import android.content.Context
+import android.content.SharedPreferences
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.FamilyMember
@@ -11,6 +15,7 @@ import com.appcasa.feature.settings.R
 import com.appcasa.features.settings.domain.usecase.*
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -30,20 +35,16 @@ class HouseSetupViewModel @Inject constructor(
   private val recoverHouseholdsUseCase: RecoverHouseholdsUseCase,
   private val linkAccountUseCase: LinkAccountUseCase,
   private val firebaseAuth: FirebaseAuth,
-  private val currentHouseholdProvider: CurrentHouseholdProvider
+  private val currentHouseholdProvider: CurrentHouseholdProvider,
+  private val sharedPreferences: SharedPreferences,
+  @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-  private val _setupEvent = MutableSharedFlow<SetupResult>(replay = 0)
-  val setupEvent = _setupEvent.asSharedFlow()
+  private val _uiState = MutableStateFlow(SetupUiState())
+  val uiState = _uiState.asStateFlow()
 
-  private val _navEvent = MutableSharedFlow<SetupStep>(replay = 0)
-  val navEvent = _navEvent.asSharedFlow()
-
-  private val _isCheckingDb = MutableStateFlow(true)
-  val isCheckingDb = _isCheckingDb.asStateFlow()
-
-  private val _discoveredHousehold = MutableStateFlow<Household?>(null)
-  val discoveredHousehold = _discoveredHousehold.asStateFlow()
+  private val _uiEffect = MutableSharedFlow<SetupUiEffect>(replay = 0)
+  val uiEffect = _uiEffect.asSharedFlow()
 
   private var pendingJoinCode: String? = null
   private var pendingCreateHouseName: String? = null
@@ -51,8 +52,46 @@ class HouseSetupViewModel @Inject constructor(
   private var pendingPhotoUri: String? = null
 
   init {
-    // Al iniciar, si el usuario está logueado pero no tenemos hogares locales,
-    // intentamos una recuperación silenciosa de la nube.
+    val authListenerFlow = callbackFlow {
+      val listener = FirebaseAuth.IdTokenListener { auth ->
+        trySend(auth.currentUser != null)
+      }
+      firebaseAuth.addIdTokenListener(listener)
+      awaitClose { firebaseAuth.removeIdTokenListener(listener) }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, firebaseAuth.currentUser != null)
+
+    val existingHouseholdFlow = currentHouseholdProvider.householdId
+      .flatMapLatest { id ->
+        if (id > 0L) getHouseholdByIdUseCase(id) else flowOf(null)
+      }
+
+    val allHouseholdsFlow = getAllHouseholdsUseCase()
+
+    val householdMembersFlow = currentHouseholdProvider.householdId
+      .flatMapLatest { id ->
+        if (id > 0) getFamilyMembersUseCase(id) else flowOf(emptyList())
+      }
+
+    viewModelScope.launch {
+      combine(
+        authListenerFlow,
+        existingHouseholdFlow,
+        allHouseholdsFlow,
+        householdMembersFlow
+      ) { isLoggedIn, existingHouse, allHouses, members ->
+        _uiState.update { state ->
+          state.copy(
+            isLoggedIn = isLoggedIn,
+            existingHousehold = existingHouse,
+            allHouseholds = allHouses,
+            householdMembers = members,
+            isCheckingDb = false,
+            userEmail = firebaseAuth.currentUser?.email
+          )
+        }
+      }.collect()
+    }
+
     viewModelScope.launch {
       if (isUserLoggedIn()) {
         val households = getAllHouseholdsUseCase().first()
@@ -66,58 +105,68 @@ class HouseSetupViewModel @Inject constructor(
   fun isUserLoggedIn(): Boolean = firebaseAuth.currentUser != null
   fun getCurrentUserEmail(): String? = firebaseAuth.currentUser?.email
 
-  val isLoggedIn: StateFlow<Boolean> = callbackFlow {
-    val listener = FirebaseAuth.IdTokenListener { auth ->
-      trySend(auth.currentUser != null)
+  fun handleIntent(intent: SetupIntent) {
+    when (intent) {
+      is SetupIntent.SearchHousehold -> searchHousehold(intent.code)
+      is SetupIntent.SetPendingJoin -> setPendingJoinData(intent.code, intent.userName, intent.photoUri)
+      is SetupIntent.SetPendingCreate -> setPendingCreateData(intent.houseName, intent.userName, intent.photoUri)
+      is SetupIntent.TryCompletePendingActions -> tryCompletePendingActions()
+      is SetupIntent.ClearPendingStep -> clearPendingStep()
+      is SetupIntent.CreateHousehold -> createHousehold(intent.houseName, intent.userName, intent.photoUri)
+      is SetupIntent.JoinHousehold -> joinHousehold(intent.code, intent.userName, intent.photoUri)
+      is SetupIntent.DiscoverAndJoin -> discoverAndJoin(intent.code)
+      is SetupIntent.SelectMember -> selectMember(intent.member)
+      is SetupIntent.SwitchHousehold -> switchHousehold(intent.id)
+      is SetupIntent.ResetHousehold -> resetHousehold()
+      is SetupIntent.SilentRecoverHouseholds -> silentRecoverHouseholds()
+      is SetupIntent.RecoverHouseholdsManual -> recoverHouseholdsManual(intent.email)
+      is SetupIntent.CheckNetworkStatus -> checkNetworkStatus()
+      is SetupIntent.SetupBiometrics -> setupBiometrics(intent.enable)
+      is SetupIntent.SaveOnboardingCompleted -> saveOnboardingCompleted()
     }
-    firebaseAuth.addIdTokenListener(listener)
-    awaitClose { firebaseAuth.removeIdTokenListener(listener) }
-  }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), firebaseAuth.currentUser != null)
+  }
 
-  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val existingHousehold: StateFlow<Household?> = currentHouseholdProvider.householdId
-    .flatMapLatest { id ->
-      if (id > 0L) getHouseholdByIdUseCase(id) else flowOf(null)
-    }
-    .onEach { _isCheckingDb.value = false }
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+  private fun checkNetworkStatus(): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork
+    val capabilities = connectivityManager.getNetworkCapabilities(network)
+    val hasInternet = capabilities != null && (
+        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+    )
+    _uiState.update { it.copy(isNetworkAvailable = hasInternet) }
+    return hasInternet
+  }
 
-  val allHouseholds = getAllHouseholdsUseCase()
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val householdMembers = currentHouseholdProvider.householdId.flatMapLatest { id ->
-    if (id > 0) getFamilyMembersUseCase(id) else flowOf(emptyList())
-  }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-  fun searchHousehold(code: String) {
+  private fun searchHousehold(code: String) {
     if (code.length < 6) {
-      _discoveredHousehold.value = null
+      _uiState.update { it.copy(discoveredHousehold = null) }
       return
     }
     viewModelScope.launch {
       try {
         val house = joinHouseholdUseCase.findHousehold(code)
-        _discoveredHousehold.value = house
+        _uiState.update { it.copy(discoveredHousehold = house) }
       } catch (e: Exception) {
-        _discoveredHousehold.value = null
+        _uiState.update { it.copy(discoveredHousehold = null) }
       }
     }
   }
 
-  fun setPendingJoinData(code: String, userName: String, photoUri: String?) {
+  private fun setPendingJoinData(code: String, userName: String, photoUri: String?) {
     pendingJoinCode = code
     pendingUserName = userName
     pendingPhotoUri = photoUri
   }
 
-  fun setPendingCreateData(houseName: String, userName: String, photoUri: String?) {
+  private fun setPendingCreateData(houseName: String, userName: String, photoUri: String?) {
     pendingCreateHouseName = houseName
     pendingUserName = userName
     pendingPhotoUri = photoUri
   }
 
-  fun tryCompletePendingActions() {
+  private fun tryCompletePendingActions() {
     if (pendingJoinCode != null) {
       val code = pendingJoinCode!!
       val name = pendingUserName ?: ""
@@ -135,7 +184,7 @@ class HouseSetupViewModel @Inject constructor(
         createHousehold(houseName, userName, pendingPhotoUri)
         pendingCreateHouseName = null
       } else {
-        viewModelScope.launch { _navEvent.emit(SetupStep.CREATE) }
+        viewModelScope.launch { _uiEffect.emit(SetupUiEffect.NavigateToStep(SetupStep.CREATE)) }
         pendingCreateHouseName = null
       }
     }
@@ -147,127 +196,211 @@ class HouseSetupViewModel @Inject constructor(
     else null
   }
 
-  fun clearPendingStep() {
+  private fun clearPendingStep() {
     pendingCreateHouseName = null
     pendingJoinCode = null
   }
 
-  fun createHousehold(houseName: String, userName: String, photoUri: String?) {
+  private fun createHousehold(houseName: String, userName: String, photoUri: String?) {
     viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true, loadingMessage = UiText.StringResource(R.string.setup_loading_creating)) }
       try {
         createHouseholdUseCase(houseName, userName, photoUri)
-        _setupEvent.emit(SetupResult.Success)
+        checkBiometricRequirementAndNavigate()
       } catch (e: Exception) {
         e.printStackTrace()
-        _setupEvent.emit(SetupResult.Error(UiText.StringResource(R.string.settings_error_generic)))
+        _uiState.update { it.copy(isLoading = false) }
+        _uiEffect.emit(SetupUiEffect.ShowError(UiText.StringResource(R.string.settings_error_generic)))
       }
     }
   }
 
-  fun joinHousehold(code: String, userName: String, photoUri: String?) {
+  private fun joinHousehold(code: String, userName: String, photoUri: String?) {
     viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true, loadingMessage = UiText.StringResource(R.string.setup_loading_joining)) }
       val success = joinHouseholdUseCase(code, userName, photoUri)
+      _uiState.update { it.copy(isLoading = false) }
       if (success) {
-        _setupEvent.emit(SetupResult.Success)
+        checkBiometricRequirementAndNavigate()
       } else {
-        _setupEvent.emit(SetupResult.Error(UiText.StringResource(R.string.setup_error_invalid_code)))
+        _uiEffect.emit(SetupUiEffect.ShowError(UiText.StringResource(R.string.setup_error_invalid_code)))
       }
     }
   }
 
-  fun discoverAndJoin(code: String) {
+  private fun discoverAndJoin(code: String) {
     viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true, loadingMessage = UiText.StringResource(R.string.setup_loading_joining)) }
       try {
-        _isCheckingDb.value = true
         val success = joinHouseholdUseCase.discoverHousehold(code)
-        _isCheckingDb.value = false
+        _uiState.update { it.copy(isLoading = false) }
         if (success) {
-          _navEvent.emit(SetupStep.SELECT_PROFILE)
+          _uiEffect.emit(SetupUiEffect.NavigateToStep(SetupStep.SELECT_PROFILE))
         } else {
-          _setupEvent.emit(SetupResult.Error(UiText.StringResource(R.string.setup_error_invalid_code)))
+          _uiEffect.emit(SetupUiEffect.ShowError(UiText.StringResource(R.string.setup_error_invalid_code)))
         }
       } catch (e: Exception) {
-        _isCheckingDb.value = false
+        _uiState.update { it.copy(isLoading = false) }
         e.printStackTrace()
-        _setupEvent.emit(SetupResult.Error(UiText.StringResource(R.string.setup_error_recover_failed)))
+        _uiEffect.emit(SetupUiEffect.ShowError(UiText.StringResource(R.string.setup_error_recover_failed)))
       }
     }
   }
 
-  fun selectMember(member: FamilyMember) {
+  private fun selectMember(member: FamilyMember) {
     viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true) }
       selectMemberUseCase(member)
-      _setupEvent.emit(SetupResult.Success)
+      checkBiometricRequirementAndNavigate()
     }
   }
 
-  fun switchHousehold(householdId: Long) {
+  private fun switchHousehold(householdId: Long) {
     viewModelScope.launch {
       switchHouseholdUseCase(householdId)
     }
   }
 
-  fun resetHousehold() {
+  private fun resetHousehold() {
     viewModelScope.launch {
       resetHouseholdUseCase()
     }
   }
 
-  /**
-   * Recuperación automática sin mensajes de error para el usuario.
-   */
-  fun silentRecoverHouseholds() {
+  private fun silentRecoverHouseholds() {
+    if (!checkNetworkStatus()) return
     val email = firebaseAuth.currentUser?.email ?: return
     viewModelScope.launch {
       try {
-        _isCheckingDb.value = true
+        _uiState.update { it.copy(isCheckingDb = true) }
         val houses = recoverHouseholdsUseCase(email)
-        _isCheckingDb.value = false
+        _uiState.update { it.copy(isCheckingDb = false) }
 
         if (houses.isNotEmpty()) {
           if (houses.size == 1) {
-            // Si solo hay una, la pre-seleccionamos y vamos a perfiles
             switchHousehold(houses.first().id)
-            _navEvent.emit(SetupStep.SELECT_PROFILE)
+            _uiEffect.emit(SetupUiEffect.NavigateToStep(SetupStep.SELECT_PROFILE))
           } else {
-            // Si hay varias, mostramos la lista para elegir
-            _navEvent.emit(SetupStep.SWITCH_HOUSEHOLD)
+            _uiEffect.emit(SetupUiEffect.NavigateToStep(SetupStep.SWITCH_HOUSEHOLD))
           }
         }
       } catch (e: Exception) {
-        _isCheckingDb.value = false
+        _uiState.update { it.copy(isCheckingDb = false) }
       }
     }
   }
 
-  fun recoverHouseholdsManual(email: String) {
+  private fun recoverHouseholdsManual(email: String) {
+    if (!checkNetworkStatus()) {
+      viewModelScope.launch {
+        _uiEffect.emit(SetupUiEffect.ShowError(UiText.StringResource(R.string.setup_error_no_network)))
+      }
+      return
+    }
     viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true, loadingMessage = UiText.StringResource(R.string.setup_loading_recovering)) }
       try {
-        _isCheckingDb.value = true
         val houses = recoverHouseholdsUseCase(email)
-        _isCheckingDb.value = false
+        _uiState.update { it.copy(isLoading = false) }
         if (houses.isEmpty()) {
-          _setupEvent.emit(SetupResult.Error(UiText.DynamicString("No hay hogares vinculados a esta cuenta. Si es la primera vez en este móvil, usa el 'Código de Invitación' de tu casa.")))
+          _uiEffect.emit(SetupUiEffect.ShowError(UiText.StringResource(R.string.setup_error_no_houses_found)))
+        } else {
+          if (houses.size == 1) {
+            switchHousehold(houses.first().id)
+            _uiEffect.emit(SetupUiEffect.NavigateToStep(SetupStep.SELECT_PROFILE))
+          } else {
+            _uiEffect.emit(SetupUiEffect.NavigateToStep(SetupStep.SWITCH_HOUSEHOLD))
+          }
         }
       } catch (e: Exception) {
-        _isCheckingDb.value = false
+        _uiState.update { it.copy(isLoading = false) }
         e.printStackTrace()
-        _setupEvent.emit(SetupResult.Error(UiText.StringResource(R.string.setup_error_recover_failed)))
+        _uiEffect.emit(SetupUiEffect.ShowError(UiText.StringResource(R.string.setup_error_recover_failed)))
       }
     }
   }
 
-  sealed class SetupResult {
-    data object Success : SetupResult()
-    data class Error(val message: UiText) : SetupResult()
+  private fun checkBiometricRequirementAndNavigate() {
+    val biometricSetting = sharedPreferences.getBoolean("biometric_lock_app", false)
+    val promptedBefore = sharedPreferences.getBoolean("biometric_prompted_before", false)
+    if (!biometricSetting && !promptedBefore) {
+      _uiState.update { it.copy(isLoading = false) }
+      viewModelScope.launch {
+        _uiEffect.emit(SetupUiEffect.NavigateToStep(SetupStep.BIOMETRIC_PROMPT))
+      }
+    } else {
+      _uiState.update { it.copy(isLoading = false) }
+      viewModelScope.launch {
+        _uiEffect.emit(SetupUiEffect.NavigateToDashboard)
+      }
+    }
+  }
+
+  private fun setupBiometrics(enable: Boolean) {
+    sharedPreferences.edit()
+      .putBoolean("biometric_lock_app", enable)
+      .putBoolean("biometric_prompted_before", true)
+      .apply()
+    viewModelScope.launch {
+      _uiEffect.emit(SetupUiEffect.NavigateToDashboard)
+    }
+  }
+
+  fun isOnboardingCompleted(): Boolean {
+    return sharedPreferences.getBoolean("onboarding_completed", false)
+  }
+
+  private fun saveOnboardingCompleted() {
+    sharedPreferences.edit().putBoolean("onboarding_completed", true).apply()
+    viewModelScope.launch {
+      _uiEffect.emit(SetupUiEffect.NavigateToStep(SetupStep.WELCOME))
+    }
   }
 
   enum class SetupStep {
-    WELCOME, CREATE, JOIN, SELECT_PROFILE, ADD_PROFILE, SWITCH_HOUSEHOLD
+    ONBOARDING, WELCOME, CREATE, JOIN, SELECT_PROFILE, ADD_PROFILE, SWITCH_HOUSEHOLD, BIOMETRIC_PROMPT
   }
 
   companion object {
     const val STEP_CREATE = "CREATE"
     const val STEP_JOIN = "JOIN"
   }
+}
+
+data class SetupUiState(
+  val isCheckingDb: Boolean = true,
+  val existingHousehold: Household? = null,
+  val allHouseholds: List<Household> = emptyList(),
+  val householdMembers: List<FamilyMember> = emptyList(),
+  val discoveredHousehold: Household? = null,
+  val isLoggedIn: Boolean = false,
+  val isLoading: Boolean = false,
+  val loadingMessage: UiText? = null,
+  val userEmail: String? = null,
+  val isNetworkAvailable: Boolean = true
+)
+
+sealed interface SetupUiEffect {
+  object NavigateToDashboard : SetupUiEffect
+  data class ShowError(val message: UiText) : SetupUiEffect
+  data class NavigateToStep(val step: HouseSetupViewModel.SetupStep) : SetupUiEffect
+}
+
+sealed interface SetupIntent {
+  data class SearchHousehold(val code: String) : SetupIntent
+  data class SetPendingJoin(val code: String, val userName: String, val photoUri: String?) : SetupIntent
+  data class SetPendingCreate(val houseName: String, val userName: String, val photoUri: String?) : SetupIntent
+  object TryCompletePendingActions : SetupIntent
+  object ClearPendingStep : SetupIntent
+  data class CreateHousehold(val houseName: String, val userName: String, val photoUri: String?) : SetupIntent
+  data class JoinHousehold(val code: String, val userName: String, val photoUri: String?) : SetupIntent
+  data class DiscoverAndJoin(val code: String) : SetupIntent
+  data class SelectMember(val member: FamilyMember) : SetupIntent
+  data class SwitchHousehold(val id: Long) : SetupIntent
+  object ResetHousehold : SetupIntent
+  object SilentRecoverHouseholds : SetupIntent
+  data class RecoverHouseholdsManual(val email: String) : SetupIntent
+  object CheckNetworkStatus : SetupIntent
+  data class SetupBiometrics(val enable: Boolean) : SetupIntent
+  object SaveOnboardingCompleted : SetupIntent
 }

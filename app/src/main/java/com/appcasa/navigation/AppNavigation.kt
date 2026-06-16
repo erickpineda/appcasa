@@ -43,6 +43,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import androidx.navigation.navDeepLink
 import com.appcasa.features.calendar.presentation.screen.CalendarScreen
 import com.appcasa.features.family.presentation.screen.AddMemberScreen
 import com.appcasa.features.family.presentation.screen.EditMemberScreen
@@ -131,7 +132,7 @@ fun AppNavigation(
   ) { innerPadding ->
     NavHost(
       navController = navController,
-      startDestination = if (isHouseholdSetup == false) Screen.HouseSetup else Screen.Dashboard,
+      startDestination = if (isHouseholdSetup == false) Screen.HouseSetup() else Screen.Dashboard,
       modifier = Modifier
         .fillMaxSize()
         .padding(bottom = if (isKeyboardVisible || !showBottomBar) 0.dp else innerPadding.calculateBottomPadding())
@@ -150,7 +151,19 @@ fun AppNavigation(
       popEnterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 1.05f, animationSpec = tween(300)) },
       popExitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 0.95f, animationSpec = tween(200)) }
     ) {
-      composable<Screen.HouseSetup> { HouseSetupScreen(navController = navController) }
+      composable<Screen.HouseSetup>(
+        deepLinks = listOf(
+          navDeepLink {
+            uriPattern = "appcasa://join/{code}"
+          }
+        )
+      ) { backStackEntry ->
+        val route = backStackEntry.toRoute<Screen.HouseSetup>()
+        HouseSetupScreen(
+          navController = navController,
+          initialCode = route.code
+        )
+      }
       composable<Screen.Auth> { AuthScreen(navController = navController) }
 
       composable<Screen.Dashboard> { DashboardScreen(navController = navController) }
