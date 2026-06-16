@@ -94,10 +94,31 @@ fun SettingsScreen(
     }
   }
 
-  LaunchedEffect(usuario) {
-      if (settingsViewModel.isUserLoggedIn() && (usuario?.email?.contains("@appcasa.local") == true)) {
-          settingsViewModel.linkAccount()
-      }
+  val showLinkAccountDialog by settingsViewModel.showLinkAccountDialog.collectAsState()
+
+  if (showLinkAccountDialog) {
+      AlertDialog(
+          onDismissRequest = { settingsViewModel.dismissLinkAccountDialog() },
+          title = { Text(stringResource(R.string.settings_link_account_title)) },
+          text = { 
+              Text(
+                  stringResource(
+                      R.string.settings_link_account_confirm_message, 
+                      usuario?.email ?: ""
+                  )
+              ) 
+          },
+          confirmButton = {
+              Button(onClick = { settingsViewModel.linkAccount() }) {
+                  Text(stringResource(R.string.settings_confirm))
+              }
+          },
+          dismissButton = {
+              TextButton(onClick = { settingsViewModel.dismissLinkAccountDialog() }) {
+                  Text(stringResource(R.string.settings_btn_cancel))
+              }
+          }
+      )
   }
 
   SettingsContent(
@@ -125,7 +146,8 @@ fun SettingsScreen(
     onLogout = { settingsViewModel.logout() },
     isUserLoggedIn = isLoggedIn,
     isAccountLinked = usuario == null || isLoggedIn || usuario?.authId != null || (usuario?.email?.contains("@appcasa.local") == false),
-    isGoogleAccount = isGoogleAccount
+    isGoogleAccount = isGoogleAccount,
+    isHouseholdSynced = hogar?.lastSyncedAt != null && hogar?.syncId != null
   )
 }
 
@@ -156,7 +178,8 @@ fun SettingsContent(
   onLogout: () -> Unit,
   isUserLoggedIn: Boolean,
   isAccountLinked: Boolean,
-  isGoogleAccount: Boolean
+  isGoogleAccount: Boolean,
+  isHouseholdSynced: Boolean
 ) {
   var activeSection by remember { mutableStateOf<SettingsSection?>(null) }
 
@@ -189,7 +212,8 @@ fun SettingsContent(
           onLogout = onLogout,
           isUserLoggedIn = isUserLoggedIn,
           isAccountLinked = isAccountLinked,
-          isGoogleAccount = isGoogleAccount
+          isGoogleAccount = isGoogleAccount,
+          isHouseholdSynced = isHouseholdSynced
         )
       } else {
         when (activeSection!!) {
@@ -249,7 +273,8 @@ fun SettingsHub(
     onLogout: () -> Unit,
     isUserLoggedIn: Boolean,
     isAccountLinked: Boolean,
-    isGoogleAccount: Boolean
+    isGoogleAccount: Boolean,
+    isHouseholdSynced: Boolean
 ) {
     var showNameDialog by remember { mutableStateOf(false) }
 
@@ -299,6 +324,40 @@ fun SettingsHub(
                     }
                     IconButton(onClick = onUpdateAvatar) {
                         Icon(Icons.Default.PhotoCamera, null, tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+        }
+
+        if (!isHouseholdSynced) {
+            item(contentType = "offline_warning") {
+                AppCasaCard(
+                    useGlassmorphism = true,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Column {
+                            Text(
+                                "Hogar sin respaldar",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                "Los datos de este hogar solo existen en este dispositivo. Toca en Sistema y Seguridad para sincronizar.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
@@ -971,7 +1030,8 @@ fun SettingsPreview() {
       onLogout = {},
       isUserLoggedIn = true,
       isAccountLinked = true,
-      isGoogleAccount = false
+      isGoogleAccount = false,
+      isHouseholdSynced = true
     )
   }
 }

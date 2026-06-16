@@ -258,8 +258,6 @@ class LogoutUseCase @Inject constructor(
         // 3. Resetear el estado de la sesión activa
         householdProvider.setHouseholdId(0L)
 
-        // Delay técnico para asegurar que los listeners de Auth reaccionen antes que la UI
-        kotlinx.coroutines.delay(300)
     }
 }
 
@@ -320,6 +318,16 @@ class RecoverHouseholdsUseCase @Inject constructor(
             repository.findHouseholdsByUserEmail(email)
         }
 
+        // Garbage Collection: Eliminar hogares locales que han sido borrados de la nube
+        val cloudSyncIds = cloudHouses.mapNotNull { it.syncId }.toSet()
+        val localHouseholds = repository.getAllHogares().first()
+        for (localHouse in localHouseholds) {
+            val localSyncId = localHouse.syncId
+            if (localSyncId != null && !cloudSyncIds.contains(localSyncId)) {
+                repository.deleteHogar(localHouse.id)
+            }
+        }
+
         val recovered = mutableListOf<Household>()
         // Guardamos localmente para que aparezcan en la lista de Switch
         for (house in cloudHouses) {
@@ -328,9 +336,6 @@ class RecoverHouseholdsUseCase @Inject constructor(
             familyRepository.startRemoteSync(localId)
             recovered.add(house.copy(id = localId))
         }
-
-        // Delay técnico para que Room consolide las transacciones antes de que la UI refresque
-        kotlinx.coroutines.delay(600)
 
         return recovered
     }
@@ -347,7 +352,7 @@ class LinkAccountUseCase @Inject constructor(
         val user = userRepository.getCurrentUser().first() ?: return
         
         // Evitamos vincular si el usuario Room es "synthetic" (ID -1) o inválido (ID 0)
-        if (user.id <= 0L || user.hogarId <= 0L) return
+        if (user.id == -1L || user.hogarId <= 0L) return
         
         // 1. Vincular el miembro local con el UID de Firebase
         user.miembroId?.let { memberId ->

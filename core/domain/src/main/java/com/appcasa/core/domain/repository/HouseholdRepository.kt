@@ -13,6 +13,8 @@ interface HouseholdRepository {
     suspend fun findHouseholdsByUserEmail(email: String): List<Household>
     suspend fun findHouseholdsByUserUid(uid: String): List<Household>
     suspend fun updateCodigoHogar(hogarId: Long, newCode: String)
+    suspend fun updateHogarSyncTimestamp(hogarId: Long, timestamp: Long)
+    suspend fun deleteHogar(id: Long)
     suspend fun deleteAllHogares()
     suspend fun clearAllLocalData()
 }

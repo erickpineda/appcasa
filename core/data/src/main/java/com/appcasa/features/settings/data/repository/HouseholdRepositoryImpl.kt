@@ -75,6 +75,14 @@ class HouseholdRepositoryImpl @Inject constructor(
         configuracionDao.updateCodigoHogar(hogarId, newCode)
     }
 
+    override suspend fun updateHogarSyncTimestamp(hogarId: Long, timestamp: Long) {
+        configuracionDao.updateHogarSyncTimestamp(hogarId, timestamp)
+    }
+
+    override suspend fun deleteHogar(id: Long) {
+        configuracionDao.deleteHogar(id)
+    }
+
     override suspend fun deleteAllHogares() {
         configuracionDao.deleteAllHogares()
     }

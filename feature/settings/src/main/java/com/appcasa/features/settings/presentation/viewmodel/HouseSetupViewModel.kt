@@ -259,7 +259,6 @@ class HouseSetupViewModel @Inject constructor(
     viewModelScope.launch {
       _uiState.update { it.copy(isLoading = true, loadingMessage = UiText.StringResource(R.string.setup_loading_checking_db)) }
       switchHouseholdUseCase(householdId)
-      kotlinx.coroutines.delay(1500) // Tiempo extra para que la BD sincronice usuarios remotamente la primera vez
       _uiState.update { it.copy(isLoading = false) }
     }
   }

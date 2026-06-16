@@ -34,17 +34,23 @@ class SyncWorker @AssistedInject constructor(
     private val maintenanceRemoteDataSource: MaintenanceRemoteDataSource,
     private val documentRemoteDataSource: DocumentRemoteDataSource,
     private val listRemoteDataSource: ListRemoteDataSource,
-    private val petRemoteDataSource: PetRemoteDataSource
+    private val petRemoteDataSource: PetRemoteDataSource,
+    private val householdRemoteDataSource: HouseholdRemoteDataSource
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         val hogarId = inputData.getLong("hogarId", -1L)
         if (hogarId == -1L) return Result.failure()
 
-        val hogar = householdRepository.getHogarById(hogarId).first()
-        val hogarSyncId = hogar?.syncId ?: return Result.failure()
+        val hogar = householdRepository.getHogarById(hogarId).first() ?: return Result.failure()
+        val hogarSyncId = hogar.syncId ?: return Result.failure()
 
         return try {
+            // Sincronizar el Hogar si no ha sido sincronizado o ha cambiado
+            if (hogar.lastSyncedAt == null || hogar.updatedAt > (hogar.lastSyncedAt ?: 0L)) {
+                householdRemoteDataSource.syncHousehold(hogar)
+                householdRepository.updateHogarSyncTimestamp(hogarId, System.currentTimeMillis())
+            }
             // Sincronizar Tareas que han cambiado
             tasksRepository.getTasksByHogar(hogarId).first().filter { 
                 it.updatedAt > (it.lastSyncedAt ?: 0L) 

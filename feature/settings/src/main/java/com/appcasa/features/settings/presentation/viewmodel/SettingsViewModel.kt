@@ -76,6 +76,13 @@ class SettingsViewModel @Inject constructor(
     private val _isExporting = MutableStateFlow(false)
     val isExporting = _isExporting.asStateFlow()
 
+    private val _showLinkAccountDialog = MutableStateFlow(false)
+    val showLinkAccountDialog = _showLinkAccountDialog.asStateFlow()
+
+    fun dismissLinkAccountDialog() {
+        _showLinkAccountDialog.value = false
+    }
+
     val isAdmin: StateFlow<Boolean> = usuarioActual.map { it?.rol == RolHogar.ADMIN }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -105,9 +112,9 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             combine(isLoggedIn, usuarioActual) { logged, user -> 
                 logged && user?.email?.contains("@appcasa.local") == true
-            }.collect { shouldLink ->
-                if (shouldLink) {
-                    linkAccount()
+            }.collect { shouldPrompt ->
+                if (shouldPrompt) {
+                    _showLinkAccountDialog.value = true
                 }
             }
         }
@@ -156,6 +163,7 @@ class SettingsViewModel @Inject constructor(
     fun isUserLoggedIn(): Boolean = firebaseAuth.currentUser != null
 
     fun linkAccount() {
+        _showLinkAccountDialog.value = false
         viewModelScope.launch {
             try {
                 _isSyncing.value = true

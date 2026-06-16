@@ -47,6 +47,9 @@ interface ConfiguracionDao {
     @Query("UPDATE hogares SET codigo_hogar = :newCode WHERE id = :hogarId")
     suspend fun updateCodigoHogar(hogarId: Long, newCode: String)
 
+    @Query("UPDATE hogares SET last_synced_at = :timestamp WHERE id = :hogarId")
+    suspend fun updateHogarSyncTimestamp(hogarId: Long, timestamp: Long)
+
     @Query("SELECT * FROM configuracion WHERE hogar_id = :hogarId")
     fun getConfiguracion(hogarId: Long): Flow<List<ConfiguracionEntity>>
 
@@ -55,6 +58,9 @@ interface ConfiguracionDao {
 
     @Query("DELETE FROM usuarios")
     suspend fun deleteAllUsuarios()
+
+    @Query("DELETE FROM hogares WHERE id = :id")
+    suspend fun deleteHogar(id: Long)
 
     @Query("DELETE FROM hogares")
     suspend fun deleteAllHogares()

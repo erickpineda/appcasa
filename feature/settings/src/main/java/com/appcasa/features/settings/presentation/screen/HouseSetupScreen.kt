@@ -29,7 +29,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -37,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.data.utils.FileUtils
 import com.appcasa.core.domain.model.Household
+import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.core.ui.components.AppCasaMeshBackground
 import com.appcasa.core.utils.Constants
 import com.appcasa.feature.settings.R
@@ -347,14 +350,28 @@ fun HouseSetupScreen(
         Box(
           modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = Constants.UI.LOADING_OVERLAY_ALPHA)),
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)),
           contentAlignment = Alignment.Center
         ) {
-          Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator()
-            Spacer(Modifier.height(16.dp))
-            val loadMsg = uiState.loadingMessage?.asString() ?: stringResource(R.string.setup_loading_checking_db)
-            Text(text = loadMsg, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+          AppCasaCard(
+            useGlassmorphism = true,
+            modifier = Modifier.padding(32.dp)
+          ) {
+            Column(
+              modifier = Modifier.padding(24.dp),
+              horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+              CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+              Spacer(Modifier.height(24.dp))
+              val loadMsg = uiState.loadingMessage?.asString() ?: stringResource(R.string.setup_loading_checking_db)
+              Text(
+                text = loadMsg,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+              )
+            }
           }
         }
       }
