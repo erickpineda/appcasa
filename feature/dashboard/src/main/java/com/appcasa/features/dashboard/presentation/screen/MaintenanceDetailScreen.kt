@@ -1,4 +1,5 @@
-package com.appcasa.features.dashboard.presentation.screen
+﻿package com.appcasa.features.dashboard.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +45,7 @@ fun MaintenanceDetailScreen(
     navController: NavController,
     viewModel: HomeMaintenanceViewModel = hiltViewModel()
 ) {
-    val events by viewModel.events.collectAsState()
+    val events by viewModel.events.collectAsStateWithLifecycle()
     val event = events.find { it.id == id }
 
     Scaffold(
@@ -102,3 +103,4 @@ fun MaintenanceDetailScreen(
         }
     }
 }
+

@@ -1,4 +1,5 @@
-package com.appcasa.features.utilities.presentation.screen
+﻿package com.appcasa.features.utilities.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,7 +44,7 @@ fun SavingsCalculatorScreen(
   navController: NavController,
   viewModel: UtilitiesViewModel = hiltViewModel()
 ) {
-  val savedValues by viewModel.savedValues.collectAsState()
+  val savedValues by viewModel.savedValues.collectAsStateWithLifecycle()
   
   var goalAmount by remember(savedValues) { mutableStateOf(savedValues["SAVINGS_GOAL"] ?: "") }
   var months by remember(savedValues) { mutableStateOf(savedValues["SAVINGS_MONTHS"] ?: "") }
@@ -115,3 +116,4 @@ fun SavingsCalculatorScreen(
     }
   }
 }
+

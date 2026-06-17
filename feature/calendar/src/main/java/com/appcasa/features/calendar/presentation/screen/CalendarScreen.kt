@@ -1,4 +1,5 @@
-package com.appcasa.features.calendar.presentation.screen
+﻿package com.appcasa.features.calendar.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -64,9 +65,9 @@ fun CalendarScreen(
   viewModel: CalendarViewModel = hiltViewModel(),
   remindersViewModel: RemindersViewModel = hiltViewModel()
 ) {
-  val state by viewModel.calendarItems.collectAsState()
-  val historyPage by viewModel.historyPage.collectAsState()
-  val searchQuery by viewModel.searchQuery.collectAsState()
+  val state by viewModel.calendarItems.collectAsStateWithLifecycle()
+  val historyPage by viewModel.historyPage.collectAsStateWithLifecycle()
+  val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
   val context = LocalContext.current
   
   var showAddReminderDialog by remember { mutableStateOf(false) }
@@ -1071,3 +1072,4 @@ fun CalendarPreview() {
     )
   }
 }
+

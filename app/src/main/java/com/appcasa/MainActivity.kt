@@ -1,4 +1,5 @@
-package com.appcasa
+﻿package com.appcasa
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.Manifest
 import android.os.Build
@@ -54,10 +55,10 @@ class MainActivity : FragmentActivity() {
     NotificationHelper(this)
 
     setContent {
-      val isDarkMode by globalViewModel.isDarkMode.collectAsState()
-      val isShopMode by globalViewModel.isShopMode.collectAsState()
-      val isSecureMode by globalViewModel.isSecureMode.collectAsState()
-      val isHouseholdSetup by globalViewModel.isHouseholdSetup.collectAsState()
+      val isDarkMode by globalViewModel.isDarkMode.collectAsStateWithLifecycle()
+      val isShopMode by globalViewModel.isShopMode.collectAsStateWithLifecycle()
+      val isSecureMode by globalViewModel.isSecureMode.collectAsStateWithLifecycle()
+      val isHouseholdSetup by globalViewModel.isHouseholdSetup.collectAsStateWithLifecycle()
       
       var isAuthenticated by remember { mutableStateOf(false) }
       val isLockEnabled = remember(sharedPrefs) { sharedPrefs.getBoolean("biometric_lock_app", false) }
@@ -201,3 +202,4 @@ fun MainActivityPreview() {
     AppNavigation()
   }
 }
+

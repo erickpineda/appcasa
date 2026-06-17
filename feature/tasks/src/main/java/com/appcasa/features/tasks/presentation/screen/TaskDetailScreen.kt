@@ -1,4 +1,5 @@
-package com.appcasa.features.tasks.presentation.screen
+﻿package com.appcasa.features.tasks.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -112,9 +113,9 @@ fun TaskDetailScreen(
   navController: NavController,
   viewModel: TaskDetailViewModel = hiltViewModel()
 ) {
-  val task by viewModel.task.collectAsState()
-  val assignedMember by viewModel.assignedMember.collectAsState()
-  val subTasks by viewModel.subTasks.collectAsState()
+  val task by viewModel.task.collectAsStateWithLifecycle()
+  val assignedMember by viewModel.assignedMember.collectAsStateWithLifecycle()
+  val subTasks by viewModel.subTasks.collectAsStateWithLifecycle()
   var newSubTaskText by remember { mutableStateOf("") }
   val haptic = LocalHapticFeedback.current
   
@@ -330,7 +331,7 @@ fun TaskDetailScreen(
                     }
                 }
               } else {
-                // MODO LISTA: Mostrar descripción pequeña (si existe) y luego la checklist
+                // MODO LISTA: Mostrar descripciÃ³n pequeÃ±a (si existe) y luego la checklist
                 if (!currentTask.descripcion.isNullOrBlank()) {
                   Text(
                     text = currentTask.descripcion ?: "",
@@ -796,3 +797,4 @@ fun EditTaskMainDialog(
     }
   )
 }
+

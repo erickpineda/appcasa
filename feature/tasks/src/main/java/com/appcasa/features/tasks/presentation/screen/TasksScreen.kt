@@ -1,4 +1,5 @@
-package com.appcasa.features.tasks.presentation.screen
+﻿package com.appcasa.features.tasks.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -48,12 +49,12 @@ fun TasksScreen(
   navController: NavController,
   viewModel: TasksViewModel = hiltViewModel()
 ) {
-  val tasks by viewModel.tasks.collectAsState()
-  val members by viewModel.familyMembers.collectAsState()
-  val isCompact by viewModel.isCompactView.collectAsState()
-  val showCelebration by viewModel.showCelebration.collectAsState()
-  val gainedXP by viewModel.gainedXP.collectAsState()
-  val subTaskCounts by viewModel.subTaskCounts.collectAsState()
+  val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+  val members by viewModel.familyMembers.collectAsStateWithLifecycle()
+  val isCompact by viewModel.isCompactView.collectAsStateWithLifecycle()
+  val showCelebration by viewModel.showCelebration.collectAsStateWithLifecycle()
+  val gainedXP by viewModel.gainedXP.collectAsStateWithLifecycle()
+  val subTaskCounts by viewModel.subTaskCounts.collectAsStateWithLifecycle()
   var toastMessage by remember { mutableStateOf<String?>(null) }
   var taskToArchive by remember { mutableStateOf<Task?>(null) }
   
@@ -348,3 +349,4 @@ fun TaskItem(
     }
   }
 }
+

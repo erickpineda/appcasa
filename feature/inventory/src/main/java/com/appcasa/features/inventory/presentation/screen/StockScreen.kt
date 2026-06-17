@@ -1,4 +1,5 @@
-package com.appcasa.features.inventory.presentation.screen
+﻿package com.appcasa.features.inventory.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -92,10 +93,10 @@ fun StockScreen(
   navController: NavController,
   viewModel: StockViewModel = hiltViewModel()
 ) {
-  val stockItems by viewModel.stockItems.collectAsState()
-  val availableLists by viewModel.availableLists.collectAsState()
-  val isCompact by viewModel.isCompactView.collectAsState()
-  val barcodeResult by viewModel.barcodeResult.collectAsState()
+  val stockItems by viewModel.stockItems.collectAsStateWithLifecycle()
+  val availableLists by viewModel.availableLists.collectAsStateWithLifecycle()
+  val isCompact by viewModel.isCompactView.collectAsStateWithLifecycle()
+  val barcodeResult by viewModel.barcodeResult.collectAsStateWithLifecycle()
   
   var showAddDialog by remember { mutableStateOf(false) }
   var editingItem by remember { mutableStateOf<StockItem?>(null) }
@@ -545,3 +546,4 @@ fun StockItemCard(
     }
   }
 }
+

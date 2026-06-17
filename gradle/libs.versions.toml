@@ -41,6 +41,7 @@ coroutines-test        = "1.9.0"
 androidx-core-ktx           = { group = "androidx.core",       name = "core-ktx",                version.ref = "coreKtx" }
 androidx-security-crypto    = { group = "androidx.security",   name = "security-crypto",         version.ref = "security-crypto" }
 lifecycle-runtime-ktx       = { group = "androidx.lifecycle",  name = "lifecycle-runtime-ktx",   version.ref = "lifecycleRuntimeKtx" }
+lifecycle-runtime-compose   = { group = "androidx.lifecycle",  name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
 activity-compose            = { group = "androidx.activity",   name = "activity-compose",         version.ref = "activityCompose" }
 
 # Biometric

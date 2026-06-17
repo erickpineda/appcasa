@@ -1,4 +1,5 @@
-package com.appcasa.features.settings.presentation.screen
+﻿package com.appcasa.features.settings.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -36,7 +37,7 @@ fun AuthScreen(
     var password by remember { mutableStateOf("") }
     var authMode by remember { mutableStateOf(AuthMode.LOGIN) }
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val googleSignInLauncher = rememberLauncherForActivityResult(
@@ -232,3 +233,4 @@ fun AuthScreen(
 }
 
 private enum class AuthMode { LOGIN, REGISTER, FORGOT_PASSWORD }
+

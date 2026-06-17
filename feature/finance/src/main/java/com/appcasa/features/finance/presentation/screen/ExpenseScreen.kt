@@ -1,4 +1,5 @@
-package com.appcasa.features.finance.presentation.screen
+﻿package com.appcasa.features.finance.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.content.Intent
 import android.graphics.ImageDecoder
@@ -104,7 +105,7 @@ fun ExpenseScreen(
   navController: NavController,
   viewModel: FinanceViewModel = hiltViewModel()
 ) {
-  val isUnlocked by viewModel.isUnlocked.collectAsState()
+  val isUnlocked by viewModel.isUnlocked.collectAsStateWithLifecycle()
   val context = LocalContext.current
 
   fun android.content.Context.findActivity(): FragmentActivity? {
@@ -139,10 +140,10 @@ fun ExpenseScreen(
       return
   }
 
-  val expenses by viewModel.expenses.collectAsState()
-  val currency by viewModel.currencySymbol.collectAsState()
-  val ocrResult by viewModel.ocrResult.collectAsState()
-  val ocrStore by viewModel.ocrStore.collectAsState()
+  val expenses by viewModel.expenses.collectAsStateWithLifecycle()
+  val currency by viewModel.currencySymbol.collectAsStateWithLifecycle()
+  val ocrResult by viewModel.ocrResult.collectAsStateWithLifecycle()
+  val ocrStore by viewModel.ocrStore.collectAsStateWithLifecycle()
   var showAddDialog by remember { mutableStateOf(false) }
   var editingExpense by remember { mutableStateOf<Expense?>(null) }
   var expenseToDelete by remember { mutableStateOf<Expense?>(null) }
@@ -350,7 +351,6 @@ fun ExpenseCard(expense: Expense, currency: String, onEdit: () -> Unit, onDelete
           SyncStatusBadge(isSynced = expense.lastSyncedAt != null && expense.lastSyncedAt!! >= expense.updatedAt)
         }
       },
-      supportingContent = { Text("${expense.categoria} · ${formatDate(expense.fecha)}") },
       leadingContent = {
           if (expense.fotoUri != null) {
               AsyncImage(
@@ -532,3 +532,4 @@ private fun formatDate(timestamp: Long): String {
   val sdf = SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Locale.getDefault())
   return sdf.format(Date(timestamp))
 }
+

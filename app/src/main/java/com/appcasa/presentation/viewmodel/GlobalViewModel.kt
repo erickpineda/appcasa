@@ -8,6 +8,8 @@ import com.appcasa.core.domain.usecase.user.GetCurrentUserUseCase
 import com.appcasa.features.settings.domain.usecase.GetCurrentHouseholdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import com.appcasa.core.domain.repository.SettingsRepository
 import javax.inject.Inject
 
 @HiltViewModel
@@ -15,7 +17,8 @@ class GlobalViewModel @Inject constructor(
   private val getConfigurationUseCase: GetConfigurationUseCase,
   private val getCurrentUserUseCase: GetCurrentUserUseCase,
   private val getCurrentHouseholdUseCase: GetCurrentHouseholdUseCase,
-  private val currentHouseholdProvider: CurrentHouseholdProvider
+  private val currentHouseholdProvider: CurrentHouseholdProvider,
+  private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
   private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
@@ -51,7 +54,11 @@ class GlobalViewModel @Inject constructor(
         // Si usuario.id es -1L, es un usuario de Firebase sin hogar local aún.
         hogar != null && usuario != null && usuario.id != -1L
     }
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    .stateIn(
+        scope = viewModelScope, 
+        started = SharingStarted.WhileSubscribed(5000), 
+        initialValue = if (currentHouseholdProvider.getCurrentHouseholdId() != 0L) true else null
+    )
 
   val currentUser = getCurrentUserUseCase()
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -61,5 +68,14 @@ class GlobalViewModel @Inject constructor(
 
   fun setSecureMode(enabled: Boolean) {
       _isSecureMode.value = enabled
+  }
+
+  fun triggerManualSync() {
+      val id = currentHouseholdProvider.getCurrentHouseholdId()
+      if (id != 0L) {
+          viewModelScope.launch {
+              settingsRepository.triggerManualSync(id)
+          }
+      }
   }
 }

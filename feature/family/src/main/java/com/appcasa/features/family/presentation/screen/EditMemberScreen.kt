@@ -1,4 +1,5 @@
-package com.appcasa.features.family.presentation.screen
+﻿package com.appcasa.features.family.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -82,7 +83,7 @@ fun EditMemberScreen(
   navController: NavController,
   viewModel: EditMemberViewModel = hiltViewModel()
 ) {
-  val member by viewModel.member.collectAsState()
+  val member by viewModel.member.collectAsStateWithLifecycle()
   val focusRequester = remember { FocusRequester() }
 
   val keyboardController = LocalSoftwareKeyboardController.current
@@ -313,3 +314,4 @@ fun EditMemberScreen(
     CircularProgressIndicator()
   }
 }
+

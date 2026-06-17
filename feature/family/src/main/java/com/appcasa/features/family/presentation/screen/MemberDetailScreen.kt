@@ -1,4 +1,5 @@
-package com.appcasa.features.family.presentation.screen
+﻿package com.appcasa.features.family.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,7 +68,7 @@ fun MemberDetailScreen(
   memberId: Long,
   viewModel: FamilyViewModel = hiltViewModel()
 ) {
-  val familyMembers by viewModel.familyMembers.collectAsState()
+  val familyMembers by viewModel.familyMembers.collectAsStateWithLifecycle()
   val member = familyMembers.find { it.id == memberId }
   val scrollState = rememberScrollState()
 
@@ -224,3 +225,4 @@ fun DetailRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Stri
     }
   }
 }
+

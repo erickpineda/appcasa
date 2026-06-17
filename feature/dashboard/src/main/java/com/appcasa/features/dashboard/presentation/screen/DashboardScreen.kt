@@ -1,4 +1,5 @@
 package com.appcasa.features.dashboard.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -121,22 +122,22 @@ fun DashboardScreen(
   navController: NavController,
   viewModel: DashboardViewModel = hiltViewModel()
 ) {
-  val familyMembers by viewModel.familyMembers.collectAsState()
-  val currentUser by viewModel.currentUser.collectAsState()
-  val petData by viewModel.petData.collectAsState()
-  val pendingTasks by viewModel.pendingTasksCount.collectAsState()
-  val monthlyExpense by viewModel.monthlyExpense.collectAsState()
-  val lowStockCount by viewModel.lowStockCount.collectAsState()
-  val nextEvent by viewModel.nextEventData.collectAsState()
-  val postIts by viewModel.postIts.collectAsState()
-  val dashboardOrder by viewModel.dashboardOrder.collectAsState()
-  val fullDashboardConfig by viewModel.fullDashboardConfig.collectAsState()
-  val quickActions by viewModel.quickActions.collectAsState()
-  val searchResults by viewModel.searchResults.collectAsState()
-  val searchQuery by viewModel.searchQuery.collectAsState()
-  val isReady by viewModel.isReady.collectAsState()
-  val userPoints by viewModel.userPoints.collectAsState()
-  val userLevel by viewModel.userLevel.collectAsState()
+  val familyMembers by viewModel.familyMembers.collectAsStateWithLifecycle()
+  val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+  val petData by viewModel.petData.collectAsStateWithLifecycle()
+  val pendingTasks by viewModel.pendingTasksCount.collectAsStateWithLifecycle()
+  val monthlyExpense by viewModel.monthlyExpense.collectAsStateWithLifecycle()
+  val lowStockCount by viewModel.lowStockCount.collectAsStateWithLifecycle()
+  val nextEvent by viewModel.nextEventData.collectAsStateWithLifecycle()
+  val postIts by viewModel.postIts.collectAsStateWithLifecycle()
+  val dashboardOrder by viewModel.dashboardOrder.collectAsStateWithLifecycle()
+  val fullDashboardConfig by viewModel.fullDashboardConfig.collectAsStateWithLifecycle()
+  val quickActions by viewModel.quickActions.collectAsStateWithLifecycle()
+  val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+  val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+  val isReady by viewModel.isReady.collectAsStateWithLifecycle()
+  val userPoints by viewModel.userPoints.collectAsStateWithLifecycle()
+  val userLevel by viewModel.userLevel.collectAsStateWithLifecycle()
 
   BackHandler(enabled = searchQuery.isNotEmpty()) {
       viewModel.onSearchQueryChange("")
@@ -204,9 +205,7 @@ fun DashboardScreen(
         }
       ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
-          PullToRefreshWrapper(
-            onRefresh = { viewModel.refresh() }
-          ) {
+          PullToRefreshWrapper {
             DashboardContent(
               dashboardOrder = dashboardOrder,
               quickActions = quickActions,
@@ -1052,3 +1051,4 @@ fun SearchResultsOverlay(results: List<SearchItem>, onResultClick: (SearchItem) 
         }
     }
 }
+

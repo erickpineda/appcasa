@@ -1,4 +1,5 @@
-package com.appcasa.features.utilities.presentation.screen
+﻿package com.appcasa.features.utilities.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,7 +53,7 @@ fun VehicleManagementScreen(
   navController: NavController,
   viewModel: VehicleViewModel = hiltViewModel()
 ) {
-  val data by viewModel.vehicleData.collectAsState()
+  val data by viewModel.vehicleData.collectAsStateWithLifecycle()
 
   var plate by remember(data) { mutableStateOf(data["VEH_PLATE"] ?: "") }
   var insurance by remember(data) { mutableStateOf(data["VEH_INSURANCE"] ?: "") }
@@ -166,3 +167,4 @@ fun VehicleManagementScreen(
     }
   }
 }
+

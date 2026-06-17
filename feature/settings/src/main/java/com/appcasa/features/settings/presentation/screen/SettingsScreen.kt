@@ -1,4 +1,5 @@
-package com.appcasa.features.settings.presentation.screen
+﻿package com.appcasa.features.settings.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.content.Intent
 import android.widget.Toast
@@ -54,16 +55,16 @@ fun SettingsScreen(
   settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
   val context = LocalContext.current
-  val usuario by settingsViewModel.usuarioActual.collectAsState()
-  val hogar by settingsViewModel.hogarActual.collectAsState()
-  val configs by settingsViewModel.configuraciones.collectAsState()
-  val listas by settingsViewModel.todasLasListas.collectAsState()
-  val todosLosHogares by settingsViewModel.todosLosHogares.collectAsState()
-  val isAdmin by settingsViewModel.isAdmin.collectAsState()
-  val isLoggedIn by settingsViewModel.isLoggedIn.collectAsState()
-  val isGoogleAccount by settingsViewModel.isGoogleAccount.collectAsState()
-  val isSyncing by settingsViewModel.isSyncing.collectAsState()
-  val isExporting by settingsViewModel.isExporting.collectAsState()
+  val usuario by settingsViewModel.usuarioActual.collectAsStateWithLifecycle()
+  val hogar by settingsViewModel.hogarActual.collectAsStateWithLifecycle()
+  val configs by settingsViewModel.configuraciones.collectAsStateWithLifecycle()
+  val listas by settingsViewModel.todasLasListas.collectAsStateWithLifecycle()
+  val todosLosHogares by settingsViewModel.todosLosHogares.collectAsStateWithLifecycle()
+  val isAdmin by settingsViewModel.isAdmin.collectAsStateWithLifecycle()
+  val isLoggedIn by settingsViewModel.isLoggedIn.collectAsStateWithLifecycle()
+  val isGoogleAccount by settingsViewModel.isGoogleAccount.collectAsStateWithLifecycle()
+  val isSyncing by settingsViewModel.isSyncing.collectAsStateWithLifecycle()
+  val isExporting by settingsViewModel.isExporting.collectAsStateWithLifecycle()
 
   LaunchedEffect(Unit) {
     settingsViewModel.settingsEvent.collect { event ->
@@ -94,7 +95,7 @@ fun SettingsScreen(
     }
   }
 
-  val showLinkAccountDialog by settingsViewModel.showLinkAccountDialog.collectAsState()
+  val showLinkAccountDialog by settingsViewModel.showLinkAccountDialog.collectAsStateWithLifecycle()
 
   if (showLinkAccountDialog) {
       AlertDialog(
@@ -1006,7 +1007,7 @@ fun SettingsToggleItem(
 fun SettingsPreview() {
   AppCasaTheme {
     SettingsContent(
-      userName = "Juan",
+      userName = "Sr Patata",
       userAvatar = null,
       householdName = "Villa Casa",
       householdCode = "CASA-1234",
@@ -1035,3 +1036,4 @@ fun SettingsPreview() {
     )
   }
 }
+

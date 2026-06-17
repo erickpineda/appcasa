@@ -1,4 +1,5 @@
-package com.appcasa.features.dashboard.presentation.screen
+﻿package com.appcasa.features.dashboard.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -88,7 +89,7 @@ fun HomeMaintenanceScreen(
   navController: NavController,
   viewModel: HomeMaintenanceViewModel = hiltViewModel()
 ) {
-  val events by viewModel.events.collectAsState()
+  val events by viewModel.events.collectAsStateWithLifecycle()
   var showAddDialog by remember { mutableStateOf(false) }
   var eventToDelete by remember { mutableStateOf<MaintenanceEvent?>(null) }
   val context = LocalContext.current
@@ -396,3 +397,4 @@ fun MaintenanceActionDialog(
 private fun formatDate(timestamp: Long): String {
   return SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Constants.Locales.SPAIN).format(Date(timestamp))
 }
+

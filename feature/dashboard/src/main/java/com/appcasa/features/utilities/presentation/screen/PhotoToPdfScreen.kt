@@ -1,4 +1,5 @@
-package com.appcasa.features.utilities.presentation.screen
+﻿package com.appcasa.features.utilities.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -85,9 +86,9 @@ fun PhotoToPdfScreen(
   viewModel: PdfViewModel = hiltViewModel()
 ) {
   val context = LocalContext.current
-  val selectedImages by viewModel.selectedImages.collectAsState()
-  val isGenerating by viewModel.isGenerating.collectAsState()
-  val pdfUri by viewModel.pdfUri.collectAsState()
+  val selectedImages by viewModel.selectedImages.collectAsStateWithLifecycle()
+  val isGenerating by viewModel.isGenerating.collectAsStateWithLifecycle()
+  val pdfUri by viewModel.pdfUri.collectAsStateWithLifecycle()
   
   val defaultName = stringResource(R.string.util_photo_pdf_default_filename, System.currentTimeMillis() / 100000)
   var fileName by remember { mutableStateOf(defaultName) }
@@ -317,3 +318,4 @@ fun PdfImageRow(
         }
     }
 }
+

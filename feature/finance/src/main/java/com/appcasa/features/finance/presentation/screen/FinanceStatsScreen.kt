@@ -1,4 +1,5 @@
-package com.appcasa.features.finance.presentation.screen
+﻿package com.appcasa.features.finance.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -51,7 +52,7 @@ fun FinanceStatsScreen(
     navController: NavController,
     viewModel: FinanceViewModel = hiltViewModel()
 ) {
-    val isUnlocked by viewModel.isUnlocked.collectAsState()
+    val isUnlocked by viewModel.isUnlocked.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     fun android.content.Context.findActivity(): FragmentActivity? {
@@ -86,9 +87,9 @@ fun FinanceStatsScreen(
         return
     }
 
-    val expensesByCategory by viewModel.expensesByCategory.collectAsState()
-    val monthlyEvolution by viewModel.monthlyEvolution.collectAsState()
-    val currency by viewModel.currencySymbol.collectAsState()
+    val expensesByCategory by viewModel.expensesByCategory.collectAsStateWithLifecycle()
+    val monthlyEvolution by viewModel.monthlyEvolution.collectAsStateWithLifecycle()
+    val currency by viewModel.currencySymbol.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -188,3 +189,4 @@ fun MonthlyBarChart(data: Map<String, Double>) {
         }
     }
 }
+

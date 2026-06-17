@@ -1,4 +1,5 @@
-package com.appcasa.features.pets.presentation.screen
+﻿package com.appcasa.features.pets.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -91,11 +92,11 @@ fun PetDetailScreen(
   navController: NavController,
   viewModel: PetDetailViewModel = hiltViewModel()
 ) {
-  val pet by viewModel.pet.collectAsState()
-  val pesos by viewModel.pesos.collectAsState()
-  val vacunas by viewModel.vacunas.collectAsState()
-  val medicaciones by viewModel.medicaciones.collectAsState()
-  val desparasitaciones by viewModel.desparasitaciones.collectAsState()
+  val pet by viewModel.pet.collectAsStateWithLifecycle()
+  val pesos by viewModel.pesos.collectAsStateWithLifecycle()
+  val vacunas by viewModel.vacunas.collectAsStateWithLifecycle()
+  val medicaciones by viewModel.medicaciones.collectAsStateWithLifecycle()
+  val desparasitaciones by viewModel.desparasitaciones.collectAsStateWithLifecycle()
   val scrollState = rememberScrollState()
 
   var showWeightDialog by remember { mutableStateOf(false) }
@@ -544,3 +545,4 @@ private fun formatDate(timestamp: Long): String {
   val sdf = SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Locale.getDefault())
   return sdf.format(Date(timestamp))
 }
+

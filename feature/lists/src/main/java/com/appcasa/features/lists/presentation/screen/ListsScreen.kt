@@ -1,4 +1,5 @@
-package com.appcasa.features.lists.presentation.screen
+﻿package com.appcasa.features.lists.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -74,8 +75,8 @@ fun ListsScreen(
   navController: NavController,
   viewModel: ListsViewModel = hiltViewModel()
 ) {
-  val lists by viewModel.lists.collectAsState()
-  val isCompact by viewModel.isCompactView.collectAsState()
+  val lists by viewModel.lists.collectAsStateWithLifecycle()
+  val isCompact by viewModel.isCompactView.collectAsStateWithLifecycle()
   var showAddDialog by remember { mutableStateOf(false) }
   var toastMessage by remember { mutableStateOf<String?>(null) }
   var listToArchive by remember { mutableStateOf<Lista?>(null) }
@@ -353,3 +354,4 @@ fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
     }
   )
 }
+

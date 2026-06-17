@@ -1,4 +1,5 @@
-package com.appcasa.features.tasks.presentation.screen
+﻿package com.appcasa.features.tasks.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -60,8 +61,8 @@ fun RewardStoreScreen(
     navController: NavController,
     viewModel: RewardStoreViewModel = hiltViewModel()
 ) {
-    val rewards by viewModel.recompensas.collectAsState()
-    val members by viewModel.members.collectAsState()
+    val rewards by viewModel.recompensas.collectAsStateWithLifecycle()
+    val members by viewModel.members.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedMemberId by remember { mutableStateOf<Long?>(null) }
@@ -232,3 +233,4 @@ fun AddRewardDialog(onDismiss: () -> Unit, onConfirm: (String, Int, String?) -> 
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(CoreR.string.common_cancel)) } }
     )
 }
+

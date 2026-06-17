@@ -1,4 +1,5 @@
-package com.appcasa.features.utilities.presentation.screen
+﻿package com.appcasa.features.utilities.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -28,7 +29,7 @@ fun AgeCalculatorScreen(
   navController: NavController,
   viewModel: UtilitiesViewModel = hiltViewModel()
 ) {
-  val savedValues by viewModel.savedValues.collectAsState()
+  val savedValues by viewModel.savedValues.collectAsStateWithLifecycle()
   
   var selectedMillis by remember(savedValues) { 
     mutableStateOf(savedValues["AGE_CALC_MILLIS"]?.toLongOrNull()) 
@@ -121,3 +122,4 @@ fun AgeCalculatorScreen(
     }
   }
 }
+

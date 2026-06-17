@@ -1,4 +1,5 @@
-package com.appcasa.features.utilities.presentation.screen
+﻿package com.appcasa.features.utilities.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,7 +48,7 @@ fun MortgageCalculatorScreen(
   navController: NavController,
   viewModel: UtilitiesViewModel = hiltViewModel()
 ) {
-  val savedValues by viewModel.savedValues.collectAsState()
+  val savedValues by viewModel.savedValues.collectAsStateWithLifecycle()
   
   var capital by remember(savedValues) { mutableStateOf(savedValues["MORTGAGE_CAPITAL"] ?: "") }
   var interest by remember(savedValues) { mutableStateOf(savedValues["MORTGAGE_INTEREST"] ?: "") }
@@ -152,3 +153,4 @@ fun MortgageCalculatorScreen(
     }
   }
 }
+

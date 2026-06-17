@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+import com.appcasa.core.ui.utils.LocalSyncAction
+
 /**
  * Un componente reutilizable que añade la funcionalidad de "Deslizar para actualizar" (Pull to Refresh).
  */
@@ -14,7 +16,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun PullToRefreshWrapper(
     modifier: Modifier = Modifier,
-    onRefresh: suspend () -> Unit = { delay(1000) }, // Por defecto simula un segundo de carga
+    onRefresh: suspend () -> Unit = LocalSyncAction.current,
     content: @Composable () -> Unit
 ) {
     var isRefreshing by remember { mutableStateOf(false) }

@@ -1,4 +1,5 @@
-package com.appcasa.features.dashboard.presentation.screen
+﻿package com.appcasa.features.dashboard.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,7 +42,7 @@ fun ArchiveScreen(
 ) {
   var selectedTab by remember { mutableStateOf(0) }
   val context = androidx.compose.ui.platform.LocalContext.current
-  val isFinanceUnlocked by financeViewModel.isUnlocked.collectAsState()
+  val isFinanceUnlocked by financeViewModel.isUnlocked.collectAsStateWithLifecycle()
 
   fun android.content.Context.findActivity(): FragmentActivity? {
       var context = this
@@ -200,7 +201,7 @@ fun ArchiveScreen(
 
 @Composable
 fun ArchivedTasksList(viewModel: TasksViewModel, onDelete: (Task) -> Unit) {
-  val tasks by viewModel.archivedTasks.collectAsState()
+  val tasks by viewModel.archivedTasks.collectAsStateWithLifecycle()
   if (tasks.isEmpty()) {
     AppCasaEmptyState(title = stringResource(R.string.archive_empty), description = "", icon = Icons.Default.Inventory)
   } else {
@@ -219,7 +220,7 @@ fun ArchivedTasksList(viewModel: TasksViewModel, onDelete: (Task) -> Unit) {
 
 @Composable
 fun ArchivedListsList(viewModel: ListsViewModel, onDelete: (Lista) -> Unit) {
-  val lists by viewModel.archivedLists.collectAsState()
+  val lists by viewModel.archivedLists.collectAsStateWithLifecycle()
   if (lists.isEmpty()) {
     AppCasaEmptyState(title = stringResource(R.string.archive_empty), description = "", icon = Icons.Default.List)
   } else {
@@ -238,8 +239,8 @@ fun ArchivedListsList(viewModel: ListsViewModel, onDelete: (Lista) -> Unit) {
 
 @Composable
 fun ArchivedExpensesList(viewModel: FinanceViewModel, onDelete: (Expense) -> Unit) {
-  val expenses by viewModel.archivedExpenses.collectAsState()
-  val currency by viewModel.currencySymbol.collectAsState()
+  val expenses by viewModel.archivedExpenses.collectAsStateWithLifecycle()
+  val currency by viewModel.currencySymbol.collectAsStateWithLifecycle()
   
   if (expenses.isEmpty()) {
     AppCasaEmptyState(title = stringResource(R.string.archive_empty), description = "", icon = Icons.Default.Payments)
@@ -263,7 +264,7 @@ fun ArchivedExpensesList(viewModel: FinanceViewModel, onDelete: (Expense) -> Uni
 
 @Composable
 fun ArchivedMaintenanceList(viewModel: HomeMaintenanceViewModel, onDelete: (MaintenanceEvent) -> Unit) {
-  val events by viewModel.archivedEvents.collectAsState()
+  val events by viewModel.archivedEvents.collectAsStateWithLifecycle()
   if (events.isEmpty()) {
     AppCasaEmptyState(title = stringResource(R.string.archive_empty), description = "", icon = Icons.Default.Build)
   } else {
@@ -294,3 +295,4 @@ fun ArchiveItemCard(title: String, onRestore: () -> Unit, onDelete: () -> Unit) 
     }
   }
 }
+

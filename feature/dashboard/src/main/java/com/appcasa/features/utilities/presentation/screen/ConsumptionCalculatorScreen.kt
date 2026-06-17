@@ -1,4 +1,5 @@
-package com.appcasa.features.utilities.presentation.screen
+﻿package com.appcasa.features.utilities.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,7 +45,7 @@ fun ConsumptionCalculatorScreen(
   navController: NavController,
   viewModel: UtilitiesViewModel = hiltViewModel()
 ) {
-  val savedValues by viewModel.savedValues.collectAsState()
+  val savedValues by viewModel.savedValues.collectAsStateWithLifecycle()
   
   var previousReading by remember(savedValues) { mutableStateOf(savedValues["CONS_PREV"] ?: "") }
   var currentReading by remember(savedValues) { mutableStateOf(savedValues["CONS_CURR"] ?: "") }
@@ -135,3 +136,4 @@ fun ConsumptionCalculatorScreen(
     }
   }
 }
+

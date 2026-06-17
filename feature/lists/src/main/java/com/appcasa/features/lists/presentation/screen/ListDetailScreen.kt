@@ -1,4 +1,5 @@
-package com.appcasa.features.lists.presentation.screen
+﻿package com.appcasa.features.lists.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.content.Intent
 import androidx.compose.foundation.clickable
@@ -72,8 +73,8 @@ fun ListDetailScreen(
   navController: NavController,
   viewModel: ListDetailViewModel = hiltViewModel()
 ) {
-  val items by viewModel.items.collectAsState()
-  val isCompact by viewModel.isCompactView.collectAsState()
+  val items by viewModel.items.collectAsStateWithLifecycle()
+  val isCompact by viewModel.isCompactView.collectAsStateWithLifecycle()
   var newItemText by remember { mutableStateOf("") }
   val context = LocalContext.current
   val haptic = LocalHapticFeedback.current
@@ -355,3 +356,4 @@ fun CompactListItemEditable(
     }
   }
 }
+

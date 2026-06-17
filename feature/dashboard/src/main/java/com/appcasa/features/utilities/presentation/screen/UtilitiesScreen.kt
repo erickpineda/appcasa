@@ -1,4 +1,5 @@
-package com.appcasa.features.utilities.presentation.screen
+﻿package com.appcasa.features.utilities.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -79,7 +80,7 @@ fun UtilitiesScreen(
   navController: NavController,
   viewModel: UtilitiesViewModel = hiltViewModel()
 ) {
-  val utilities by viewModel.utilities.collectAsState()
+  val utilities by viewModel.utilities.collectAsStateWithLifecycle()
 
   AppCasaMeshBackground {
     PullToRefreshWrapper {
@@ -286,3 +287,4 @@ fun UtilityCard(utility: Utility, onClick: () -> Unit, modifier: Modifier = Modi
     }
   }
 }
+

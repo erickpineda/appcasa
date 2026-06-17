@@ -1,4 +1,5 @@
 package com.appcasa.navigation
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -34,6 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.CompositionLocalProvider
+import com.appcasa.core.ui.utils.LocalSyncAction
+import kotlinx.coroutines.delay
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -91,7 +95,7 @@ fun AppNavigation(
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentDestination = navBackStackEntry?.destination
   
-  val isHouseholdSetup by globalViewModel.isHouseholdSetup.collectAsState()
+  val isHouseholdSetup by globalViewModel.isHouseholdSetup.collectAsStateWithLifecycle()
   val isKeyboardVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() > 0.dp
 
   // Manejo de Seguridad (FLAG_SECURE) basado en la ruta
@@ -120,61 +124,68 @@ fun AppNavigation(
                       currentDestination.hasRoute(Screen.Auth::class) == false && 
                       isHouseholdSetup == true
 
-  Scaffold(
-    bottomBar = {
-      AppBottomBar(
-        navController = navController,
-        currentDestination = currentDestination,
-        showBottomBar = showBottomBar,
-        isKeyboardVisible = isKeyboardVisible
-      )
+  CompositionLocalProvider(
+    LocalSyncAction provides {
+        globalViewModel.triggerManualSync()
+        delay(1000)
     }
-  ) { innerPadding ->
-    NavHost(
-      navController = navController,
-      startDestination = if (isHouseholdSetup == false) Screen.HouseSetup() else Screen.Dashboard,
-      modifier = Modifier
-        .fillMaxSize()
-        .padding(bottom = if (isKeyboardVisible || !showBottomBar) 0.dp else innerPadding.calculateBottomPadding())
-        .padding(top = innerPadding.calculateTopPadding()),
-      enterTransition = { 
-        if (targetState.destination.hasRoute(Screen.Dashboard::class) || 
-            targetState.destination.hasRoute(Screen.Management::class) ||
-            targetState.destination.hasRoute(Screen.FamilyHub::class) ||
-            targetState.destination.hasRoute(Screen.Utilities::class)) {
-          fadeIn(animationSpec = tween(400))
-        } else {
-          fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f, animationSpec = tween(300)) 
-        }
-      },
-      exitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 1.05f, animationSpec = tween(200)) },
-      popEnterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 1.05f, animationSpec = tween(300)) },
-      popExitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 0.95f, animationSpec = tween(200)) }
-    ) {
-      composable<Screen.HouseSetup>(
-        deepLinks = listOf(
-          navDeepLink {
-            uriPattern = "appcasa://join/{code}"
-          }
-        )
-      ) { backStackEntry ->
-        val route = backStackEntry.toRoute<Screen.HouseSetup>()
-        HouseSetupScreen(
+  ) {
+    Scaffold(
+      bottomBar = {
+        AppBottomBar(
           navController = navController,
-          initialCode = route.code
+          currentDestination = currentDestination,
+          showBottomBar = showBottomBar,
+          isKeyboardVisible = isKeyboardVisible
         )
       }
-      composable<Screen.Auth> { AuthScreen(navController = navController) }
+    ) { innerPadding ->
+      NavHost(
+        navController = navController,
+        startDestination = if (isHouseholdSetup == false) Screen.HouseSetup() else Screen.Dashboard,
+        modifier = Modifier
+          .fillMaxSize()
+          .padding(bottom = if (isKeyboardVisible || !showBottomBar) 0.dp else innerPadding.calculateBottomPadding())
+          .padding(top = innerPadding.calculateTopPadding()),
+        enterTransition = { 
+          if (targetState.destination.hasRoute(Screen.Dashboard::class) || 
+              targetState.destination.hasRoute(Screen.Management::class) ||
+              targetState.destination.hasRoute(Screen.FamilyHub::class) ||
+              targetState.destination.hasRoute(Screen.Utilities::class)) {
+            fadeIn(animationSpec = tween(400))
+          } else {
+            fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f, animationSpec = tween(300)) 
+          }
+        },
+        exitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 1.05f, animationSpec = tween(200)) },
+        popEnterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 1.05f, animationSpec = tween(300)) },
+        popExitTransition = { fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 0.95f, animationSpec = tween(200)) }
+      ) {
+        composable<Screen.HouseSetup>(
+          deepLinks = listOf(
+            navDeepLink {
+              uriPattern = "appcasa://join/{code}"
+            }
+          )
+        ) { backStackEntry ->
+          val route = backStackEntry.toRoute<Screen.HouseSetup>()
+          HouseSetupScreen(
+            navController = navController,
+            initialCode = route.code
+          )
+        }
+        composable<Screen.Auth> { AuthScreen(navController = navController) }
 
-      composable<Screen.Dashboard> { DashboardScreen(navController = navController) }
+        composable<Screen.Dashboard> { DashboardScreen(navController = navController) }
 
-      managementGraph(navController)
-      familyGraph(navController)
-      utilitiesGraph(navController)
+        managementGraph(navController)
+        familyGraph(navController)
+        utilitiesGraph(navController)
 
-      composable<Screen.Settings> { SettingsScreen(navController = navController, innerPadding = innerPadding) }
-      composable<Screen.RewardStore> { RewardStoreScreen(navController = navController) }
-      composable<Screen.Archive> { ArchiveScreen(navController = navController) }
+        composable<Screen.Settings> { SettingsScreen(navController = navController, innerPadding = innerPadding) }
+        composable<Screen.RewardStore> { RewardStoreScreen(navController = navController) }
+        composable<Screen.Archive> { ArchiveScreen(navController = navController) }
+      }
     }
   }
 }
@@ -314,3 +325,4 @@ private fun AppBottomBar(
     }
   }
 }
+

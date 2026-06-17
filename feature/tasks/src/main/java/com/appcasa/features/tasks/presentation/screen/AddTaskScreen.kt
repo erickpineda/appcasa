@@ -1,4 +1,5 @@
-package com.appcasa.features.tasks.presentation.screen
+﻿package com.appcasa.features.tasks.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -88,7 +89,7 @@ fun AddTaskScreen(
   navController: NavController,
   viewModel: AddTaskViewModel = hiltViewModel()
 ) {
-  val familyMembers by viewModel.familyMembers.collectAsState()
+  val familyMembers by viewModel.familyMembers.collectAsStateWithLifecycle()
 
   var titulo by remember { mutableStateOf("") }
   var tituloTouched by remember { mutableStateOf(false) }
@@ -452,3 +453,4 @@ fun AddTaskScreen(
     }
   }
 }
+

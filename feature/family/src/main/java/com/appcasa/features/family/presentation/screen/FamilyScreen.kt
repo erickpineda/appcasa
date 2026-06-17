@@ -1,4 +1,5 @@
-package com.appcasa.features.family.presentation.screen
+﻿package com.appcasa.features.family.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -72,8 +73,8 @@ fun FamilyScreen(
   navController: NavController,
   viewModel: FamilyViewModel = hiltViewModel()
 ) {
-  val people by viewModel.people.collectAsState()
-  val pets by viewModel.pets.collectAsState()
+  val people by viewModel.people.collectAsStateWithLifecycle()
+  val pets by viewModel.pets.collectAsStateWithLifecycle()
   
   var memberToDelete by remember { mutableStateOf<FamilyMember?>(null) }
 
@@ -320,3 +321,4 @@ fun FamilyPreview() {
     )
   }
 }
+

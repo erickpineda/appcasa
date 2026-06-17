@@ -1,4 +1,5 @@
-package com.appcasa.features.settings.presentation.screen
+﻿package com.appcasa.features.settings.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -65,7 +66,7 @@ fun HouseSetupScreen(
   initialCode: String? = null,
   viewModel: HouseSetupViewModel = hiltViewModel()
 ) {
-  val uiState by viewModel.uiState.collectAsState()
+  val uiState by viewModel.uiState.collectAsStateWithLifecycle()
   val context = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
 
@@ -516,3 +517,4 @@ fun QRScannerDialog(onCodeScanned: (String) -> Unit, onDismiss: () -> Unit) {
     confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(CoreR.string.common_cancel)) } }
   )
 }
+

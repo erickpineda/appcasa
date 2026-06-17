@@ -1,4 +1,5 @@
-package com.appcasa.features.utilities.presentation.screen
+﻿package com.appcasa.features.utilities.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,7 +45,7 @@ fun BMICalculatorScreen(
   navController: NavController,
   viewModel: UtilitiesViewModel = hiltViewModel()
 ) {
-  val savedValues by viewModel.savedValues.collectAsState()
+  val savedValues by viewModel.savedValues.collectAsStateWithLifecycle()
   
   var height by remember(savedValues) { mutableStateOf(savedValues["BMI_HEIGHT"] ?: "") }
   var weight by remember(savedValues) { mutableStateOf(savedValues["BMI_WEIGHT"] ?: "") }
@@ -139,3 +140,4 @@ private fun getBMICategory(bmi: Double): String {
     else -> stringResource(R.string.util_bmi_cat_obese)
   }
 }
+

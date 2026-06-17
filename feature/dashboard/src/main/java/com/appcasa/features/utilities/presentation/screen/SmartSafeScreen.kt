@@ -1,4 +1,5 @@
-package com.appcasa.features.utilities.presentation.screen
+﻿package com.appcasa.features.utilities.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.content.Context
 import android.content.ContextWrapper
@@ -93,7 +94,7 @@ fun SmartSafeScreen(
   navController: NavController,
   viewModel: SmartSafeViewModel = hiltViewModel()
 ) {
-  val isUnlocked by viewModel.isUnlocked.collectAsState()
+  val isUnlocked by viewModel.isUnlocked.collectAsStateWithLifecycle()
   val context = LocalContext.current
   fun Context.findActivity(): FragmentActivity? {
     var context = this
@@ -127,7 +128,7 @@ fun SmartSafeScreen(
       return
   }
 
-  val documentos by viewModel.documentos.collectAsState()
+  val documentos by viewModel.documentos.collectAsStateWithLifecycle()
   var showAddDialog by remember { mutableStateOf(false) }
   var editingDocument by remember { mutableStateOf<Document?>(null) }
   var documentToDelete by remember { mutableStateOf<Document?>(null) }
@@ -485,3 +486,4 @@ fun EditDocumentDialog(
     }
   )
 }
+

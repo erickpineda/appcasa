@@ -1,4 +1,5 @@
-package com.appcasa.features.utilities.presentation.screen
+﻿package com.appcasa.features.utilities.presentation.screen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -57,8 +58,8 @@ fun FeedingCalculatorScreen(
   familyViewModel: FamilyViewModel = hiltViewModel(),
   dosageViewModel: DosageViewModel = hiltViewModel()
 ) {
-  val pets by familyViewModel.pets.collectAsState()
-  val petWeight by dosageViewModel.petWeight.collectAsState()
+  val pets by familyViewModel.pets.collectAsStateWithLifecycle()
+  val petWeight by dosageViewModel.petWeight.collectAsStateWithLifecycle()
   
   var selectedPetName by remember { mutableStateOf("") }
   val selectPetHint = stringResource(R.string.util_dosage_select_pet)
@@ -238,3 +239,4 @@ fun ReferenceRow(weight: String, amount: String) {
         Text(amount, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
     }
 }
+
