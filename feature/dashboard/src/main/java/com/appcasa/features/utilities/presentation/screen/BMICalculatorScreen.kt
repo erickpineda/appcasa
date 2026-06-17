@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.utils.Constants
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.utilities.presentation.viewmodel.UtilitiesViewModel
 
@@ -47,8 +48,8 @@ fun BMICalculatorScreen(
 ) {
   val savedValues by viewModel.savedValues.collectAsStateWithLifecycle()
   
-  var height by remember(savedValues) { mutableStateOf(savedValues["BMI_HEIGHT"] ?: "") }
-  var weight by remember(savedValues) { mutableStateOf(savedValues["BMI_WEIGHT"] ?: "") }
+  var height by remember(savedValues) { mutableStateOf(savedValues[Constants.Keys.BMI_HEIGHT] ?: "") }
+  var weight by remember(savedValues) { mutableStateOf(savedValues[Constants.Keys.BMI_WEIGHT] ?: "") }
 
   val h = height.toDoubleOrNull() ?: 0.0
   val w = weight.toDoubleOrNull() ?: 0.0
@@ -65,8 +66,8 @@ fun BMICalculatorScreen(
         },
         actions = {
           TextButton(onClick = {
-            viewModel.saveValue("BMI_HEIGHT", height)
-            viewModel.saveValue("BMI_WEIGHT", weight)
+            viewModel.saveValue(Constants.Keys.BMI_HEIGHT, height)
+            viewModel.saveValue(Constants.Keys.BMI_WEIGHT, weight)
           }) {
             Text(stringResource(R.string.util_bmi_save), color = MaterialTheme.colorScheme.onPrimary)
           }
@@ -110,7 +111,7 @@ fun BMICalculatorScreen(
         Column(modifier = Modifier.padding(24.dp)) {
           Text(stringResource(R.string.util_bmi_result_prefix), style = MaterialTheme.typography.labelLarge)
           Text(
-            text = String.format("%.1f", bmi),
+            text = String.format(Constants.Formatting.ONE_DECIMAL, bmi),
             style = MaterialTheme.typography.displayMedium,
             color = MaterialTheme.colorScheme.primary
           )

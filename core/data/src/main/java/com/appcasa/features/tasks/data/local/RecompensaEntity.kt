@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.appcasa.core.utils.Constants
 import com.appcasa.features.settings.data.local.HogarEntity
 
 @Entity(
@@ -33,7 +34,7 @@ data class RecompensaEntity(
     val descripcion: String? = null,
     @ColumnInfo(name = "coste_puntos")
     val costePuntos: Int,
-    val icono: String = "card_giftcard", // Nombre del icono de Material
+    val icono: String = Constants.UI.DEFAULT_REWARD_ICON, // Nombre del icono de Material
     
     @ColumnInfo(name = "sync_id")
     val syncId: String? = null,

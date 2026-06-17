@@ -348,16 +348,16 @@ fun SettingsHub(
                         )
                         Column {
                             Text(
-                                "Hogar sin respaldar",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                            Text(
-                                "Los datos de este hogar solo existen en este dispositivo. Toca en Sistema y Seguridad para sincronizar.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+              stringResource(R.string.settings_offline_warning_title),
+              style = MaterialTheme.typography.labelLarge,
+              fontWeight = FontWeight.Bold,
+              color = MaterialTheme.colorScheme.error
+            )
+            Text(
+              stringResource(R.string.settings_offline_warning_desc),
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
                         }
                     }
                 }
@@ -611,49 +611,49 @@ fun AparienciaSection(
     configs: Map<String, String>,
     onUpdateConfig: (String, String) -> Unit
 ) {
-    val darkMode = configs["tema_oscuro"] == "true"
-    val notifications = configs["notif_activas"] != "false"
-    val partnerNotifs = configs["notif_pareja"] != "false"
-    val compactView = configs["vista_compacta"] == "true"
+  val darkMode = configs[Constants.Config.DARK_MODE] == Constants.Config.TRUE
+  val notifications = configs[Constants.Config.NOTIFICATIONS_ACTIVE] != Constants.Config.FALSE
+  val partnerNotifs = configs[Constants.Config.PARTNER_NOTIFICATIONS] != Constants.Config.FALSE
+  val compactView = configs[Constants.Config.COMPACT_VIEW] == Constants.Config.TRUE
 
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item(contentType = "toggle") {
-            SettingsToggleItem(
-                icon = Icons.Default.DarkMode,
-                title = stringResource(R.string.settings_dark_mode_title),
-                subtitle = stringResource(R.string.settings_dark_mode_subtitle),
-                checked = darkMode,
-                onCheckedChange = { onUpdateConfig("tema_oscuro", it.toString()) }
-            )
-        }
-        item(contentType = "toggle") {
-            SettingsToggleItem(
-                icon = Icons.Default.Notifications,
-                title = stringResource(R.string.settings_notifications_title),
-                subtitle = stringResource(R.string.settings_notifications_subtitle),
-                checked = notifications,
-                onCheckedChange = { onUpdateConfig("notif_activas", it.toString()) }
-            )
-        }
-        item(contentType = "toggle") {
-            SettingsToggleItem(
-                icon = Icons.Default.Groups,
-                title = stringResource(R.string.settings_partner_notifications_title),
-                subtitle = stringResource(R.string.settings_partner_notifications_desc),
-                checked = partnerNotifs,
-                onCheckedChange = { onUpdateConfig("notif_pareja", it.toString()) }
-            )
-        }
-        item(contentType = "toggle") {
-            SettingsToggleItem(
-                icon = Icons.Default.Compress,
-                title = stringResource(R.string.settings_compact_view_title),
-                subtitle = stringResource(R.string.settings_compact_view_subtitle),
-                checked = compactView,
-                onCheckedChange = { onUpdateConfig("vista_compacta", it.toString()) }
-            )
-        }
+  LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    item(contentType = "toggle") {
+      SettingsToggleItem(
+        icon = Icons.Default.DarkMode,
+        title = stringResource(R.string.settings_dark_mode_title),
+        subtitle = stringResource(R.string.settings_dark_mode_subtitle),
+        checked = darkMode,
+        onCheckedChange = { onUpdateConfig(Constants.Config.DARK_MODE, it.toString()) }
+      )
     }
+    item(contentType = "toggle") {
+      SettingsToggleItem(
+        icon = Icons.Default.Notifications,
+        title = stringResource(R.string.settings_notifications_title),
+        subtitle = stringResource(R.string.settings_notifications_subtitle),
+        checked = notifications,
+        onCheckedChange = { onUpdateConfig(Constants.Config.NOTIFICATIONS_ACTIVE, it.toString()) }
+      )
+    }
+    item(contentType = "toggle") {
+      SettingsToggleItem(
+        icon = Icons.Default.Groups,
+        title = stringResource(R.string.settings_partner_notifications_title),
+        subtitle = stringResource(R.string.settings_partner_notifications_desc),
+        checked = partnerNotifs,
+        onCheckedChange = { onUpdateConfig(Constants.Config.PARTNER_NOTIFICATIONS, it.toString()) }
+      )
+    }
+    item(contentType = "toggle") {
+      SettingsToggleItem(
+        icon = Icons.Default.Compress,
+        title = stringResource(R.string.settings_compact_view_title),
+        subtitle = stringResource(R.string.settings_compact_view_subtitle),
+        checked = compactView,
+        onCheckedChange = { onUpdateConfig(Constants.Config.COMPACT_VIEW, it.toString()) }
+      )
+    }
+  }
 }
 
 @Composable
@@ -662,58 +662,58 @@ fun PreferenciasSection(
     listas: List<Lista>,
     onUpdateConfig: (String, String) -> Unit
 ) {
-    val currency = configs["moneda"] ?: "€"
-    val shopMode = configs["modo_tienda"] == "true"
-    val preferredListId = configs["lista_compra_id"]?.toLongOrNull()
-    val preferredListName = listas.find { it.id == preferredListId }?.nombre ?: "No seleccionada"
+  val currency = configs[Constants.Config.CURRENCY] ?: Constants.Config.DEFAULT_CURRENCY
+  val shopMode = configs[Constants.Config.SHOP_MODE] == Constants.Config.TRUE
+  val preferredListId = configs[Constants.Config.MAIN_LIST_ID]?.toLongOrNull()
+  val preferredListName = listas.find { it.id == preferredListId }?.nombre ?: stringResource(R.string.settings_no_list_selected)
 
-    var showCurrencyDialog by remember { mutableStateOf(false) }
-    var showListSelector by remember { mutableStateOf(false) }
+  var showCurrencyDialog by remember { mutableStateOf(false) }
+  var showListSelector by remember { mutableStateOf(false) }
 
-    if (showCurrencyDialog) {
-        CurrencySelectorDialog(
-            selectedCurrency = currency,
-            onDismiss = { showCurrencyDialog = false },
-            onSelect = { onUpdateConfig("moneda", it); showCurrencyDialog = false }
-        )
+  if (showCurrencyDialog) {
+    CurrencySelectorDialog(
+      selectedCurrency = currency,
+      onDismiss = { showCurrencyDialog = false },
+      onSelect = { onUpdateConfig(Constants.Config.CURRENCY, it); showCurrencyDialog = false }
+    )
+  }
+
+  if (showListSelector) {
+    ListSelectorDialog(
+      listas = listas,
+      selectedListId = preferredListId,
+      onDismiss = { showListSelector = false },
+      onSelect = { onUpdateConfig(Constants.Config.MAIN_LIST_ID, it.toString()); showListSelector = false }
+    )
+  }
+
+  LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    item(contentType = "item") {
+      SettingsItem(
+        icon = Icons.Default.Payments,
+        title = stringResource(R.string.settings_currency_title),
+        subtitle = stringResource(R.string.settings_currency_current, currency),
+        onClick = { showCurrencyDialog = true }
+      )
     }
-
-    if (showListSelector) {
-        ListSelectorDialog(
-            listas = listas,
-            selectedListId = preferredListId,
-            onDismiss = { showListSelector = false },
-            onSelect = { onUpdateConfig("lista_compra_id", it.toString()); showListSelector = false }
-        )
+    item(contentType = "item") {
+      SettingsItem(
+        icon = Icons.Default.ShoppingCart,
+        title = stringResource(R.string.settings_main_list_title),
+        subtitle = preferredListName,
+        onClick = { showListSelector = true }
+      )
     }
-
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item(contentType = "item") {
-            SettingsItem(
-                icon = Icons.Default.Payments,
-                title = stringResource(R.string.settings_currency_title),
-                subtitle = stringResource(R.string.settings_currency_current, currency),
-                onClick = { showCurrencyDialog = true }
-            )
-        }
-        item(contentType = "item") {
-            SettingsItem(
-                icon = Icons.Default.ShoppingCart,
-                title = stringResource(R.string.settings_main_list_title),
-                subtitle = preferredListName,
-                onClick = { showListSelector = true }
-            )
-        }
-        item(contentType = "toggle") {
-            SettingsToggleItem(
-                icon = Icons.Default.Storefront,
-                title = stringResource(R.string.settings_shop_mode_title),
-                subtitle = stringResource(R.string.settings_shop_mode_subtitle),
-                checked = shopMode,
-                onCheckedChange = { onUpdateConfig("modo_tienda", it.toString()) }
-            )
-        }
+    item(contentType = "toggle") {
+      SettingsToggleItem(
+        icon = Icons.Default.Storefront,
+        title = stringResource(R.string.settings_shop_mode_title),
+        subtitle = stringResource(R.string.settings_shop_mode_subtitle),
+        checked = shopMode,
+        onCheckedChange = { onUpdateConfig(Constants.Config.SHOP_MODE, it.toString()) }
+      )
     }
+  }
 }
 
 @Composable
@@ -724,86 +724,86 @@ fun MiCuentaSection(
     onUpdatePassword: (String) -> Unit,
     onUpdateConfig: (String, String) -> Unit
 ) {
-    val biometricAppLock = configs["biometric_lock_app"] == "true"
-    var showEmailDialog by remember { mutableStateOf(false) }
-    var showPassDialog by remember { mutableStateOf(false) }
+  val biometricAppLock = configs[Constants.Config.BIOMETRIC_LOCK] == Constants.Config.TRUE
+  var showEmailDialog by remember { mutableStateOf(false) }
+  var showPassDialog by remember { mutableStateOf(false) }
 
-    if (showEmailDialog) {
-        EditValueDialog(
-            title = stringResource(R.string.settings_update_email_title),
-            initialValue = "",
-            onDismiss = { showEmailDialog = false },
-            onConfirm = { onUpdateEmail(it); showEmailDialog = false }
+  if (showEmailDialog) {
+    EditValueDialog(
+      title = stringResource(R.string.settings_update_email_title),
+      initialValue = "",
+      onDismiss = { showEmailDialog = false },
+      onConfirm = { onUpdateEmail(it); showEmailDialog = false }
+    )
+  }
+
+  if (showPassDialog) {
+    EditValueDialog(
+      title = stringResource(R.string.settings_update_password_title),
+      initialValue = "",
+      onDismiss = { showPassDialog = false },
+      onConfirm = { onUpdatePassword(it); showPassDialog = false }
+    )
+  }
+
+  LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    if (isGoogleAccount) {
+      item {
+        AppCasaCard(useGlassmorphism = false, modifier = Modifier.fillMaxWidth()) {
+          Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            GoogleIcon(size = 24.dp)
+            Column {
+              Text(
+                stringResource(R.string.settings_google_managed_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+              )
+              Text(
+                stringResource(R.string.settings_google_managed_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            }
+          }
+        }
+      }
+    }
+
+    if (!isGoogleAccount) {
+      item {
+        SettingsItem(
+          icon = Icons.Default.Person,
+          title = stringResource(R.string.settings_change_email_label),
+          subtitle = stringResource(R.string.settings_change_email_desc),
+          onClick = { showEmailDialog = true }
         )
-    }
-
-    if (showPassDialog) {
-        EditValueDialog(
-            title = stringResource(R.string.settings_update_password_title),
-            initialValue = "",
-            onDismiss = { showPassDialog = false },
-            onConfirm = { onUpdatePassword(it); showPassDialog = false }
+      }
+      item {
+        SettingsItem(
+          icon = Icons.Default.Security,
+          title = stringResource(R.string.settings_change_password_label),
+          subtitle = stringResource(R.string.settings_change_password_desc),
+          onClick = { showPassDialog = true }
         )
+      }
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (isGoogleAccount) {
-            item {
-                AppCasaCard(useGlassmorphism = false, modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        GoogleIcon(size = 24.dp)
-                        Column {
-                            Text(
-                                stringResource(R.string.settings_google_managed_title),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                stringResource(R.string.settings_google_managed_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
+    item {
+      SettingsToggleItem(
+        icon = Icons.Default.Lock,
+        title = stringResource(R.string.settings_app_lock_label),
+        subtitle = stringResource(R.string.settings_app_lock_desc),
+        checked = biometricAppLock,
+        onCheckedChange = {
+          onUpdateConfig(Constants.Config.BIOMETRIC_LOCK, it.toString())
         }
-
-        if (!isGoogleAccount) {
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Person,
-                    title = stringResource(R.string.settings_change_email_label),
-                    subtitle = stringResource(R.string.settings_change_email_desc),
-                    onClick = { showEmailDialog = true }
-                )
-            }
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Security,
-                    title = stringResource(R.string.settings_change_password_label),
-                    subtitle = stringResource(R.string.settings_change_password_desc),
-                    onClick = { showPassDialog = true }
-                )
-            }
-        }
-
-        item {
-            SettingsToggleItem(
-                icon = Icons.Default.Lock,
-                title = stringResource(R.string.settings_app_lock_label),
-                subtitle = stringResource(R.string.settings_app_lock_desc),
-                checked = biometricAppLock,
-                onCheckedChange = { 
-                    onUpdateConfig("biometric_lock_app", it.toString())
-                }
-            )
-        }
+      )
     }
+  }
 }
 
 @Composable

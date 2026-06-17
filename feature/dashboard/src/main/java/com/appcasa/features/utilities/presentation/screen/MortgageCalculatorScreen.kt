@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.appcasa.core.ui.components.AppCasaCard
+import com.appcasa.core.utils.Constants
 import com.appcasa.feature.dashboard.R
 import com.appcasa.features.utilities.presentation.viewmodel.UtilitiesViewModel
 import kotlin.math.pow
@@ -50,9 +51,9 @@ fun MortgageCalculatorScreen(
 ) {
   val savedValues by viewModel.savedValues.collectAsStateWithLifecycle()
   
-  var capital by remember(savedValues) { mutableStateOf(savedValues["MORTGAGE_CAPITAL"] ?: "") }
-  var interest by remember(savedValues) { mutableStateOf(savedValues["MORTGAGE_INTEREST"] ?: "") }
-  var years by remember(savedValues) { mutableStateOf(savedValues["MORTGAGE_YEARS"] ?: "") }
+  var capital by remember(savedValues) { mutableStateOf(savedValues[Constants.Keys.MORTGAGE_CAPITAL] ?: "") }
+  var interest by remember(savedValues) { mutableStateOf(savedValues[Constants.Keys.MORTGAGE_INTEREST] ?: "") }
+  var years by remember(savedValues) { mutableStateOf(savedValues[Constants.Keys.MORTGAGE_YEARS] ?: "") }
 
   val c = capital.toDoubleOrNull() ?: 0.0
   val i = (interest.toDoubleOrNull() ?: 0.0) / 100.0 / 12.0
@@ -77,9 +78,9 @@ fun MortgageCalculatorScreen(
         },
         actions = {
           TextButton(onClick = {
-            viewModel.saveValue("MORTGAGE_CAPITAL", capital)
-            viewModel.saveValue("MORTGAGE_INTEREST", interest)
-            viewModel.saveValue("MORTGAGE_YEARS", years)
+            viewModel.saveValue(Constants.Keys.MORTGAGE_CAPITAL, capital)
+            viewModel.saveValue(Constants.Keys.MORTGAGE_INTEREST, interest)
+            viewModel.saveValue(Constants.Keys.MORTGAGE_YEARS, years)
           }) {
             Text(stringResource(R.string.util_bmi_save), color = MaterialTheme.colorScheme.onPrimary)
           }
@@ -132,13 +133,13 @@ fun MortgageCalculatorScreen(
         Column(modifier = Modifier.padding(24.dp)) {
           Text(stringResource(R.string.util_mortgage_result_label), style = MaterialTheme.typography.labelLarge)
           Text(
-            text = "${String.format("%.2f", monthlyPayment)} €",
+            text = "${String.format(Constants.Formatting.TWO_DECIMALS, monthlyPayment)} ${Constants.Config.DEFAULT_CURRENCY}",
             style = MaterialTheme.typography.displayMedium,
             color = MaterialTheme.colorScheme.primary
           )
           Spacer(modifier = Modifier.height(8.dp))
           Text(
-            text = stringResource(R.string.util_mortgage_total_interest, String.format("%.2f", totalInterest)),
+            text = stringResource(R.string.util_mortgage_total_interest, String.format(Constants.Formatting.TWO_DECIMALS, totalInterest)),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.secondary
           )

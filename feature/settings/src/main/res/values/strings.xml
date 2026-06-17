@@ -197,4 +197,7 @@
     <string name="logout_dialog_text">¿Seguro que quieres cerrar sesión? Volverás a la pantalla inicial.</string>
     <string name="logout_confirm_btn">Cerrar sesión</string>
     <string name="settings_link_account_confirm_message">¿Quieres vincular de forma permanente el hogar guardado en este dispositivo a la cuenta %s?</string>
+    <string name="settings_offline_warning_title">Hogar sin respaldar</string>
+    <string name="settings_offline_warning_desc">Los datos de este hogar solo existen en este dispositivo. Toca en Sistema y Seguridad para sincronizar.</string>
+    <string name="settings_no_list_selected">No seleccionada</string>
 </resources>

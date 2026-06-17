@@ -377,7 +377,7 @@ fun CalendarContent(
             }
             
             Row(modifier = Modifier.fillMaxWidth()) {
-              listOf("D", "L", "M", "X", "J", "V", "S").forEach { day ->
+              Constants.Calendar.WEEKDAYS_ES.forEach { day ->
                 Text(
                   text = day,
                   modifier = Modifier.weight(1f),
@@ -748,7 +748,7 @@ fun AgendaItemCompact(
         Row(verticalAlignment = Alignment.CenterVertically) {
           val allDaySuffix = stringResource(R.string.calendar_all_day_suffix)
           Text(text = formatDateCompact(item.timestamp, allDaySuffix), style = MaterialTheme.typography.labelSmall)
-          Text(text = " • ", style = MaterialTheme.typography.labelSmall)
+          Text(text = Constants.Formatting.DOT_SEPARATOR, style = MaterialTheme.typography.labelSmall)
           Text(text = typeLabel.uppercase(), style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.Bold)
           
           if (item is CalendarItem.TaskItem && item.task.periodicidad != Periodicidad.NINGUNA) {
@@ -809,9 +809,9 @@ private fun formatDateCompact(timestamp: Long, allDaySuffix: String): String {
   val date = Date(timestamp)
   val cal = Calendar.getInstance().apply { time = date }
   val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-    "d MMM yyyy '$allDaySuffix'"
+    String.format(Constants.Formatting.DATE_ALL_DAY_FORMAT, allDaySuffix)
   } else {
-    "d MMM yyyy HH:mm"
+    Constants.Formatting.DATE_TIME_FORMAT
   }
   val sdf = SimpleDateFormat(format, Constants.Locales.SPAIN)
   return sdf.format(date)
@@ -819,9 +819,9 @@ private fun formatDateCompact(timestamp: Long, allDaySuffix: String): String {
 
 val CalendarItem.uniqueKey: String
   get() = when(this) {
-    is CalendarItem.EventItem -> "E_${event.id}"
-    is CalendarItem.TaskItem -> "T_${task.id}"
-    is CalendarItem.ReminderItem -> "R_${reminder.id}"
+    is CalendarItem.EventItem -> "${Constants.Calendar.PREFIX_EVENT}${event.id}"
+    is CalendarItem.TaskItem -> "${Constants.Calendar.PREFIX_TASK}${task.id}"
+    is CalendarItem.ReminderItem -> "${Constants.Calendar.PREFIX_REMINDER}${reminder.id}"
   }
 
 @OptIn(ExperimentalMaterial3Api::class)
