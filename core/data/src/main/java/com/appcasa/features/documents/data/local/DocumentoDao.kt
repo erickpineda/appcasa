@@ -1,6 +1,7 @@
 package com.appcasa.features.documents.data.local
 
 import androidx.room.*
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -20,7 +21,7 @@ interface DocumentoDao {
   @Query("UPDATE documentos SET last_synced_at = :timestamp WHERE id = :id")
   suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
 
-  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  @Upsert
   suspend fun insertDocumento(documento: DocumentoEntity): Long
 
   @Delete

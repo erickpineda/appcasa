@@ -1,6 +1,7 @@
 package com.appcasa.features.settings.data.local
 
 import androidx.room.Dao
+import androidx.room.Upsert
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -23,7 +24,7 @@ interface ConfiguracionDao {
     @Query("SELECT * FROM hogares WHERE sync_id = :syncId LIMIT 1")
     suspend fun getHogarBySyncId(syncId: String): HogarEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertHogar(hogar: HogarEntity): Long
 
     @Query("SELECT * FROM usuarios WHERE is_active = 1 LIMIT 1")
@@ -32,7 +33,7 @@ interface ConfiguracionDao {
     @Query("SELECT * FROM usuarios")
     fun getAllUsuarios(): Flow<List<UsuarioEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertUsuario(usuario: UsuarioEntity): Long
 
     @Query("UPDATE usuarios SET is_active = 0")
@@ -53,7 +54,7 @@ interface ConfiguracionDao {
     @Query("SELECT * FROM configuracion WHERE hogar_id = :hogarId")
     fun getConfiguracion(hogarId: Long): Flow<List<ConfiguracionEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertConfiguracion(config: ConfiguracionEntity): Long
 
     @Query("DELETE FROM usuarios")

@@ -1,6 +1,7 @@
 package com.appcasa.features.inventory.data.local
 
 import androidx.room.Dao
+import androidx.room.Upsert
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -19,7 +20,7 @@ interface StockDao {
     @Query("SELECT * FROM stock WHERE hogar_id = :hogarId AND cantidad_actual <= cantidad_minima")
     fun getLowStockItems(hogarId: Long): Flow<List<StockEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertItem(item: StockEntity): Long
 
     @Update

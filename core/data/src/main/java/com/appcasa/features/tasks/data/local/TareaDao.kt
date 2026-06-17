@@ -1,6 +1,7 @@
 package com.appcasa.features.tasks.data.local
 
 import androidx.room.Dao
+import androidx.room.Upsert
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -40,7 +41,7 @@ interface TareaDao {
     @Query("SELECT * FROM tarea_check_items WHERE sync_id = :syncId LIMIT 1")
     suspend fun getCheckItemBySyncId(syncId: String): TareaCheckItemEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertTarea(tarea: TareaEntity): Long
 
     @Update
@@ -59,10 +60,10 @@ interface TareaDao {
     @Query("SELECT * FROM categorias_tarea WHERE hogar_id = :hogarId")
     fun getCategorias(hogarId: Long): Flow<List<CategoriaTareaEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertCategoria(categoria: CategoriaTareaEntity): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertAsignacion(asignacion: TareaAsignacionEntity)
 
     @Query("SELECT * FROM tarea_asignaciones WHERE tarea_id = :tareaId LIMIT 1")
@@ -80,7 +81,7 @@ interface TareaDao {
     @Query("SELECT * FROM tarea_check_items WHERE id = :id")
     suspend fun getCheckItemById(id: Long): TareaCheckItemEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertCheckItem(item: TareaCheckItemEntity): Long
 
     @Update

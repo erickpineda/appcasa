@@ -1,6 +1,7 @@
 package com.appcasa.features.family.data.local
 
 import androidx.room.*
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -17,7 +18,7 @@ interface MiembroDao {
     @Query("UPDATE miembros SET last_synced_at = :timestamp WHERE id = :id")
     suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertMiembro(miembro: MiembroEntity): Long
 
     @Update

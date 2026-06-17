@@ -1,6 +1,7 @@
 package com.appcasa.features.calendar.data.local
 
 import androidx.room.*
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -8,7 +9,7 @@ interface EventoDao {
     @Query("SELECT * FROM eventos WHERE hogar_id = :hogarId")
     fun getEventosByHogar(hogarId: Long): Flow<List<EventoEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertEvento(evento: EventoEntity): Long
 
     @Query("SELECT * FROM eventos WHERE id = :id")

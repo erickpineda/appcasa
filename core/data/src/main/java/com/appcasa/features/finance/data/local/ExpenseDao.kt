@@ -1,6 +1,7 @@
 package com.appcasa.features.finance.data.local
 
 import androidx.room.Dao
+import androidx.room.Upsert
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -33,7 +34,7 @@ interface ExpenseDao {
     @Query("SELECT SUM(importe) FROM gastos WHERE hogar_id = :hogarId AND fecha >= :startOfMonth")
     fun getTotalMonthlyExpense(hogarId: Long, startOfMonth: Long): Flow<Double?>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertExpense(expense: ExpenseEntity): Long
 
     @Delete

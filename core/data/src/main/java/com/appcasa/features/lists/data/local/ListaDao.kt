@@ -1,6 +1,7 @@
 package com.appcasa.features.lists.data.local
 
 import androidx.room.Dao
+import androidx.room.Upsert
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -29,13 +30,13 @@ interface ListaDao {
   @Query("DELETE FROM listas WHERE hogar_id = :hogarId AND archived = 1")
   suspend fun deleteAllArchivedListas(hogarId: Long)
 
-  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  @Upsert
   suspend fun insertLista(lista: ListaEntity): Long
 
   @Query("SELECT * FROM lista_items WHERE lista_id = :listaId")
   fun getItemsByLista(listaId: Long): Flow<List<ListaItemEntity>>
 
-  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  @Upsert
   suspend fun insertItem(item: ListaItemEntity): Long
 
   @Query("SELECT * FROM lista_items WHERE id = :id")

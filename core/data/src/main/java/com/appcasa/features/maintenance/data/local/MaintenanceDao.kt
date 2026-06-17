@@ -1,6 +1,7 @@
 package com.appcasa.features.maintenance.data.local
 
 import androidx.room.Dao
+import androidx.room.Upsert
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -27,7 +28,7 @@ interface MaintenanceDao {
     @Query("DELETE FROM mantenimiento_hogar WHERE hogar_id = :hogarId AND archived = 1")
     suspend fun deleteAllArchivedMaintenanceEvents(hogarId: Long)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertEvent(event: MaintenanceEntity): Long
 
     @Delete

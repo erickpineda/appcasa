@@ -1,6 +1,7 @@
 package com.appcasa.features.utilities.data.local
 
 import androidx.room.*
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -8,7 +9,7 @@ interface UtilidadDao {
     @Query("SELECT * FROM utilidades ORDER BY orden ASC")
     fun getUtilidades(): Flow<List<UtilidadEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertUtilidad(utilidad: UtilidadEntity): Long
 
     @Update
