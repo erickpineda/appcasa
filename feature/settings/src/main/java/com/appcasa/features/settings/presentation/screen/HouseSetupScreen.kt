@@ -1,4 +1,4 @@
-﻿package com.appcasa.features.settings.presentation.screen
+package com.appcasa.features.settings.presentation.screen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.Manifest
@@ -109,12 +109,14 @@ fun HouseSetupScreen(
   var hasInitialNavigationDone by rememberSaveable { mutableStateOf(false) }
 
   // Navegación/decisión inicial automática tras comprobar DB (si no estamos en onboarding)
-  LaunchedEffect(uiState.isCheckingDb, uiState.existingHousehold, uiState.allHouseholds) {
+  LaunchedEffect(uiState.isCheckingDb, uiState.existingHousehold, uiState.allHouseholds, uiState.isLoggedIn) {
     if (step == SetupStep.ONBOARDING) return@LaunchedEffect
     if (hasInitialNavigationDone) return@LaunchedEffect
     
     if (!uiState.isCheckingDb) {
-      if (uiState.existingHousehold != null) {
+      if (!uiState.isLoggedIn) {
+        step = SetupStep.WELCOME
+      } else if (uiState.existingHousehold != null) {
         step = SetupStep.SELECT_PROFILE
       } else if (uiState.allHouseholds.size == 1) {
         viewModel.handleIntent(SetupIntent.SwitchHousehold(uiState.allHouseholds.first().id))
@@ -181,6 +183,7 @@ fun HouseSetupScreen(
     when (step) {
       SetupStep.CREATE, SetupStep.JOIN, SetupStep.ADD_PROFILE -> {
         step = when {
+          !uiState.isLoggedIn -> SetupStep.WELCOME
           uiState.existingHousehold != null -> SetupStep.SELECT_PROFILE
           uiState.allHouseholds.isNotEmpty() -> SetupStep.SWITCH_HOUSEHOLD
           else -> SetupStep.WELCOME

@@ -243,6 +243,19 @@ class ResetHouseholdUseCase @Inject constructor(
     }
 }
 
+class SwitchProfileUseCase @Inject constructor(
+    private val userRepository: UserRepository,
+    private val householdProvider: CurrentHouseholdProvider
+) {
+    suspend operator fun invoke() {
+        // Borramos el usuario local para desactivar la sesión de este miembro
+        userRepository.deleteUsers()
+        
+        // Resetear el estado de la sesión activa del hogar para forzar ir a HouseSetupScreen
+        householdProvider.setHouseholdId(0L)
+    }
+}
+
 class LogoutUseCase @Inject constructor(
     private val userRepository: UserRepository,
     private val householdProvider: CurrentHouseholdProvider,

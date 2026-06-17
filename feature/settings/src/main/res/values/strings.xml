@@ -10,8 +10,8 @@
     <string name="settings_hub_preferences">Preferencias de Uso</string>
     <string name="settings_hub_preferences_subtitle">Moneda, listas y modo tienda</string>
     <string name="settings_hub_account">Cuenta y Privacidad</string>
-    <string name="settings_hub_logout">Cerrar Sesión</string>
-    <string name="settings_hub_logout_subtitle">Salir de tu cuenta de forma segura</string>
+    <string name="settings_hub_logout">Cambiar Perfil</string>
+    <string name="settings_hub_logout_subtitle">Volver a la pantalla de selección de perfiles</string>
     <string name="settings_version_footer">AppCasa %s • Hecho con ❤️ para tu hogar</string>
     <string name="settings_household_name_title">Nombre del Hogar</string>
     <string name="settings_regenerate_code_title">Regenerar Código</string>

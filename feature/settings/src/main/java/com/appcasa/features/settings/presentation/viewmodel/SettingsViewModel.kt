@@ -31,7 +31,7 @@ class SettingsViewModel @Inject constructor(
     private val updateHouseholdUseCase: UpdateHouseholdUseCase,
     private val forceSyncUseCase: ForceSyncUseCase,
     private val exportHouseholdDataUseCase: ExportHouseholdDataUseCase,
-    private val logoutUseCase: LogoutUseCase,
+    private val switchProfileUseCase: SwitchProfileUseCase,
     private val linkAccountUseCase: LinkAccountUseCase,
     private val getAllHouseholdsUseCase: GetAllHouseholdsUseCase,
     private val switchHouseholdUseCase: SwitchHouseholdUseCase,
@@ -201,7 +201,7 @@ class SettingsViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
-            logoutUseCase()
+            switchProfileUseCase()
         }
     }
 
