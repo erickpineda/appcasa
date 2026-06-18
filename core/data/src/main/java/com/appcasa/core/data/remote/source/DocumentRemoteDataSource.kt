@@ -24,13 +24,13 @@ class DocumentRemoteDataSource @Inject constructor(
     private fun getStorageRef(hogarSyncId: String, docSyncId: String) = 
         storage.reference.child("${FirestoreConstants.COL_HOUSEHOLDS}/$hogarSyncId/${FirestoreConstants.COL_DOCUMENTS}/$docSyncId.pdf")
 
-    suspend fun syncDocument(doc: Document) {
-        val hogarSyncId = doc.hogarSyncId ?: return
+    suspend fun syncDocument(hogarSyncId: String, doc: Document) {
         val syncId = doc.syncId ?: return
+        val dto = DocumentDto.fromDomain(doc).copy(hogarSyncId = hogarSyncId)
         
         // 1. Sincronizar metadatos en Firestore
         getDocumentCollection(hogarSyncId).document(syncId)
-            .set(DocumentDto.fromDomain(doc)).await()
+            .set(dto).await()
             
         // 2. Si hay un archivo local, subirlo a Storage si no está sincronizado
         doc.uriPdf.let { uri ->
@@ -43,8 +43,7 @@ class DocumentRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun deleteDocument(doc: Document) {
-        val hogarSyncId = doc.hogarSyncId ?: return
+    suspend fun deleteDocument(hogarSyncId: String, doc: Document) {
         val syncId = doc.syncId ?: return
         getDocumentCollection(hogarSyncId).document(syncId).delete().await()
         try {

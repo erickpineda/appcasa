@@ -1,5 +1,6 @@
 package com.appcasa.features.settings.data.repository
 
+import android.content.SharedPreferences
 import com.appcasa.core.data.remote.SyncScheduler
 import com.appcasa.core.domain.repository.SettingsRepository
 import com.appcasa.features.settings.data.local.ConfiguracionDao
@@ -10,8 +11,33 @@ import javax.inject.Inject
 
 class SettingsRepositoryImpl @Inject constructor(
     private val configuracionDao: ConfiguracionDao,
-    private val syncScheduler: SyncScheduler
+    private val syncScheduler: SyncScheduler,
+    private val sharedPreferences: SharedPreferences
 ) : SettingsRepository {
+
+    override fun isOnboardingCompleted(): Boolean {
+        return sharedPreferences.getBoolean("onboarding_completed", false)
+    }
+
+    override fun setOnboardingCompleted(completed: Boolean) {
+        sharedPreferences.edit().putBoolean("onboarding_completed", completed).apply()
+    }
+
+    override fun isBiometricLockEnabled(): Boolean {
+        return sharedPreferences.getBoolean("biometric_lock_app", false)
+    }
+
+    override fun setBiometricLockEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean("biometric_lock_app", enabled).apply()
+    }
+
+    override fun isBiometricPromptedBefore(): Boolean {
+        return sharedPreferences.getBoolean("biometric_prompted_before", false)
+    }
+
+    override fun setBiometricPromptedBefore(prompted: Boolean) {
+        sharedPreferences.edit().putBoolean("biometric_prompted_before", prompted).apply()
+    }
 
     override fun isCompactView(hogarId: Long): Flow<Boolean> {
         return configuracionDao.getConfiguracion(hogarId)

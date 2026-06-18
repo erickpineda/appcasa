@@ -18,15 +18,14 @@ class InventoryRemoteDataSource @Inject constructor(
     private fun getStockCollection(hogarSyncId: String) = 
         firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_ITEMS)
 
-    suspend fun syncStock(item: StockItem) {
-        val hogarSyncId = item.hogarSyncId ?: return
+    suspend fun syncStock(hogarSyncId: String, item: StockItem) {
         val syncId = item.syncId ?: return
+        val dto = StockDto.fromDomain(item).copy(hogarSyncId = hogarSyncId)
         getStockCollection(hogarSyncId).document(syncId)
-            .set(StockDto.fromDomain(item)).await()
+            .set(dto).await()
     }
 
-    suspend fun deleteStock(item: StockItem) {
-        val hogarSyncId = item.hogarSyncId ?: return
+    suspend fun deleteStock(hogarSyncId: String, item: StockItem) {
         val syncId = item.syncId ?: return
         getStockCollection(hogarSyncId).document(syncId).delete().await()
     }

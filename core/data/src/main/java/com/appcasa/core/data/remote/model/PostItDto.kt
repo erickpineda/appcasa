@@ -32,3 +32,24 @@ data class PostItDto(
         )
     }
 }
+
+data class DashboardConfigDto(
+    val hogarSyncId: String? = null,
+    val ordenModulos: String = "",
+    val updatedAt: Long = 0
+) {
+    fun toDomain(): com.appcasa.core.domain.model.DashboardConfig = com.appcasa.core.domain.model.DashboardConfig(
+        hogarId = 0,
+        hogarSyncId = hogarSyncId,
+        ordenModulos = ordenModulos,
+        updatedAt = updatedAt
+    )
+
+    companion object {
+        fun fromDomain(config: com.appcasa.core.domain.model.DashboardConfig): DashboardConfigDto = DashboardConfigDto(
+            hogarSyncId = config.hogarSyncId,
+            ordenModulos = config.ordenModulos,
+            updatedAt = config.updatedAt
+        )
+    }
+}

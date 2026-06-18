@@ -318,6 +318,54 @@ class ExportHouseholdDataUseCase @Inject constructor(
     }
 }
 
+class GetBiometricStatusUseCase @Inject constructor(
+    private val repository: SettingsRepository
+) {
+    operator fun invoke(): Boolean {
+        return repository.isBiometricLockEnabled()
+    }
+}
+
+class SetBiometricStatusUseCase @Inject constructor(
+    private val repository: SettingsRepository
+) {
+    operator fun invoke(enabled: Boolean) {
+        repository.setBiometricLockEnabled(enabled)
+    }
+}
+
+class GetBiometricPromptedUseCase @Inject constructor(
+    private val repository: SettingsRepository
+) {
+    operator fun invoke(): Boolean {
+        return repository.isBiometricPromptedBefore()
+    }
+}
+
+class SetBiometricPromptedUseCase @Inject constructor(
+    private val repository: SettingsRepository
+) {
+    operator fun invoke(prompted: Boolean) {
+        repository.setBiometricPromptedBefore(prompted)
+    }
+}
+
+class GetOnboardingStatusUseCase @Inject constructor(
+    private val repository: SettingsRepository
+) {
+    operator fun invoke(): Boolean {
+        return repository.isOnboardingCompleted()
+    }
+}
+
+class SetOnboardingStatusUseCase @Inject constructor(
+    private val repository: SettingsRepository
+) {
+    operator fun invoke(completed: Boolean) {
+        repository.setOnboardingCompleted(completed)
+    }
+}
+
 class RecoverHouseholdsUseCase @Inject constructor(
     private val repository: HouseholdRepository,
     private val familyRepository: FamilyRepository,

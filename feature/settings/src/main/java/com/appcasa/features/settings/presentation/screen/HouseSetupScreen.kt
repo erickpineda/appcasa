@@ -106,27 +106,26 @@ fun HouseSetupScreen(
     lastStep = step
   }
 
-  var hasInitialNavigationDone by rememberSaveable { mutableStateOf(false) }
-
   // Navegación/decisión inicial automática tras comprobar DB (si no estamos en onboarding)
   LaunchedEffect(uiState.isCheckingDb, uiState.existingHousehold, uiState.allHouseholds, uiState.isLoggedIn) {
     if (step == SetupStep.ONBOARDING) return@LaunchedEffect
-    if (hasInitialNavigationDone) return@LaunchedEffect
     
     if (!uiState.isCheckingDb) {
       if (!uiState.isLoggedIn) {
         step = SetupStep.WELCOME
       } else if (uiState.existingHousehold != null) {
-        step = SetupStep.SELECT_PROFILE
-      } else if (uiState.allHouseholds.size == 1) {
-        viewModel.handleIntent(SetupIntent.SwitchHousehold(uiState.allHouseholds.first().id))
+        // Si ya hay un hogar activo, vamos a elegir perfil
         step = SetupStep.SELECT_PROFILE
       } else if (uiState.allHouseholds.isNotEmpty()) {
-        step = SetupStep.SWITCH_HOUSEHOLD
+        if (uiState.allHouseholds.size == 1) {
+          viewModel.handleIntent(SetupIntent.SwitchHousehold(uiState.allHouseholds.first().id))
+          step = SetupStep.SELECT_PROFILE
+        } else {
+          step = SetupStep.SWITCH_HOUSEHOLD
+        }
       } else {
         step = SetupStep.WELCOME
       }
-      hasInitialNavigationDone = true
     }
   }
 

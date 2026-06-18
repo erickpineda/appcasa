@@ -18,15 +18,14 @@ class MaintenanceRemoteDataSource @Inject constructor(
     private fun getMaintenanceCollection(hogarSyncId: String) = 
         firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_MAINTENANCE)
 
-    suspend fun syncMaintenance(event: MaintenanceEvent) {
-        val hogarSyncId = event.hogarSyncId ?: return
+    suspend fun syncMaintenance(hogarSyncId: String, event: MaintenanceEvent) {
         val syncId = event.syncId ?: return
+        val dto = MaintenanceDto.fromDomain(event).copy(hogarSyncId = hogarSyncId)
         getMaintenanceCollection(hogarSyncId).document(syncId)
-            .set(MaintenanceDto.fromDomain(event)).await()
+            .set(dto).await()
     }
 
-    suspend fun deleteMaintenance(event: MaintenanceEvent) {
-        val hogarSyncId = event.hogarSyncId ?: return
+    suspend fun deleteMaintenance(hogarSyncId: String, event: MaintenanceEvent) {
         val syncId = event.syncId ?: return
         getMaintenanceCollection(hogarSyncId).document(syncId).delete().await()
     }

@@ -57,7 +57,11 @@ class ListsRepositoryImpl @Inject constructor(
     override suspend fun deleteLista(lista: Lista) {
         listaDao.deleteLista(lista.toEntity())
         try {
-            remoteDataSource.deleteList(lista)
+            val hogar = householdRepository.getHogarById(lista.hogarId).first()
+            val hSyncId = lista.hogarSyncId ?: hogar?.syncId
+            if (hSyncId != null) {
+                remoteDataSource.deleteList(hSyncId, lista)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -174,7 +178,7 @@ class ListsRepositoryImpl @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeAndSyncItems(hogarId: Long, listId: Long, listSyncId: String) {
-        if (itemSyncJobs.containsKey(listId)) return
+        itemSyncJobs[listId]?.cancel()
         
         itemSyncJobs[listId] = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
@@ -197,7 +201,13 @@ class ListsRepositoryImpl @Inject constructor(
                     }
                 }
             }
-            .catch { e -> e.printStackTrace() }
+            .catch { e -> 
+                e.printStackTrace()
+                itemSyncJobs.remove(listId)
+            }
+            .onCompletion {
+                itemSyncJobs.remove(listId)
+            }
             .launchIn(appScope)
     }
 }

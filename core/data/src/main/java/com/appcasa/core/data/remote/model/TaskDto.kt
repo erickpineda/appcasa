@@ -139,3 +139,71 @@ data class TaskCheckItemDto(
         )
     }
 }
+
+data class RewardDto(
+    val syncId: String? = null,
+    val hogarSyncId: String? = null,
+    val titulo: String = "",
+    val descripcion: String? = null,
+    val costePuntos: Int = 0,
+    val icono: String = "card_giftcard",
+    val updatedAt: Long = 0
+) {
+    fun toDomain(): com.appcasa.core.domain.model.Reward = com.appcasa.core.domain.model.Reward(
+        id = 0,
+        syncId = syncId,
+        hogarId = 0,
+        hogarSyncId = hogarSyncId,
+        titulo = titulo,
+        descripcion = descripcion,
+        costePuntos = costePuntos,
+        icono = icono,
+        updatedAt = updatedAt
+    )
+
+    companion object {
+        fun fromDomain(item: com.appcasa.core.domain.model.Reward): RewardDto = RewardDto(
+            syncId = item.syncId,
+            hogarSyncId = item.hogarSyncId,
+            titulo = item.titulo,
+            descripcion = item.descripcion,
+            costePuntos = item.costePuntos,
+            icono = item.icono,
+            updatedAt = item.updatedAt
+        )
+    }
+}
+
+data class TaskCategoryDto(
+    val syncId: String? = null,
+    val hogarSyncId: String? = null,
+    val nombre: String = "",
+    val colorHex: String = "2563EB",
+    val icono: String? = null,
+    val orden: Int = 0,
+    val updatedAt: Long = 0
+) {
+    fun toDomain(): com.appcasa.core.domain.model.TaskCategory = com.appcasa.core.domain.model.TaskCategory(
+        id = 0,
+        syncId = syncId,
+        hogarId = 0,
+        hogarSyncId = hogarSyncId,
+        nombre = nombre,
+        colorHex = colorHex,
+        icono = icono,
+        orden = orden,
+        updatedAt = updatedAt
+    )
+
+    companion object {
+        fun fromDomain(item: com.appcasa.core.domain.model.TaskCategory): TaskCategoryDto = TaskCategoryDto(
+            syncId = item.syncId,
+            hogarSyncId = item.hogarSyncId,
+            nombre = item.nombre,
+            colorHex = item.colorHex,
+            icono = item.icono,
+            orden = item.orden,
+            updatedAt = item.updatedAt
+        )
+    }
+}

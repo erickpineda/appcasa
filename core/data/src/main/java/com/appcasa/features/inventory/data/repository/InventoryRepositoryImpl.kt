@@ -63,7 +63,11 @@ class InventoryRepositoryImpl @Inject constructor(
     override suspend fun deleteStockItem(item: StockItem) {
         stockDao.deleteItem(item.toEntity())
         try {
-            remoteDataSource.deleteStock(item)
+            val hogar = householdRepository.getHogarById(item.hogarId).first()
+            val hSyncId = item.hogarSyncId ?: hogar?.syncId
+            if (hSyncId != null) {
+                remoteDataSource.deleteStock(hSyncId, item)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

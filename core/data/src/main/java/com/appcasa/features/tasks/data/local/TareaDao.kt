@@ -63,6 +63,12 @@ interface TareaDao {
     @Upsert
     suspend fun insertCategoria(categoria: CategoriaTareaEntity): Long
 
+    @Delete
+    suspend fun deleteCategoria(categoria: CategoriaTareaEntity)
+
+    @Query("UPDATE categorias_tarea SET last_synced_at = :timestamp WHERE id = :id")
+    suspend fun updateCategoriaSyncTimestamp(id: Long, timestamp: Long)
+
     @Upsert
     suspend fun insertAsignacion(asignacion: TareaAsignacionEntity)
 
@@ -92,6 +98,9 @@ interface TareaDao {
 
     @Query("UPDATE tareas SET last_synced_at = :timestamp WHERE id = :id")
     suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
+
+    @Query("UPDATE tareas SET hogar_sync_id = :hogarSyncId WHERE id = :id")
+    suspend fun updateHogarSyncId(id: Long, hogarSyncId: String)
 
     @Query("UPDATE tarea_check_items SET last_synced_at = :timestamp WHERE id = :id")
     suspend fun updateCheckItemSyncTimestamp(id: Long, timestamp: Long)

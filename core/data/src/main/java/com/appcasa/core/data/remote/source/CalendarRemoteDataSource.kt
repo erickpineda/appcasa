@@ -18,15 +18,14 @@ class CalendarRemoteDataSource @Inject constructor(
     private fun getEventCollection(hogarSyncId: String) = 
         firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_EVENTS)
 
-    suspend fun syncEvent(event: Event) {
-        val hogarSyncId = event.hogarSyncId ?: return
+    suspend fun syncEvent(hogarSyncId: String, event: Event) {
         val syncId = event.syncId ?: return
+        val dto = EventDto.fromDomain(event).copy(hogarSyncId = hogarSyncId)
         getEventCollection(hogarSyncId).document(syncId)
-            .set(EventDto.fromDomain(event)).await()
+            .set(dto).await()
     }
 
-    suspend fun deleteEvent(event: Event) {
-        val hogarSyncId = event.hogarSyncId ?: return
+    suspend fun deleteEvent(hogarSyncId: String, event: Event) {
         val syncId = event.syncId ?: return
         getEventCollection(hogarSyncId).document(syncId).delete().await()
     }

@@ -90,7 +90,11 @@ class FinanceRepositoryImpl @Inject constructor(
     override suspend fun deleteExpense(expense: Expense) {
         expenseDao.deleteExpense(expense.toEntity())
         try {
-            remoteDataSource.deleteExpense(expense)
+            val hogar = householdRepository.getHogarById(expense.hogarId).first()
+            val hSyncId = expense.hogarSyncId ?: hogar?.syncId
+            if (hSyncId != null) {
+                remoteDataSource.deleteExpense(hSyncId, expense)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

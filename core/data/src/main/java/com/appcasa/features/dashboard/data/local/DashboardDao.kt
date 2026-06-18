@@ -21,6 +21,9 @@ interface DashboardDao {
     @Query("UPDATE post_its SET last_synced_at = :timestamp WHERE id = :id")
     suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
 
+    @Query("UPDATE post_its SET hogar_sync_id = :hogarSyncId WHERE id = :id")
+    suspend fun updateHogarSyncId(id: Long, hogarSyncId: String)
+
     @Delete
     suspend fun deletePostIt(postIt: PostItEntity)
 
@@ -29,4 +32,7 @@ interface DashboardDao {
 
     @Upsert
     suspend fun saveConfig(config: DashboardConfigEntity)
+
+    @Query("UPDATE dashboard_config SET last_synced_at = :timestamp WHERE hogar_id = :hogarId")
+    suspend fun updateConfigSyncTimestamp(hogarId: Long, timestamp: Long)
 }

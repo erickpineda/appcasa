@@ -81,7 +81,11 @@ class TasksRepositoryImpl @Inject constructor(
     override suspend fun deleteTask(task: Task) {
         tareaDao.deleteTarea(task.toEntity())
         try {
-            remoteDataSource.deleteTask(task)
+            val hogar = householdRepository.getHogarById(task.hogarId).first()
+            val hSyncId = task.hogarSyncId ?: hogar?.syncId
+            if (hSyncId != null) {
+                remoteDataSource.deleteTask(hSyncId, task)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -132,14 +136,33 @@ class TasksRepositoryImpl @Inject constructor(
 
     override suspend fun insertReward(reward: Reward) {
         var rewardToInsert = reward
+        if (rewardToInsert.hogarSyncId == null && rewardToInsert.hogarId > 0) {
+            val hogar = householdRepository.getHogarById(rewardToInsert.hogarId).first()
+            rewardToInsert = rewardToInsert.copy(hogarSyncId = hogar?.syncId)
+        }
         if (rewardToInsert.syncId == null) {
             rewardToInsert = rewardToInsert.copy(syncId = UUID.randomUUID().toString())
         }
-        recompensaDao.insertRecompensa(rewardToInsert.toEntity())
+        val existing = rewardToInsert.syncId?.let { recompensaDao.getRecompensaBySyncId(it) }
+        if (existing != null) {
+            rewardToInsert = rewardToInsert.copy(id = existing.id)
+        }
+        recompensaDao.insertRecompensa(rewardToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(rewardToInsert.hogarId)
     }
 
     override suspend fun deleteReward(reward: Reward) {
         recompensaDao.deleteRecompensa(reward.toEntity())
+        try {
+            val hogar = householdRepository.getHogarById(reward.hogarId).first()
+            val hSyncId = reward.hogarSyncId ?: hogar?.syncId
+            if (hSyncId != null) {
+                remoteDataSource.deleteReward(hSyncId, reward)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        syncScheduler.scheduleSync(reward.hogarId)
     }
 
     override fun getCategoriesByHogar(hogarId: Long): Flow<List<TaskCategory>> {
@@ -150,10 +173,19 @@ class TasksRepositoryImpl @Inject constructor(
 
     override suspend fun insertCategory(category: TaskCategory) {
         var categoryToInsert = category
+        if (categoryToInsert.hogarSyncId == null && categoryToInsert.hogarId > 0) {
+            val hogar = householdRepository.getHogarById(categoryToInsert.hogarId).first()
+            categoryToInsert = categoryToInsert.copy(hogarSyncId = hogar?.syncId)
+        }
         if (categoryToInsert.syncId == null) {
             categoryToInsert = categoryToInsert.copy(syncId = UUID.randomUUID().toString())
         }
-        tareaDao.insertCategoria(categoryToInsert.toEntity())
+        val existing = categoryToInsert.syncId?.let { tareaDao.getCategoriaBySyncId(it) }
+        if (existing != null) {
+            categoryToInsert = categoryToInsert.copy(id = existing.id)
+        }
+        tareaDao.insertCategoria(categoryToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(categoryToInsert.hogarId)
     }
 
     override fun getAssignmentsForTask(taskId: Long): Flow<List<TaskAssignment>> {
@@ -208,8 +240,20 @@ class TasksRepositoryImpl @Inject constructor(
         tareaDao.updateSyncTimestamp(taskId, System.currentTimeMillis())
     }
 
+    override suspend fun updateTaskHogarSyncId(taskId: Long, hogarSyncId: String) {
+        tareaDao.updateHogarSyncId(taskId, hogarSyncId)
+    }
+
     override suspend fun updateCheckItemSyncTimestamp(itemId: Long) {
         tareaDao.updateCheckItemSyncTimestamp(itemId, System.currentTimeMillis())
+    }
+
+    override suspend fun updateRewardSyncTimestamp(rewardId: Long) {
+        recompensaDao.updateSyncTimestamp(rewardId, System.currentTimeMillis())
+    }
+
+    override suspend fun updateCategorySyncTimestamp(categoryId: Long) {
+        tareaDao.updateCategoriaSyncTimestamp(categoryId, System.currentTimeMillis())
     }
 
     override suspend fun getCheckItemsToSync(hogarId: Long): List<TaskCheckItem> {
@@ -268,13 +312,16 @@ class TasksRepositoryImpl @Inject constructor(
             }
             .catch { e -> e.printStackTrace() }
             .launchIn(appScope)
+
+        observeAndSyncRewards(hogarId)
+        observeAndSyncCategories(hogarId)
     }
 
     private val assignmentSyncJobs = mutableMapOf<Long, Job>()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeAndSyncAssignments(hogarId: Long, taskId: Long, taskSyncId: String) {
-        if (assignmentSyncJobs.containsKey(taskId)) return
+        assignmentSyncJobs[taskId]?.cancel()
         
         assignmentSyncJobs[taskId] = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
@@ -296,7 +343,13 @@ class TasksRepositoryImpl @Inject constructor(
                     }
                 }
             }
-            .catch { e -> e.printStackTrace() }
+            .catch { e -> 
+                e.printStackTrace()
+                assignmentSyncJobs.remove(taskId)
+            }
+            .onCompletion {
+                assignmentSyncJobs.remove(taskId)
+            }
             .launchIn(appScope)
     }
 
@@ -304,7 +357,7 @@ class TasksRepositoryImpl @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeAndSyncCheckItems(hogarId: Long, taskId: Long, taskSyncId: String) {
-        if (checkItemSyncJobs.containsKey(taskId)) return
+        checkItemSyncJobs[taskId]?.cancel()
         
         checkItemSyncJobs[taskId] = syncManager.isAppInForeground
             .flatMapLatest { isInForeground ->
@@ -324,6 +377,78 @@ class TasksRepositoryImpl @Inject constructor(
                     )
                     if (existing == null || remoteItem.updatedAt > existing.updatedAt) {
                         tareaDao.insertCheckItem(itemToSave.toEntity())
+                    }
+                }
+            }
+            .catch { e -> 
+                e.printStackTrace()
+                checkItemSyncJobs.remove(taskId)
+            }
+            .onCompletion {
+                checkItemSyncJobs.remove(taskId)
+            }
+            .launchIn(appScope)
+    }
+
+    private var rewardSyncJob: Job? = null
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeAndSyncRewards(hogarId: Long) {
+        rewardSyncJob?.cancel()
+        rewardSyncJob = syncManager.isAppInForeground
+            .flatMapLatest { isInForeground ->
+                if (isInForeground) {
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    hogar?.syncId?.let { remoteDataSource.observeRewards(it) } ?: emptyFlow()
+                } else emptyFlow()
+            }
+            .onEach { remoteItems ->
+                remoteItems.forEach { remoteItem ->
+                    val existing = remoteItem.syncId?.let { recompensaDao.getRecompensaBySyncId(it) }
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    
+                    val itemToSave = remoteItem.copy(
+                        id = existing?.id ?: 0L,
+                        hogarId = hogarId,
+                        hogarSyncId = hogar?.syncId,
+                        lastSyncedAt = System.currentTimeMillis()
+                    )
+
+                    if (existing == null || remoteItem.updatedAt > existing.updatedAt) {
+                        recompensaDao.insertRecompensa(itemToSave.toEntity())
+                    }
+                }
+            }
+            .catch { e -> e.printStackTrace() }
+            .launchIn(appScope)
+    }
+
+    private var categorySyncJob: Job? = null
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeAndSyncCategories(hogarId: Long) {
+        categorySyncJob?.cancel()
+        categorySyncJob = syncManager.isAppInForeground
+            .flatMapLatest { isInForeground ->
+                if (isInForeground) {
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    hogar?.syncId?.let { remoteDataSource.observeCategories(it) } ?: emptyFlow()
+                } else emptyFlow()
+            }
+            .onEach { remoteItems ->
+                remoteItems.forEach { remoteItem ->
+                    val existing = remoteItem.syncId?.let { tareaDao.getCategoriaBySyncId(it) }
+                    val hogar = householdRepository.getHogarById(hogarId).first()
+                    
+                    val itemToSave = remoteItem.copy(
+                        id = existing?.id ?: 0L,
+                        hogarId = hogarId,
+                        hogarSyncId = hogar?.syncId,
+                        lastSyncedAt = System.currentTimeMillis()
+                    )
+
+                    if (existing == null || remoteItem.updatedAt > existing.updatedAt) {
+                        tareaDao.insertCategoria(itemToSave.toEntity())
                     }
                 }
             }

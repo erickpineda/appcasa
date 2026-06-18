@@ -57,7 +57,11 @@ class MaintenanceRepositoryImpl @Inject constructor(
     override suspend fun deleteEvent(event: MaintenanceEvent) {
         maintenanceDao.deleteEvent(event.toEntity())
         try {
-            remoteDataSource.deleteMaintenance(event)
+            val hogar = householdRepository.getHogarById(event.hogarId).first()
+            val hSyncId = event.hogarSyncId ?: hogar?.syncId
+            if (hSyncId != null) {
+                remoteDataSource.deleteMaintenance(hSyncId, event)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

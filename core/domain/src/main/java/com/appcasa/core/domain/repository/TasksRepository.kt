@@ -21,10 +21,12 @@ interface TasksRepository {
     fun getRewardsByHogar(hogarId: Long): Flow<List<Reward>>
     suspend fun insertReward(reward: Reward)
     suspend fun deleteReward(reward: Reward)
+    suspend fun updateRewardSyncTimestamp(rewardId: Long)
 
     // Categorías
     fun getCategoriesByHogar(hogarId: Long): Flow<List<TaskCategory>>
     suspend fun insertCategory(category: TaskCategory)
+    suspend fun updateCategorySyncTimestamp(categoryId: Long)
 
     // Asignaciones e Ítems
     fun getAssignmentsForTask(taskId: Long): Flow<List<TaskAssignment>>
@@ -34,6 +36,7 @@ interface TasksRepository {
     suspend fun updateCheckItem(item: TaskCheckItem)
     suspend fun deleteCheckItem(item: TaskCheckItem)
     suspend fun updateTaskSyncTimestamp(taskId: Long)
+    suspend fun updateTaskHogarSyncId(taskId: Long, hogarSyncId: String)
     suspend fun updateCheckItemSyncTimestamp(itemId: Long)
     suspend fun getCheckItemsToSync(hogarId: Long): List<TaskCheckItem>
     fun startRemoteSync(hogarId: Long)

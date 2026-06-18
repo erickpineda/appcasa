@@ -18,15 +18,14 @@ class FinanceRemoteDataSource @Inject constructor(
     private fun getExpenseCollection(hogarSyncId: String) = 
         firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_EXPENSES)
 
-    suspend fun syncExpense(expense: Expense) {
-        val hogarSyncId = expense.hogarSyncId ?: return
+    suspend fun syncExpense(hogarSyncId: String, expense: Expense) {
         val syncId = expense.syncId ?: return
+        val dto = ExpenseDto.fromDomain(expense).copy(hogarSyncId = hogarSyncId)
         getExpenseCollection(hogarSyncId).document(syncId)
-            .set(ExpenseDto.fromDomain(expense)).await()
+            .set(dto).await()
     }
 
-    suspend fun deleteExpense(expense: Expense) {
-        val hogarSyncId = expense.hogarSyncId ?: return
+    suspend fun deleteExpense(hogarSyncId: String, expense: Expense) {
         val syncId = expense.syncId ?: return
         getExpenseCollection(hogarSyncId).document(syncId).delete().await()
     }

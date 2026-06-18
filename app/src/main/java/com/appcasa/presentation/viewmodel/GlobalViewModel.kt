@@ -6,10 +6,10 @@ import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.usecase.config.GetConfigurationUseCase
 import com.appcasa.core.domain.usecase.user.GetCurrentUserUseCase
 import com.appcasa.features.settings.domain.usecase.GetCurrentHouseholdUseCase
+import com.appcasa.features.settings.domain.usecase.ForceSyncUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.appcasa.core.domain.repository.SettingsRepository
 import javax.inject.Inject
 
 @HiltViewModel
@@ -18,7 +18,7 @@ class GlobalViewModel @Inject constructor(
   private val getCurrentUserUseCase: GetCurrentUserUseCase,
   private val getCurrentHouseholdUseCase: GetCurrentHouseholdUseCase,
   private val currentHouseholdProvider: CurrentHouseholdProvider,
-  private val settingsRepository: SettingsRepository
+  private val forceSyncUseCase: ForceSyncUseCase
 ) : ViewModel() {
 
   private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
@@ -74,7 +74,7 @@ class GlobalViewModel @Inject constructor(
       val id = currentHouseholdProvider.getCurrentHouseholdId()
       if (id != 0L) {
           viewModelScope.launch {
-              settingsRepository.triggerManualSync(id)
+              forceSyncUseCase(id)
           }
       }
   }

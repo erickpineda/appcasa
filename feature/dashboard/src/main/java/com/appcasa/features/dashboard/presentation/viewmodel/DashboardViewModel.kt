@@ -65,13 +65,7 @@ class DashboardViewModel @Inject constructor(
   private val getCurrentUserUseCase: GetCurrentUserUseCase,
   private val getConfigurationUseCase: GetConfigurationUseCase,
   private val updateConfigurationUseCase: UpdateConfigurationUseCase,
-  private val tasksRepository: TasksRepository,
-  private val financeRepository: FinanceRepository,
-  private val familyRepository: FamilyRepository,
-  private val inventoryRepository: InventoryRepository,
-  private val dashboardRepository: DashboardRepository,
-  private val maintenanceRepository: MaintenanceRepository,
-  private val documentRepository: DocumentRepository,
+  private val startHouseholdSyncUseCase: com.appcasa.core.domain.usecase.sync.StartHouseholdSyncUseCase,
   private val currentHouseholdProvider: CurrentHouseholdProvider,
 ) : ViewModel() {
 
@@ -84,31 +78,7 @@ class DashboardViewModel @Inject constructor(
   val dashboardOrder: StateFlow<List<String>> = currentHouseholdProvider.householdId
     .flatMapLatest { id ->
       getDashboardConfigUseCase(id).map { config ->
-        val rawOrder = config?.ordenModulos?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
-        val defaultModules = listOf(
-          Constants.Modules.POSTITS,
-          Constants.Modules.TASKS,
-          Constants.Modules.PETS,
-          Constants.Modules.CALENDAR,
-          Constants.Modules.EXPENSES,
-          Constants.Modules.REWARDS,
-        )
-        
-        val finalOrder = if (rawOrder.isEmpty()) {
-            defaultModules
-        } else {
-            // 1. Identificamos qué módulos "reales" (sin prefijo HIDDEN_) están en la lista guardada
-            val existingBaseModules = rawOrder.map { if (it.startsWith("HIDDEN_")) it.substring(7) else it }
-            
-            // 2. Buscamos módulos nuevos que no estén ni activos ni ocultos (ej. una actualización de la app)
-            val newModules = defaultModules.filter { it !in existingBaseModules }
-            
-            // 3. Devolvemos la lista guardada + los nuevos al final
-            rawOrder + newModules
-        }
-
-        // Para la UI, solo enviamos los que NO están ocultos
-        finalOrder.filter { !it.startsWith("HIDDEN_") }
+        config.activeModules
       }
     }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -117,21 +87,7 @@ class DashboardViewModel @Inject constructor(
   val fullDashboardConfig: StateFlow<List<String>> = currentHouseholdProvider.householdId
     .flatMapLatest { id ->
         getDashboardConfigUseCase(id).map { config ->
-            val rawOrder = config?.ordenModulos?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
-            val defaultModules = listOf(
-              Constants.Modules.POSTITS,
-              Constants.Modules.TASKS,
-              Constants.Modules.PETS,
-              Constants.Modules.CALENDAR,
-              Constants.Modules.EXPENSES,
-              Constants.Modules.REWARDS,
-            )
-            if (rawOrder.isEmpty()) defaultModules
-            else {
-                val existingBase = rawOrder.map { if (it.startsWith("HIDDEN_")) it.substring(7) else it }
-                val newOnes = defaultModules.filter { it !in existingBase }
-                rawOrder + newOnes
-            }
+            config.allModules
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -213,13 +169,7 @@ class DashboardViewModel @Inject constructor(
             id to user
         }.collect { (id, user) ->
             if (id != 0L && user != null) {
-                tasksRepository.startRemoteSync(id)
-                financeRepository.startRemoteSync(id)
-                familyRepository.startRemoteSync(id)
-                inventoryRepository.startRemoteSync(id)
-                dashboardRepository.startRemoteSync(id)
-                maintenanceRepository.startRemoteSync(id)
-                documentRepository.startRemoteSync(id)
+                startHouseholdSyncUseCase(id)
             }
         }
     }

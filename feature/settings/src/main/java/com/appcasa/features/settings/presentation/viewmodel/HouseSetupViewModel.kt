@@ -1,21 +1,19 @@
 package com.appcasa.features.settings.presentation.viewmodel
 
-import android.content.Context
-import android.content.SharedPreferences
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appcasa.core.domain.model.FamilyMember
 import com.appcasa.core.domain.model.Household
 import com.appcasa.core.domain.providers.CurrentHouseholdProvider
 import com.appcasa.core.domain.usecase.household.GetFamilyMembersUseCase
+import com.appcasa.core.domain.usecase.sync.StartHouseholdSyncUseCase
 import com.appcasa.core.ui.utils.UiText
 import com.appcasa.feature.settings.R
 import com.appcasa.features.settings.domain.usecase.*
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
+import com.appcasa.core.domain.usecase.network.CheckNetworkStatusUseCase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -33,11 +31,17 @@ class HouseSetupViewModel @Inject constructor(
   private val getAllHouseholdsUseCase: GetAllHouseholdsUseCase,
   private val switchHouseholdUseCase: SwitchHouseholdUseCase,
   private val recoverHouseholdsUseCase: RecoverHouseholdsUseCase,
+  private val startHouseholdSyncUseCase: StartHouseholdSyncUseCase,
   private val linkAccountUseCase: LinkAccountUseCase,
   private val firebaseAuth: FirebaseAuth,
   private val currentHouseholdProvider: CurrentHouseholdProvider,
-  private val sharedPreferences: SharedPreferences,
-  @ApplicationContext private val context: Context
+  private val checkNetworkStatusUseCase: CheckNetworkStatusUseCase,
+  private val getBiometricStatusUseCase: GetBiometricStatusUseCase,
+  private val setBiometricStatusUseCase: SetBiometricStatusUseCase,
+  private val getBiometricPromptedUseCase: GetBiometricPromptedUseCase,
+  private val setBiometricPromptedUseCase: SetBiometricPromptedUseCase,
+  private val getOnboardingStatusUseCase: GetOnboardingStatusUseCase,
+  private val setOnboardingStatusUseCase: SetOnboardingStatusUseCase
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(SetupUiState())
@@ -93,6 +97,18 @@ class HouseSetupViewModel @Inject constructor(
     }
 
     viewModelScope.launch {
+      currentHouseholdProvider.householdId.collect { id ->
+        if (id != 0L) {
+          _uiState.update { it.copy(isLoading = true) }
+          startHouseholdSyncUseCase(id)
+          // Damos un pequeño margen para que el primer snapshot llegue
+          delay(500)
+          _uiState.update { it.copy(isLoading = false) }
+        }
+      }
+    }
+
+    viewModelScope.launch {
       if (isUserLoggedIn()) {
         val households = getAllHouseholdsUseCase().first()
         if (households.isEmpty()) {
@@ -127,14 +143,7 @@ class HouseSetupViewModel @Inject constructor(
   }
 
   private fun checkNetworkStatus(): Boolean {
-    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val network = connectivityManager.activeNetwork
-    val capabilities = connectivityManager.getNetworkCapabilities(network)
-    val hasInternet = capabilities != null && (
-        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
-    )
+    val hasInternet = checkNetworkStatusUseCase()
     _uiState.update { it.copy(isNetworkAvailable = hasInternet) }
     return hasInternet
   }
@@ -324,8 +333,8 @@ class HouseSetupViewModel @Inject constructor(
   }
 
   private fun checkBiometricRequirementAndNavigate() {
-    val biometricSetting = sharedPreferences.getBoolean("biometric_lock_app", false)
-    val promptedBefore = sharedPreferences.getBoolean("biometric_prompted_before", false)
+    val biometricSetting = getBiometricStatusUseCase()
+    val promptedBefore = getBiometricPromptedUseCase()
     if (!biometricSetting && !promptedBefore) {
       _uiState.update { it.copy(isLoading = false) }
       viewModelScope.launch {
@@ -340,21 +349,19 @@ class HouseSetupViewModel @Inject constructor(
   }
 
   private fun setupBiometrics(enable: Boolean) {
-    sharedPreferences.edit()
-      .putBoolean("biometric_lock_app", enable)
-      .putBoolean("biometric_prompted_before", true)
-      .apply()
+    setBiometricStatusUseCase(enable)
+    setBiometricPromptedUseCase(true)
     viewModelScope.launch {
       _uiEffect.emit(SetupUiEffect.NavigateToDashboard)
     }
   }
 
   fun isOnboardingCompleted(): Boolean {
-    return sharedPreferences.getBoolean("onboarding_completed", false)
+    return getOnboardingStatusUseCase()
   }
 
   private fun saveOnboardingCompleted() {
-    sharedPreferences.edit().putBoolean("onboarding_completed", true).apply()
+    setOnboardingStatusUseCase(true)
     viewModelScope.launch {
       _uiEffect.emit(SetupUiEffect.NavigateToStep(SetupStep.WELCOME))
     }

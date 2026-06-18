@@ -51,7 +51,11 @@ class DocumentRepositoryImpl @Inject constructor(
     override suspend fun deleteDocumento(documento: Document) {
         documentoDao.deleteDocumento(documento.toEntity())
         try {
-            remoteDataSource.deleteDocument(documento)
+            val hogar = householdRepository.getHogarById(documento.hogarId).first()
+            val hSyncId = documento.hogarSyncId ?: hogar?.syncId
+            if (hSyncId != null) {
+                remoteDataSource.deleteDocument(hSyncId, documento)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

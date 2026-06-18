@@ -24,20 +24,24 @@ class FamilyRemoteDataSource @Inject constructor(
     private fun getStorageRef(hogarSyncId: String, memberSyncId: String) = 
         storage.reference.child("${FirestoreConstants.COL_HOUSEHOLDS}/$hogarSyncId/${FirestoreConstants.COL_MEMBERS}/$memberSyncId.jpg")
 
-    suspend fun syncMember(member: FamilyMember) {
-        val hogarSyncId = member.hogarSyncId ?: return
+    suspend fun syncMember(hogarSyncId: String, member: FamilyMember) {
         val syncId = member.syncId ?: return
-        var updatedMember = member
+        var updatedMember = member.copy(hogarSyncId = hogarSyncId)
         
         // Si hay una foto local, subirla a Storage
         member.fotoUri?.let { uri ->
             if (uri.startsWith("/") || uri.startsWith("file://")) {
                 val file = File(uri.replace("file://", ""))
                 if (file.exists()) {
-                    val ref = getStorageRef(hogarSyncId, syncId)
-                    ref.putFile(android.net.Uri.fromFile(file)).await()
-                    val downloadUrl = ref.downloadUrl.await().toString()
-                    updatedMember = member.copy(urlNube = downloadUrl)
+                    try {
+                        val ref = getStorageRef(hogarSyncId, syncId)
+                        ref.putFile(android.net.Uri.fromFile(file)).await()
+                        val downloadUrl = ref.downloadUrl.await().toString()
+                        updatedMember = updatedMember.copy(urlNube = downloadUrl)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        // Continuamos sin urlNube si falla para no bloquear el registro del miembro
+                    }
                 }
             }
         }
@@ -46,8 +50,7 @@ class FamilyRemoteDataSource @Inject constructor(
             .set(MemberDto.fromDomain(updatedMember)).await()
     }
 
-    suspend fun deleteMember(member: FamilyMember) {
-        val hogarSyncId = member.hogarSyncId ?: return
+    suspend fun deleteMember(hogarSyncId: String, member: FamilyMember) {
         val syncId = member.syncId ?: return
         getMemberCollection(hogarSyncId).document(syncId).delete().await()
     }

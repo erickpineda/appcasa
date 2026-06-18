@@ -18,15 +18,14 @@ class ListRemoteDataSource @Inject constructor(
     private fun getListCollection(hogarSyncId: String) = 
         firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_LISTS)
 
-    suspend fun syncList(list: Lista) {
-        val hogarSyncId = list.hogarSyncId ?: return
+    suspend fun syncList(hogarSyncId: String, list: Lista) {
         val syncId = list.syncId ?: return
+        val dto = ListDto.fromDomain(list).copy(hogarSyncId = hogarSyncId)
         getListCollection(hogarSyncId).document(syncId)
-            .set(ListDto.fromDomain(list)).await()
+            .set(dto).await()
     }
 
-    suspend fun deleteList(list: Lista) {
-        val hogarSyncId = list.hogarSyncId ?: return
+    suspend fun deleteList(hogarSyncId: String, list: Lista) {
         val syncId = list.syncId ?: return
         getListCollection(hogarSyncId).document(syncId).delete().await()
     }

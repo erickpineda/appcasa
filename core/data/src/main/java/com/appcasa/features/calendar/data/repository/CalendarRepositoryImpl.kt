@@ -61,7 +61,11 @@ class CalendarRepositoryImpl @Inject constructor(
   override suspend fun deleteEvent(event: Event) {
     eventoDao.deleteEvento(event.toEntity())
     try {
-      remoteDataSource.deleteEvent(event)
+      val hogar = householdRepository.getHogarById(event.hogarId).first()
+      val hSyncId = event.hogarSyncId ?: hogar?.syncId
+      if (hSyncId != null) {
+        remoteDataSource.deleteEvent(hSyncId, event)
+      }
     } catch (e: Exception) {
       e.printStackTrace()
     }

@@ -22,4 +22,10 @@ interface RecompensaDao {
 
     @Delete
     suspend fun deleteRecompensa(recompensa: RecompensaEntity)
+
+    @Query("SELECT * FROM recompensas WHERE sync_id = :syncId")
+    suspend fun getRecompensaBySyncId(syncId: String): RecompensaEntity?
+
+    @Query("UPDATE recompensas SET last_synced_at = :timestamp WHERE id = :id")
+    suspend fun updateSyncTimestamp(id: Long, timestamp: Long)
 }

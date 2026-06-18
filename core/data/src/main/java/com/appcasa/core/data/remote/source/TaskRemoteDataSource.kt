@@ -22,15 +22,14 @@ class TaskRemoteDataSource @Inject constructor(
     private fun getTaskCollection(hogarSyncId: String) = 
         firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection(FirestoreConstants.COL_TASKS)
 
-    suspend fun syncTask(task: Task) {
-        val hogarSyncId = task.hogarSyncId ?: return
+    suspend fun syncTask(hogarSyncId: String, task: Task) {
         val syncId = task.syncId ?: return
+        val dto = TaskDto.fromDomain(task).copy(hogarSyncId = hogarSyncId)
         getTaskCollection(hogarSyncId).document(syncId)
-            .set(TaskDto.fromDomain(task)).await()
+            .set(dto).await()
     }
 
-    suspend fun deleteTask(task: Task) {
-        val hogarSyncId = task.hogarSyncId ?: return
+    suspend fun deleteTask(hogarSyncId: String, task: Task) {
         val syncId = task.syncId ?: return
         getTaskCollection(hogarSyncId).document(syncId).delete().await()
     }
@@ -96,6 +95,66 @@ class TaskRemoteDataSource @Inject constructor(
                 doc.toObject(TaskAssignmentDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
             } ?: emptyList()
             trySend(items)
+        }
+        awaitClose { reg.remove() }
+    }
+
+    // Rewards
+    private fun getRewardCollection(hogarSyncId: String) = 
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection("rewards")
+
+    suspend fun syncReward(hogarSyncId: String, reward: com.appcasa.core.domain.model.Reward) {
+        val syncId = reward.syncId ?: return
+        val dto = com.appcasa.core.data.remote.model.RewardDto.fromDomain(reward).copy(hogarSyncId = hogarSyncId)
+        getRewardCollection(hogarSyncId).document(syncId)
+            .set(dto).await()
+    }
+
+    suspend fun deleteReward(hogarSyncId: String, reward: com.appcasa.core.domain.model.Reward) {
+        val syncId = reward.syncId ?: return
+        getRewardCollection(hogarSyncId).document(syncId).delete().await()
+    }
+
+    fun observeRewards(hogarSyncId: String): Flow<List<com.appcasa.core.domain.model.Reward>> = callbackFlow {
+        val reg = getRewardCollection(hogarSyncId).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+            val rewards = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(com.appcasa.core.data.remote.model.RewardDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
+            trySend(rewards)
+        }
+        awaitClose { reg.remove() }
+    }
+
+    // Task Categories
+    private fun getCategoryCollection(hogarSyncId: String) = 
+        firestore.collection(FirestoreConstants.COL_HOUSEHOLDS).document(hogarSyncId).collection("task_categories")
+
+    suspend fun syncCategory(hogarSyncId: String, category: com.appcasa.core.domain.model.TaskCategory) {
+        val syncId = category.syncId ?: return
+        val dto = com.appcasa.core.data.remote.model.TaskCategoryDto.fromDomain(category).copy(hogarSyncId = hogarSyncId)
+        getCategoryCollection(hogarSyncId).document(syncId)
+            .set(dto).await()
+    }
+
+    suspend fun deleteCategory(hogarSyncId: String, category: com.appcasa.core.domain.model.TaskCategory) {
+        val syncId = category.syncId ?: return
+        getCategoryCollection(hogarSyncId).document(syncId).delete().await()
+    }
+
+    fun observeCategories(hogarSyncId: String): Flow<List<com.appcasa.core.domain.model.TaskCategory>> = callbackFlow {
+        val reg = getCategoryCollection(hogarSyncId).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+            val categories = snapshot?.documents?.mapNotNull { doc -> 
+                doc.toObject(com.appcasa.core.data.remote.model.TaskCategoryDto::class.java)?.copy(syncId = doc.id)?.toDomain() 
+            } ?: emptyList()
+            trySend(categories)
         }
         awaitClose { reg.remove() }
     }

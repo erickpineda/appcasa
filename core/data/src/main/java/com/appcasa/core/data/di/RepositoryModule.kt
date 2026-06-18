@@ -17,6 +17,7 @@ import com.appcasa.features.settings.data.repository.SettingsRepositoryImpl
 import com.appcasa.features.settings.data.repository.UserRepositoryImpl
 import com.appcasa.features.tasks.data.repository.TasksRepositoryImpl
 import com.appcasa.features.utilities.data.repository.UtilityRepositoryImpl
+import com.appcasa.core.data.repository.NetworkRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -26,6 +27,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindNetworkRepository(
+        networkRepositoryImpl: NetworkRepositoryImpl
+    ): NetworkRepository
 
     @Binds
     @Singleton

@@ -51,11 +51,39 @@ class DeletePostItUseCase @Inject constructor(
   }
 }
 
+data class DashboardModulesConfig(
+    val activeModules: List<String>,
+    val allModules: List<String>
+)
+
 class GetDashboardConfigUseCase @Inject constructor(
   private val repository: DashboardRepository
 ) {
-  operator fun invoke(hogarId: Long): Flow<DashboardConfig?> {
-    return repository.getDashboardConfig(hogarId)
+  operator fun invoke(hogarId: Long): Flow<DashboardModulesConfig> {
+    return repository.getDashboardConfig(hogarId).map { config ->
+        val rawOrder = config?.ordenModulos?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+        val defaultModules = listOf(
+          Constants.Modules.POSTITS,
+          Constants.Modules.TASKS,
+          Constants.Modules.PETS,
+          Constants.Modules.CALENDAR,
+          Constants.Modules.EXPENSES,
+          Constants.Modules.REWARDS,
+        )
+        
+        val finalOrder = if (rawOrder.isEmpty()) {
+            defaultModules
+        } else {
+            val existingBaseModules = rawOrder.map { if (it.startsWith("HIDDEN_")) it.substring(7) else it }
+            val newModules = defaultModules.filter { it !in existingBaseModules }
+            rawOrder + newModules
+        }
+
+        DashboardModulesConfig(
+            activeModules = finalOrder.filter { !it.startsWith("HIDDEN_") },
+            allModules = finalOrder
+        )
+    }
   }
 }
 
