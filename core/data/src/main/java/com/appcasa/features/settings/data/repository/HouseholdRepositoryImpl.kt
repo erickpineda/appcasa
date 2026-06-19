@@ -52,6 +52,7 @@ class HouseholdRepositoryImpl @Inject constructor(
             val syncedHogar = hogartoInsert.copy(id = id)
             withTimeoutOrNull(3000) {
                 remoteDataSource.syncHousehold(syncedHogar)
+                configuracionDao.updateHogarSyncTimestamp(id, System.currentTimeMillis())
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -72,7 +73,19 @@ class HouseholdRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateCodigoHogar(hogarId: Long, newCode: String) {
-        configuracionDao.updateCodigoHogar(hogarId, newCode)
+        val now = System.currentTimeMillis()
+        configuracionDao.updateCodigoHogar(hogarId, newCode, now)
+        // Sincronización inmediata para que el nuevo código sea válido en la nube
+        try {
+            configuracionDao.getHogarByIdOnce(hogarId)?.let { entity ->
+                withTimeoutOrNull(3000) {
+                    remoteDataSource.syncHousehold(entity.toDomain())
+                    configuracionDao.updateHogarSyncTimestamp(hogarId, System.currentTimeMillis())
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override suspend fun updateHogarSyncTimestamp(hogarId: Long, timestamp: Long) {

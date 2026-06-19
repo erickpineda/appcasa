@@ -59,6 +59,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -138,8 +139,12 @@ fun DashboardScreen(
   val isReady by viewModel.isReady.collectAsStateWithLifecycle()
   val userPoints by viewModel.userPoints.collectAsStateWithLifecycle()
   val userLevel by viewModel.userLevel.collectAsStateWithLifecycle()
+  val householdName by viewModel.householdName.collectAsStateWithLifecycle()
 
-  BackHandler(enabled = searchQuery.isNotEmpty()) {
+  var isSearchExpanded by remember { mutableStateOf(false) }
+
+  BackHandler(enabled = isSearchExpanded || searchQuery.isNotEmpty()) {
+      isSearchExpanded = false
       viewModel.onSearchQueryChange("")
   }
 
@@ -197,7 +202,10 @@ fun DashboardScreen(
         topBar = {
           DashboardTopBar(
             user = currentUser,
+            householdName = householdName,
             searchQuery = searchQuery,
+            isSearchExpanded = isSearchExpanded,
+            onSearchExpandedChange = { isSearchExpanded = it },
             onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
             onSettingsClick = { navController.navigate(Screen.Settings) },
             onCustomizeClick = { showReorderDialog = true }
@@ -266,7 +274,7 @@ fun DashboardContent(
     state = listState,
     modifier = Modifier.fillMaxSize(),
     contentPadding = PaddingValues(bottom = 80.dp),
-    verticalArrangement = Arrangement.spacedBy(16.dp)
+    verticalArrangement = Arrangement.spacedBy(20.dp)
   ) {
     item {
         FamilyStatusRow(
@@ -355,40 +363,77 @@ fun DashboardContent(
 @Composable
 fun DashboardTopBar(
     user: User?,
+    householdName: String,
     searchQuery: String,
+    isSearchExpanded: Boolean,
+    onSearchExpandedChange: (Boolean) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onSettingsClick: () -> Unit,
     onCustomizeClick: () -> Unit
 ) {
-    CenterAlignedTopAppBar(
+    TopAppBar(
         title = {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp)
-                    .heightIn(min = 48.dp),
-                placeholder = { Text(stringResource(R.string.dashboard_search_placeholder), fontSize = 14.sp) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { onSearchQueryChange("") }) {
+            if (isSearchExpanded || searchQuery.isNotEmpty()) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                        .heightIn(min = 48.dp),
+                    placeholder = { Text(stringResource(R.string.dashboard_search_placeholder), fontSize = 14.sp) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                    trailingIcon = {
+                        IconButton(onClick = { 
+                            onSearchQueryChange("")
+                            onSearchExpandedChange(false)
+                        }) {
                             Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp))
                         }
-                    }
-                },
-                shape = RoundedCornerShape(24.dp),
-                singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
+                    },
+                    shape = RoundedCornerShape(24.dp),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    )
                 )
-            )
+            } else {
+                Column(horizontalAlignment = Alignment.Start) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = householdName.uppercase(),
+                            style = MaterialTheme.typography.titleMedium,
+                            letterSpacing = 1.2.sp,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    user?.nombre?.let { name ->
+                        Text(
+                            text = "${stringResource(R.string.hub_management_title)} · $name",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+            }
         },
         actions = {
+            if (!isSearchExpanded && searchQuery.isEmpty()) {
+                IconButton(onClick = { onSearchExpandedChange(true) }) {
+                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.dashboard_search_placeholder), tint = MaterialTheme.colorScheme.primary)
+                }
+            }
             IconButton(onClick = onCustomizeClick) {
                 Icon(Icons.Default.DashboardCustomize, contentDescription = stringResource(R.string.cd_customize), tint = MaterialTheme.colorScheme.primary)
             }
@@ -406,7 +451,7 @@ fun DashboardTopBar(
                 }
             }
         },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+        colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.background
         )
     )

@@ -67,6 +67,7 @@ class DashboardViewModel @Inject constructor(
   private val updateConfigurationUseCase: UpdateConfigurationUseCase,
   private val startHouseholdSyncUseCase: com.appcasa.core.domain.usecase.sync.StartHouseholdSyncUseCase,
   private val currentHouseholdProvider: CurrentHouseholdProvider,
+  private val getDashboardHouseholdUseCase: GetDashboardHouseholdUseCase
 ) : ViewModel() {
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -108,6 +109,12 @@ class DashboardViewModel @Inject constructor(
 
   val currentUser: StateFlow<User?> = getCurrentUserUseCase()
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  val householdName: StateFlow<String> = currentHouseholdProvider.householdId
+    .flatMapLatest { id -> getDashboardHouseholdUseCase(id) }
+    .map { it?.nombre ?: "Mi Hogar" }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Mi Hogar")
 
   val userPoints: StateFlow<Int> = combine(currentUser, familyMembers) { user, members ->
     members.find { it.id == user?.miembroId }?.puntos ?: 0

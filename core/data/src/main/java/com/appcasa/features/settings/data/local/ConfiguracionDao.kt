@@ -15,6 +15,9 @@ interface ConfiguracionDao {
     @Query("SELECT * FROM hogares WHERE id = :id LIMIT 1")
     fun getHogarById(id: Long): Flow<HogarEntity?>
 
+    @Query("SELECT * FROM hogares WHERE id = :id LIMIT 1")
+    suspend fun getHogarByIdOnce(id: Long): HogarEntity?
+
     @Query("SELECT * FROM hogares")
     fun getAllHogares(): Flow<List<HogarEntity>>
 
@@ -45,8 +48,8 @@ interface ConfiguracionDao {
     @Query("UPDATE usuarios SET is_active = 1 WHERE id = :userId")
     suspend fun activateUser(userId: Long)
 
-    @Query("UPDATE hogares SET codigo_hogar = :newCode WHERE id = :hogarId")
-    suspend fun updateCodigoHogar(hogarId: Long, newCode: String)
+    @Query("UPDATE hogares SET codigo_hogar = :newCode, updated_at = :updatedAt WHERE id = :hogarId")
+    suspend fun updateCodigoHogar(hogarId: Long, newCode: String, updatedAt: Long)
 
     @Query("UPDATE hogares SET last_synced_at = :timestamp WHERE id = :hogarId")
     suspend fun updateHogarSyncTimestamp(hogarId: Long, timestamp: Long)

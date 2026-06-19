@@ -207,3 +207,11 @@ class GetNextEventUseCase @Inject constructor(
     return sdf.format(date)
   }
 }
+
+class GetDashboardHouseholdUseCase @Inject constructor(
+  private val repository: HouseholdRepository
+) {
+  operator fun invoke(hogarId: Long): Flow<Household?> {
+    return repository.getHogarById(hogarId)
+  }
+}

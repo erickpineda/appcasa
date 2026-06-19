@@ -71,7 +71,7 @@ class UpdateHouseholdUseCase @Inject constructor(
     private val repository: HouseholdRepository
 ) {
     suspend operator fun invoke(hogar: Household, nombre: String) {
-        repository.insertHogar(hogar.copy(nombre = nombre))
+        repository.insertHogar(hogar.copy(nombre = nombre, updatedAt = System.currentTimeMillis()))
     }
 }
 
