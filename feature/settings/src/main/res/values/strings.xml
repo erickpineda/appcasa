@@ -156,6 +156,7 @@
     <string name="setup_error_no_houses_found">No se encontraron hogares para este email</string>
     <string name="setup_error_recover_failed">Error al recuperar hogares</string>
     <string name="setup_error_invalid_code">Código de hogar no encontrado</string>
+    <string name="setup_error_duplicate_name">Ese nombre de usuario ya está en uso</string>
 
     <!-- Bloqueos Biométricos -->
     <string name="lock_finance_title">Finanzas Bloqueadas</string>

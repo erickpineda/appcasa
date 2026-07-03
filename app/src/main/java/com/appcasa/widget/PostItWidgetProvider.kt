@@ -21,35 +21,35 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class PostItWidgetProvider : AppWidgetProvider() {
 
-    @Inject
-    lateinit var dashboardDao: DashboardDao
+  @Inject
+  lateinit var dashboardDao: DashboardDao
 
-    @Inject
-    lateinit var configuracionDao: ConfiguracionDao
+  @Inject
+  lateinit var configuracionDao: ConfiguracionDao
 
-    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        for (appWidgetId in appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId)
-        }
+  override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+    for (appWidgetId in appWidgetIds) {
+      updateAppWidget(context, appWidgetManager, appWidgetId)
     }
+  }
 
-    private fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
-        val views = RemoteViews(context.packageName, R.layout.widget_post_it)
+  private fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+    val views = RemoteViews(context.packageName, R.layout.widget_post_it)
         
-        CoroutineScope(Dispatchers.IO).launch {
-            val hogar = configuracionDao.getHogarActual().firstOrNull()
-            val hogarId = hogar?.id ?: 0L
+    CoroutineScope(Dispatchers.IO).launch {
+      val hogar = configuracionDao.getHogarActual().firstOrNull()
+      val hogarId = hogar?.id ?: ""
             
-            val postIts = if (hogarId != 0L) dashboardDao.getPostIts(hogarId).first() else emptyList()
-            val lastPostIt = postIts.firstOrNull()?.contenido ?: context.getString(R.string.widget_no_notes)
+      val postIts = if (hogarId.isNotEmpty()) dashboardDao.getPostIts(hogarId).first() else emptyList()
+      val lastPostIt = postIts.firstOrNull()?.contenido ?: context.getString(R.string.widget_no_notes)
             
-            views.setTextViewText(R.id.widget_text, lastPostIt)
+      views.setTextViewText(R.id.widget_text, lastPostIt)
             
-            val intent = Intent(context, MainActivity::class.java)
-            val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-            views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
+      val intent = Intent(context, MainActivity::class.java)
+      val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+      views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
             
-            appWidgetManager.updateAppWidget(appWidgetId, views)
-        }
+      appWidgetManager.updateAppWidget(appWidgetId, views)
     }
+  }
 }

@@ -5,11 +5,15 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.appcasa.core.data.local.base.Auditable
+import com.appcasa.core.data.local.base.Syncable
 import com.appcasa.core.domain.model.EstadoTarea
 import com.appcasa.core.domain.model.Periodicidad
 import com.appcasa.core.domain.model.Prioridad
 import com.appcasa.core.domain.model.TipoContenidoTarea
+import com.appcasa.features.family.data.local.MiembroEntity
 import com.appcasa.features.settings.data.local.HogarEntity
+import java.util.UUID
 
 @Entity(
   tableName = "tareas",
@@ -25,27 +29,30 @@ import com.appcasa.features.settings.data.local.HogarEntity
       parentColumns = ["id"],
       childColumns  = ["categoria_id"],
       onDelete      = ForeignKey.SET_NULL
+    ),
+    ForeignKey(
+      entity        = TareaEntity::class,
+      parentColumns = ["id"],
+      childColumns  = ["tarea_padre_id"],
+      onDelete      = ForeignKey.CASCADE
     )
   ],
   indices = [
     Index("hogar_id"),
     Index("categoria_id"),
+    Index("tarea_padre_id"),
     Index("estado"),
-    Index("fecha_limite"),
-    Index("created_by_id"),
-    Index("sync_id")
+    Index("fecha_limite")
   ]
 )
 data class TareaEntity(
 
-  @PrimaryKey(autoGenerate = true)
-  val id: Long = 0,
+  @PrimaryKey
+  @ColumnInfo(name = "id")
+  override val id: String = UUID.randomUUID().toString(),
 
   @ColumnInfo(name = "hogar_id")
-  val hogarId: Long,
-
-  @ColumnInfo(name = "hogar_sync_id")
-  val hogarSyncId: String? = null,
+  val hogarId: String,
 
   @ColumnInfo(name = "titulo")
   val titulo: String,
@@ -66,10 +73,11 @@ data class TareaEntity(
   val estado: String = EstadoTarea.PENDIENTE.name,
 
   @ColumnInfo(name = "categoria_id")
-  val categoriaId: Long? = null,
+  val categoriaId: String? = null,
 
-  @ColumnInfo(name = "categoria_sync_id")
-  val categoriaSyncId: String? = null,
+  // Referencia a la tarea original si esta fue generada por periodicidad
+  @ColumnInfo(name = "tarea_padre_id")
+  val tareaPadreId: String? = null,
 
   @ColumnInfo(name = "fecha_limite")
   val fechaLimite: Long? = null,
@@ -93,30 +101,35 @@ data class TareaEntity(
   @ColumnInfo(name = "anticipacion_mins")
   val anticipacionMins: Int = 0,
 
-  @ColumnInfo(name = "sync_id")
-  val syncId: String? = null,
-
-  @ColumnInfo(name = "created_at")
-  val createdAt: Long = System.currentTimeMillis(),
-
-  @ColumnInfo(name = "updated_at")
-  val updatedAt: Long = System.currentTimeMillis(),
-
   @ColumnInfo(name = "points")
   val points: Int = 10,
 
   @ColumnInfo(name = "puntos_otorgados")
   val puntosOtorgados: Boolean = false,
 
-  @ColumnInfo(name = "created_by_id")
-  val createdById: Long? = null,
-
-  @ColumnInfo(name = "created_by_sync_id")
-  val createdBySyncId: String? = null,
-
   @ColumnInfo(name = "archived")
   val archived: Boolean = false,
 
+  // --- Auditoría / Sync ---
+  @ColumnInfo(name = "created_at")
+  override val createdAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "created_by")
+  override val createdBy: String? = null,
+
+  @ColumnInfo(name = "updated_at")
+  override val updatedAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "updated_by")
+  override val updatedBy: String? = null,
+
+  @ColumnInfo(name = "deleted_at")
+  override val deletedAt: Long? = null,
+
+  @ColumnInfo(name = "deleted_by")
+  override val deletedBy: String? = null,
+
   @ColumnInfo(name = "last_synced_at")
-  val lastSyncedAt: Long? = null
-)
+  override var lastSyncedAt: Long? = null
+
+) : Syncable, Auditable

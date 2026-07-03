@@ -6,16 +6,13 @@ import com.appcasa.features.tasks.data.local.*
 fun TareaEntity.toDomain(): Task {
     return Task(
         id = id,
-        syncId = syncId,
         hogarId = hogarId,
-        hogarSyncId = hogarSyncId,
         titulo = titulo,
         descripcion = descripcion,
         prioridad = try { Prioridad.valueOf(prioridad) } catch (e: Exception) { Prioridad.MEDIA },
         tipoContenido = try { TipoContenidoTarea.valueOf(tipoContenido) } catch (e: Exception) { TipoContenidoTarea.LISTA },
         estado = try { EstadoTarea.valueOf(estado) } catch (e: Exception) { EstadoTarea.PENDIENTE },
         categoriaId = categoriaId,
-        categoriaSyncId = categoriaSyncId,
         fechaLimite = fechaLimite,
         periodicidad = try { Periodicidad.valueOf(periodicidad) } catch (e: Exception) { Periodicidad.NINGUNA },
         esPersonal = esPersonal,
@@ -26,8 +23,7 @@ fun TareaEntity.toDomain(): Task {
         updatedAt = updatedAt,
         points = points,
         puntosOtorgados = puntosOtorgados,
-        createdById = createdById,
-        createdBySyncId = createdBySyncId,
+
         archived = archived,
         lastSyncedAt = lastSyncedAt
     )
@@ -36,16 +32,13 @@ fun TareaEntity.toDomain(): Task {
 fun Task.toEntity(): TareaEntity {
     return TareaEntity(
         id = id,
-        syncId = syncId,
         hogarId = hogarId,
-        hogarSyncId = hogarSyncId,
         titulo = titulo,
         descripcion = descripcion,
         prioridad = prioridad.name,
         tipoContenido = tipoContenido.name,
         estado = estado.name,
         categoriaId = categoriaId,
-        categoriaSyncId = categoriaSyncId,
         fechaLimite = fechaLimite,
         periodicidad = periodicidad.name,
         esPersonal = esPersonal,
@@ -56,8 +49,7 @@ fun Task.toEntity(): TareaEntity {
         updatedAt = updatedAt,
         points = points,
         puntosOtorgados = puntosOtorgados,
-        createdById = createdById,
-        createdBySyncId = createdBySyncId,
+
         archived = archived,
         lastSyncedAt = lastSyncedAt
     )
@@ -66,9 +58,7 @@ fun Task.toEntity(): TareaEntity {
 fun RecompensaEntity.toDomain(): Reward {
     return Reward(
         id = id,
-        syncId = syncId,
         hogarId = hogarId,
-        hogarSyncId = hogarSyncId,
         titulo = titulo,
         descripcion = descripcion,
         costePuntos = costePuntos,
@@ -81,9 +71,7 @@ fun RecompensaEntity.toDomain(): Reward {
 fun Reward.toEntity(): RecompensaEntity {
     return RecompensaEntity(
         id = id,
-        syncId = syncId,
         hogarId = hogarId,
-        hogarSyncId = hogarSyncId,
         titulo = titulo,
         descripcion = descripcion,
         costePuntos = costePuntos,
@@ -96,9 +84,7 @@ fun Reward.toEntity(): RecompensaEntity {
 fun CategoriaTareaEntity.toDomain(): TaskCategory {
     return TaskCategory(
         id = id,
-        syncId = syncId,
         hogarId = hogarId,
-        hogarSyncId = hogarSyncId,
         nombre = nombre,
         colorHex = colorHex,
         icono = icono,
@@ -111,9 +97,7 @@ fun CategoriaTareaEntity.toDomain(): TaskCategory {
 fun TaskCategory.toEntity(): CategoriaTareaEntity {
     return CategoriaTareaEntity(
         id = id,
-        syncId = syncId,
         hogarId = hogarId,
-        hogarSyncId = hogarSyncId,
         nombre = nombre,
         colorHex = colorHex,
         icono = icono,
@@ -125,11 +109,8 @@ fun TaskCategory.toEntity(): CategoriaTareaEntity {
 
 fun TareaAsignacionEntity.toDomain(): TaskAssignment {
     return TaskAssignment(
-        syncId = syncId,
         tareaId = tareaId,
-        tareaSyncId = tareaSyncId,
         miembroId = miembroId,
-        miembroSyncId = miembroSyncId,
         createdAt = createdAt,
         updatedAt = updatedAt,
         lastSyncedAt = lastSyncedAt
@@ -138,11 +119,8 @@ fun TareaAsignacionEntity.toDomain(): TaskAssignment {
 
 fun TaskAssignment.toEntity(): TareaAsignacionEntity {
     return TareaAsignacionEntity(
-        syncId = syncId,
         tareaId = tareaId,
-        tareaSyncId = tareaSyncId,
         miembroId = miembroId,
-        miembroSyncId = miembroSyncId,
         createdAt = createdAt,
         updatedAt = updatedAt,
         lastSyncedAt = lastSyncedAt
@@ -152,9 +130,7 @@ fun TaskAssignment.toEntity(): TareaAsignacionEntity {
 fun TareaCheckItemEntity.toDomain(): TaskCheckItem {
     return TaskCheckItem(
         id = id,
-        syncId = syncId,
         tareaId = tareaId,
-        tareaSyncId = tareaSyncId,
         texto = texto,
         completado = completado,
         orden = orden,
@@ -167,9 +143,7 @@ fun TareaCheckItemEntity.toDomain(): TaskCheckItem {
 fun TaskCheckItem.toEntity(): TareaCheckItemEntity {
     return TareaCheckItemEntity(
         id = id,
-        syncId = syncId,
         tareaId = tareaId,
-        tareaSyncId = tareaSyncId,
         texto = texto,
         completado = completado,
         orden = orden,

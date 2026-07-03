@@ -7,7 +7,6 @@ import com.appcasa.features.settings.data.local.HogarEntity
 fun HogarEntity.toDomain(): Household {
     return Household(
         id = id,
-        syncId = syncId,
         nombre = nombre,
         descripcion = descripcion,
         estado = try { EstadoGeneral.valueOf(estado) } catch (e: Exception) { EstadoGeneral.ACTIVO },
@@ -21,7 +20,6 @@ fun HogarEntity.toDomain(): Household {
 fun Household.toEntity(): HogarEntity {
     return HogarEntity(
         id = id,
-        syncId = syncId,
         nombre = nombre,
         descripcion = descripcion,
         estado = estado.name,

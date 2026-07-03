@@ -21,7 +21,7 @@ class EditMemberViewModel @Inject constructor(
   private val updateMemberUseCase: UpdateMemberUseCase
 ) : ViewModel() {
 
-  private val memberId: Long = checkNotNull(savedStateHandle["memberId"])
+  private val memberId: String = checkNotNull(savedStateHandle["memberId"])
 
   private val _member = MutableStateFlow<FamilyMember?>(null)
   val member: StateFlow<FamilyMember?> = _member.asStateFlow()
@@ -44,7 +44,7 @@ class EditMemberViewModel @Inject constructor(
     chip: String? = null, 
     vetNombre: String? = null, 
     vetTlf: String? = null, 
-    fotoUri: String? = null,
+    avatarUrl: String? = null,
     fechaNacimiento: Long? = null
   ) {
     viewModelScope.launch {
@@ -57,7 +57,7 @@ class EditMemberViewModel @Inject constructor(
           numeroChip = chip,
           veterinarioNombre = vetNombre,
           veterinarioTelefono = vetTlf,
-          fotoUri = fotoUri ?: current.fotoUri,
+          avatarUrl = avatarUrl ?: current.avatarUrl,
           fechaNacimiento = fechaNacimiento,
           updatedAt = System.currentTimeMillis()
         )

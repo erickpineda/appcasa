@@ -8,6 +8,6 @@ class UpdateListUseCase @Inject constructor(
     private val repository: ListsRepository
 ) {
     suspend operator fun invoke(lista: Lista, nuevoNombre: String) {
-        repository.insertLista(lista.copy(nombre = nuevoNombre, updatedAt = System.currentTimeMillis()))
+        repository.upsertLista(lista.copy(nombre = nuevoNombre, updatedAt = System.currentTimeMillis()))
     }
 }

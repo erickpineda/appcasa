@@ -21,7 +21,7 @@ class GlobalViewModel @Inject constructor(
   private val forceSyncUseCase: ForceSyncUseCase
 ) : ViewModel() {
 
-  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+  private val householdId: String get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   private val configs = currentHouseholdProvider.householdId
@@ -50,14 +50,20 @@ class GlobalViewModel @Inject constructor(
 
   val isHouseholdSetup: StateFlow<Boolean?> = getCurrentHouseholdUseCase()
     .combine(getCurrentUserUseCase()) { hogar, usuario ->
-        // Un hogar está configurado si existe en Room Y el usuario persistido también existe.
-        // Si usuario.id es -1L, es un usuario de Firebase sin hogar local aún.
-        hogar != null && usuario != null && usuario.id != -1L
+      // Un hogar está configurado si existe en Room local.
+      // Ignoramos el estado del usuario de Firebase temporalmente para que la app no se bloquee
+      // si Google Play Services falla al devolver el perfil.
+      val hasHouse = hogar != null && hogar.id.isNotEmpty()
+      val hasUser = usuario != null && usuario.id.isNotEmpty() && usuario.id != "volatile_id"
+      
+      if (hasHouse && hasUser) true 
+      else if (hasHouse && !hasUser) false // Necesita elegir perfil
+      else false // No hay casa
     }
     .stateIn(
-        scope = viewModelScope, 
-        started = SharingStarted.WhileSubscribed(5000), 
-        initialValue = if (currentHouseholdProvider.getCurrentHouseholdId() != 0L) true else null
+      scope = viewModelScope, 
+      started = SharingStarted.WhileSubscribed(5000), 
+      initialValue = null
     )
 
   val currentUser = getCurrentUserUseCase()
@@ -67,15 +73,15 @@ class GlobalViewModel @Inject constructor(
   val isSecureMode = _isSecureMode.asStateFlow()
 
   fun setSecureMode(enabled: Boolean) {
-      _isSecureMode.value = enabled
+    _isSecureMode.value = enabled
   }
 
   fun triggerManualSync() {
-      val id = currentHouseholdProvider.getCurrentHouseholdId()
-      if (id != 0L) {
-          viewModelScope.launch {
-              forceSyncUseCase(id)
-          }
+    val id = currentHouseholdProvider.getCurrentHouseholdId()
+    if (id.isNotEmpty()) {
+      viewModelScope.launch {
+        forceSyncUseCase(id)
       }
+    }
   }
 }

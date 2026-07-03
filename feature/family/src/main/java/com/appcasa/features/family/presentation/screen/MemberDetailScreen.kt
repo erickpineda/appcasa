@@ -1,4 +1,4 @@
-﻿package com.appcasa.features.family.presentation.screen
+package com.appcasa.features.family.presentation.screen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
@@ -65,12 +65,15 @@ import java.util.Date
 @Composable
 fun MemberDetailScreen(
   navController: NavController,
-  memberId: Long,
+  memberId: String,
   viewModel: FamilyViewModel = hiltViewModel()
 ) {
   val familyMembers by viewModel.familyMembers.collectAsStateWithLifecycle()
+  val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
   val member = familyMembers.find { it.id == memberId }
   val scrollState = rememberScrollState()
+  
+  val canEdit = currentUser?.rol == com.appcasa.core.domain.model.RolHogar.ADMIN || currentUser?.miembroId == member?.id
 
   AppCasaMeshBackground {
     PullToRefreshWrapper {
@@ -84,10 +87,12 @@ fun MemberDetailScreen(
               }
             },
             actions = {
-              IconButton(onClick = { 
-                member?.let { navController.navigate(Screen.EditMember(it.id)) }
-              }) {
-                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit))
+              if (canEdit) {
+                IconButton(onClick = { 
+                  member?.let { navController.navigate(Screen.EditMember(it.id)) }
+                }) {
+                  Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit))
+                }
               }
             }
           )
@@ -116,7 +121,7 @@ fun MemberDetailScreen(
               shadowElevation = 4.dp
             ) {
               Box(contentAlignment = Alignment.Center) {
-                val imageModel = member.fotoUri ?: member.urlNube
+                val imageModel = member.avatarUrl ?: member.avatarUrl
                 if (imageModel != null) {
                   AsyncImage(
                     model = imageModel,

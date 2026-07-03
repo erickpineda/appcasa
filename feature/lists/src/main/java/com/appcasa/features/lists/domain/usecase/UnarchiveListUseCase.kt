@@ -6,7 +6,7 @@ import javax.inject.Inject
 class UnarchiveListUseCase @Inject constructor(
     private val repository: ListsRepository
 ) {
-    suspend operator fun invoke(listaId: Long) {
+    suspend operator fun invoke(listaId: String) {
         repository.unarchiveLista(listaId)
     }
 }

@@ -53,9 +53,6 @@ object DatabaseModule {
   fun provideListaDao(db: AppCasaDatabase) = db.listaDao()
 
   @Provides
-  fun provideMascotaDao(db: AppCasaDatabase) = db.mascotaDao()
-
-  @Provides
   fun provideUtilidadDao(db: AppCasaDatabase) = db.utilidadDao()
 
   @Provides
@@ -72,6 +69,9 @@ object DatabaseModule {
 
   @Provides
   fun provideMaintenanceDao(db: AppCasaDatabase) = db.maintenanceDao()
+
+  @Provides
+  fun providePetDao(db: AppCasaDatabase) = db.petDao()
 
   @Provides
   fun provideRecompensaDao(db: AppCasaDatabase) = db.recompensaDao()

@@ -24,97 +24,48 @@ class MaintenanceRepositoryImpl @Inject constructor(
     private val syncScheduler: SyncScheduler
 ) : MaintenanceRepository {
 
-    override fun getEventsPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<MaintenanceEvent>> {
+    override fun getEventsPaged(hogarId: String, limit: Int, offset: Int): Flow<List<MaintenanceEvent>> {
         return maintenanceDao.getEventsPaged(hogarId, limit, offset).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override fun getArchivedEventsPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<MaintenanceEvent>> {
+    override fun getArchivedEventsPaged(hogarId: String, limit: Int, offset: Int): Flow<List<MaintenanceEvent>> {
         return maintenanceDao.getArchivedEventsPaged(hogarId, limit, offset).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override suspend fun insertEvent(event: MaintenanceEvent): Long {
-        var eventToInsert = event
-        if (eventToInsert.hogarSyncId == null && eventToInsert.hogarId > 0) {
-            val hogar = householdRepository.getHogarById(eventToInsert.hogarId).first()
-            eventToInsert = eventToInsert.copy(hogarSyncId = hogar?.syncId)
-        }
-        if (eventToInsert.syncId == null) {
-            eventToInsert = eventToInsert.copy(syncId = UUID.randomUUID().toString())
-        }
-        val existing = eventToInsert.syncId?.let { maintenanceDao.getEventBySyncId(it) }
-        if (existing != null) {
-            eventToInsert = eventToInsert.copy(id = existing.id)
-        }
-        val id = maintenanceDao.insertEvent(eventToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(eventToInsert.hogarId)
-        return id
+    override suspend fun upsertEvent(event: MaintenanceEvent) {
+        maintenanceDao.upsertEvent(event.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(event.hogarId)
     }
 
     override suspend fun deleteEvent(event: MaintenanceEvent) {
         maintenanceDao.deleteEvent(event.toEntity())
-        try {
-            val hogar = householdRepository.getHogarById(event.hogarId).first()
-            val hSyncId = event.hogarSyncId ?: hogar?.syncId
-            if (hSyncId != null) {
-                remoteDataSource.deleteMaintenance(hSyncId, event)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
         syncScheduler.scheduleSync(event.hogarId)
     }
 
-    override suspend fun unarchiveEvent(id: Long) {
+    override suspend fun unarchiveEvent(id: String) {
         maintenanceDao.unarchiveEvent(id)
     }
 
-    override suspend fun deleteAllArchivedEvents(hogarId: Long) {
-        maintenanceDao.deleteAllArchivedMaintenanceEvents(hogarId)
+    override suspend fun deleteAllArchivedEvents(hogarId: String) {
+        maintenanceDao.softDeleteAllArchivedMaintenanceEvents(hogarId, System.currentTimeMillis(), "system")
     }
 
-    override suspend fun archiveOldEvents(hogarId: Long, threshold: Long) {
+    override suspend fun archiveOldEvents(hogarId: String, threshold: Long) {
         maintenanceDao.archiveOldMaintenanceEvents(hogarId, threshold)
     }
 
-    override suspend fun updateMaintenanceSyncTimestamp(eventId: Long) {
+    override suspend fun updateMaintenanceSyncTimestamp(eventId: String) {
         maintenanceDao.updateSyncTimestamp(eventId, System.currentTimeMillis())
     }
 
     private var syncJob: Job? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun startRemoteSync(hogarId: Long) {
-        syncJob?.cancel()
-        syncJob = syncManager.isAppInForeground
-            .flatMapLatest { isInForeground ->
-                if (isInForeground) {
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    hogar?.syncId?.let { remoteDataSource.observeMaintenance(it) } ?: emptyFlow()
-                } else {
-                    emptyFlow()
-                }
-            }
-            .onEach { remoteItems ->
-                remoteItems.forEach { remoteEvent ->
-                    val existing = remoteEvent.syncId?.let { maintenanceDao.getEventBySyncId(it) }
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-
-                    val eventToSave = remoteEvent.copy(
-                        id = existing?.id ?: 0L,
-                        hogarId = hogarId,
-                        hogarSyncId = hogar?.syncId
-                    )
-
-                    if (existing == null || remoteEvent.updatedAt > existing.updatedAt) {
-                        maintenanceDao.insertEvent(eventToSave.toEntity())
-                    }
-                }
-            }
-            .catch { e -> e.printStackTrace() }
-            .launchIn(appScope)
+    override fun startRemoteSync(hogarId: String) {
+        // TODO: Refactor in Phase 4
     }
 }

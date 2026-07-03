@@ -8,6 +8,6 @@ class ArchiveListUseCase @Inject constructor(
     private val repository: ListsRepository
 ) {
     suspend operator fun invoke(lista: Lista) {
-        repository.insertLista(lista.copy(archived = true))
+        repository.upsertLista(lista.copy(archived = true))
     }
 }

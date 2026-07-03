@@ -41,7 +41,7 @@ import com.appcasa.core.ui.R as CoreR
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaintenanceDetailScreen(
-    id: Long,
+    id: String,
     navController: NavController,
     viewModel: HomeMaintenanceViewModel = hiltViewModel()
 ) {

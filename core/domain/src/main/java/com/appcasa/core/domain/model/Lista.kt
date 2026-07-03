@@ -1,11 +1,9 @@
 package com.appcasa.core.domain.model
 
 data class Lista(
-    val id: Long = 0,
-    val syncId: String? = null,
-    val hogarId: Long,
-    val hogarSyncId: String? = null,
-    val nombre: String,
+    val id: String = "",
+    val hogarId: String = "",
+    val nombre: String = "",
     val tipo: TipoLista = TipoLista.PERSONALIZADA,
     val completada: Boolean = false,
     val archived: Boolean = false,

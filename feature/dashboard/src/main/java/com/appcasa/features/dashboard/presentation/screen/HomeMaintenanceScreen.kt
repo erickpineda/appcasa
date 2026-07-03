@@ -110,8 +110,8 @@ fun HomeMaintenanceScreen(
       scanner.process(image).addOnSuccessListener { barcodes ->
         barcodes.firstOrNull()?.rawValue?.let { code ->
           if (code.startsWith("maintenance/")) {
-            val id = code.substringAfter("maintenance/").toLongOrNull()
-            id?.let { navController.navigate(Screen.MaintenanceDetail(it)) }
+            val id = code.substringAfter("maintenance/")
+            navController.navigate(Screen.MaintenanceDetail(id))
           }
         }
       }
@@ -397,4 +397,3 @@ fun MaintenanceActionDialog(
 private fun formatDate(timestamp: Long): String {
   return SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Constants.Locales.SPAIN).format(Date(timestamp))
 }
-

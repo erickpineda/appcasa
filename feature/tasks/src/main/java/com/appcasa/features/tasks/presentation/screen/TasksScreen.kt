@@ -88,7 +88,7 @@ fun TasksScreen(
           onToggleTask = { viewModel.toggleTaskCompletion(it) },
           onDeleteTask = { taskToArchive = it },
           onTaskClick = { navController.navigate(Screen.TaskDetail(it.id)) },
-          onUpdateTask = { tarea, nuevoTitulo -> viewModel.updateTask(tarea, nuevoTitulo) },
+          onUpdateTask = { tarea, nuevoTitulo -> viewModel.upsertTask(tarea, nuevoTitulo) },
           onLoadMore = { viewModel.loadMoreActive() }
         )
       }
@@ -112,8 +112,8 @@ fun TasksScreen(
 fun TasksContent(
   tasks: List<Task>,
   isCompact: Boolean,
-  subTaskCounts: Map<Long, Pair<Int, Int>>,
-  memberMap: Map<Long, String>,
+  subTaskCounts: Map<String, Pair<Int, Int>>,
+  memberMap: Map<String, String>,
   onAddTask: () -> Unit,
   onToggleTask: (Task) -> Unit,
   onDeleteTask: (Task) -> Unit,

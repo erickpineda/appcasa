@@ -7,12 +7,11 @@ import com.appcasa.core.domain.repository.HouseholdRepository
 import com.appcasa.features.settings.data.local.ConfiguracionDao
 import com.appcasa.features.settings.data.mapper.toDomain
 import com.appcasa.features.settings.data.mapper.toEntity
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
+import java.util.UUID
 import javax.inject.Inject
 
 class HouseholdRepositoryImpl @Inject constructor(
@@ -27,7 +26,7 @@ class HouseholdRepositoryImpl @Inject constructor(
     }
   }
 
-  override fun getHogarById(id: Long): Flow<Household?> {
+  override fun getHogarById(id: String): Flow<Household?> {
     return configuracionDao.getHogarById(id).map { it?.toDomain() }
   }
 
@@ -39,72 +38,68 @@ class HouseholdRepositoryImpl @Inject constructor(
     configuracionDao.getHogarByCodigo(code)?.toDomain()
   }
 
-  override suspend fun insertHogar(hogar: Household): Long = withContext(Dispatchers.IO) {
-    // Antes de insertar, comprobamos si ya existe por syncId para no duplicar localmente
-    val existingEntity = hogar.syncId?.let { configuracionDao.getHogarBySyncId(it) }
+  override suspend fun insertHogar(hogar: Household): String = withContext(Dispatchers.IO) {
+    val idToUse = if (hogar.id.isBlank()) UUID.randomUUID().toString() else hogar.id
+    val hogartoInsert = hogar.copy(id = idToUse)
 
-    val hogartoInsert = if (existingEntity != null) {
-      hogar.copy(id = existingEntity.id) // Mantenemos el ID local para Room
-    } else {
-      hogar
-    }
-
-    val id = configuracionDao.insertHogar(hogartoInsert.toEntity())
+    configuracionDao.upsertHogar(hogartoInsert.toEntity())
+    
     try {
-      // Ponemos un timeout de 3 segundos para que no bloquee la creación local si falla la nube
-      val syncedHogar = hogartoInsert.copy(id = id)
-      withTimeoutOrNull(3000) {
-        remoteDataSource.syncHousehold(syncedHogar)
-        configuracionDao.updateHogarSyncTimestamp(id, System.currentTimeMillis())
-      }
-    } catch (e: CancellationException) {
-      throw e
+      remoteDataSource.saveHousehold(hogartoInsert)
+      configuracionDao.updateHogarSyncTimestamp(idToUse, System.currentTimeMillis())
     } catch (e: Exception) {
       e.printStackTrace()
     }
-    id
+    
+    idToUse
   }
 
   override suspend fun findHouseholdRemotely(code: String): Household? = withContext(Dispatchers.IO) {
-    remoteDataSource.getHouseholdByCode(code)
+    try {
+      remoteDataSource.getHouseholdByCode(code)
+    } catch (e: Exception) {
+      null
+    }
   }
 
   override suspend fun findHouseholdsByUserEmail(email: String): List<Household> = withContext(Dispatchers.IO) {
-    remoteDataSource.findHouseholdsByUserEmail(email)
+    emptyList() 
   }
 
   override suspend fun findHouseholdsByUserUid(uid: String): List<Household> = withContext(Dispatchers.IO) {
-    remoteDataSource.findHouseholdsByUserUid(uid)
+    try {
+      remoteDataSource.findHouseholdsByMemberUid(uid)
+    } catch (e: Exception) {
+      emptyList()
+    }
   }
 
-  override suspend fun updateCodigoHogar(hogarId: Long, newCode: String) {
+  override suspend fun updateCodigoHogar(hogarId: String, newCode: String) {
     val now = System.currentTimeMillis()
     withContext(Dispatchers.IO) {
-      // 1. Actualización local
       configuracionDao.updateCodigoHogar(hogarId, newCode, now)
-      
-      // 2. Sincronización remota con tiempo límite
-      try {
-        configuracionDao.getHogarByIdOnce(hogarId)?.let { entity ->
-          withTimeoutOrNull(3000) {
-            remoteDataSource.syncHousehold(entity.toDomain())
-            configuracionDao.updateHogarSyncTimestamp(hogarId, System.currentTimeMillis())
-          }
+      configuracionDao.getHogarByIdOnce(hogarId)?.let { entity ->
+        try {
+          remoteDataSource.saveHousehold(entity.toDomain())
+          configuracionDao.updateHogarSyncTimestamp(hogarId, System.currentTimeMillis())
+        } catch (e: Exception) {
+          e.printStackTrace()
         }
-      } catch (e: CancellationException) {
-        throw e
-      } catch (e: Exception) {
-        e.printStackTrace()
       }
     }
   }
 
-  override suspend fun updateHogarSyncTimestamp(hogarId: Long, timestamp: Long) = withContext(Dispatchers.IO) {
+  override suspend fun updateHogarSyncTimestamp(hogarId: String, timestamp: Long) = withContext(Dispatchers.IO) {
     configuracionDao.updateHogarSyncTimestamp(hogarId, timestamp)
   }
 
-  override suspend fun deleteHogar(id: Long) = withContext(Dispatchers.IO) {
+  override suspend fun deleteHogar(id: String) = withContext(Dispatchers.IO) {
     configuracionDao.deleteHogar(id)
+    try {
+      remoteDataSource.deleteHousehold(id)
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
   }
 
   override suspend fun deleteAllHogares() = withContext(Dispatchers.IO) {

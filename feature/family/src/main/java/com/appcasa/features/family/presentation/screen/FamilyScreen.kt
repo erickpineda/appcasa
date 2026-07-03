@@ -1,4 +1,4 @@
-﻿package com.appcasa.features.family.presentation.screen
+package com.appcasa.features.family.presentation.screen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
@@ -228,9 +228,9 @@ fun MemberCard(
         shadowElevation = 2.dp
       ) {
         Box(contentAlignment = Alignment.Center) {
-          if (member.fotoUri != null) {
+          if (member.avatarUrl != null) {
             AsyncImage(
-              model = member.fotoUri,
+              model = member.avatarUrl,
               contentDescription = null,
               modifier = Modifier.fillMaxSize().clip(CircleShape),
               contentScale = ContentScale.Crop
@@ -307,13 +307,13 @@ fun FamilyPreview() {
     FamilyContent(
       navController = NavController(androidx.compose.ui.platform.LocalContext.current),
       people = listOf(
-        FamilyMember(id = 1, hogarId = 1, nombre = "Yo", tipo = TipoMiembro.PERSONA),
-        FamilyMember(id = 2, hogarId = 1, nombre = "Mi mujer", tipo = TipoMiembro.PERSONA)
+        FamilyMember(id = "1", hogarId = "1", nombre = "Yo", tipo = TipoMiembro.PERSONA),
+        FamilyMember(id = "2", hogarId = "1", nombre = "Mi mujer", tipo = TipoMiembro.PERSONA)
       ),
       pets = listOf(
-        FamilyMember(id = 3, hogarId = 1, nombre = "Perro 1", tipo = TipoMiembro.PERRO),
-        FamilyMember(id = 4, hogarId = 1, nombre = "Gato 1", tipo = TipoMiembro.GATO),
-        FamilyMember(id = 5, hogarId = 1, nombre = "Tortuga", tipo = TipoMiembro.TORTUGA)
+        FamilyMember(id = "3", hogarId = "1", nombre = "Perro 1", tipo = TipoMiembro.PERRO),
+        FamilyMember(id = "4", hogarId = "1", nombre = "Gato 1", tipo = TipoMiembro.GATO),
+        FamilyMember(id = "5", hogarId = "1", nombre = "Tortuga", tipo = TipoMiembro.TORTUGA)
       ),
       onAddClick = {},
       onDeleteMember = {},

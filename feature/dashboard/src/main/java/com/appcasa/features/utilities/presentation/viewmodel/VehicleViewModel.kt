@@ -21,7 +21,7 @@ class VehicleViewModel @Inject constructor(
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+  private val householdId: String get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val vehicleData: StateFlow<Map<String, String>> = currentHouseholdProvider.householdId

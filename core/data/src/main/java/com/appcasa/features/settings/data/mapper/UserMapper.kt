@@ -8,17 +8,13 @@ import com.appcasa.features.settings.data.local.UsuarioEntity
 fun UsuarioEntity.toDomain(): User {
     return User(
         id = id,
-        syncId = syncId,
-        hogarId = hogarId,
-        hogarSyncId = hogarSyncId,
+        hogarId = hogarId ?: "",
         nombre = nombre,
         email = email,
         avatarUrl = avatarUrl,
         authId = authId,
-        rol = try { RolHogar.valueOf(rol) } catch (e: Exception) { RolHogar.COLABORADOR },
-        estado = try { EstadoGeneral.valueOf(estado) } catch (e: Exception) { EstadoGeneral.ACTIVO },
         miembroId = miembroId,
-        isActive = isActive,
+        estado = try { EstadoGeneral.valueOf(estado) } catch (e: Exception) { EstadoGeneral.ACTIVO },
         createdAt = createdAt,
         updatedAt = updatedAt,
         lastSyncedAt = lastSyncedAt
@@ -26,19 +22,15 @@ fun UsuarioEntity.toDomain(): User {
 }
 
 fun User.toEntity(): UsuarioEntity {
-    return UsuarioEntity(
-        id = id,
-        syncId = syncId,
-        hogarId = hogarId,
-        hogarSyncId = hogarSyncId,
+  return UsuarioEntity(
+    id = if (id.isBlank()) java.util.UUID.randomUUID().toString() else id,
+    hogarId = hogarId,
         nombre = nombre,
         email = email,
         avatarUrl = avatarUrl,
         authId = authId,
-        rol = rol.name,
-        estado = estado.name,
         miembroId = miembroId,
-        isActive = isActive,
+        estado = estado.name,
         createdAt = createdAt,
         updatedAt = updatedAt,
         lastSyncedAt = lastSyncedAt

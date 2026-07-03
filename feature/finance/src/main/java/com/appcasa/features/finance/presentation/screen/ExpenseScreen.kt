@@ -109,35 +109,35 @@ fun ExpenseScreen(
   val context = LocalContext.current
 
   fun android.content.Context.findActivity(): FragmentActivity? {
-      var context = this
-      while (context is android.content.ContextWrapper) {
-          if (context is FragmentActivity) return context
-          context = context.baseContext
-      }
-      return null
+    var context = this
+    while (context is android.content.ContextWrapper) {
+      if (context is FragmentActivity) return context
+      context = context.baseContext
+    }
+    return null
   }
 
   LaunchedEffect(Unit) {
-      if (!isUnlocked) {
-          delay(300)
-          context.findActivity()?.let { viewModel.authenticate(it) }
-      }
+    if (!isUnlocked) {
+      delay(300)
+      context.findActivity()?.let { viewModel.authenticate(it) }
+    }
   }
 
   if (!isUnlocked) {
-      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          Column(horizontalAlignment = Alignment.CenterHorizontally) {
-              Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
-              Spacer(Modifier.height(16.dp))
-              Text(stringResource(CoreR.string.lock_finance_title), style = MaterialTheme.typography.titleLarge)
-              TextButton(onClick = { 
-                  context.findActivity()?.let { viewModel.authenticate(it) }
-              }) {
-                  Text(stringResource(CoreR.string.lock_btn_unlock))
-              }
-          }
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+      Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(16.dp))
+        Text(stringResource(CoreR.string.lock_finance_title), style = MaterialTheme.typography.titleLarge)
+        TextButton(onClick = { 
+          context.findActivity()?.let { viewModel.authenticate(it) }
+        }) {
+          Text(stringResource(CoreR.string.lock_btn_unlock))
+        }
       }
-      return
+    }
+    return
   }
 
   val expenses by viewModel.expenses.collectAsStateWithLifecycle()
@@ -151,7 +151,7 @@ fun ExpenseScreen(
 
   LaunchedEffect(Unit) {
     viewModel.toastEvent.collect { message ->
-        toastMessage = message
+      toastMessage = message
     }
   }
 
@@ -160,8 +160,8 @@ fun ExpenseScreen(
     title = stringResource(R.string.finance_delete_title),
     text = stringResource(R.string.finance_delete_confirm, expenseToDelete?.concepto ?: ""),
     onConfirm = {
-        expenseToDelete?.let { viewModel.archiveExpense(it) }
-        expenseToDelete = null
+      expenseToDelete?.let { viewModel.archiveExpense(it) }
+      expenseToDelete = null
     },
     onDismiss = { expenseToDelete = null }
   )
@@ -171,10 +171,10 @@ fun ExpenseScreen(
   ) { uri: Uri? ->
     uri?.let {
       val bitmap = if (Build.VERSION.SDK_INT < 28) {
-          MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+        MediaStore.Images.Media.getBitmap(context.contentResolver, it)
       } else {
-          val source = ImageDecoder.createSource(context.contentResolver, it)
-          ImageDecoder.decodeBitmap(source)
+        val source = ImageDecoder.createSource(context.contentResolver, it)
+        ImageDecoder.decodeBitmap(source)
       }
       viewModel.processTicket(bitmap)
       showAddDialog = true
@@ -187,8 +187,8 @@ fun ExpenseScreen(
       initialImporte = ocrResult?.toString() ?: "",
       initialConcepto = ocrStore ?: "",
       onDismiss = { 
-          showAddDialog = false
-          viewModel.clearOcr()
+        showAddDialog = false
+        viewModel.clearOcr()
       },
       onConfirm = { concepto, importe, categoria, fotoUri ->
         viewModel.addExpense(concepto, importe, categoria, fotoUri)
@@ -205,10 +205,10 @@ fun ExpenseScreen(
       onDismiss = { editingExpense = null },
       onConfirm = { concepto, importe, categoria, fotoUri ->
         viewModel.updateExpense(expense.copy(
-            concepto = concepto,
-            importe = importe,
-            categoria = categoria,
-            fotoUri = fotoUri
+          concepto = concepto,
+          importe = importe,
+          categoria = categoria,
+          fotoUri = fotoUri
         ))
         editingExpense = null
       }
@@ -216,106 +216,106 @@ fun ExpenseScreen(
   }
 
   Box(modifier = Modifier.fillMaxSize()) {
-      PullToRefreshWrapper {
-        Scaffold(
-          topBar = {
-            TopAppBar(
-              title = { Text(stringResource(R.string.finance_title)) },
-              navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                  Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
-                }
-              },
-              colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-              ),
-              actions = {
-                IconButton(onClick = { navController.navigate(Screen.FinanceStats) }) {
-                  Icon(Icons.Default.Assessment, contentDescription = stringResource(R.string.cd_stats))
-                }
-                IconButton(onClick = { galleryLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) }) {
-                    Icon(Icons.Default.DocumentScanner, contentDescription = stringResource(R.string.cd_scan_ticket))
-                }
-                if (expenses.isNotEmpty()) {
-                  val shareSummaryTitle = stringResource(R.string.finance_share_summary_title)
-                  val shareTotalLabel = stringResource(R.string.finance_share_total_label)
-                  IconButton(onClick = {
-                    val total = expenses.sumOf { it.importe }
-                    val shareText = shareSummaryTitle + "\n" + 
-                      expenses.joinToString("\n") { "- ${it.concepto}: ${String.format("%.2f", it.importe)} $currency" } +
-                      String.format(shareTotalLabel, String.format("%.2f", total), currency)
+    PullToRefreshWrapper {
+      Scaffold(
+        topBar = {
+          TopAppBar(
+            title = { Text(stringResource(R.string.finance_title)) },
+            navigationIcon = {
+              IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
+              }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+              containerColor = MaterialTheme.colorScheme.primary,
+              titleContentColor = MaterialTheme.colorScheme.onPrimary,
+              actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            actions = {
+              IconButton(onClick = { navController.navigate(Screen.FinanceStats) }) {
+                Icon(Icons.Default.Assessment, contentDescription = stringResource(R.string.cd_stats))
+              }
+              IconButton(onClick = { galleryLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) }) {
+                Icon(Icons.Default.DocumentScanner, contentDescription = stringResource(R.string.cd_scan_ticket))
+              }
+              if (expenses.isNotEmpty()) {
+                val shareSummaryTitle = stringResource(R.string.finance_share_summary_title)
+                val shareTotalLabel = stringResource(R.string.finance_share_total_label)
+                IconButton(onClick = {
+                  val total = expenses.sumOf { it.importe }
+                  val shareText = shareSummaryTitle + "\n" + 
+                    expenses.joinToString("\n") { "- ${it.concepto}: ${String.format("%.2f", it.importe)} $currency" } +
+                    String.format(shareTotalLabel, String.format("%.2f", total), currency)
                     
-                    val sendIntent: Intent = Intent().apply {
-                      action = Intent.ACTION_SEND
-                      putExtra(Intent.EXTRA_TEXT, shareText)
-                      type = "text/plain"
-                    }
-                    context.startActivity(Intent.createChooser(sendIntent, null))
-                  }) {
-                    Icon(Icons.Default.Share, contentDescription = stringResource(R.string.cd_share))
+                  val sendIntent: Intent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_TEXT, shareText)
+                    type = "text/plain"
                   }
-                }
-              }
-            )
-          },
-          floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-              Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_new_expense))
-            }
-          },
-          contentWindowInsets = WindowInsets(0, 0, 0, 0)
-        ) { padding ->
-          LazyColumn(
-            modifier = Modifier
-              .fillMaxSize()
-              .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-          ) {
-            if (expenses.isEmpty()) {
-              item {
-                AppCasaEmptyState(
-                  title = stringResource(R.string.finance_empty_title),
-                  description = stringResource(R.string.finance_empty_description),
-                  icon = Icons.Default.ReceiptLong,
-                  actionText = stringResource(R.string.finance_add_action),
-                  onActionClick = { showAddDialog = true },
-                  modifier = Modifier.fillParentMaxSize()
-                )
-              }
-            } else {
-              items(expenses) { expense ->
-                ExpenseCard(
-                  expense = expense,
-                  currency = currency,
-                  onEdit = { editingExpense = expense },
-                  onDelete = { expenseToDelete = expense }
-                )
-              }
-    
-              item {
-                TextButton(
-                    onClick = { viewModel.loadMoreActive() }, 
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.finance_load_more))
+                  context.startActivity(Intent.createChooser(sendIntent, null))
+                }) {
+                  Icon(Icons.Default.Share, contentDescription = stringResource(R.string.cd_share))
                 }
               }
             }
-            
+          )
+        },
+        floatingActionButton = {
+          FloatingActionButton(onClick = { showAddDialog = true }) {
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_new_expense))
+          }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+      ) { padding ->
+        LazyColumn(
+          modifier = Modifier
+            .fillMaxSize()
+            .padding(padding),
+          contentPadding = PaddingValues(16.dp),
+          verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+          if (expenses.isEmpty()) {
             item {
-                Spacer(Modifier.imePadding())
+              AppCasaEmptyState(
+                title = stringResource(R.string.finance_empty_title),
+                description = stringResource(R.string.finance_empty_description),
+                icon = Icons.Default.ReceiptLong,
+                actionText = stringResource(R.string.finance_add_action),
+                onActionClick = { showAddDialog = true },
+                modifier = Modifier.fillParentMaxSize()
+              )
             }
+          } else {
+            items(expenses) { expense ->
+              ExpenseCard(
+                expense = expense,
+                currency = currency,
+                onEdit = { editingExpense = expense },
+                onDelete = { expenseToDelete = expense }
+              )
+            }
+    
+            item {
+              TextButton(
+                onClick = { viewModel.loadMoreActive() }, 
+                modifier = Modifier.fillMaxWidth()
+              ) {
+                Text(stringResource(R.string.finance_load_more))
+              }
+            }
+          }
+            
+          item {
+            Spacer(Modifier.imePadding())
           }
         }
       }
+    }
 
-      AppCasaSutilToast(
-          message = toastMessage,
-          onDismiss = { toastMessage = null }
-      )
+    AppCasaSutilToast(
+      message = toastMessage,
+      onDismiss = { toastMessage = null }
+    )
   }
 }
 
@@ -324,20 +324,20 @@ fun ExpenseCard(expense: Expense, currency: String, onEdit: () -> Unit, onDelete
   var showImagePreview by remember { mutableStateOf(false) }
 
   if (showImagePreview && expense.fotoUri != null) {
-      AlertDialog(
-          onDismissRequest = { showImagePreview = false },
-          text = {
-              AsyncImage(
-                  model = expense.fotoUri,
-                  contentDescription = null,
-                  modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
-                  contentScale = ContentScale.Fit
-              )
-          },
-          confirmButton = {
-              TextButton(onClick = { showImagePreview = false }) { Text(stringResource(R.string.finance_btn_close)) }
-          }
-      )
+    AlertDialog(
+      onDismissRequest = { showImagePreview = false },
+      text = {
+        AsyncImage(
+          model = expense.fotoUri,
+          contentDescription = null,
+          modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
+          contentScale = ContentScale.Fit
+        )
+      },
+      confirmButton = {
+        TextButton(onClick = { showImagePreview = false }) { Text(stringResource(R.string.finance_btn_close)) }
+      }
+    )
   }
 
   AppCasaCard(useGlassmorphism = true,
@@ -352,19 +352,19 @@ fun ExpenseCard(expense: Expense, currency: String, onEdit: () -> Unit, onDelete
         }
       },
       leadingContent = {
-          if (expense.fotoUri != null) {
-              AsyncImage(
-                  model = expense.fotoUri,
-                  contentDescription = null,
-                  modifier = Modifier
-                      .size(48.dp)
-                      .clip(RoundedCornerShape(4.dp))
-                      .clickable { showImagePreview = true },
-                  contentScale = ContentScale.Crop
-              )
-          } else {
-              Icon(Icons.Default.Payments, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-          }
+        if (expense.fotoUri != null) {
+          AsyncImage(
+            model = expense.fotoUri,
+            contentDescription = null,
+            modifier = Modifier
+              .size(48.dp)
+              .clip(RoundedCornerShape(4.dp))
+              .clickable { showImagePreview = true },
+            contentScale = ContentScale.Crop
+          )
+        } else {
+          Icon(Icons.Default.Payments, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        }
       },
       trailingContent = {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -406,17 +406,17 @@ fun ExpenseActionDialog(
   val keyboardController = LocalSoftwareKeyboardController.current
 
   LaunchedEffect(Unit) {
-      delay(300)
-      focusRequester.requestFocus()
-      keyboardController?.show()
+    delay(300)
+    focusRequester.requestFocus()
+    keyboardController?.show()
   }
 
   val imagePickerLauncher = rememberLauncherForActivityResult(
-      contract = ActivityResultContracts.GetContent()
+    contract = ActivityResultContracts.GetContent()
   ) { uri ->
-      uri?.let {
-          fotoUri = FileUtils.saveImageLocally(context, it.toString())
-      }
+    uri?.let {
+      fotoUri = FileUtils.saveImageLocally(context, it.toString())
+    }
   }
 
   val isImporteValid = remember(importe) { 
@@ -430,17 +430,17 @@ fun ExpenseActionDialog(
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (initialImporte.isNotEmpty()) {
-            Surface(
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-            ) {
-                Text(
-                    stringResource(R.string.finance_ocr_detected, initialImporte, currency),
-                    modifier = Modifier.padding(8.dp),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
+          Surface(
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+          ) {
+            Text(
+              stringResource(R.string.finance_ocr_detected, initialImporte, currency),
+              modifier = Modifier.padding(8.dp),
+              style = MaterialTheme.typography.labelMedium
+            )
+          }
         }
         OutlinedTextField(
           value = concepto, 
@@ -454,14 +454,14 @@ fun ExpenseActionDialog(
         OutlinedTextField(
           value = importe, 
           onValueChange = { 
-              if (it.isEmpty() || it.all { char -> char.isDigit() || char == '.' || char == ',' }) {
-                  importe = it.replace(',', '.')
-              }
+            if (it.isEmpty() || it.all { char -> char.isDigit() || char == '.' || char == ',' }) {
+              importe = it.replace(',', '.')
+            }
           }, 
           label = { Text(stringResource(R.string.finance_label_amount, currency)) },
           keyboardOptions = KeyboardOptions(
-              keyboardType = KeyboardType.Number,
-              imeAction = ImeAction.Next
+            keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Next
           ),
           modifier = Modifier.fillMaxWidth(),
           singleLine = true,
@@ -473,42 +473,42 @@ fun ExpenseActionDialog(
           }
         )
         OutlinedTextField(
-            value = categoria, 
-            onValueChange = { categoria = it }, 
-            label = { Text(stringResource(R.string.finance_label_category)) }, 
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done)
+          value = categoria, 
+          onValueChange = { categoria = it }, 
+          label = { Text(stringResource(R.string.finance_label_category)) }, 
+          modifier = Modifier.fillMaxWidth(),
+          singleLine = true,
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done)
         )
 
         Spacer(Modifier.height(8.dp))
         
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+          modifier = Modifier.fillMaxWidth(),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
-                onClick = { imagePickerLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) },
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-            ) {
-                Icon(Icons.Default.PhotoCamera, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(if (fotoUri == null) stringResource(R.string.finance_btn_attach_ticket) else stringResource(R.string.finance_btn_change_photo), style = MaterialTheme.typography.labelSmall)
-            }
+          Button(
+            onClick = { imagePickerLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) },
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+          ) {
+            Icon(Icons.Default.PhotoCamera, null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(if (fotoUri == null) stringResource(R.string.finance_btn_attach_ticket) else stringResource(R.string.finance_btn_change_photo), style = MaterialTheme.typography.labelSmall)
+          }
             
-            if (fotoUri != null) {
-                AsyncImage(
-                    model = fotoUri,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(4.dp)).border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(4.dp)),
-                    contentScale = ContentScale.Crop
-                )
-                IconButton(onClick = { fotoUri = null }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Close, null, tint = MaterialTheme.colorScheme.error)
-                }
+          if (fotoUri != null) {
+            AsyncImage(
+              model = fotoUri,
+              contentDescription = null,
+              modifier = Modifier.size(40.dp).clip(RoundedCornerShape(4.dp)).border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(4.dp)),
+              contentScale = ContentScale.Crop
+            )
+            IconButton(onClick = { fotoUri = null }, modifier = Modifier.size(24.dp)) {
+              Icon(Icons.Default.Close, null, tint = MaterialTheme.colorScheme.error)
             }
+          }
         }
       }
     },
@@ -532,4 +532,3 @@ private fun formatDate(timestamp: Long): String {
   val sdf = SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Locale.getDefault())
   return sdf.format(Date(timestamp))
 }
-

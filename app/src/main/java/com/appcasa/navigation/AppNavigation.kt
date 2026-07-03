@@ -10,22 +10,9 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,6 +26,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import com.appcasa.core.ui.utils.LocalSyncAction
 import kotlinx.coroutines.delay
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -87,6 +75,7 @@ import com.appcasa.features.utilities.presentation.screen.VehicleManagementScree
 import com.appcasa.features.utilities.presentation.screen.WifiQRScreen
 import com.appcasa.presentation.viewmodel.GlobalViewModel
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AppNavigation(
   globalViewModel: GlobalViewModel = hiltViewModel()
@@ -96,18 +85,30 @@ fun AppNavigation(
   val currentDestination = navBackStackEntry?.destination
   
   val isHouseholdSetup by globalViewModel.isHouseholdSetup.collectAsStateWithLifecycle()
-  val isKeyboardVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() > 0.dp
+  val isKeyboardVisible = WindowInsets.isImeVisible
 
   // Manejo de Seguridad (FLAG_SECURE) basado en la ruta
   LaunchedEffect(currentDestination) {
-      val isSensitiveScreen = currentDestination?.hasRoute(Screen.SmartSafe::class) == true ||
-                              currentDestination?.hasRoute(Screen.Expenses::class) == true ||
-                              currentDestination?.hasRoute(Screen.FinanceStats::class) == true ||
-                              currentDestination?.hasRoute(Screen.MortgageCalculator::class) == true ||
-                              currentDestination?.hasRoute(Screen.SavingsCalculator::class) == true ||
-                              currentDestination?.hasRoute(Screen.Archive::class) == true ||
-                              currentDestination?.hasRoute(Screen.Auth::class) == true
+      val isSensitiveScreen = currentDestination?.hasRoute<Screen.SmartSafe>() == true ||
+                              currentDestination?.hasRoute<Screen.Expenses>() == true ||
+                              currentDestination?.hasRoute<Screen.FinanceStats>() == true ||
+                              currentDestination?.hasRoute<Screen.MortgageCalculator>() == true ||
+                              currentDestination?.hasRoute<Screen.SavingsCalculator>() == true ||
+                              currentDestination?.hasRoute<Screen.Archive>() == true ||
+                              currentDestination?.hasRoute<Screen.Auth>() == true
       globalViewModel.setSecureMode(isSensitiveScreen)
+  }
+
+  LaunchedEffect(isHouseholdSetup) {
+      if (isHouseholdSetup == false) {
+          navController.navigate(Screen.HouseSetup()) {
+              popUpTo(0) { inclusive = true }
+          }
+      } else if (isHouseholdSetup == true && currentDestination?.hasRoute<Screen.HouseSetup>() == true) {
+          navController.navigate(Screen.Dashboard) {
+              popUpTo(0) { inclusive = true }
+          }
+      }
   }
 
   if (isHouseholdSetup == null) {
@@ -120,9 +121,9 @@ fun AppNavigation(
       return
   }
 
-  val showBottomBar = currentDestination?.hasRoute(Screen.HouseSetup::class) == false && 
-                      currentDestination.hasRoute(Screen.Auth::class) == false && 
-                      isHouseholdSetup == true
+  val showBottomBar = isHouseholdSetup == true && 
+                      currentDestination?.hasRoute<Screen.HouseSetup>() != true && 
+                      currentDestination?.hasRoute<Screen.Auth>() != true
 
   CompositionLocalProvider(
     LocalSyncAction provides {
@@ -148,10 +149,10 @@ fun AppNavigation(
           .padding(bottom = if (isKeyboardVisible || !showBottomBar) 0.dp else innerPadding.calculateBottomPadding())
           .padding(top = innerPadding.calculateTopPadding()),
         enterTransition = { 
-          if (targetState.destination.hasRoute(Screen.Dashboard::class) || 
-              targetState.destination.hasRoute(Screen.Management::class) ||
-              targetState.destination.hasRoute(Screen.FamilyHub::class) ||
-              targetState.destination.hasRoute(Screen.Utilities::class)) {
+          if (targetState.destination.hasRoute<Screen.Dashboard>() || 
+              targetState.destination.hasRoute<Screen.Management>() ||
+              targetState.destination.hasRoute<Screen.FamilyHub>() ||
+              targetState.destination.hasRoute<Screen.Utilities>()) {
             fadeIn(animationSpec = tween(400))
           } else {
             fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f, animationSpec = tween(300)) 
@@ -271,10 +272,10 @@ private fun AppBottomBar(
     ) {
       bottomNavItems.forEach { item ->
         val selected = when (item.screen) {
-          Screen.Dashboard -> currentDestination?.hasRoute(Screen.Dashboard::class) == true
-          Screen.Management -> currentDestination?.hasRoute(Screen.ManagementGraph::class) == true || currentDestination?.hasRoute(Screen.Management::class) == true || Screen.managementTabRoutes.any { currentDestination?.hasRoute(it) == true }
-          Screen.FamilyHub -> currentDestination?.hasRoute(Screen.FamilyGraph::class) == true || currentDestination?.hasRoute(Screen.FamilyHub::class) == true || Screen.familyTabRoutes.any { currentDestination?.hasRoute(it) == true }
-          Screen.Utilities -> currentDestination?.hasRoute(Screen.UtilitiesGraph::class) == true || currentDestination?.hasRoute(Screen.Utilities::class) == true || Screen.utilitiesTabRoutes.any { currentDestination?.hasRoute(it) == true }
+          Screen.Dashboard -> currentDestination?.hierarchy?.any { it.hasRoute<Screen.Dashboard>() } == true
+          Screen.Management -> currentDestination?.hierarchy?.any { it.hasRoute<Screen.ManagementGraph>() || it.hasRoute<Screen.Management>() || Screen.managementTabRoutes.any { route -> it.hasRoute(route) } } == true
+          Screen.FamilyHub -> currentDestination?.hierarchy?.any { it.hasRoute<Screen.FamilyGraph>() || it.hasRoute<Screen.FamilyHub>() || Screen.familyTabRoutes.any { route -> it.hasRoute(route) } } == true
+          Screen.Utilities -> currentDestination?.hierarchy?.any { it.hasRoute<Screen.UtilitiesGraph>() || it.hasRoute<Screen.Utilities>() || Screen.utilitiesTabRoutes.any { route -> it.hasRoute(route) } } == true
           else -> false
         }
         
@@ -283,24 +284,21 @@ private fun AppBottomBar(
         NavigationBarItem(
           selected = selected,
           onClick = {
-            val isAtHub = currentDestination?.hasRoute(item.screen::class) == true
-            if (!isAtHub) {
-              if (selected) {
-                val popped = navController.popBackStack(item.screen, inclusive = false)
-                if (!popped) {
-                  navController.navigate(item.screen) {
-                    popUpTo(navController.graph.findStartDestination().id) { saveState = false }
-                    launchSingleTop = true
-                  }
+            val isAlreadyOnSelectedTab = when (item.screen) {
+              Screen.Dashboard -> currentDestination?.hasRoute<Screen.Dashboard>() == true
+              Screen.Management -> currentDestination?.hasRoute<Screen.Management>() == true
+              Screen.FamilyHub -> currentDestination?.hasRoute<Screen.FamilyHub>() == true
+              Screen.Utilities -> currentDestination?.hasRoute<Screen.Utilities>() == true
+              else -> false
+            }
+
+            if (!isAlreadyOnSelectedTab) {
+              navController.navigate(item.screen) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                  saveState = true
                 }
-              } else {
-                navController.navigate(item.screen) {
-                  popUpTo(navController.graph.findStartDestination().id) {
-                    saveState = false
-                  }
-                  launchSingleTop = true
-                  restoreState = false
-                }
+                launchSingleTop = true
+                restoreState = true
               }
             }
           },
@@ -325,4 +323,3 @@ private fun AppBottomBar(
     }
   }
 }
-

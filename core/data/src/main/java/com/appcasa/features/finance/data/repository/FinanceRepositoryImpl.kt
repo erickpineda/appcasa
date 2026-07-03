@@ -24,118 +24,62 @@ class FinanceRepositoryImpl @Inject constructor(
     private val syncScheduler: SyncScheduler
 ) : FinanceRepository {
 
-    override fun getExpensesByHogar(hogarId: Long): Flow<List<Expense>> {
+    override fun getExpensesByHogar(hogarId: String): Flow<List<Expense>> {
         return expenseDao.getExpensesByHogar(hogarId).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override fun getExpensesPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<Expense>> {
+    override fun getExpensesPaged(hogarId: String, limit: Int, offset: Int): Flow<List<Expense>> {
         return expenseDao.getExpensesPaged(hogarId, limit, offset).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override fun getArchivedExpensesPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<Expense>> {
+    override fun getArchivedExpensesPaged(hogarId: String, limit: Int, offset: Int): Flow<List<Expense>> {
         return expenseDao.getArchivedExpensesPaged(hogarId, limit, offset).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override suspend fun unarchiveExpense(id: Long) {
+    override suspend fun unarchiveExpense(id: String) {
         expenseDao.unarchiveExpense(id)
     }
 
-    override suspend fun archiveOldExpenses(hogarId: Long, threshold: Long) {
+    override suspend fun archiveOldExpenses(hogarId: String, threshold: Long) {
         expenseDao.archiveOldExpenses(hogarId, threshold)
     }
 
-    override suspend fun purgeOldExpensePhotos(hogarId: Long, threshold: Long) {
+    override suspend fun purgeOldExpensePhotos(hogarId: String, threshold: Long) {
         expenseDao.purgeOldExpensePhotos(hogarId, threshold)
     }
 
-    override suspend fun deleteAllExpenses(hogarId: Long) {
+    override suspend fun deleteAllExpenses(hogarId: String) {
         expenseDao.deleteAll() // O filtrar por hogar si existe la query
     }
 
-    override fun getTotalMonthlyExpense(hogarId: Long, startOfMonth: Long): Flow<Double?> {
+    override fun getTotalMonthlyExpense(hogarId: String, startOfMonth: Long): Flow<Double?> {
         return expenseDao.getTotalMonthlyExpense(hogarId, startOfMonth)
     }
 
-    override suspend fun insertExpense(expense: Expense): Long {
-        var expenseToInsert = expense
-        
-        // Resolve hogarSyncId
-        if (expenseToInsert.hogarSyncId == null && expenseToInsert.hogarId > 0) {
-            val hogar = householdRepository.getHogarById(expenseToInsert.hogarId).first()
-            expenseToInsert = expenseToInsert.copy(hogarSyncId = hogar?.syncId)
-        }
-
-        // Offline-first syncId
-        if (expenseToInsert.syncId == null) {
-            expenseToInsert = expenseToInsert.copy(syncId = UUID.randomUUID().toString())
-        }
-
-        // Avoid local duplicates from remote sync
-        val existing = expenseToInsert.syncId?.let { expenseDao.getExpenseBySyncId(it) }
-        if (existing != null) {
-            expenseToInsert = expenseToInsert.copy(id = existing.id)
-        }
-
-        val id = expenseDao.insertExpense(expenseToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(expenseToInsert.hogarId)
-        return id
+    override suspend fun upsertExpense(expense: Expense) {
+        expenseDao.upsertExpense(expense.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(expense.hogarId)
     }
 
     override suspend fun deleteExpense(expense: Expense) {
         expenseDao.deleteExpense(expense.toEntity())
-        try {
-            val hogar = householdRepository.getHogarById(expense.hogarId).first()
-            val hSyncId = expense.hogarSyncId ?: hogar?.syncId
-            if (hSyncId != null) {
-                remoteDataSource.deleteExpense(hSyncId, expense)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
         syncScheduler.scheduleSync(expense.hogarId)
     }
 
-    override suspend fun updateExpenseSyncTimestamp(expenseId: Long) {
+    override suspend fun updateExpenseSyncTimestamp(expenseId: String) {
         expenseDao.updateSyncTimestamp(expenseId, System.currentTimeMillis())
     }
 
     private var syncJob: Job? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun startRemoteSync(hogarId: Long) {
-        syncJob?.cancel()
-        syncJob = syncManager.isAppInForeground
-            .flatMapLatest { isInForeground ->
-                if (isInForeground) {
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    hogar?.syncId?.let { remoteDataSource.observeExpenses(it) } ?: emptyFlow()
-                } else {
-                    emptyFlow()
-                }
-            }
-            .onEach { remoteExpenses ->
-                remoteExpenses.forEach { remoteExpense ->
-                    val existing = remoteExpense.syncId?.let { expenseDao.getExpenseBySyncId(it) }
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    
-                    val expenseToSave = remoteExpense.copy(
-                        id = existing?.id ?: 0L,
-                        hogarId = hogarId,
-                        hogarSyncId = hogar?.syncId
-                    )
-
-                    if (existing == null || remoteExpense.updatedAt > existing.updatedAt) {
-                        expenseDao.insertExpense(expenseToSave.toEntity())
-                    }
-                }
-            }
-            .catch { e -> e.printStackTrace() }
-            .launchIn(appScope)
+    override fun startRemoteSync(hogarId: String) {
+        // TODO: Refactor in Phase 4
     }
 }

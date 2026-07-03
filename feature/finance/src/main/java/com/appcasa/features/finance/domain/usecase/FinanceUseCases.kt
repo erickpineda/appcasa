@@ -45,7 +45,7 @@ class ProcessTicketUseCase @Inject constructor() {
 class GetExpensesUseCase @Inject constructor(
     private val repository: FinanceRepository
 ) {
-    operator fun invoke(hogarId: Long, page: Int): Flow<List<Expense>> {
+    operator fun invoke(hogarId: String, page: Int): Flow<List<Expense>> {
         return repository.getExpensesPaged(hogarId, limit = page * 20, offset = 0)
     }
 }
@@ -53,28 +53,28 @@ class GetExpensesUseCase @Inject constructor(
 class GetArchivedExpensesUseCase @Inject constructor(
     private val repository: FinanceRepository
 ) {
-    operator fun invoke(hogarId: Long, page: Int): Flow<List<Expense>> {
+    operator fun invoke(hogarId: String, page: Int): Flow<List<Expense>> {
         return repository.getArchivedExpensesPaged(hogarId, limit = page * 20, offset = 0)
     }
 }
 
 class AddExpenseUseCase @Inject constructor(
-    private val repository: FinanceRepository,
-    private val userRepository: UserRepository
+  private val repository: FinanceRepository,
+  private val userRepository: UserRepository
 ) {
-    suspend operator fun invoke(hogarId: Long, concepto: String, importe: Double, categoria: String, fotoUri: String? = null) {
-        val currentUser = userRepository.getCurrentUser().first()
-        repository.insertExpense(
-            Expense(
-                hogarId = hogarId,
-                concepto = concepto,
-                importe = importe,
-                categoria = categoria,
-                fotoUri = fotoUri,
-                createdById = currentUser?.id
-            )
-        )
-    }
+  suspend operator fun invoke(hogarId: String, concepto: String, importe: Double, categoria: String, fotoUri: String? = null) {
+    val currentUser = userRepository.getCurrentUser().first()
+    repository.upsertExpense(
+      Expense(
+        hogarId = hogarId,
+        concepto = concepto,
+        importe = importe,
+        categoria = categoria,
+        fotoUri = fotoUri,
+        createdById = currentUser?.id
+      )
+    )
+  }
 }
 
 class DeleteExpenseUseCase @Inject constructor(
@@ -88,7 +88,7 @@ class DeleteExpenseUseCase @Inject constructor(
 class UnarchiveExpenseUseCase @Inject constructor(
     private val repository: FinanceRepository
 ) {
-    suspend operator fun invoke(expenseId: Long) {
+    suspend operator fun invoke(expenseId: String) {
         repository.unarchiveExpense(expenseId)
     }
 }
@@ -96,7 +96,7 @@ class UnarchiveExpenseUseCase @Inject constructor(
 class ClearAllArchivedExpensesUseCase @Inject constructor(
     private val repository: FinanceRepository
 ) {
-    suspend operator fun invoke(hogarId: Long) {
+    suspend operator fun invoke(hogarId: String) {
         repository.deleteAllExpenses(hogarId)
     }
 }
@@ -104,7 +104,7 @@ class ClearAllArchivedExpensesUseCase @Inject constructor(
 class ArchiveOldExpensesUseCase @Inject constructor(
     private val repository: FinanceRepository
 ) {
-    suspend operator fun invoke(hogarId: Long) {
+    suspend operator fun invoke(hogarId: String) {
         val threshold = System.currentTimeMillis() - (365L * 24 * 60 * 60 * 1000)
         repository.archiveOldExpenses(hogarId, threshold)
     }
@@ -113,7 +113,7 @@ class ArchiveOldExpensesUseCase @Inject constructor(
 class PurgeOldPhotosUseCase @Inject constructor(
     private val repository: FinanceRepository
 ) {
-    suspend operator fun invoke(hogarId: Long) {
+    suspend operator fun invoke(hogarId: String) {
         val threshold = System.currentTimeMillis() - (365L * 24 * 60 * 60 * 1000)
         repository.purgeOldExpensePhotos(hogarId, threshold)
     }
@@ -123,7 +123,7 @@ class UpdateExpenseUseCase @Inject constructor(
     private val repository: FinanceRepository
 ) {
     suspend operator fun invoke(expense: Expense) {
-        repository.insertExpense(expense)
+        repository.upsertExpense(expense)
     }
 }
 

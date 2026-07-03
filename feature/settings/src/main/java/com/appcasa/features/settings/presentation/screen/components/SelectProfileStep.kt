@@ -227,7 +227,7 @@ private fun ProfileAvatar(member: FamilyMember, onClick: () -> Unit) {
         .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
       contentAlignment = Alignment.Center
     ) {
-      val imageModel = member.fotoUri ?: member.urlNube
+      val imageModel = member.avatarUrl ?: member.avatarUrl
       if (imageModel != null) {
         AsyncImage(
           model = imageModel,

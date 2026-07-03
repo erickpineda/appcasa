@@ -2,37 +2,29 @@ package com.appcasa.features.settings.data.local
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.appcasa.core.data.local.base.Auditable
+import com.appcasa.core.data.local.base.Syncable
 import com.appcasa.core.domain.model.EstadoGeneral
-import com.appcasa.core.domain.model.RolHogar
+import java.util.UUID
 
 @Entity(
   tableName = "usuarios",
-  foreignKeys = [ForeignKey(
-    entity        = HogarEntity::class,
-    parentColumns = ["id"],
-    childColumns  = ["hogar_id"],
-    onDelete      = ForeignKey.CASCADE
-  )],
   indices = [
-    Index("hogar_id"),
     Index("email", unique = true),
-    Index("auth_id"),
-    Index("sync_id")
+    Index("auth_id")
   ]
 )
 data class UsuarioEntity(
 
-  @PrimaryKey(autoGenerate = true)
-  val id: Long = 0,
+  @PrimaryKey
+  @ColumnInfo(name = "id")
+  override val id: String = UUID.randomUUID().toString(),
 
-  @ColumnInfo(name = "hogar_id")
-  val hogarId: Long,
-
-  @ColumnInfo(name = "hogar_sync_id")
-  val hogarSyncId: String? = null,
+  // ID único del proveedor de autenticación (Firebase/Supabase)
+  @ColumnInfo(name = "auth_id")
+  val authId: String? = null,
 
   @ColumnInfo(name = "nombre")
   val nombre: String,
@@ -43,31 +35,34 @@ data class UsuarioEntity(
   @ColumnInfo(name = "avatar_url")
   val avatarUrl: String? = null,
 
-  // ID único del proveedor de autenticación (Firebase/Supabase)
-  @ColumnInfo(name = "auth_id")
-  val authId: String? = null,
-
-  @ColumnInfo(name = "rol")
-  val rol: String = RolHogar.COLABORADOR.name,
-
   @ColumnInfo(name = "estado")
   val estado: String = EstadoGeneral.ACTIVO.name,
 
-  @ColumnInfo(name = "sync_id")
-  val syncId: String? = null,
-
-  @ColumnInfo(name = "miembro_id")
-  val miembroId: Long? = null,
-
-  @ColumnInfo(name = "is_active")
-  val isActive: Boolean = false,
-
   @ColumnInfo(name = "created_at")
-  val createdAt: Long = System.currentTimeMillis(),
+  override val createdAt: Long = System.currentTimeMillis(),
 
   @ColumnInfo(name = "updated_at")
-  val updatedAt: Long = System.currentTimeMillis(),
+  override val updatedAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "hogar_id")
+  val hogarId: String? = null,
+
+  @ColumnInfo(name = "miembro_id")
+  val miembroId: String? = null,
+
+  @ColumnInfo(name = "created_by")
+  override val createdBy: String? = null,
+
+  @ColumnInfo(name = "updated_by")
+  override val updatedBy: String? = null,
+
+  @ColumnInfo(name = "deleted_at")
+  override val deletedAt: Long? = null,
+
+  @ColumnInfo(name = "deleted_by")
+  override val deletedBy: String? = null,
 
   @ColumnInfo(name = "last_synced_at")
-  val lastSyncedAt: Long? = null
-)
+  override var lastSyncedAt: Long? = null
+
+) : Syncable, Auditable

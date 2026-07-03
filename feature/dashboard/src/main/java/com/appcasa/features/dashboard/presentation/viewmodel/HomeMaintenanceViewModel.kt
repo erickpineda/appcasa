@@ -90,7 +90,7 @@ class HomeMaintenanceViewModel @Inject constructor(
         }
     }
 
-    fun unarchiveEvent(eventId: Long) {
+    fun unarchiveEvent(eventId: String) {
         viewModelScope.launch {
             unarchiveMaintenanceEventUseCase(eventId)
         }

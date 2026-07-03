@@ -33,42 +33,20 @@ class DashboardRepositoryImpl @Inject constructor(
     private val syncScheduler: SyncScheduler
 ) : DashboardRepository {
 
-    override fun getPostIts(hogarId: Long): Flow<List<PostIt>> {
+    override fun getPostIts(hogarId: String): Flow<List<PostIt>> {
         return dashboardDao.getPostIts(hogarId).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override suspend fun insertPostIt(postIt: PostIt): Long {
-        var postItToInsert = postIt
-        if (postItToInsert.hogarSyncId == null && postItToInsert.hogarId > 0) {
-            val hogar = householdRepository.getHogarById(postItToInsert.hogarId).first()
-            postItToInsert = postItToInsert.copy(hogarSyncId = hogar?.syncId)
-        }
-        if (postItToInsert.syncId == null) {
-            postItToInsert = postItToInsert.copy(syncId = UUID.randomUUID().toString())
-        }
-        val existing = postItToInsert.syncId?.let { dashboardDao.getPostItBySyncId(it) }
-        if (existing != null) {
-            postItToInsert = postItToInsert.copy(id = existing.id)
-        }
-        val id = dashboardDao.insertPostIt(postItToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(postItToInsert.hogarId)
+    override suspend fun upsertPostIt(postIt: PostIt) {
+        dashboardDao.upsertPostIt(postIt.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(postIt.hogarId)
         updateWidget()
-        return id
     }
 
     override suspend fun deletePostIt(postIt: PostIt) {
         dashboardDao.deletePostIt(postIt.toEntity())
-        try {
-            val hogar = householdRepository.getHogarById(postIt.hogarId).first()
-            val hSyncId = postIt.hogarSyncId ?: hogar?.syncId
-            if (hSyncId != null) {
-                remoteDataSource.deletePostIt(hSyncId, postIt)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
         syncScheduler.scheduleSync(postIt.hogarId)
         updateWidget()
     }
@@ -86,110 +64,25 @@ class DashboardRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getDashboardConfig(hogarId: Long): Flow<DashboardConfig?> {
+    override fun getDashboardConfig(hogarId: String): Flow<DashboardConfig?> {
         return dashboardDao.getConfig(hogarId).map { it?.toDomain() }
     }
 
     override suspend fun saveDashboardConfig(config: DashboardConfig) {
-        var configToSave = config
-        if (configToSave.hogarSyncId == null && configToSave.hogarId > 0) {
-            val hogar = householdRepository.getHogarById(configToSave.hogarId).first()
-            configToSave = configToSave.copy(hogarSyncId = hogar?.syncId)
-        }
-        dashboardDao.saveConfig(configToSave.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(configToSave.hogarId)
+        dashboardDao.upsertConfig(config.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(config.hogarId)
     }
 
-    override suspend fun updateConfigSyncTimestamp(hogarId: Long) {
+    override suspend fun updateConfigSyncTimestamp(hogarId: String) {
         dashboardDao.updateConfigSyncTimestamp(hogarId, System.currentTimeMillis())
     }
 
-    override suspend fun updatePostItSyncTimestamp(postItId: Long) {
+    override suspend fun updatePostItSyncTimestamp(postItId: String) {
         dashboardDao.updateSyncTimestamp(postItId, System.currentTimeMillis())
     }
 
-    override suspend fun updatePostItHogarSyncId(postItId: Long, hogarSyncId: String) {
-        dashboardDao.updateHogarSyncId(postItId, hogarSyncId)
-    }
-
-    private var syncJob: Job? = null
-
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun startRemoteSync(hogarId: Long) {
-        syncJob?.cancel()
-        syncJob = syncManager.isAppInForeground
-            .flatMapLatest { isInForeground ->
-                if (isInForeground) {
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    hogar?.syncId?.let { remoteDataSource.observePostIts(it) } ?: emptyFlow()
-                } else {
-                    emptyFlow()
-                }
-            }
-            .onEach { remoteItems ->
-                remoteItems.forEach { remoteItem ->
-                    val existing = remoteItem.syncId?.let { dashboardDao.getPostItBySyncId(it) }
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-
-                    val postItToSave = remoteItem.copy(
-                        id = existing?.id ?: 0L,
-                        hogarId = hogarId,
-                        hogarSyncId = hogar?.syncId,
-                        lastSyncedAt = System.currentTimeMillis()
-                    )
-
-                    if (existing == null) {
-                        dashboardDao.insertPostIt(postItToSave.toEntity())
-                        updateWidget()
-                        NotificationHelper.showNotification(
-                            context,
-                            postItToSave.syncId.hashCode(),
-                            context.getString(R.string.notif_new_postit_title),
-                            postItToSave.contenido.take(50)
-                        )
-                    } else if (remoteItem.updatedAt > existing.updatedAt) {
-                        dashboardDao.insertPostIt(postItToSave.toEntity())
-                        updateWidget()
-                    }
-                }
-            }
-            .catch { e -> e.printStackTrace() }
-            .launchIn(appScope)
-
-        observeAndSyncConfig(hogarId)
-    }
-
-    private var configSyncJob: Job? = null
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun observeAndSyncConfig(hogarId: Long) {
-        configSyncJob?.cancel()
-        configSyncJob = syncManager.isAppInForeground
-            .flatMapLatest { isInForeground ->
-                if (isInForeground) {
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    hogar?.syncId?.let { remoteDataSource.observeConfig(it) } ?: emptyFlow()
-                } else {
-                    emptyFlow()
-                }
-            }
-            .onEach { remoteConfig ->
-                if (remoteConfig != null) {
-                    val existing = dashboardDao.getConfig(hogarId).first()
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    
-                    val configToSave = remoteConfig.copy(
-                        hogarId = hogarId,
-                        hogarSyncId = hogar?.syncId,
-                        lastSyncedAt = System.currentTimeMillis()
-                    )
-
-                    if (existing == null || remoteConfig.updatedAt > existing.updatedAt) {
-                        dashboardDao.saveConfig(configToSave.toEntity())
-                    }
-                }
-            }
-            .catch { e -> e.printStackTrace() }
-            .launchIn(appScope)
+    override fun startRemoteSync(hogarId: String) {
+        // TODO Phase 4 Remote Sync
     }
 }

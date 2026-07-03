@@ -17,31 +17,31 @@ class DatabaseSessionProvider @Inject constructor(
     private val sharedPrefs: SharedPreferences
 ) : CurrentHouseholdProvider {
 
-    private val _manualId = MutableStateFlow(0L)
+    private val _manualId = MutableStateFlow("")
 
     init {
         // Cargar el ID guardado al iniciar (Recuerda sesión)
-        _manualId.value = sharedPrefs.getLong("current_household_id", 0L)
+        _manualId.value = sharedPrefs.getString("current_household_id", "") ?: ""
     }
 
-    override val householdId: Flow<Long> = combine(
-        configuracionDao.getHogarActual().map { it?.id ?: 0L },
+    override val householdId: Flow<String> = combine(
+        configuracionDao.getHogarActual().map { it?.id ?: "" },
         _manualId
     ) { dbId, manualId ->
-        val id = if (manualId != 0L) manualId else dbId
+        val id = if (manualId.isNotEmpty()) manualId else dbId
         _cachedId = id
         id
     }.distinctUntilChanged()
 
-    private var _cachedId: Long = 0L
+    private var _cachedId: String = ""
 
-    override suspend fun setHouseholdId(id: Long) {
-        sharedPrefs.edit().putLong("current_household_id", id).apply()
+    override suspend fun setHouseholdId(id: String) {
+        sharedPrefs.edit().putString("current_household_id", id).apply()
         _manualId.value = id
         _cachedId = id
     }
 
-    override fun getCurrentHouseholdId(): Long {
+    override fun getCurrentHouseholdId(): String {
         return _cachedId
     }
 }

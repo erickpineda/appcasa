@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetConfigurationUseCase @Inject constructor(
     private val repository: ConfigurationRepository
 ) {
-    operator fun invoke(hogarId: Long): Flow<List<Configuration>> {
+    operator fun invoke(hogarId: String): Flow<List<Configuration>> {
         return repository.getConfiguracion(hogarId)
     }
 }

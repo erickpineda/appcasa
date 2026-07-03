@@ -82,7 +82,7 @@ class FinanceViewModel @Inject constructor(
   private val _ocrStore = MutableStateFlow<String?>(null)
   val ocrStore = _ocrStore.asStateFlow()
 
-  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+  private val householdId: String get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   private val _activePage = MutableStateFlow(1)
   val activePage = _activePage.asStateFlow()
@@ -162,7 +162,7 @@ class FinanceViewModel @Inject constructor(
     }
   }
 
-  fun unarchiveExpense(expenseId: Long) {
+  fun unarchiveExpense(expenseId: String) {
     viewModelScope.launch {
       unarchiveExpenseUseCase(expenseId)
     }

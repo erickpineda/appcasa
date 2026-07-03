@@ -9,7 +9,7 @@ import javax.inject.Inject
 class GetEventsUseCase @Inject constructor(
     private val repository: CalendarRepository
 ) {
-    operator fun invoke(hogarId: Long): Flow<List<Event>> {
+    operator fun invoke(hogarId: String): Flow<List<Event>> {
         return repository.getEventsByHogar(hogarId)
     }
 }
@@ -18,13 +18,13 @@ class AddEventUseCase @Inject constructor(
     private val repository: CalendarRepository
 ) {
     suspend operator fun invoke(
-        hogarId: Long,
+        hogarId: String,
         titulo: String,
         fecha: Long,
         tipo: TipoEvento = TipoEvento.OTRO,
         descripcion: String? = null
     ) {
-        repository.insertEvent(
+        repository.upsertEvent(
             Event(
                 hogarId = hogarId,
                 titulo = titulo,

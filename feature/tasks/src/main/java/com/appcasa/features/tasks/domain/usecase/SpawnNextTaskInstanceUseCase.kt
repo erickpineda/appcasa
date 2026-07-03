@@ -16,9 +16,9 @@ class SpawnNextTaskInstanceUseCase @Inject constructor(
 
         val nextDate = calculateNextDate(task.fechaLimite ?: System.currentTimeMillis(), task.periodicidad)
         
-        val nextTaskId = repository.insertTask(
+        val nextTaskId = repository.upsertTask(
             task.copy(
-                id = 0,
+                id = "",
                 estado = EstadoTarea.PENDIENTE,
                 fechaLimite = nextDate,
                 completadoEn = null,
@@ -30,9 +30,9 @@ class SpawnNextTaskInstanceUseCase @Inject constructor(
         
         val subTasks = repository.getCheckItemsForTask(task.id).first()
         subTasks.forEach { sub ->
-            repository.insertCheckItem(
+            repository.upsertCheckItem(
                 sub.copy(
-                    id = 0,
+                    id = "",
                     tareaId = nextTaskId,
                     completado = false
                 )

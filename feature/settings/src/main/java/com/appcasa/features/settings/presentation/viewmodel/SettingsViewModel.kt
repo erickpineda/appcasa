@@ -154,7 +154,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun switchHogar(id: Long) {
+    fun switchHogar(id: String) {
         viewModelScope.launch {
             switchHouseholdUseCase(id)
         }

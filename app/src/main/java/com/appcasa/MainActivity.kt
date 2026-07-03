@@ -30,6 +30,7 @@ import com.appcasa.core.ui.theme.AppCasaTheme
 import com.appcasa.navigation.AppNavigation
 import com.appcasa.presentation.viewmodel.GlobalViewModel
 import com.appcasa.core.utils.NotificationHelper
+import com.google.firebase.FirebaseApp
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -46,6 +47,7 @@ class MainActivity : FragmentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    FirebaseApp.initializeApp(this)
     enableEdgeToEdge()
     
     // 1. Pre-flight check (Versión de DB/App)

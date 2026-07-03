@@ -8,6 +8,6 @@ class UpdateListItemUseCase @Inject constructor(
     private val repository: ListsRepository
 ) {
     suspend operator fun invoke(item: ListaItem, nuevoTexto: String) {
-        repository.updateItem(item.copy(texto = nuevoTexto))
+        repository.upsertItem(item.copy(texto = nuevoTexto))
     }
 }

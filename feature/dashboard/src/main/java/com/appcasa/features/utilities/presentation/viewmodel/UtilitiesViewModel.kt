@@ -26,7 +26,7 @@ class UtilitiesViewModel @Inject constructor(
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+  private val householdId: String get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   val utilities: StateFlow<List<Utility>> = getUtilitiesUseCase()
     .stateIn(

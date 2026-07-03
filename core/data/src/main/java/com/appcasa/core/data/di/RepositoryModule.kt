@@ -120,13 +120,14 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun bindPetRepository(
+        petRepositoryImpl: PetRepositoryImpl
+    ): PetRepository
+
+    @Binds
+    @Singleton
     abstract fun bindUtilityRepository(
         utilityRepositoryImpl: UtilityRepositoryImpl
     ): UtilityRepository
 
-    @Binds
-    @Singleton
-    abstract fun bindPetRepository(
-        petRepositoryImpl: PetRepositoryImpl
-    ): PetRepository
 }

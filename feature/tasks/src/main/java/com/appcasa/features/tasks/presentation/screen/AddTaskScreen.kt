@@ -98,7 +98,7 @@ fun AddTaskScreen(
   var periodicidad by remember { mutableStateOf(Periodicidad.NINGUNA) }
   var tipoContenido by remember { mutableStateOf(TipoContenidoTarea.LISTA) }
   var esPersonal by remember { mutableStateOf(false) }
-  var selectedMemberId by remember { mutableStateOf<Long?>(null) }
+  var selectedMemberId by remember { mutableStateOf<String?>(null) }
   var fotoUri by remember { mutableStateOf<String?>(null) }
   
   var memberExpanded by remember { mutableStateOf(false) }
@@ -115,9 +115,9 @@ fun AddTaskScreen(
   val keyboardController = LocalSoftwareKeyboardController.current
 
   LaunchedEffect(Unit) {
-      delay(100)
-      focusRequester.requestFocus()
-      keyboardController?.show()
+    delay(100)
+    focusRequester.requestFocus()
+    keyboardController?.show()
   }
 
   val canSave = titulo.isNotBlank()
@@ -214,17 +214,17 @@ fun AddTaskScreen(
       OutlinedTextField(
         value = titulo,
         onValueChange = { 
-            titulo = it
-            tituloTouched = true
+          titulo = it
+          tituloTouched = true
         },
         label = { Text(stringResource(R.string.task_label_title)) },
         modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
         isError = tituloTouched && titulo.isBlank(),
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
         supportingText = {
-            if (tituloTouched && titulo.isBlank()) {
-                Text(stringResource(R.string.task_error_title_required), color = MaterialTheme.colorScheme.error)
-            }
+          if (tituloTouched && titulo.isBlank()) {
+            Text(stringResource(R.string.task_error_title_required), color = MaterialTheme.colorScheme.error)
+          }
         }
       )
 
@@ -240,11 +240,11 @@ fun AddTaskScreen(
             onClick = { tipoContenido = tipo },
             label = { Text(if (tipo == TipoContenidoTarea.LISTA) stringResource(R.string.task_label_content_type_list) else stringResource(R.string.task_label_content_type_note)) },
             leadingIcon = {
-                Icon(
-                    imageVector = if (tipo == TipoContenidoTarea.LISTA) Icons.Default.List else Icons.Default.Notes,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
+              Icon(
+                imageVector = if (tipo == TipoContenidoTarea.LISTA) Icons.Default.List else Icons.Default.Notes,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+              )
             },
             modifier = Modifier.weight(1f)
           )
@@ -322,10 +322,10 @@ fun AddTaskScreen(
           horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
           val options = listOf(
-              0 to stringResource(R.string.task_notify_on_time), 
-              5 to stringResource(R.string.task_notify_5_min), 
-              15 to stringResource(R.string.task_notify_15_min), 
-              30 to stringResource(R.string.task_notify_30_min)
+            0 to stringResource(R.string.task_notify_on_time), 
+            5 to stringResource(R.string.task_notify_5_min), 
+            15 to stringResource(R.string.task_notify_15_min), 
+            30 to stringResource(R.string.task_notify_30_min)
           )
           options.forEach { (mins, label) ->
             FilterChip(
@@ -453,4 +453,3 @@ fun AddTaskScreen(
     }
   }
 }
-

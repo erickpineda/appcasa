@@ -5,8 +5,11 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.appcasa.core.data.local.base.Auditable
+import com.appcasa.core.data.local.base.Syncable
 import com.appcasa.core.domain.model.TipoRepeticion
 import com.appcasa.features.settings.data.local.HogarEntity
+import java.util.UUID
 
 @Entity(
   tableName = "recordatorios",
@@ -19,17 +22,17 @@ import com.appcasa.features.settings.data.local.HogarEntity
   indices = [
     Index("hogar_id"),
     Index("fecha_hora"),
-    Index("activo"),
-    Index("sync_id")
+    Index("activo")
   ]
 )
 data class RecordatorioEntity(
 
-  @PrimaryKey(autoGenerate = true)
-  val id: Long = 0,
+  @PrimaryKey
+  @ColumnInfo(name = "id")
+  override val id: String = UUID.randomUUID().toString(),
 
   @ColumnInfo(name = "hogar_id")
-  val hogarId: Long,
+  val hogarId: String,
 
   @ColumnInfo(name = "titulo")
   val titulo: String,
@@ -47,13 +50,13 @@ data class RecordatorioEntity(
 
   // ID de la tarea asociada (opcional)
   @ColumnInfo(name = "tarea_id")
-  val tareaId: Long? = null,
+  val tareaId: String? = null,
 
-  // ID del miembro al que está vinculado — ej: vacuna de una mascota (opcional)
+  // ID del miembro al que está vinculado (opcional)
   @ColumnInfo(name = "miembro_id")
-  val miembroId: Long? = null,
+  val miembroId: String? = null,
 
-  // UUID del Worker de WorkManager — necesario para cancelarlo si se edita o elimina
+  // UUID del Worker de WorkManager
   @ColumnInfo(name = "worker_id")
   val workerId: String? = null,
 
@@ -63,15 +66,26 @@ data class RecordatorioEntity(
   @ColumnInfo(name = "activo")
   val activo: Boolean = true,
 
-  @ColumnInfo(name = "sync_id")
-  val syncId: String? = null,
-
+  // --- Auditoría / Sync ---
   @ColumnInfo(name = "created_at")
-  val createdAt: Long = System.currentTimeMillis(),
+  override val createdAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "created_by")
+  override val createdBy: String? = null,
 
   @ColumnInfo(name = "updated_at")
-  val updatedAt: Long = System.currentTimeMillis(),
+  override val updatedAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "updated_by")
+  override val updatedBy: String? = null,
+
+  @ColumnInfo(name = "deleted_at")
+  override val deletedAt: Long? = null,
+
+  @ColumnInfo(name = "deleted_by")
+  override val deletedBy: String? = null,
 
   @ColumnInfo(name = "last_synced_at")
-  val lastSyncedAt: Long? = null
-)
+  override var lastSyncedAt: Long? = null
+
+) : Syncable, Auditable

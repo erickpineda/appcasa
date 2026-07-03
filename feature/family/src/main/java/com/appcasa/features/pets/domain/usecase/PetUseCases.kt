@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetPetWeightsUseCase @Inject constructor(
     private val repository: PetRepository
 ) {
-    operator fun invoke(petId: Long): Flow<List<PetWeight>> {
+    operator fun invoke(petId: String): Flow<List<PetWeight>> {
         return repository.getPesos(petId)
     }
 }
@@ -16,7 +16,7 @@ class GetPetWeightsUseCase @Inject constructor(
 class AddPetWeightUseCase @Inject constructor(
     private val repository: PetRepository
 ) {
-    suspend operator fun invoke(petId: Long, value: Double) {
+    suspend operator fun invoke(petId: String, value: Double) {
         repository.insertPeso(PetWeight(mascotaId = petId, pesoKg = value))
     }
 }
@@ -32,7 +32,7 @@ class DeletePetWeightUseCase @Inject constructor(
 class GetPetVaccinesUseCase @Inject constructor(
     private val repository: PetRepository
 ) {
-    operator fun invoke(petId: Long): Flow<List<PetVaccine>> {
+    operator fun invoke(petId: String): Flow<List<PetVaccine>> {
         return repository.getVacunas(petId)
     }
 }
@@ -40,7 +40,7 @@ class GetPetVaccinesUseCase @Inject constructor(
 class AddPetVaccineUseCase @Inject constructor(
     private val repository: PetRepository
 ) {
-    suspend operator fun invoke(petId: Long, name: String) {
+    suspend operator fun invoke(petId: String, name: String) {
         repository.insertVacuna(PetVaccine(mascotaId = petId, nombre = name))
     }
 }
@@ -56,7 +56,7 @@ class DeletePetVaccineUseCase @Inject constructor(
 class GetPetMedicationsUseCase @Inject constructor(
     private val repository: PetRepository
 ) {
-    operator fun invoke(petId: Long): Flow<List<PetMedication>> {
+    operator fun invoke(petId: String): Flow<List<PetMedication>> {
         return repository.getMedicacionesActivas(petId)
     }
 }
@@ -64,7 +64,7 @@ class GetPetMedicationsUseCase @Inject constructor(
 class AddPetMedicationUseCase @Inject constructor(
     private val repository: PetRepository
 ) {
-    suspend operator fun invoke(petId: Long, name: String, dose: String, freq: String) {
+    suspend operator fun invoke(petId: String, name: String, dose: String, freq: String) {
         repository.insertMedicacion(PetMedication(mascotaId = petId, nombre = name, dosis = dose, frecuencia = freq))
     }
 }
@@ -88,7 +88,7 @@ class DeletePetMedicationUseCase @Inject constructor(
 class GetPetDewormingsUseCase @Inject constructor(
     private val repository: PetRepository
 ) {
-    operator fun invoke(petId: Long): Flow<List<PetDeworming>> {
+    operator fun invoke(petId: String): Flow<List<PetDeworming>> {
         return repository.getDesparasitaciones(petId)
     }
 }
@@ -96,7 +96,7 @@ class GetPetDewormingsUseCase @Inject constructor(
 class AddPetDewormingUseCase @Inject constructor(
     private val repository: PetRepository
 ) {
-    suspend operator fun invoke(petId: Long, type: String, product: String) {
+    suspend operator fun invoke(petId: String, type: String, product: String) {
         repository.insertDesparasitacion(PetDeworming(mascotaId = petId, tipo = type, producto = product))
     }
 }

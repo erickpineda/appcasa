@@ -13,7 +13,6 @@ fun ConfiguracionEntity.toDomain(): Configuration {
         tipo = try { TipoConfiguracion.valueOf(tipo) } catch (e: Exception) { TipoConfiguracion.STRING },
         createdAt = createdAt,
         updatedAt = updatedAt,
-        syncId = syncId,
         lastSyncedAt = lastSyncedAt
     )
 }
@@ -27,7 +26,6 @@ fun Configuration.toEntity(): ConfiguracionEntity {
         tipo = tipo.name,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        syncId = syncId,
         lastSyncedAt = lastSyncedAt
     )
 }

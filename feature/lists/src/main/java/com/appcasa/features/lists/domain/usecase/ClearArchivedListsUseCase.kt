@@ -6,7 +6,7 @@ import javax.inject.Inject
 class ClearArchivedListsUseCase @Inject constructor(
     private val repository: ListsRepository
 ) {
-    suspend operator fun invoke(hogarId: Long) {
+    suspend operator fun invoke(hogarId: String) {
         repository.deleteAllArchivedListas(hogarId)
     }
 }

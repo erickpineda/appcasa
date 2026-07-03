@@ -5,90 +5,59 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.appcasa.core.domain.model.EstadoGeneral
+import com.appcasa.core.data.local.base.Auditable
+import com.appcasa.core.data.local.base.Syncable
 import com.appcasa.core.domain.model.TipoMiembro
+import com.appcasa.core.domain.model.RolHogar
 import com.appcasa.features.settings.data.local.HogarEntity
+import java.util.UUID
 
-/**
- * Representa tanto personas como mascotas del hogar.
- * El campo [tipo] diferencia entre PERSONA, PERRO, GATO, TORTUGA, etc.
- * Los campos específicos de mascota (raza, chip, veterinario) son null para personas.
- */
 @Entity(
   tableName = "miembros",
-  foreignKeys = [ForeignKey(
-    entity        = HogarEntity::class,
-    parentColumns = ["id"],
-    childColumns  = ["hogar_id"],
-    onDelete      = ForeignKey.CASCADE
-  )],
+  foreignKeys = [
+    ForeignKey(
+      entity        = HogarEntity::class,
+      parentColumns = ["id"],
+      childColumns  = ["hogar_id"],
+      onDelete      = ForeignKey.CASCADE
+    )
+  ],
   indices = [
     Index("hogar_id"),
-    Index("tipo"),
-    Index("nombre"),
-    Index("sync_id")
+    Index("firebase_uid")
   ]
 )
 data class MiembroEntity(
 
-  @PrimaryKey(autoGenerate = true)
-  val id: Long = 0,
+  @PrimaryKey
+  @ColumnInfo(name = "id")
+  override val id: String = UUID.randomUUID().toString(),
 
   @ColumnInfo(name = "hogar_id")
-  val hogarId: Long,
+  val hogarId: String,
 
-  @ColumnInfo(name = "hogar_sync_id")
-  val hogarSyncId: String? = null,
-
-  @ColumnInfo(name = "nombre")
-  val nombre: String,
+  // Vinculación opcional a una cuenta global de la app
+  @ColumnInfo(name = "firebase_uid")
+  val firebaseUid: String? = null,
 
   @ColumnInfo(name = "email")
   val email: String? = null,
 
-  // TipoMiembro: PERSONA, PERRO, GATO, TORTUGA...
+  // HUMANO, MASCOTA_PERRO, MASCOTA_GATO, etc.
   @ColumnInfo(name = "tipo")
   val tipo: String = TipoMiembro.PERSONA.name,
 
-  @ColumnInfo(name = "fecha_nacimiento")
-  val fechaNacimiento: Long? = null,
-
-  @ColumnInfo(name = "foto_uri")
-  val fotoUri: String? = null,
-
-  // ── Solo mascotas ──────────────────────────────────
-  @ColumnInfo(name = "raza")
-  val raza: String? = null,
-
-  @ColumnInfo(name = "color_pelaje")
-  val colorPelaje: String? = null,
-
-  @ColumnInfo(name = "numero_chip")
-  val numeroChip: String? = null,
-
-  @ColumnInfo(name = "veterinario_nombre")
-  val veterinarioNombre: String? = null,
-
-  @ColumnInfo(name = "veterinario_telefono")
-  val veterinarioTelefono: String? = null,
-
-  @ColumnInfo(name = "notas")
-  val notas: String? = null,
-
-  @ColumnInfo(name = "estado")
-  val estado: String = EstadoGeneral.ACTIVO.name,
-
   @ColumnInfo(name = "rol")
-  val rol: String = com.appcasa.core.domain.model.RolHogar.COLABORADOR.name,
+  val rol: String = RolHogar.COLABORADOR.name,
 
-  @ColumnInfo(name = "sync_id")
-  val syncId: String? = null,
+  @ColumnInfo(name = "nombre")
+  val nombre: String,
 
-  @ColumnInfo(name = "created_at")
-  val createdAt: Long = System.currentTimeMillis(),
+  @ColumnInfo(name = "avatar_url")
+  val avatarUrl: String? = null,
 
-  @ColumnInfo(name = "updated_at")
-  val updatedAt: Long = System.currentTimeMillis(),
+  @ColumnInfo(name = "color_hex")
+  val colorHex: String? = null,
 
   @ColumnInfo(name = "puntos")
   val puntos: Int = 0,
@@ -99,15 +68,32 @@ data class MiembroEntity(
   @ColumnInfo(name = "estado_animo")
   val estadoAnimo: String? = null,
 
-  @ColumnInfo(name = "estado_animo_updated")
-  val estadoAnimoUpdatedAt: Long? = null,
+  @ColumnInfo(name = "fecha_nacimiento")
+  val fechaNacimiento: Long? = null,
 
-  @ColumnInfo(name = "url_nube")
-  val urlNube: String? = null,
+  @ColumnInfo(name = "notas")
+  val notas: String? = null,
 
-  @ColumnInfo(name = "firebase_uid")
-  val firebaseUid: String? = null,
+  // --- Auditoría / Sync ---
+  @ColumnInfo(name = "created_at")
+  override val createdAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "created_by")
+  override val createdBy: String? = null,
+
+  @ColumnInfo(name = "updated_at")
+  override val updatedAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "updated_by")
+  override val updatedBy: String? = null,
+
+  @ColumnInfo(name = "deleted_at")
+  override val deletedAt: Long? = null,
+
+  @ColumnInfo(name = "deleted_by")
+  override val deletedBy: String? = null,
 
   @ColumnInfo(name = "last_synced_at")
-  val lastSyncedAt: Long? = null
-)
+  override var lastSyncedAt: Long? = null
+
+) : Syncable, Auditable

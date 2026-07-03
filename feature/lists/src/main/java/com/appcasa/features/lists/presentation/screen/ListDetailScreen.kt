@@ -79,7 +79,7 @@ fun ListDetailScreen(
   val context = LocalContext.current
   val haptic = LocalHapticFeedback.current
   
-  var selectedItems by remember { mutableStateOf(setOf<Long>()) }
+  var selectedItems by remember { mutableStateOf(setOf<String>()) }
   val isSelectionMode = selectedItems.isNotEmpty()
 
   Scaffold(
@@ -245,7 +245,7 @@ fun ListDetailScreen(
               haptic.performHapticFeedback(HapticFeedbackType.LongPress)
               viewModel.deleteItem(item) 
             },
-            onEdit = { nuevoTexto -> viewModel.updateItem(item, nuevoTexto) }
+            onEdit = { nuevoTexto -> viewModel.upsertItem(item, nuevoTexto) }
           )
           HorizontalDivider(
             modifier = Modifier.padding(horizontal = 16.dp), 
@@ -331,7 +331,7 @@ fun CompactListItemEditable(
           text = item.texto,
           style = if (isCompact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
           textDecoration = if (item.completado) TextDecoration.LineThrough else null,
-          color = if (item.completado) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
+          color = if (item.completado) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
         )
         if (!item.cantidad.isNullOrBlank()) {
           Text(

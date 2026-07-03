@@ -5,7 +5,10 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.appcasa.core.data.local.base.Auditable
+import com.appcasa.core.data.local.base.Syncable
 import com.appcasa.features.settings.data.local.HogarEntity
+import java.util.UUID
 
 /**
  * Representa un gasto familiar registrado.
@@ -23,21 +26,17 @@ import com.appcasa.features.settings.data.local.HogarEntity
     ],
     indices = [
         Index("hogar_id"),
-        Index("fecha"),
-        Index("created_by_id"),
-        Index("sync_id")
+        Index("fecha")
     ]
 )
 data class ExpenseEntity(
 
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey
+    @ColumnInfo(name = "id")
+    override val id: String = UUID.randomUUID().toString(),
 
     @ColumnInfo(name = "hogar_id")
-    val hogarId: Long,
-
-    @ColumnInfo(name = "hogar_sync_id")
-    val hogarSyncId: String? = null,
+    val hogarId: String,
 
     @ColumnInfo(name = "concepto")
     val concepto: String,
@@ -54,24 +53,32 @@ data class ExpenseEntity(
     @ColumnInfo(name = "foto_uri")
     val fotoUri: String? = null,
 
-    @ColumnInfo(name = "created_at")
-    val createdAt: Long = System.currentTimeMillis(),
-
-    @ColumnInfo(name = "updated_at")
-    val updatedAt: Long = System.currentTimeMillis(),
-
-    @ColumnInfo(name = "created_by_id")
-    val createdById: Long? = null,
-
-    @ColumnInfo(name = "created_by_sync_id")
-    val createdBySyncId: String? = null,
-
-    @ColumnInfo(name = "sync_id")
-    val syncId: String? = null,
+    @ColumnInfo(name = "estado")
+    val estado: String = "ACTIVO",
 
     @ColumnInfo(name = "archived")
     val archived: Boolean = false,
 
+    // --- Auditoría / Sync ---
+    @ColumnInfo(name = "created_at")
+    override val createdAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "created_by")
+    override val createdBy: String? = null,
+
+    @ColumnInfo(name = "updated_at")
+    override val updatedAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "updated_by")
+    override val updatedBy: String? = null,
+
+    @ColumnInfo(name = "deleted_at")
+    override val deletedAt: Long? = null,
+
+    @ColumnInfo(name = "deleted_by")
+    override val deletedBy: String? = null,
+
     @ColumnInfo(name = "last_synced_at")
-    val lastSyncedAt: Long? = null
-)
+    override var lastSyncedAt: Long? = null
+
+) : Syncable, Auditable

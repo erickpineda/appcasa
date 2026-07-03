@@ -40,7 +40,7 @@ fun AgeCalculatorScreen(
   val resultFormat = stringResource(R.string.util_age_result_format)
   
   if (ageResult.isEmpty() && selectedMillis == null) {
-      ageResult = selectHint
+    ageResult = selectHint
   }
 
   val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedMillis)
@@ -122,4 +122,3 @@ fun AgeCalculatorScreen(
     }
   }
 }
-

@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetFamilyMembersUseCase @Inject constructor(
     private val repository: FamilyRepository
 ) {
-    operator fun invoke(hogarId: Long): Flow<List<FamilyMember>> {
+    operator fun invoke(hogarId: String): Flow<List<FamilyMember>> {
         return repository.getMembersByHogar(hogarId)
     }
 }

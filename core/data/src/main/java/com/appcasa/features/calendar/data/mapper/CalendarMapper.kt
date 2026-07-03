@@ -7,16 +7,13 @@ import com.appcasa.features.calendar.data.local.EventoEntity
 fun EventoEntity.toDomain(): Event {
     return Event(
         id = id,
-        syncId = syncId,
         hogarId = hogarId,
-        hogarSyncId = hogarSyncId,
         titulo = titulo,
         descripcion = descripcion,
         tipo = try { TipoEvento.valueOf(tipo) } catch (e: Exception) { TipoEvento.OTRO },
         fecha = fecha,
         fechaFin = fechaFin,
         miembroId = miembroId,
-        miembroSyncId = miembroSyncId,
         todoElDia = todoElDia,
         repeticionAnual = repeticionAnual,
         createdAt = createdAt,
@@ -28,16 +25,13 @@ fun EventoEntity.toDomain(): Event {
 fun Event.toEntity(): EventoEntity {
     return EventoEntity(
         id = id,
-        syncId = syncId,
         hogarId = hogarId,
-        hogarSyncId = hogarSyncId,
         titulo = titulo,
         descripcion = descripcion,
         tipo = tipo.name,
         fecha = fecha,
         fechaFin = fechaFin,
         miembroId = miembroId,
-        miembroSyncId = miembroSyncId,
         todoElDia = todoElDia,
         repeticionAnual = repeticionAnual,
         createdAt = createdAt,

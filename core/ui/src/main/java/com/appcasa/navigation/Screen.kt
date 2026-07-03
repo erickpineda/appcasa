@@ -34,13 +34,13 @@ sealed interface Screen {
   @Serializable data object Lists : Screen
 
   // ─── Destinos de detalle (sin barra inferior) ────────
-  @Serializable data class TaskDetail(val taskId: Long) : Screen
-  @Serializable data class PetDetail(val petId: Long) : Screen
-  @Serializable data class MemberDetail(val memberId: Long) : Screen
+  @Serializable data class TaskDetail(val taskId: String) : Screen
+  @Serializable data class PetDetail(val petId: String) : Screen
+  @Serializable data class MemberDetail(val memberId: String) : Screen
   @Serializable data object AddMember : Screen
   @Serializable data object AddTask : Screen
-  @Serializable data class EditMember(val memberId: Long) : Screen
-  @Serializable data class ListDetail(val listId: Long) : Screen
+  @Serializable data class EditMember(val memberId: String) : Screen
+  @Serializable data class ListDetail(val listId: String) : Screen
   
   @Serializable data object DosageCalculator : Screen
   @Serializable data object BMICalculator : Screen
@@ -57,7 +57,7 @@ sealed interface Screen {
   @Serializable data object FeedingCalculator : Screen
   @Serializable data object SmartSafe : Screen
   @Serializable data object HomeMaintenance : Screen
-  @Serializable data class MaintenanceDetail(val id: Long) : Screen
+  @Serializable data class MaintenanceDetail(val id: String) : Screen
   @Serializable data object FinanceStats : Screen
   @Serializable data object RewardStore : Screen
   @Serializable data object Archive : Screen
@@ -65,7 +65,8 @@ sealed interface Screen {
   companion object {
     val managementTabRoutes = listOf(
       Management::class, Tasks::class, Lists::class, ListDetail::class, 
-      Inventory::class, AddTask::class, TaskDetail::class, HomeMaintenance::class, MaintenanceDetail::class
+      Inventory::class, AddTask::class, TaskDetail::class, HomeMaintenance::class, 
+      MaintenanceDetail::class, RewardStore::class, Archive::class
     )
     val familyTabRoutes = listOf(
       FamilyHub::class, Family::class, Calendar::class, PetDetail::class, 

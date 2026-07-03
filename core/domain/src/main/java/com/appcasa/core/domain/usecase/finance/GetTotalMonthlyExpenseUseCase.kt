@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetTotalMonthlyExpenseUseCase @Inject constructor(
     private val repository: FinanceRepository
 ) {
-    operator fun invoke(hogarId: Long): Flow<Double?> {
+    operator fun invoke(hogarId: String): Flow<Double?> {
         val calendar = Calendar.getInstance().apply {
             set(Calendar.DAY_OF_MONTH, 1)
             set(Calendar.HOUR_OF_DAY, 0)

@@ -3,7 +3,7 @@ package com.appcasa.features.dashboard.presentation.model
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class SearchItem(
-    val id: Long,
+    val id: String,
     val title: String,
     val type: SearchType,
     val icon: ImageVector,

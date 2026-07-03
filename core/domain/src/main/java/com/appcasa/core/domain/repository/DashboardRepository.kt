@@ -5,14 +5,13 @@ import com.appcasa.core.domain.model.PostIt
 import kotlinx.coroutines.flow.Flow
 
 interface DashboardRepository {
-    fun getPostIts(hogarId: Long): Flow<List<PostIt>>
-    suspend fun insertPostIt(postIt: PostIt): Long
+    fun getPostIts(hogarId: String): Flow<List<PostIt>>
+    suspend fun upsertPostIt(postIt: PostIt)
     suspend fun deletePostIt(postIt: PostIt)
-    fun getDashboardConfig(hogarId: Long): Flow<DashboardConfig?>
+    fun getDashboardConfig(hogarId: String): Flow<DashboardConfig?>
     suspend fun saveDashboardConfig(config: DashboardConfig)
-    suspend fun updateConfigSyncTimestamp(hogarId: Long)
+    suspend fun updateConfigSyncTimestamp(hogarId: String)
     
-    suspend fun updatePostItSyncTimestamp(postItId: Long)
-    suspend fun updatePostItHogarSyncId(postItId: Long, hogarSyncId: String)
-    fun startRemoteSync(hogarId: Long)
+    suspend fun updatePostItSyncTimestamp(postItId: String)
+    fun startRemoteSync(hogarId: String)
 }

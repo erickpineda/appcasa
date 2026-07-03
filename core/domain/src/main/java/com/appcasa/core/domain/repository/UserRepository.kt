@@ -5,9 +5,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
     fun getCurrentUser(): Flow<User?>
-    suspend fun insertUser(user: User): Long
+    suspend fun getUserByName(name: String): User?
+    suspend fun insertUser(user: User): String
     suspend fun deleteUsers()
     suspend fun deactivateAllUsers()
-    suspend fun activateUser(userId: Long)
-    suspend fun activateUserByHousehold(householdId: Long)
+    suspend fun activateUser(userId: String)
+    suspend fun activateUserByHousehold(householdId: String)
 }

@@ -13,14 +13,14 @@ class ReminderRepositoryImpl @Inject constructor(
     private val recordatorioDao: RecordatorioDao
 ) : ReminderRepository {
 
-    override fun getRemindersByHogar(hogarId: Long): Flow<List<Reminder>> {
+    override fun getRemindersByHogar(hogarId: String): Flow<List<Reminder>> {
         return recordatorioDao.getRecordatoriosByHogar(hogarId).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override suspend fun insertReminder(reminder: Reminder): Long {
-        return recordatorioDao.insertRecordatorio(reminder.toEntity())
+    override suspend fun upsertReminder(reminder: Reminder) {
+        recordatorioDao.upsertRecordatorio(reminder.toEntity())
     }
 
     override suspend fun deleteReminder(reminder: Reminder) {

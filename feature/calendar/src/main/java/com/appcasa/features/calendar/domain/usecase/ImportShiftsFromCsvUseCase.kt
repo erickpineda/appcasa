@@ -12,7 +12,7 @@ class ImportShiftsFromCsvUseCase @Inject constructor(
     private val repository: CalendarRepository,
     private val reminderScheduler: ReminderScheduler
 ) {
-    suspend operator fun invoke(hogarId: Long, content: String): Boolean {
+    suspend operator fun invoke(hogarId: String, content: String): Boolean {
         return try {
             val lines = content.lines()
       val dateFormat = SimpleDateFormat(Constants.Formatting.DATE_FORMAT_ES, Constants.Locales.SPAIN)
@@ -23,7 +23,7 @@ class ImportShiftsFromCsvUseCase @Inject constructor(
                 val title = parts[1].trim()
                 val date = dateFormat.parse(dateStr)?.time
                 if (date != null) {
-                  val id = repository.insertEvent(
+                  val id = repository.upsertEvent(
                     Event(
                       hogarId = hogarId,
                       titulo = "Turno: $title",
@@ -34,7 +34,7 @@ class ImportShiftsFromCsvUseCase @Inject constructor(
                   
                   if (date > System.currentTimeMillis()) {
                     reminderScheduler.scheduleReminder(
-                      id = (id + 10000).toInt(),
+                      id = id.hashCode() + 10000,
                       title = "Turno hoy: $title",
                       message = "Recuerda tu turno de trabajo para hoy",
                       timeInMillis = date + (8 * 60 * 60 * 1000) // 8 AM

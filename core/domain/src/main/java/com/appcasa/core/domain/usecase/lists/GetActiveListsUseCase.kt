@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetActiveListsUseCase @Inject constructor(
     private val repository: ListsRepository
 ) {
-    operator fun invoke(hogarId: Long, page: Int): Flow<List<Lista>> {
+    operator fun invoke(hogarId: String, page: Int): Flow<List<Lista>> {
         return repository.getListasPaged(hogarId, limit = page * 20, offset = 0)
     }
 }

@@ -7,8 +7,8 @@ import javax.inject.Inject
 class AddListItemUseCase @Inject constructor(
     private val repository: ListsRepository
 ) {
-    suspend operator fun invoke(listaId: Long, texto: String) {
-        repository.insertItem(
+    suspend operator fun invoke(listaId: String, texto: String) {
+        repository.upsertItem(
             ListaItem(
                 listaId = listaId,
                 texto = texto

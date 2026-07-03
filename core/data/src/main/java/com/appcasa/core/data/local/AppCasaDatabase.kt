@@ -20,11 +20,7 @@ import com.appcasa.features.lists.data.local.ListaEntity
 import com.appcasa.features.lists.data.local.ListaItemEntity
 import com.appcasa.features.maintenance.data.local.MaintenanceDao
 import com.appcasa.features.maintenance.data.local.MaintenanceEntity
-import com.appcasa.features.pets.data.local.MascotaDao
-import com.appcasa.features.pets.data.local.MascotaDesparasitacionEntity
-import com.appcasa.features.pets.data.local.MascotaMedicacionEntity
-import com.appcasa.features.pets.data.local.MascotaPesoEntity
-import com.appcasa.features.pets.data.local.MascotaVacunaEntity
+import com.appcasa.features.pets.data.local.*
 import com.appcasa.features.reminders.data.local.RecordatorioDao
 import com.appcasa.features.reminders.data.local.RecordatorioEntity
 import com.appcasa.features.settings.data.local.ConfiguracionDao
@@ -43,9 +39,6 @@ import com.appcasa.features.utilities.data.local.UtilidadEntity
 
 /**
  * Base de datos central de AppCasa.
- *
- * Cada entidad vive en el paquete data/local de su módulo.
- * Este fichero solo registra las entidades y expone los DAOs.
  */
 @Database(
   entities = [
@@ -57,14 +50,11 @@ import com.appcasa.features.utilities.data.local.UtilidadEntity
     TareaEntity::class,
     TareaAsignacionEntity::class,
     TareaCheckItemEntity::class,
+    RecompensaEntity::class,
     RecordatorioEntity::class,
     EventoEntity::class,
     ListaEntity::class,
     ListaItemEntity::class,
-    MascotaVacunaEntity::class,
-    MascotaDesparasitacionEntity::class,
-    MascotaPesoEntity::class,
-    MascotaMedicacionEntity::class,
     UtilidadEntity::class,
     StockEntity::class,
     ExpenseEntity::class,
@@ -72,9 +62,12 @@ import com.appcasa.features.utilities.data.local.UtilidadEntity
     PostItEntity::class,
     DashboardConfigEntity::class,
     MaintenanceEntity::class,
-    RecompensaEntity::class,
+    PetWeightEntity::class,
+    PetVaccineEntity::class,
+    PetMedicationEntity::class,
+    PetDewormingEntity::class,
   ],
-  version      = 5,
+  version      = 7,
   exportSchema = true
 )
 abstract class AppCasaDatabase : RoomDatabase() {
@@ -85,12 +78,12 @@ abstract class AppCasaDatabase : RoomDatabase() {
   abstract fun recordatorioDao(): RecordatorioDao
   abstract fun eventoDao(): EventoDao
   abstract fun listaDao(): ListaDao
-  abstract fun mascotaDao(): MascotaDao
   abstract fun utilidadDao(): UtilidadDao
   abstract fun stockDao(): StockDao
   abstract fun expenseDao(): ExpenseDao
   abstract fun documentoDao(): DocumentoDao
   abstract fun dashboardDao(): DashboardDao
   abstract fun maintenanceDao(): MaintenanceDao
+  abstract fun petDao(): PetDao
   abstract fun recompensaDao(): RecompensaDao
 }

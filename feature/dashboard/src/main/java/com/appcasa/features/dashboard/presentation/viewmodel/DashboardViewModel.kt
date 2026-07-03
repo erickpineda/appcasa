@@ -175,7 +175,7 @@ class DashboardViewModel @Inject constructor(
         combine(currentHouseholdProvider.householdId, currentUser) { id, user ->
             id to user
         }.collect { (id, user) ->
-            if (id != 0L && user != null) {
+            if (id.isNotBlank() && user != null) {
                 startHouseholdSyncUseCase(id)
             }
         }
@@ -215,9 +215,12 @@ class DashboardViewModel @Inject constructor(
     }
   }
 
-  fun updateMemberMood(miembroId: Long, emoji: String?) {
-    viewModelScope.launch {
-      updateMemberMoodUseCase(miembroId, emoji)
+  fun updateMemberMood(miembroId: String, emoji: String?) {
+    val currentMemberId = currentUser.value?.miembroId
+    if (miembroId == currentMemberId) {
+      viewModelScope.launch {
+        updateMemberMoodUseCase(miembroId, emoji)
+      }
     }
   }
 

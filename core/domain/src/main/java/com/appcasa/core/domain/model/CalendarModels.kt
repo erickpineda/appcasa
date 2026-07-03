@@ -1,17 +1,14 @@
 package com.appcasa.core.domain.model
 
 data class Event(
-    val id: Long = 0,
-    val syncId: String? = null,
-    val hogarId: Long,
-    val hogarSyncId: String? = null,
-    val titulo: String,
+    val id: String = "",
+    val hogarId: String = "",
+    val titulo: String = "",
     val descripcion: String? = null,
     val tipo: TipoEvento = TipoEvento.OTRO,
-    val fecha: Long,
+    val fecha: Long = 0L,
     val fechaFin: Long? = null,
-    val miembroId: Long? = null,
-    val miembroSyncId: String? = null,
+    val miembroId: String? = null,
     val todoElDia: Boolean = true,
     val repeticionAnual: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
@@ -20,7 +17,7 @@ data class Event(
 )
 
 data class NextEventSummary(
-    val title: String,
-    val timestamp: Long,
+    val title: String = "",
+    val timestamp: Long = 0L,
     val isBirthday: Boolean = false
 )

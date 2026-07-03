@@ -42,7 +42,7 @@ class GetCalendarItemsUseCase @Inject constructor(
     private val reminderRepository: ReminderRepository,
     private val familyRepository: FamilyRepository
 ) {
-    operator fun invoke(hogarId: Long, query: String = ""): Flow<CalendarState> {
+    operator fun invoke(hogarId: String, query: String = ""): Flow<CalendarState> {
         return combine(
             calendarRepository.getEventsByHogar(hogarId),
             tasksRepository.getTasksByHogar(hogarId),
@@ -56,7 +56,7 @@ class GetCalendarItemsUseCase @Inject constructor(
               val bdayMillis = calculateBirthdayOccurrence(member.fechaNacimiento!!)
               CalendarItem.EventItem(
                 Event(
-                  id = -member.id,
+                  id = "bday-${member.id}",
                   hogarId = member.hogarId,
                   titulo = "Cumpleaños: ${member.nombre} 🎂",
                   fecha = bdayMillis,

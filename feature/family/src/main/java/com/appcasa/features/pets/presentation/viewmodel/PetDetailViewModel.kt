@@ -32,7 +32,7 @@ class PetDetailViewModel @Inject constructor(
   private val deletePetDewormingUseCase: DeletePetDewormingUseCase
 ) : ViewModel() {
 
-  private val petId: Long = checkNotNull(savedStateHandle["petId"])
+  private val petId: String = checkNotNull(savedStateHandle["petId"])
 
   val pet: StateFlow<FamilyMember?> = viewModelScope.let {
     kotlinx.coroutines.flow.flow {

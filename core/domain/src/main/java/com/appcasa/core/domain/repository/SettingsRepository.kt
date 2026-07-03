@@ -3,10 +3,10 @@ package com.appcasa.core.domain.repository
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
-    fun isCompactView(hogarId: Long): Flow<Boolean>
-    fun getCurrencySymbol(hogarId: Long): Flow<String>
-    suspend fun triggerManualSync(hogarId: Long)
-    suspend fun exportData(hogarId: Long): String // Returns a JSON or path to backup
+    fun isCompactView(hogarId: String): Flow<Boolean>
+    fun getCurrencySymbol(hogarId: String): Flow<String>
+    suspend fun triggerManualSync(hogarId: String)
+    suspend fun exportData(hogarId: String): String // Returns a JSON or path to backup
     
     fun isOnboardingCompleted(): Boolean
     fun setOnboardingCompleted(completed: Boolean)

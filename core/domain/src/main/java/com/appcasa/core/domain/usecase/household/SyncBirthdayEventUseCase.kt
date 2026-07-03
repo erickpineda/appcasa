@@ -11,14 +11,14 @@ class SyncBirthdayEventUseCase @Inject constructor(
     private val familyRepository: FamilyRepository,
     private val calendarRepository: CalendarRepository
 ) {
-    suspend operator fun invoke(memberId: Long) {
+    suspend operator fun invoke(memberId: String) {
         val member = familyRepository.getMemberById(memberId) ?: return
         if (member.fechaNacimiento != null) {
             val existing = calendarRepository.getEventsByHogar(member.hogarId)
                 .first().any { it.tipo == TipoEvento.CUMPLEANOS && it.titulo.contains(member.nombre) }
             
             if (!existing) {
-                calendarRepository.insertEvent(
+                calendarRepository.upsertEvent(
                     Event(
                         hogarId = member.hogarId,
                         titulo = "Cumpleaños: ${member.nombre} 🎂",

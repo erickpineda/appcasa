@@ -66,14 +66,14 @@ class HouseSetupViewModel @Inject constructor(
 
     val existingHouseholdFlow = currentHouseholdProvider.householdId
       .flatMapLatest { id ->
-        if (id > 0L) getHouseholdByIdUseCase(id) else flowOf(null)
+        if (id.isNotEmpty()) getHouseholdByIdUseCase(id) else flowOf(null)
       }
 
     val allHouseholdsFlow = getAllHouseholdsUseCase()
 
     val householdMembersFlow = currentHouseholdProvider.householdId
       .flatMapLatest { id ->
-        if (id > 0) getFamilyMembersUseCase(id) else flowOf(emptyList())
+        if (id.isNotEmpty()) getFamilyMembersUseCase(id) else flowOf(emptyList())
       }
 
     viewModelScope.launch {
@@ -98,7 +98,7 @@ class HouseSetupViewModel @Inject constructor(
 
     viewModelScope.launch {
       currentHouseholdProvider.householdId.collect { id ->
-        if (id != 0L) {
+        if (id.isNotBlank()) {
           _uiState.update { it.copy(isLoading = true) }
           startHouseholdSyncUseCase(id)
           // Damos un pequeño margen para que el primer snapshot llegue
@@ -214,8 +214,13 @@ class HouseSetupViewModel @Inject constructor(
     viewModelScope.launch {
       _uiState.update { it.copy(isLoading = true, loadingMessage = UiText.StringResource(R.string.setup_loading_creating)) }
       try {
-        createHouseholdUseCase(houseName, userName, photoUri)
-        checkBiometricRequirementAndNavigate()
+        val success = createHouseholdUseCase(houseName, userName, photoUri)
+        if (success) {
+            checkBiometricRequirementAndNavigate()
+        } else {
+            _uiState.update { it.copy(isLoading = false) }
+            _uiEffect.emit(SetupUiEffect.ShowError(UiText.StringResource(R.string.setup_error_duplicate_name)))
+        }
       } catch (e: Exception) {
         e.printStackTrace()
         _uiState.update { it.copy(isLoading = false) }
@@ -264,7 +269,7 @@ class HouseSetupViewModel @Inject constructor(
     }
   }
 
-  private fun switchHousehold(householdId: Long) {
+  private fun switchHousehold(householdId: String) {
     viewModelScope.launch {
       _uiState.update { it.copy(isLoading = true, loadingMessage = UiText.StringResource(R.string.setup_loading_checking_db)) }
       switchHouseholdUseCase(householdId)
@@ -406,7 +411,7 @@ sealed interface SetupIntent {
   data class JoinHousehold(val code: String, val userName: String, val photoUri: String?) : SetupIntent
   data class DiscoverAndJoin(val code: String) : SetupIntent
   data class SelectMember(val member: FamilyMember) : SetupIntent
-  data class SwitchHousehold(val id: Long) : SetupIntent
+  data class SwitchHousehold(val id: String) : SetupIntent
   object Logout : SetupIntent
   object SilentRecoverHouseholds : SetupIntent
   data class RecoverHouseholdsManual(val email: String) : SetupIntent

@@ -45,7 +45,7 @@ class TasksViewModel @Inject constructor(
   private val _gainedXP = MutableStateFlow(0)
   val gainedXP: StateFlow<Int> = _gainedXP.asStateFlow()
 
-  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+  private val householdId: String get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   private val _activePage = MutableStateFlow(1)
   val activePage = _activePage.asStateFlow()
@@ -89,7 +89,7 @@ class TasksViewModel @Inject constructor(
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-  val subTaskCounts: StateFlow<Map<Long, Pair<Int, Int>>> = currentHouseholdProvider.householdId
+  val subTaskCounts: StateFlow<Map<String, Pair<Int, Int>>> = currentHouseholdProvider.householdId
     .flatMapLatest { id -> getSubTaskCountsUseCase(id) }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
@@ -124,7 +124,7 @@ class TasksViewModel @Inject constructor(
     }
   }
 
-  fun unarchiveTask(taskId: Long) {
+  fun unarchiveTask(taskId: String) {
     viewModelScope.launch {
       unarchiveTaskUseCase(taskId)
     }
@@ -172,7 +172,7 @@ class TasksViewModel @Inject constructor(
     }
   }
 
-  fun updateTask(task: Task, nuevoTitulo: String) {
+  fun upsertTask(task: Task, nuevoTitulo: String) {
     viewModelScope.launch {
       updateTaskUseCase(task, nuevoTitulo)
     }

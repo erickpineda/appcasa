@@ -193,7 +193,7 @@ fun PetDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
           ) {
             // Foto de cabecera con Parallax
-            val imageModel = pet!!.fotoUri ?: pet!!.urlNube
+            val imageModel = pet!!.avatarUrl ?: pet!!.avatarUrl
             if (imageModel != null) {
               AsyncImage(
                 model = imageModel,

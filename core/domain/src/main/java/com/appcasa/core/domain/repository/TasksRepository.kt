@@ -5,39 +5,38 @@ import kotlinx.coroutines.flow.Flow
 
 interface TasksRepository {
     // Tareas
-    fun getTasksByHogar(hogarId: Long): Flow<List<Task>>
-    fun getTasksPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<Task>>
-    fun getArchivedTasksPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<Task>>
-    fun getTaskById(taskId: Long): Flow<Task?>
-    suspend fun insertTask(task: Task): Long
+    fun getTasksByHogar(hogarId: String): Flow<List<Task>>
+    fun getTasksPaged(hogarId: String, limit: Int, offset: Int): Flow<List<Task>>
+    fun getArchivedTasksPaged(hogarId: String, limit: Int, offset: Int): Flow<List<Task>>
+    fun getTaskById(taskId: String): Flow<Task?>
+    suspend fun upsertTask(task: Task): String
     suspend fun deleteTask(task: Task)
-    suspend fun updateTaskStatus(taskId: Long, status: EstadoTarea)
-    suspend fun unarchiveTarea(id: Long)
-    suspend fun archiveOldCompletedTasks(hogarId: Long, threshold: Long)
-    suspend fun deleteAllArchivedTasks(hogarId: Long)
-    fun getAllCheckItemsCounts(hogarId: Long): Flow<Map<Long, Pair<Int, Int>>>
+    suspend fun updateTaskStatus(taskId: String, status: EstadoTarea)
+    suspend fun unarchiveTarea(id: String)
+    suspend fun archiveOldCompletedTasks(hogarId: String, threshold: Long)
+    suspend fun deleteAllArchivedTasks(hogarId: String)
+    fun getAllCheckItemsCounts(hogarId: String): Flow<Map<String, Pair<Int, Int>>>
 
     // Recompensas
-    fun getRewardsByHogar(hogarId: Long): Flow<List<Reward>>
-    suspend fun insertReward(reward: Reward)
+    fun getRewardsByHogar(hogarId: String): Flow<List<Reward>>
+    suspend fun upsertReward(reward: Reward)
     suspend fun deleteReward(reward: Reward)
-    suspend fun updateRewardSyncTimestamp(rewardId: Long)
+    suspend fun updateRewardSyncTimestamp(rewardId: String)
 
     // Categorías
-    fun getCategoriesByHogar(hogarId: Long): Flow<List<TaskCategory>>
-    suspend fun insertCategory(category: TaskCategory)
-    suspend fun updateCategorySyncTimestamp(categoryId: Long)
+    fun getCategoriesByHogar(hogarId: String): Flow<List<TaskCategory>>
+    suspend fun upsertCategory(category: TaskCategory)
+    suspend fun updateCategorySyncTimestamp(categoryId: String)
 
     // Asignaciones e Ítems
-    fun getAssignmentsForTask(taskId: Long): Flow<List<TaskAssignment>>
-    suspend fun insertAssignment(assignment: TaskAssignment)
-    fun getCheckItemsForTask(taskId: Long): Flow<List<TaskCheckItem>>
-    suspend fun insertCheckItem(item: TaskCheckItem): Long
-    suspend fun updateCheckItem(item: TaskCheckItem)
+    fun getAssignmentsForTask(taskId: String): Flow<List<TaskAssignment>>
+    suspend fun upsertAssignment(assignment: TaskAssignment)
+    fun getCheckItemsForTask(taskId: String): Flow<List<TaskCheckItem>>
+    suspend fun upsertCheckItem(item: TaskCheckItem): String
     suspend fun deleteCheckItem(item: TaskCheckItem)
-    suspend fun updateTaskSyncTimestamp(taskId: Long)
-    suspend fun updateTaskHogarSyncId(taskId: Long, hogarSyncId: String)
-    suspend fun updateCheckItemSyncTimestamp(itemId: Long)
-    suspend fun getCheckItemsToSync(hogarId: Long): List<TaskCheckItem>
-    fun startRemoteSync(hogarId: Long)
+    suspend fun updateTaskSyncTimestamp(taskId: String)
+    suspend fun updateTaskHogarSyncId(taskId: String, hogarSyncId: String)
+    suspend fun updateCheckItemSyncTimestamp(itemId: String)
+    suspend fun getCheckItemsToSync(hogarId: String): List<TaskCheckItem>
+    fun startRemoteSync(hogarId: String)
 }

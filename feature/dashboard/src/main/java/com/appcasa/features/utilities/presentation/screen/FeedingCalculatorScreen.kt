@@ -74,7 +74,7 @@ fun FeedingCalculatorScreen(
   
   LaunchedEffect(petWeight) {
     if (petWeight > 0 && weightInput.toDoubleOrNull() != petWeight) {
-        weightInput = if (petWeight % 1 == 0.0) petWeight.toInt().toString() else petWeight.toString()
+        weightInput = if (petWeight % 1 == 0.0) petWeight.hashCode().toString() else petWeight.toString()
     }
   }
 

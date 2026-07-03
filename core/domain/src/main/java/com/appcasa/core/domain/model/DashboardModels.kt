@@ -1,11 +1,9 @@
 package com.appcasa.core.domain.model
 
 data class PostIt(
-    val id: Long = 0,
-    val syncId: String? = null,
-    val hogarId: Long,
-    val hogarSyncId: String? = null,
-    val contenido: String,
+    val id: String = "",
+    val hogarId: String = "",
+    val contenido: String = "",
     val colorHex: String = "#FFF9C4",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
@@ -13,9 +11,8 @@ data class PostIt(
 )
 
 data class DashboardConfig(
-    val hogarId: Long,
-    val hogarSyncId: String? = null,
-    val ordenModulos: String,
+    val hogarId: String = "",
+    val ordenModulos: String = "",
     val updatedAt: Long = System.currentTimeMillis(),
     val lastSyncedAt: Long? = null
 )

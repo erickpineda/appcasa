@@ -5,6 +5,9 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.appcasa.core.data.local.base.Auditable
+import com.appcasa.core.data.local.base.Syncable
+import java.util.UUID
 
 /**
  * Subtareas o checklist dentro de una tarea.
@@ -19,20 +22,17 @@ import androidx.room.PrimaryKey
     onDelete      = ForeignKey.CASCADE
   )],
   indices = [
-    Index("tarea_id"),
-    Index("sync_id")
+    Index("tarea_id")
   ]
 )
 data class TareaCheckItemEntity(
 
-  @PrimaryKey(autoGenerate = true)
-  val id: Long = 0,
+  @PrimaryKey
+  @ColumnInfo(name = "id")
+  override val id: String = UUID.randomUUID().toString(),
 
   @ColumnInfo(name = "tarea_id")
-  val tareaId: Long,
-
-  @ColumnInfo(name = "tarea_sync_id")
-  val tareaSyncId: String? = null,
+  val tareaId: String,
 
   @ColumnInfo(name = "texto")
   val texto: String,
@@ -44,15 +44,26 @@ data class TareaCheckItemEntity(
   @ColumnInfo(name = "orden")
   val orden: Int = 0,
 
-  @ColumnInfo(name = "sync_id")
-  val syncId: String? = null,
-
+  // --- Auditoría / Sync ---
   @ColumnInfo(name = "created_at")
-  val createdAt: Long = System.currentTimeMillis(),
+  override val createdAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "created_by")
+  override val createdBy: String? = null,
 
   @ColumnInfo(name = "updated_at")
-  val updatedAt: Long = System.currentTimeMillis(),
+  override val updatedAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "updated_by")
+  override val updatedBy: String? = null,
+
+  @ColumnInfo(name = "deleted_at")
+  override val deletedAt: Long? = null,
+
+  @ColumnInfo(name = "deleted_by")
+  override val deletedBy: String? = null,
 
   @ColumnInfo(name = "last_synced_at")
-  val lastSyncedAt: Long? = null
-)
+  override var lastSyncedAt: Long? = null
+
+) : Syncable, Auditable

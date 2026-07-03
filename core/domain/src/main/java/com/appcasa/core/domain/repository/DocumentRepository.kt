@@ -4,10 +4,10 @@ import com.appcasa.core.domain.model.Document
 import kotlinx.coroutines.flow.Flow
 
 interface DocumentRepository {
-    fun getDocumentosByHogar(hogarId: Long): Flow<List<Document>>
-    suspend fun insertDocumento(documento: Document): Long
+    fun getDocumentosByHogar(hogarId: String): Flow<List<Document>>
+    suspend fun upsertDocumento(documento: Document)
     suspend fun deleteDocumento(documento: Document)
-    suspend fun updateDocumentSyncTimestamp(docId: Long)
+    suspend fun updateDocumentSyncTimestamp(docId: String)
     suspend fun downloadDocument(document: Document, localFile: java.io.File): Boolean
-    fun startRemoteSync(hogarId: Long)
+    fun startRemoteSync(hogarId: String)
 }

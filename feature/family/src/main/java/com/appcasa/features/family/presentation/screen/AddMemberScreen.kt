@@ -62,6 +62,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.appcasa.core.data.utils.FileUtils
@@ -86,8 +87,11 @@ fun AddMemberScreen(
   var raza by remember { mutableStateOf("") }
   var color by remember { mutableStateOf("") }
   var chip by remember { mutableStateOf("") }
-  var fotoUri by remember { mutableStateOf<String?>(null) }
+  var avatarUrl by remember { mutableStateOf<String?>(null) }
   var expanded by remember { mutableStateOf(false) }
+  
+  val existingNames by viewModel.existingNames.collectAsStateWithLifecycle()
+  val isDuplicate = nombre.isNotBlank() && existingNames.any { it.equals(nombre.trim(), ignoreCase = true) }
   
   var selectedBirthDate by remember { mutableStateOf<Long?>(null) }
   var showDatePicker by remember { mutableStateOf(false) }
@@ -97,9 +101,9 @@ fun AddMemberScreen(
   val keyboardController = LocalSoftwareKeyboardController.current
 
   LaunchedEffect(Unit) {
-      delay(300)
-      focusRequester.requestFocus()
-      keyboardController?.show()
+    delay(300)
+    focusRequester.requestFocus()
+    keyboardController?.show()
   }
 
   val confirmText = stringResource(R.string.family_btn_ok)
@@ -124,7 +128,7 @@ fun AddMemberScreen(
     contract = ActivityResultContracts.GetContent()
   ) { uri -> 
     uri?.let {
-        fotoUri = FileUtils.saveImageLocally(context, it.toString())
+      avatarUrl = FileUtils.saveImageLocally(context, it.toString())
     }
   }
 
@@ -138,8 +142,8 @@ fun AddMemberScreen(
           }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            titleContentColor = MaterialTheme.colorScheme.onPrimary
+          containerColor = MaterialTheme.colorScheme.primary,
+          titleContentColor = MaterialTheme.colorScheme.onPrimary
         )
       )
     },
@@ -163,26 +167,26 @@ fun AddMemberScreen(
           .clickable { imagePickerLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) },
         contentAlignment = Alignment.Center
       ) {
-        if (fotoUri != null) {
+        if (avatarUrl != null) {
           AsyncImage(
-            model = fotoUri,
+            model = avatarUrl,
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
           )
           // Overlay sutil para indicar que se puede cambiar
           Surface(
-              color = Color.Black.copy(alpha = 0.3f),
-              modifier = Modifier.fillMaxSize()
+            color = Color.Black.copy(alpha = 0.3f),
+            modifier = Modifier.fillMaxSize()
           ) {
-              Box(contentAlignment = Alignment.Center) {
-                  Icon(
-                      Icons.Default.PhotoCamera, 
-                      contentDescription = null, 
-                      tint = Color.White.copy(alpha = 0.8f),
-                      modifier = Modifier.size(32.dp)
-                  )
-              }
+            Box(contentAlignment = Alignment.Center) {
+              Icon(
+                Icons.Default.PhotoCamera, 
+                contentDescription = null, 
+                tint = Color.White.copy(alpha = 0.8f),
+                modifier = Modifier.size(32.dp)
+              )
+            }
           }
         } else {
           Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -195,17 +199,19 @@ fun AddMemberScreen(
       OutlinedTextField(
         value = nombre,
         onValueChange = { 
-            nombre = it
-            nombreTouched = true
+          nombre = it
+          nombreTouched = true
         },
         label = { Text(stringResource(R.string.family_label_name)) },
         modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-        isError = nombreTouched && nombre.isBlank(),
+        isError = (nombreTouched && nombre.isBlank()) || isDuplicate,
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
         supportingText = {
-            if (nombreTouched && nombre.isBlank()) {
-                Text(stringResource(R.string.family_error_name_required), color = MaterialTheme.colorScheme.error)
-            }
+          if (nombreTouched && nombre.isBlank()) {
+            Text(stringResource(R.string.family_error_name_required), color = MaterialTheme.colorScheme.error)
+          } else if (isDuplicate) {
+            Text("Ya existe un miembro con este nombre", color = MaterialTheme.colorScheme.error)
+          }
         }
       )
 
@@ -281,13 +287,13 @@ fun AddMemberScreen(
             raza = raza.takeIf { it.isNotBlank() }, 
             color = color.takeIf { it.isNotBlank() },
             chip = chip.takeIf { it.isNotBlank() }, 
-            fotoUri = fotoUri,
+            avatarUrl = avatarUrl,
             fechaNacimiento = selectedBirthDate
           )
           navController.popBackStack()
         },
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-        enabled = nombre.isNotBlank()
+        enabled = nombre.isNotBlank() && !isDuplicate
       ) {
         Text(stringResource(R.string.family_btn_save))
       }

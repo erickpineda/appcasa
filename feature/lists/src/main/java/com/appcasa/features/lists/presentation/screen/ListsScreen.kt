@@ -135,7 +135,7 @@ fun ListsScreen(
 fun ListsContent(
   lists: List<Lista>,
   isCompact: Boolean,
-  onListClick: (Long) -> Unit,
+  onListClick: (String) -> Unit,
   onDeleteList: (Lista) -> Unit,
   onAddClick: () -> Unit,
   onUpdateList: (Lista, String) -> Unit,

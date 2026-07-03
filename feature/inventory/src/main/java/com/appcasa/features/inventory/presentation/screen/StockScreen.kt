@@ -107,7 +107,7 @@ fun StockScreen(
 
   LaunchedEffect(Unit) {
     viewModel.toastEvent.collect { message ->
-        toastMessage = message
+      toastMessage = message
     }
   }
 
@@ -116,8 +116,8 @@ fun StockScreen(
     title = stringResource(R.string.inventory_delete_title),
     text = stringResource(R.string.inventory_delete_confirm),
     onConfirm = {
-        itemToDelete?.let { viewModel.deleteItem(it) }
-        itemToDelete = null
+      itemToDelete?.let { viewModel.deleteItem(it) }
+      itemToDelete = null
     },
     onDismiss = { itemToDelete = null }
   )
@@ -136,8 +136,8 @@ fun StockScreen(
     StockActionDialog(
       initialBarcode = barcodeResult ?: "",
       onDismiss = { 
-          showAddDialog = false
-          viewModel.clearBarcode()
+        showAddDialog = false
+        viewModel.clearBarcode()
       },
       onConfirm = { nombre, categoria, cantidad, minima, unidad ->
         viewModel.addItem(nombre, categoria, cantidad, minima, unidad)
@@ -152,7 +152,7 @@ fun StockScreen(
       item = item,
       onDismiss = { editingItem = null },
       onConfirm = { nombre, categoria, cantidad, minima, unidad ->
-        viewModel.updateItem(item.copy(
+        viewModel.upsertItem(item.copy(
           nombre = nombre,
           categoria = categoria,
           cantidadActual = cantidad,
@@ -177,86 +177,86 @@ fun StockScreen(
   }
 
   Box(modifier = Modifier.fillMaxSize()) {
-      PullToRefreshWrapper {
-        Scaffold(
-          topBar = {
-            TopAppBar(
-              title = { Text(stringResource(R.string.inventory_title)) },
-              navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                  Icon(Icons.Default.ArrowBack, contentDescription = stringResource(CoreR.string.common_back), tint = MaterialTheme.colorScheme.onPrimary)
-                }
-              },
-              colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = MaterialTheme.colorScheme.onPrimary
-              ),
-              actions = {
-                  IconButton(onClick = { barcodeLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) }) {
-                      Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.cd_scan))
-                  }
+    PullToRefreshWrapper {
+      Scaffold(
+        topBar = {
+          TopAppBar(
+            title = { Text(stringResource(R.string.inventory_title)) },
+            navigationIcon = {
+              IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = stringResource(CoreR.string.common_back), tint = MaterialTheme.colorScheme.onPrimary)
               }
-            )
-          },
-          floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-              Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_item))
-            }
-          },
-          contentWindowInsets = WindowInsets(0, 0, 0, 0)
-        ) { padding ->
-          LazyColumn(
-            modifier = Modifier
-              .fillMaxSize()
-              .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(if (isCompact) 4.dp else 12.dp)
-          ) {
-            if (stockItems.isEmpty()) {
-              item {
-                AppCasaEmptyState(
-                  title = stringResource(R.string.inventory_empty_title),
-                  description = stringResource(R.string.inventory_empty_description),
-                  icon = Icons.Default.Inventory,
-                  actionText = stringResource(R.string.inventory_add_action),
-                  onActionClick = { showAddDialog = true },
-                  modifier = Modifier.fillParentMaxSize()
-                )
-              }
-            } else {
-              items(stockItems) { item ->
-                StockItemCard(
-                  item = item,
-                  isCompact = isCompact,
-                  onAdd = { viewModel.updateQuantity(item, 1.0) },
-                  onRemove = { viewModel.updateQuantity(item, -1.0) },
-                  onEdit = { editingItem = item },
-                  onDelete = { itemToDelete = item },
-                  onAddToList = { itemToAddToList = item }
-                )
-              }
-    
-              item {
-                TextButton(
-                  onClick = { viewModel.loadMore() }, 
-                  modifier = Modifier.fillMaxWidth()
-                ) {
-                  Text(stringResource(R.string.inventory_load_more))
-                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+              containerColor = MaterialTheme.colorScheme.primary,
+              titleContentColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            actions = {
+              IconButton(onClick = { barcodeLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) }) {
+                Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.cd_scan))
               }
             }
-            
+          )
+        },
+        floatingActionButton = {
+          FloatingActionButton(onClick = { showAddDialog = true }) {
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_item))
+          }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+      ) { padding ->
+        LazyColumn(
+          modifier = Modifier
+            .fillMaxSize()
+            .padding(padding),
+          contentPadding = PaddingValues(16.dp),
+          verticalArrangement = Arrangement.spacedBy(if (isCompact) 4.dp else 12.dp)
+        ) {
+          if (stockItems.isEmpty()) {
             item {
-                Spacer(Modifier.imePadding())
+              AppCasaEmptyState(
+                title = stringResource(R.string.inventory_empty_title),
+                description = stringResource(R.string.inventory_empty_description),
+                icon = Icons.Default.Inventory,
+                actionText = stringResource(R.string.inventory_add_action),
+                onActionClick = { showAddDialog = true },
+                modifier = Modifier.fillParentMaxSize()
+              )
             }
+          } else {
+            items(stockItems) { item ->
+              StockItemCard(
+                item = item,
+                isCompact = isCompact,
+                onAdd = { viewModel.updateQuantity(item, 1.0) },
+                onRemove = { viewModel.updateQuantity(item, -1.0) },
+                onEdit = { editingItem = item },
+                onDelete = { itemToDelete = item },
+                onAddToList = { itemToAddToList = item }
+              )
+            }
+    
+            item {
+              TextButton(
+                onClick = { viewModel.loadMore() }, 
+                modifier = Modifier.fillMaxWidth()
+              ) {
+                Text(stringResource(R.string.inventory_load_more))
+              }
+            }
+          }
+            
+          item {
+            Spacer(Modifier.imePadding())
           }
         }
       }
+    }
 
-      AppCasaSutilToast(
-          message = toastMessage,
-          onDismiss = { toastMessage = null }
-      )
+    AppCasaSutilToast(
+      message = toastMessage,
+      onDismiss = { toastMessage = null }
+    )
   }
 }
 
@@ -265,11 +265,11 @@ fun AddToListDialog(
   item: StockItem,
   lists: List<Lista>,
   onDismiss: () -> Unit,
-  onConfirm: (Long, Double) -> Unit
+  onConfirm: (String, Double) -> Unit
 ) {
   val initialMissing = (item.cantidadMinima - item.cantidadActual).coerceAtLeast(1.0)
   var quantity by remember { mutableStateOf(initialMissing.toString()) }
-  var selectedListId by remember { mutableStateOf<Long?>(lists.find { it.tipo == TipoLista.COMPRA }?.id ?: lists.firstOrNull()?.id) }
+  var selectedListId by remember { mutableStateOf<String?>(lists.find { it.tipo == TipoLista.COMPRA }?.id ?: lists.firstOrNull()?.id) }
   var expanded by remember { mutableStateOf(false) }
 
   AlertDialog(
@@ -356,9 +356,9 @@ fun StockActionDialog(
   val keyboardController = LocalSoftwareKeyboardController.current
 
   LaunchedEffect(Unit) {
-      delay(300)
-      focusRequester.requestFocus()
-      keyboardController?.show()
+    delay(300)
+    focusRequester.requestFocus()
+    keyboardController?.show()
   }
 
   val isNombreValid = nombre.isNotBlank()
@@ -370,40 +370,40 @@ fun StockActionDialog(
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (initialBarcode.isNotEmpty()) {
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-            ) {
-                Text(
-                    stringResource(R.string.inventory_barcode_detected, initialBarcode),
-                    modifier = Modifier.padding(8.dp),
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
+          Surface(
+            color = MaterialTheme.colorScheme.primaryContainer,
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+          ) {
+            Text(
+              stringResource(R.string.inventory_barcode_detected, initialBarcode),
+              modifier = Modifier.padding(8.dp),
+              style = MaterialTheme.typography.labelSmall
+            )
+          }
         }
         OutlinedTextField(
-            value = nombre, 
-            onValueChange = { 
-                nombre = it
-                nombreTouched = true
-            }, 
-            label = { Text(stringResource(R.string.inventory_label_name)) }, 
-            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-            isError = nombreTouched && !isNombreValid,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-            supportingText = {
-                if (nombreTouched && !isNombreValid) {
-                    Text(stringResource(R.string.inventory_error_name_required), color = MaterialTheme.colorScheme.error)
-                }
+          value = nombre, 
+          onValueChange = { 
+            nombre = it
+            nombreTouched = true
+          }, 
+          label = { Text(stringResource(R.string.inventory_label_name)) }, 
+          modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+          isError = nombreTouched && !isNombreValid,
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+          supportingText = {
+            if (nombreTouched && !isNombreValid) {
+              Text(stringResource(R.string.inventory_error_name_required), color = MaterialTheme.colorScheme.error)
             }
+          }
         )
         OutlinedTextField(
-            value = categoria, 
-            onValueChange = { categoria = it }, 
-            label = { Text(stringResource(R.string.inventory_label_category)) }, 
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+          value = categoria, 
+          onValueChange = { categoria = it }, 
+          label = { Text(stringResource(R.string.inventory_label_category)) }, 
+          modifier = Modifier.fillMaxWidth(),
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           OutlinedTextField(
@@ -424,11 +424,11 @@ fun StockActionDialog(
           )
         }
         OutlinedTextField(
-            value = unidad, 
-            onValueChange = { unidad = it }, 
-            label = { Text(stringResource(R.string.inventory_label_unit)) }, 
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+          value = unidad, 
+          onValueChange = { unidad = it }, 
+          label = { Text(stringResource(R.string.inventory_label_unit)) }, 
+          modifier = Modifier.fillMaxWidth(),
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
       }
     },
@@ -506,7 +506,7 @@ fun StockItemCard(
             Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(16.dp))
           }
           Text(
-            text = "${if (item.cantidadActual % 1 == 0.0) item.cantidadActual.toInt() else item.cantidadActual} ${item.unidad}",
+            text = "${if (item.cantidadActual % 1 == 0.0) item.cantidadActual.hashCode() else item.cantidadActual} ${item.unidad}",
             style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Black,
             modifier = Modifier.padding(horizontal = 4.dp)
@@ -546,4 +546,3 @@ fun StockItemCard(
     }
   }
 }
-

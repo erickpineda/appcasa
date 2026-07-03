@@ -8,6 +8,6 @@ class ToggleListItemUseCase @Inject constructor(
     private val repository: ListsRepository
 ) {
     suspend operator fun invoke(item: ListaItem) {
-        repository.updateItem(item.copy(completado = !item.completado))
+        repository.upsertItem(item.copy(completado = !item.completado))
     }
 }

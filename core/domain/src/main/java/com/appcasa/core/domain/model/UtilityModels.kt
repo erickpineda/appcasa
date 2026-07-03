@@ -1,11 +1,11 @@
 package com.appcasa.core.domain.model
 
 data class Utility(
-    val id: Long = 0,
-    val codigo: String,
-    val nombre: String,
+    val id: String = "",
+    val codigo: String = "",
+    val nombre: String = "",
     val descripcion: String? = null,
-    val icono: String,
+    val icono: String = "",
     val activa: Boolean = true,
     val orden: Int = 0,
     val categoria: String = "General",

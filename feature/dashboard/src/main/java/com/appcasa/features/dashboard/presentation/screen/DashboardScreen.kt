@@ -493,7 +493,7 @@ fun MoodAvatar(member: FamilyMember, onMoodClick: () -> Unit) {
         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
         border = if (member.estadoAnimo != null) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
       ) {
-        val imageModel = member.fotoUri ?: member.urlNube
+        val imageModel = member.avatarUrl ?: member.avatarUrl
         if (imageModel != null) {
           AsyncImage(
             model = imageModel,

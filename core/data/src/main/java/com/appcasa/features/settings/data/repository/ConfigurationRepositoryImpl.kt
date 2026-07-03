@@ -13,13 +13,13 @@ class ConfigurationRepositoryImpl @Inject constructor(
     private val configuracionDao: ConfiguracionDao
 ) : ConfigurationRepository {
 
-    override fun getConfiguracion(hogarId: Long): Flow<List<Configuration>> {
+    override fun getConfiguracion(hogarId: String): Flow<List<Configuration>> {
         return configuracionDao.getConfiguracion(hogarId).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override suspend fun insertConfiguracion(config: Configuration) {
-        configuracionDao.insertConfiguracion(config.toEntity())
+    override suspend fun upsertConfiguracion(config: Configuration) {
+        configuracionDao.upsertConfiguracion(config.toEntity())
     }
 }

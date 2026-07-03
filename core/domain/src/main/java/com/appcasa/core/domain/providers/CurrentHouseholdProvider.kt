@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
  * La implementación debe asegurar la persistencia de esta selección.
  */
 interface CurrentHouseholdProvider {
-    val householdId: Flow<Long>
-    suspend fun setHouseholdId(id: Long)
-    fun getCurrentHouseholdId(): Long
+    val householdId: Flow<String>
+    suspend fun setHouseholdId(id: String)
+    fun getCurrentHouseholdId(): String
 }

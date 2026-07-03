@@ -24,7 +24,7 @@ class AddTaskViewModel @Inject constructor(
   private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+  private val householdId: String get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val familyMembers: StateFlow<List<FamilyMember>> = currentHouseholdProvider.householdId
@@ -38,7 +38,7 @@ class AddTaskViewModel @Inject constructor(
   fun addTask(
     titulo: String, 
     prioridad: Prioridad, 
-    asignadoId: Long? = null, 
+    asignadoId: String? = null, 
     esPersonal: Boolean = false, 
     fotoUri: String? = null,
     fechaLimite: Long? = null,

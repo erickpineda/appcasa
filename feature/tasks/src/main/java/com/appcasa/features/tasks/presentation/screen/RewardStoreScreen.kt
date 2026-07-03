@@ -65,7 +65,7 @@ fun RewardStoreScreen(
     val members by viewModel.members.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showAddDialog by remember { mutableStateOf(false) }
-    var selectedMemberId by remember { mutableStateOf<Long?>(null) }
+    var selectedMemberId by remember { mutableStateOf<String?>(null) }
     var showCelebration by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {

@@ -28,12 +28,12 @@ class ToggleTaskCompletionUseCase @Inject constructor(
             updatedAt = System.currentTimeMillis()
         )
         
-        repository.insertTask(updatedTask)
+        repository.upsertTask(updatedTask)
         
         var pointsGained = 0
         
         if (isMarkingAsCompleted) {
-            reminderScheduler.cancelReminder((task.id + 20000).toInt())
+            reminderScheduler.cancelReminder((task.id + 20000).hashCode())
             pointsGained = awardTaskPointsUseCase(updatedTask)
             if (task.periodicidad != Periodicidad.NINGUNA) {
                 spawnNextTaskInstanceUseCase(updatedTask)

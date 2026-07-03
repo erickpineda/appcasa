@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetListItemsUseCase @Inject constructor(
     private val repository: ListsRepository
 ) {
-    operator fun invoke(listaId: Long): Flow<List<ListaItem>> {
+    operator fun invoke(listaId: String): Flow<List<ListaItem>> {
         return repository.getItemsByLista(listaId)
     }
 }

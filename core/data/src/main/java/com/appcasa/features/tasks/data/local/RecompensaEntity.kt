@@ -5,8 +5,11 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.appcasa.core.data.local.base.Auditable
+import com.appcasa.core.data.local.base.Syncable
 import com.appcasa.core.utils.Constants
 import com.appcasa.features.settings.data.local.HogarEntity
+import java.util.UUID
 
 @Entity(
     tableName = "recompensas",
@@ -19,29 +22,49 @@ import com.appcasa.features.settings.data.local.HogarEntity
         )
     ],
     indices = [
-        Index("hogar_id"),
-        Index("sync_id")
+        Index("hogar_id")
     ]
 )
 data class RecompensaEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey
+    @ColumnInfo(name = "id")
+    override val id: String = UUID.randomUUID().toString(),
+
     @ColumnInfo(name = "hogar_id")
-    val hogarId: Long,
-    @ColumnInfo(name = "hogar_sync_id")
-    val hogarSyncId: String? = null,
+    val hogarId: String,
+
+    @ColumnInfo(name = "titulo")
     val titulo: String,
+
+    @ColumnInfo(name = "descripcion")
     val descripcion: String? = null,
+
     @ColumnInfo(name = "coste_puntos")
     val costePuntos: Int,
+
+    @ColumnInfo(name = "icono")
     val icono: String = Constants.UI.DEFAULT_REWARD_ICON, // Nombre del icono de Material
     
-    @ColumnInfo(name = "sync_id")
-    val syncId: String? = null,
+    // --- Auditoría / Sync ---
+    @ColumnInfo(name = "created_at")
+    override val createdAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "created_by")
+    override val createdBy: String? = null,
 
     @ColumnInfo(name = "updated_at")
-    val updatedAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "updated_by")
+    override val updatedBy: String? = null,
+
+    @ColumnInfo(name = "deleted_at")
+    override val deletedAt: Long? = null,
+
+    @ColumnInfo(name = "deleted_by")
+    override val deletedBy: String? = null,
 
     @ColumnInfo(name = "last_synced_at")
-    val lastSyncedAt: Long? = null
-)
+    override var lastSyncedAt: Long? = null
+
+) : Syncable, Auditable

@@ -5,7 +5,10 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.appcasa.core.data.local.base.Auditable
+import com.appcasa.core.data.local.base.Syncable
 import com.appcasa.features.settings.data.local.HogarEntity
+import java.util.UUID
 
 @Entity(
     tableName = "dashboard_config",
@@ -18,23 +21,41 @@ import com.appcasa.features.settings.data.local.HogarEntity
         )
     ],
     indices = [
-        Index("hogar_id")
+        Index("hogar_id", unique = true)
     ]
 )
 data class DashboardConfigEntity(
+    
     @PrimaryKey
-    @ColumnInfo(name = "hogar_id")
-    val hogarId: Long,
+    @ColumnInfo(name = "id")
+    override val id: String = UUID.randomUUID().toString(),
 
-    @ColumnInfo(name = "hogar_sync_id")
-    val hogarSyncId: String? = null,
+    @ColumnInfo(name = "hogar_id")
+    val hogarId: String,
     
     @ColumnInfo(name = "orden_modulos")
     val ordenModulos: String,
 
+    // --- Auditoría / Sync ---
+    @ColumnInfo(name = "created_at")
+    override val createdAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "created_by")
+    override val createdBy: String? = null,
+
     @ColumnInfo(name = "updated_at")
-    val updatedAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "updated_by")
+    override val updatedBy: String? = null,
+
+    @ColumnInfo(name = "deleted_at")
+    override val deletedAt: Long? = null,
+
+    @ColumnInfo(name = "deleted_by")
+    override val deletedBy: String? = null,
 
     @ColumnInfo(name = "last_synced_at")
-    val lastSyncedAt: Long? = null
-)
+    override var lastSyncedAt: Long? = null
+
+) : Syncable, Auditable

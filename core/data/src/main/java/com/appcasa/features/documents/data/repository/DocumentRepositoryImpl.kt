@@ -24,86 +24,35 @@ class DocumentRepositoryImpl @Inject constructor(
     private val syncScheduler: SyncScheduler
 ) : DocumentRepository {
 
-    override fun getDocumentosByHogar(hogarId: Long): Flow<List<Document>> {
+    override fun getDocumentosByHogar(hogarId: String): Flow<List<Document>> {
         return documentoDao.getDocumentosByHogar(hogarId).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override suspend fun insertDocumento(documento: Document): Long {
-        var docToInsert = documento
-        if (docToInsert.hogarSyncId == null && docToInsert.hogarId > 0) {
-            val hogar = householdRepository.getHogarById(docToInsert.hogarId).first()
-            docToInsert = docToInsert.copy(hogarSyncId = hogar?.syncId)
-        }
-        if (docToInsert.syncId == null) {
-            docToInsert = docToInsert.copy(syncId = UUID.randomUUID().toString())
-        }
-        val existing = docToInsert.syncId?.let { documentoDao.getDocumentoBySyncId(it) }
-        if (existing != null) {
-            docToInsert = docToInsert.copy(id = existing.id)
-        }
-        val id = documentoDao.insertDocumento(docToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(docToInsert.hogarId)
-        return id
+    override suspend fun upsertDocumento(documento: Document) {
+        documentoDao.upsertDocumento(documento.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(documento.hogarId)
     }
 
     override suspend fun deleteDocumento(documento: Document) {
         documentoDao.deleteDocumento(documento.toEntity())
-        try {
-            val hogar = householdRepository.getHogarById(documento.hogarId).first()
-            val hSyncId = documento.hogarSyncId ?: hogar?.syncId
-            if (hSyncId != null) {
-                remoteDataSource.deleteDocument(hSyncId, documento)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
         syncScheduler.scheduleSync(documento.hogarId)
     }
 
-    override suspend fun updateDocumentSyncTimestamp(docId: Long) {
+    override suspend fun updateDocumentSyncTimestamp(docId: String) {
         documentoDao.updateSyncTimestamp(docId, System.currentTimeMillis())
     }
 
     override suspend fun downloadDocument(document: Document, localFile: java.io.File): Boolean {
-        val hogar = householdRepository.getHogarById(document.hogarId).first()
-        val hogarSyncId = hogar?.syncId ?: return false
-        val docSyncId = document.syncId ?: return false
-        return remoteDataSource.downloadDocument(hogarSyncId, docSyncId, localFile)
+        // TODO Phase 4
+        return false
     }
 
     private var syncJob: Job? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun startRemoteSync(hogarId: Long) {
-        syncJob?.cancel()
-        syncJob = syncManager.isAppInForeground
-            .flatMapLatest { isInForeground ->
-                if (isInForeground) {
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    hogar?.syncId?.let { remoteDataSource.observeDocuments(it) } ?: emptyFlow()
-                } else {
-                    emptyFlow()
-                }
-            }
-            .onEach { remoteItems ->
-                remoteItems.forEach { remoteDoc ->
-                    val existing = remoteDoc.syncId?.let { documentoDao.getDocumentoBySyncId(it) }
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-
-                    val docToSave = remoteDoc.copy(
-                        id = existing?.id ?: 0L,
-                        hogarId = hogarId,
-                        hogarSyncId = hogar?.syncId
-                    )
-
-                    if (existing == null || remoteDoc.updatedAt > existing.updatedAt) {
-                        documentoDao.insertDocumento(docToSave.toEntity())
-                    }
-                }
-            }
-            .catch { e -> e.printStackTrace() }
-            .launchIn(appScope)
+    override fun startRemoteSync(hogarId: String) {
+        // TODO: Refactor in Phase 4
     }
 }

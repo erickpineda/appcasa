@@ -22,7 +22,7 @@ import javax.inject.Inject
 class GetPostItsUseCase @Inject constructor(
   private val repository: DashboardRepository
 ) {
-  operator fun invoke(hogarId: Long): Flow<List<PostIt>> {
+  operator fun invoke(hogarId: String): Flow<List<PostIt>> {
     return repository.getPostIts(hogarId)
   }
 }
@@ -30,8 +30,8 @@ class GetPostItsUseCase @Inject constructor(
 class AddPostItUseCase @Inject constructor(
   private val repository: DashboardRepository
 ) {
-  suspend operator fun invoke(hogarId: Long, contenido: String, color: String = "#FFF9C4") {
-    repository.insertPostIt(PostIt(hogarId = hogarId, contenido = contenido, colorHex = color))
+  suspend operator fun invoke(hogarId: String, contenido: String, color: String = "#FFF9C4") {
+    repository.upsertPostIt(PostIt(hogarId = hogarId, contenido = contenido, colorHex = color))
   }
 }
 
@@ -39,7 +39,7 @@ class UpdatePostItUseCase @Inject constructor(
   private val repository: DashboardRepository
 ) {
   suspend operator fun invoke(postIt: PostIt) {
-    repository.insertPostIt(postIt)
+    repository.upsertPostIt(postIt)
   }
 }
 
@@ -52,37 +52,37 @@ class DeletePostItUseCase @Inject constructor(
 }
 
 data class DashboardModulesConfig(
-    val activeModules: List<String>,
-    val allModules: List<String>
+  val activeModules: List<String>,
+  val allModules: List<String>
 )
 
 class GetDashboardConfigUseCase @Inject constructor(
   private val repository: DashboardRepository
 ) {
-  operator fun invoke(hogarId: Long): Flow<DashboardModulesConfig> {
+  operator fun invoke(hogarId: String): Flow<DashboardModulesConfig> {
     return repository.getDashboardConfig(hogarId).map { config ->
-        val rawOrder = config?.ordenModulos?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
-        val defaultModules = listOf(
-          Constants.Modules.POSTITS,
-          Constants.Modules.TASKS,
-          Constants.Modules.PETS,
-          Constants.Modules.CALENDAR,
-          Constants.Modules.EXPENSES,
-          Constants.Modules.REWARDS,
-        )
+      val rawOrder = config?.ordenModulos?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+      val defaultModules = listOf(
+        Constants.Modules.POSTITS,
+        Constants.Modules.TASKS,
+        Constants.Modules.PETS,
+        Constants.Modules.CALENDAR,
+        Constants.Modules.EXPENSES,
+        Constants.Modules.REWARDS
+      )
         
-        val finalOrder = if (rawOrder.isEmpty()) {
-            defaultModules
-        } else {
-            val existingBaseModules = rawOrder.map { if (it.startsWith("HIDDEN_")) it.substring(7) else it }
-            val newModules = defaultModules.filter { it !in existingBaseModules }
-            rawOrder + newModules
-        }
+      val finalOrder = if (rawOrder.isEmpty()) {
+        defaultModules
+      } else {
+        val existingBaseModules = rawOrder.map { if (it.startsWith("HIDDEN_")) it.substring(7) else it }
+        val newModules = defaultModules.filter { it !in existingBaseModules }
+        rawOrder + newModules
+      }
 
-        DashboardModulesConfig(
-            activeModules = finalOrder.filter { !it.startsWith("HIDDEN_") },
-            allModules = finalOrder
-        )
+      DashboardModulesConfig(
+        activeModules = finalOrder.filter { !it.startsWith("HIDDEN_") },
+        allModules = finalOrder
+      )
     }
   }
 }
@@ -90,7 +90,7 @@ class GetDashboardConfigUseCase @Inject constructor(
 class UpdateDashboardOrderUseCase @Inject constructor(
   private val repository: DashboardRepository
 ) {
-  suspend operator fun invoke(hogarId: Long, newOrder: List<String>) {
+  suspend operator fun invoke(hogarId: String, newOrder: List<String>) {
     repository.saveDashboardConfig(
       DashboardConfig(
         hogarId = hogarId,
@@ -108,7 +108,7 @@ class SearchUseCase @Inject constructor(
   private val financeRepository: FinanceRepository,
   private val maintenanceRepository: MaintenanceRepository
 ) {
-  suspend operator fun invoke(hogarId: Long, query: String): List<SearchItem> {
+  suspend operator fun invoke(hogarId: String, query: String): List<SearchItem> {
     val tasks = tasksRepository.getTasksByHogar(hogarId).first()
     val lists = listsRepository.getListasPaged(hogarId, 50, 0).first()
     val members = familyRepository.getMembersByHogar(hogarId).first()
@@ -156,7 +156,7 @@ class GetNextEventUseCase @Inject constructor(
   private val tasksRepository: TasksRepository,
   private val familyRepository: FamilyRepository
 ) {
-  operator fun invoke(hogarId: Long): Flow<NextEventSummary?> {
+  operator fun invoke(hogarId: String): Flow<NextEventSummary?> {
     return combine(
       calendarRepository.getEventsByHogar(hogarId),
       reminderRepository.getRemindersByHogar(hogarId),
@@ -211,7 +211,7 @@ class GetNextEventUseCase @Inject constructor(
 class GetDashboardHouseholdUseCase @Inject constructor(
   private val repository: HouseholdRepository
 ) {
-  operator fun invoke(hogarId: Long): Flow<Household?> {
+  operator fun invoke(hogarId: String): Flow<Household?> {
     return repository.getHogarById(hogarId)
   }
 }

@@ -4,6 +4,6 @@ import com.appcasa.core.domain.model.Configuration
 import kotlinx.coroutines.flow.Flow
 
 interface ConfigurationRepository {
-    fun getConfiguracion(hogarId: Long): Flow<List<Configuration>>
-    suspend fun insertConfiguracion(config: Configuration)
+    fun getConfiguracion(hogarId: String): Flow<List<Configuration>>
+    suspend fun upsertConfiguracion(config: Configuration)
 }

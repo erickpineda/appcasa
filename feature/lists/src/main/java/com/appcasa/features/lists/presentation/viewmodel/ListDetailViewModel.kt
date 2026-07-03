@@ -29,7 +29,7 @@ class ListDetailViewModel @Inject constructor(
     private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-    private val listId: Long = checkNotNull(savedStateHandle["listId"])
+    private val listId: String = checkNotNull(savedStateHandle["listId"])
 
     val items: StateFlow<List<ListaItem>> = getListItemsUseCase(listId)
         .stateIn(
@@ -55,7 +55,7 @@ class ListDetailViewModel @Inject constructor(
         }
     }
 
-    fun updateItem(item: ListaItem, nuevoTexto: String) {
+    fun upsertItem(item: ListaItem, nuevoTexto: String) {
         viewModelScope.launch {
             updateListItemUseCase(item, nuevoTexto)
         }

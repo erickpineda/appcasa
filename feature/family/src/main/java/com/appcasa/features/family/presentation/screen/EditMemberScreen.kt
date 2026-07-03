@@ -104,7 +104,7 @@ fun EditMemberScreen(
     var chip by remember { mutableStateOf(currentMember.numeroChip ?: "") }
     var vetNombre by remember { mutableStateOf(currentMember.veterinarioNombre ?: "") }
     var vetTlf by remember { mutableStateOf(currentMember.veterinarioTelefono ?: "") }
-    var fotoUri by remember { mutableStateOf<String?>(currentMember.fotoUri) }
+    var avatarUrl by remember { mutableStateOf<String?>(currentMember.avatarUrl) }
     var expanded by remember { mutableStateOf(false) }
     
     var selectedBirthDate by remember { mutableStateOf(currentMember.fechaNacimiento) }
@@ -133,7 +133,7 @@ fun EditMemberScreen(
       contract = ActivityResultContracts.GetContent()
     ) { uri -> 
       uri?.let {
-          fotoUri = FileUtils.saveImageLocally(context, it.toString())
+          avatarUrl = FileUtils.saveImageLocally(context, it.toString())
       }
     }
 
@@ -168,9 +168,9 @@ fun EditMemberScreen(
             .clickable { imagePickerLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) },
           contentAlignment = Alignment.Center
         ) {
-          if (fotoUri != null) {
+          if (avatarUrl != null) {
             AsyncImage(
-              model = fotoUri,
+              model = avatarUrl,
               contentDescription = null,
               modifier = Modifier.fillMaxSize(),
               contentScale = ContentScale.Crop
@@ -295,7 +295,7 @@ fun EditMemberScreen(
               chip = chip.takeIf { it.isNotBlank() },
               vetNombre = vetNombre.takeIf { it.isNotBlank() },
               vetTlf = vetTlf.takeIf { it.isNotBlank() },
-              fotoUri = fotoUri,
+              avatarUrl = avatarUrl,
               fechaNacimiento = selectedBirthDate
             )
             navController.popBackStack()

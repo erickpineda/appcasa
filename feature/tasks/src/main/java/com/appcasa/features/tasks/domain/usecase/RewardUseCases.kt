@@ -9,7 +9,7 @@ import javax.inject.Inject
 class GetRewardsUseCase @Inject constructor(
     private val repository: TasksRepository
 ) {
-    operator fun invoke(hogarId: Long): Flow<List<Reward>> {
+    operator fun invoke(hogarId: String): Flow<List<Reward>> {
         return repository.getRewardsByHogar(hogarId)
     }
 }
@@ -17,8 +17,8 @@ class GetRewardsUseCase @Inject constructor(
 class AddRewardUseCase @Inject constructor(
     private val repository: TasksRepository
 ) {
-    suspend operator fun invoke(hogarId: Long, titulo: String, puntos: Int, desc: String?) {
-        repository.insertReward(
+    suspend operator fun invoke(hogarId: String, titulo: String, puntos: Int, desc: String?) {
+        repository.upsertReward(
             Reward(
                 hogarId = hogarId,
                 titulo = titulo,
@@ -32,7 +32,7 @@ class AddRewardUseCase @Inject constructor(
 class RedeemRewardUseCase @Inject constructor(
     private val familyRepository: FamilyRepository
 ) {
-    suspend operator fun invoke(memberId: Long, reward: Reward): Boolean {
+    suspend operator fun invoke(memberId: String, reward: Reward): Boolean {
         val member = familyRepository.getMemberById(memberId)
         if (member != null && member.puntos >= reward.costePuntos) {
             familyRepository.updateMember(member.copy(

@@ -20,6 +20,6 @@ class UtilityRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertUtilidad(utility: Utility) {
-        utilidadDao.insertUtilidad(utility.toEntity())
+        utilidadDao.upsertUtilidad(utility.toEntity())
     }
 }

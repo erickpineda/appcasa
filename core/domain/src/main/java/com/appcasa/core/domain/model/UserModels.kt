@@ -1,17 +1,15 @@
 package com.appcasa.core.domain.model
 
 data class User(
-    val id: Long = 0,
-    val syncId: String? = null,
-    val hogarId: Long,
-    val hogarSyncId: String? = null,
-    val nombre: String,
-    val email: String,
+    val id: String = "",
+    val hogarId: String = "",
+    val nombre: String = "",
+    val email: String = "",
     val avatarUrl: String? = null,
     val authId: String? = null,
     val rol: RolHogar = RolHogar.COLABORADOR,
     val estado: EstadoGeneral = EstadoGeneral.ACTIVO,
-    val miembroId: Long? = null,
+    val miembroId: String? = null,
     val isActive: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),

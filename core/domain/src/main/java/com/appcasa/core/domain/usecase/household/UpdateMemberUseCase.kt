@@ -23,7 +23,7 @@ class UpdateMemberUseCase @Inject constructor(
       userRepository.insertUser(
         currentUser.copy(
           nombre = member.nombre,
-          avatarUrl = member.fotoUri ?: member.urlNube
+          avatarUrl = member.avatarUrl
         )
       )
     }

@@ -27,9 +27,9 @@ class UserRepositoryImpl @Inject constructor(
                 // Esto permite que el GlobalViewModel sepa que hay alguien "logueado"
                 // pero que aún tiene que completar el setup del hogar.
                 User(
-                    id = -1L, // ID negativo indica que es volátil/no persistido
-                    hogarId = 0L,
-                    miembroId = 0L,
+                    id = "volatile_id", // ID indica que es volátil/no persistido
+                    hogarId = "",
+                    miembroId = "",
                     nombre = firebaseUser.displayName ?: "Usuario",
                     email = firebaseUser.email ?: "",
                     isActive = true
@@ -40,8 +40,13 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun insertUser(user: User): Long {
-        return configuracionDao.insertUsuario(user.toEntity())
+    override suspend fun getUserByName(name: String): User? {
+        return configuracionDao.getUsuarioByNombre(name)?.toDomain()
+    }
+
+    override suspend fun insertUser(user: User): String {
+        configuracionDao.upsertUsuario(user.toEntity())
+        return user.id
     }
 
     override suspend fun deleteUsers() {
@@ -52,11 +57,11 @@ class UserRepositoryImpl @Inject constructor(
         configuracionDao.deactivateAllUsers()
     }
 
-    override suspend fun activateUser(userId: Long) {
+    override suspend fun activateUser(userId: String) {
         configuracionDao.activateUser(userId)
     }
 
-    override suspend fun activateUserByHousehold(householdId: Long) {
+    override suspend fun activateUserByHousehold(householdId: String) {
         configuracionDao.activateUserByHousehold(householdId)
     }
 }

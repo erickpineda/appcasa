@@ -31,7 +31,7 @@ class SmartSafeViewModel @Inject constructor(
   private val _isUnlocked = MutableStateFlow(false)
   val isUnlocked: StateFlow<Boolean> = _isUnlocked.asStateFlow()
 
-  private val householdId = currentHouseholdProvider.getCurrentHouseholdId()
+  private val householdId: String get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
   val documentos: StateFlow<List<Document>> = currentHouseholdProvider.householdId
@@ -42,31 +42,31 @@ class SmartSafeViewModel @Inject constructor(
 
   fun authenticate(activity: FragmentActivity) {
     try {
-        val biometricManager = BiometricManager.from(activity)
-        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+      val biometricManager = BiometricManager.from(activity)
+      val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
         
-        val canAuth = biometricManager.canAuthenticate(authenticators)
+      val canAuth = biometricManager.canAuthenticate(authenticators)
         
-        if (canAuth == BiometricManager.BIOMETRIC_SUCCESS) {
-            val promptInfo = BiometricPrompt.PromptInfo.Builder()
-                .setTitle(activity.getString(com.appcasa.core.ui.R.string.lock_prompt_safe_title))
-                .setSubtitle(activity.getString(com.appcasa.core.ui.R.string.lock_prompt_safe_subtitle))
-                .setAllowedAuthenticators(authenticators)
-                .build()
+      if (canAuth == BiometricManager.BIOMETRIC_SUCCESS) {
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+          .setTitle(activity.getString(com.appcasa.core.ui.R.string.lock_prompt_safe_title))
+          .setSubtitle(activity.getString(com.appcasa.core.ui.R.string.lock_prompt_safe_subtitle))
+          .setAllowedAuthenticators(authenticators)
+          .build()
 
-            val executor = ContextCompat.getMainExecutor(activity)
-            val biometricPrompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                    super.onAuthenticationSucceeded(result)
-                    _isUnlocked.value = true
-                }
-            })
-            biometricPrompt.authenticate(promptInfo)
-        } else {
+        val executor = ContextCompat.getMainExecutor(activity)
+        val biometricPrompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
+          override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+            super.onAuthenticationSucceeded(result)
             _isUnlocked.value = true
-        }
-    } catch (e: Exception) {
+          }
+        })
+        biometricPrompt.authenticate(promptInfo)
+      } else {
         _isUnlocked.value = true
+      }
+    } catch (e: Exception) {
+      _isUnlocked.value = true
     }
   }
 
@@ -95,9 +95,9 @@ class SmartSafeViewModel @Inject constructor(
   
   fun uploadToCloud(documento: Document) {
     viewModelScope.launch {
-        // Mock cloud upload logic
-        val mockCloudUrl = "https://drive.google.com/mock/${documento.nombre}"
-        updateDocumentUseCase(documento.copy(urlNube = mockCloudUrl, sincronizado = true))
+      // Mock cloud upload logic
+      val mockCloudUrl = "https://drive.google.com/mock/${documento.id}"
+      updateDocumentUseCase(documento.copy(urlNube = mockCloudUrl, sincronizado = true))
     }
   }
 }

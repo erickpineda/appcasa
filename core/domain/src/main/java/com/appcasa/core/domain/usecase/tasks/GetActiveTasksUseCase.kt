@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetActiveTasksUseCase @Inject constructor(
     private val repository: TasksRepository
 ) {
-    operator fun invoke(hogarId: Long, page: Int): Flow<List<Task>> {
+    operator fun invoke(hogarId: String, page: Int): Flow<List<Task>> {
         return repository.getTasksPaged(hogarId, limit = page * 20, offset = 0)
     }
 }

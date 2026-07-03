@@ -4,9 +4,9 @@ import com.appcasa.core.domain.model.Event
 import kotlinx.coroutines.flow.Flow
 
 interface CalendarRepository {
-    fun getEventsByHogar(hogarId: Long): Flow<List<Event>>
-    suspend fun insertEvent(event: Event): Long
+    fun getEventsByHogar(hogarId: String): Flow<List<Event>>
+    suspend fun upsertEvent(event: Event)
     suspend fun deleteEvent(event: Event)
-    suspend fun updateEventSyncTimestamp(eventId: Long)
-    fun startRemoteSync(hogarId: Long)
+    suspend fun updateEventSyncTimestamp(eventId: String)
+    fun startRemoteSync(hogarId: String)
 }

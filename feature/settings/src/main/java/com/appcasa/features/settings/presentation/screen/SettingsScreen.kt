@@ -98,28 +98,28 @@ fun SettingsScreen(
   val showLinkAccountDialog by settingsViewModel.showLinkAccountDialog.collectAsStateWithLifecycle()
 
   if (showLinkAccountDialog) {
-      AlertDialog(
-          onDismissRequest = { settingsViewModel.dismissLinkAccountDialog() },
-          title = { Text(stringResource(R.string.settings_link_account_title)) },
-          text = { 
-              Text(
-                  stringResource(
-                      R.string.settings_link_account_confirm_message, 
-                      usuario?.email ?: ""
-                  )
-              ) 
-          },
-          confirmButton = {
-              Button(onClick = { settingsViewModel.linkAccount() }) {
-                  Text(stringResource(R.string.settings_confirm))
-              }
-          },
-          dismissButton = {
-              TextButton(onClick = { settingsViewModel.dismissLinkAccountDialog() }) {
-                  Text(stringResource(R.string.settings_btn_cancel))
-              }
-          }
-      )
+    AlertDialog(
+      onDismissRequest = { settingsViewModel.dismissLinkAccountDialog() },
+      title = { Text(stringResource(R.string.settings_link_account_title)) },
+      text = { 
+        Text(
+          stringResource(
+            R.string.settings_link_account_confirm_message, 
+            usuario?.email ?: ""
+          )
+        ) 
+      },
+      confirmButton = {
+        Button(onClick = { settingsViewModel.linkAccount() }) {
+          Text(stringResource(R.string.settings_confirm))
+        }
+      },
+      dismissButton = {
+        TextButton(onClick = { settingsViewModel.dismissLinkAccountDialog() }) {
+          Text(stringResource(R.string.settings_btn_cancel))
+        }
+      }
+    )
   }
 
   SettingsContent(
@@ -148,7 +148,7 @@ fun SettingsScreen(
     isUserLoggedIn = isLoggedIn,
     isAccountLinked = usuario == null || isLoggedIn || usuario?.authId != null || (usuario?.email?.contains("@appcasa.local") == false),
     isGoogleAccount = isGoogleAccount,
-    isHouseholdSynced = hogar?.lastSyncedAt != null && hogar?.syncId != null
+    isHouseholdSynced = hogar?.lastSyncedAt != null
   )
 }
 
@@ -173,7 +173,7 @@ fun SettingsContent(
   onUpdateEmail: (String) -> Unit,
   onUpdatePassword: (String) -> Unit,
   onLinkAccount: () -> Unit,
-  onSwitchHogar: (Long) -> Unit,
+  onSwitchHogar: (String) -> Unit,
   onForceSync: () -> Unit,
   onExportData: () -> Unit,
   onLogout: () -> Unit,
@@ -256,360 +256,360 @@ fun SettingsContent(
 }
 
 enum class SettingsSection(val titleRes: Int) {
-    ACCOUNT(R.string.settings_account_title),
-    APPEARANCE(R.string.settings_section_appearance_full),
-    PREFERENCES(R.string.settings_hub_preferences),
-    HOUSEHOLD(R.string.settings_section_household),
-    SYSTEM(R.string.settings_system_title)
+  ACCOUNT(R.string.settings_account_title),
+  APPEARANCE(R.string.settings_section_appearance_full),
+  PREFERENCES(R.string.settings_hub_preferences),
+  HOUSEHOLD(R.string.settings_section_household),
+  SYSTEM(R.string.settings_system_title)
 }
 
 @Composable
 fun SettingsHub(
-    userName: String,
-    userAvatar: String?,
-    onSectionClick: (SettingsSection) -> Unit,
-    onUpdateAvatar: () -> Unit,
-    onUpdateName: (String) -> Unit,
-    onLinkAccount: () -> Unit,
-    onLogout: () -> Unit,
-    isUserLoggedIn: Boolean,
-    isAccountLinked: Boolean,
-    isGoogleAccount: Boolean,
-    isHouseholdSynced: Boolean
+  userName: String,
+  userAvatar: String?,
+  onSectionClick: (SettingsSection) -> Unit,
+  onUpdateAvatar: () -> Unit,
+  onUpdateName: (String) -> Unit,
+  onLinkAccount: () -> Unit,
+  onLogout: () -> Unit,
+  isUserLoggedIn: Boolean,
+  isAccountLinked: Boolean,
+  isGoogleAccount: Boolean,
+  isHouseholdSynced: Boolean
 ) {
-    var showNameDialog by remember { mutableStateOf(false) }
+  var showNameDialog by remember { mutableStateOf(false) }
 
-    if (showNameDialog) {
-        EditValueDialog(
-            title = stringResource(R.string.settings_edit_name_title),
-            initialValue = userName,
-            onDismiss = { showNameDialog = false },
-            onConfirm = { onUpdateName(it); showNameDialog = false }
-        )
+  if (showNameDialog) {
+    EditValueDialog(
+      title = stringResource(R.string.settings_edit_name_title),
+      initialValue = userName,
+      onDismiss = { showNameDialog = false },
+      onConfirm = { onUpdateName(it); showNameDialog = false }
+    )
+  }
+
+  LazyColumn(
+    modifier = Modifier.fillMaxSize(),
+    contentPadding = PaddingValues(16.dp),
+    verticalArrangement = Arrangement.spacedBy(12.dp)
+  ) {
+    item(contentType = "profile") {
+      AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
+        Row(
+          modifier = Modifier.padding(16.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+          Box(
+            modifier = Modifier
+              .size(64.dp)
+              .clip(CircleShape)
+              .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+              .clickable { onUpdateAvatar() },
+            contentAlignment = Alignment.Center
+          ) {
+            if (userAvatar != null) {
+              AsyncImage(
+                model = userAvatar,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+              )
+            } else {
+              Icon(Icons.Default.Person, null, modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
+            }
+          }
+          Column(modifier = Modifier.weight(1f).clickable { showNameDialog = true }) {
+            Text(userName.ifBlank { stringResource(R.string.settings_user_name_title) }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.settings_profile_edit_hint), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+          }
+          IconButton(onClick = onUpdateAvatar) {
+            Icon(Icons.Default.PhotoCamera, null, tint = MaterialTheme.colorScheme.primary)
+          }
+        }
+      }
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item(contentType = "profile") {
-            AppCasaCard(useGlassmorphism = true, modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                            .clickable { onUpdateAvatar() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (userAvatar != null) {
-                            AsyncImage(
-                                model = userAvatar,
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Icon(Icons.Default.Person, null, modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
-                        }
-                    }
-                    Column(modifier = Modifier.weight(1f).clickable { showNameDialog = true }) {
-                        Text(userName.ifBlank { stringResource(R.string.settings_user_name_title) }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        Text(stringResource(R.string.settings_profile_edit_hint), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                    }
-                    IconButton(onClick = onUpdateAvatar) {
-                        Icon(Icons.Default.PhotoCamera, null, tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        }
-
-        if (!isHouseholdSynced) {
-            item(contentType = "offline_warning") {
-                AppCasaCard(
-                    useGlassmorphism = true,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                        Column {
-                            Text(
-              stringResource(R.string.settings_offline_warning_title),
-              style = MaterialTheme.typography.labelLarge,
-              fontWeight = FontWeight.Bold,
-              color = MaterialTheme.colorScheme.error
+    if (!isHouseholdSynced) {
+      item(contentType = "offline_warning") {
+        AppCasaCard(
+          useGlassmorphism = true,
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            Icon(
+              Icons.Default.Warning,
+              contentDescription = null,
+              tint = MaterialTheme.colorScheme.error
             )
+            Column {
+              Text(
+                stringResource(R.string.settings_offline_warning_title),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.error
+              )
+              Text(
+                stringResource(R.string.settings_offline_warning_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            }
+          }
+        }
+      }
+    }
+
+    if (!isAccountLinked) {
+      item(contentType = "link_account") {
+        AppCasaCard(
+          useGlassmorphism = true,
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Column(modifier = Modifier.padding(16.dp)) {
             Text(
-              stringResource(R.string.settings_offline_warning_desc),
+              stringResource(R.string.settings_link_account_title),
+              style = MaterialTheme.typography.titleMedium,
+              fontWeight = FontWeight.Bold,
+              color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+              stringResource(R.string.settings_link_account_warning),
               style = MaterialTheme.typography.bodySmall,
               color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-                        }
-                    }
-                }
+            Spacer(Modifier.height(16.dp))
+                        
+            Button(
+              onClick = onLinkAccount,
+              modifier = Modifier.fillMaxWidth(),
+              shape = RoundedCornerShape(12.dp),
+              colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+              Icon(Icons.Default.VpnKey, null)
+              Spacer(Modifier.width(8.dp))
+              Text(stringResource(R.string.settings_link_account_email_btn))
             }
-        }
-
-        if (!isAccountLinked) {
-            item(contentType = "link_account") {
-                AppCasaCard(
-                    useGlassmorphism = true,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            stringResource(R.string.settings_link_account_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            stringResource(R.string.settings_link_account_warning),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.height(16.dp))
                         
-                        Button(
-                            onClick = onLinkAccount,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Icon(Icons.Default.VpnKey, null)
-                            Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.settings_link_account_email_btn))
-                        }
+            Spacer(Modifier.height(8.dp))
                         
-                        Spacer(Modifier.height(8.dp))
-                        
-                        OutlinedButton(
-                            onClick = onLinkAccount,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
-                        ) {
-                            GoogleIcon()
-                            Spacer(Modifier.width(12.dp))
-                            Text(stringResource(R.string.settings_link_account_google_btn))
-                        }
-                    }
-                }
+            OutlinedButton(
+              onClick = onLinkAccount,
+              modifier = Modifier.fillMaxWidth(),
+              shape = RoundedCornerShape(12.dp),
+              colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+            ) {
+              GoogleIcon()
+              Spacer(Modifier.width(12.dp))
+              Text(stringResource(R.string.settings_link_account_google_btn))
             }
+          }
         }
-
-        item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_account)) }
-        item(contentType = "category") {
-            CategoryItem(
-                title = stringResource(R.string.settings_account_title),
-                subtitle = if (isGoogleAccount) stringResource(R.string.settings_google_managed_title) else stringResource(R.string.settings_account_subtitle),
-                icon = Icons.Default.Security,
-                onClick = { onSectionClick(SettingsSection.ACCOUNT) }
-            )
-        }
-
-        item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_personalization)) }
-        item(contentType = "category") {
-            CategoryItem(
-                title = stringResource(R.string.settings_section_appearance_full),
-                subtitle = stringResource(R.string.settings_hub_appearance_subtitle),
-                icon = Icons.Default.NotificationsActive,
-                onClick = { onSectionClick(SettingsSection.APPEARANCE) }
-            )
-        }
-        item(contentType = "category") {
-            CategoryItem(
-                title = stringResource(R.string.settings_hub_preferences),
-                subtitle = stringResource(R.string.settings_hub_preferences_subtitle),
-                icon = Icons.Default.Payments,
-                onClick = { onSectionClick(SettingsSection.PREFERENCES) }
-            )
-        }
-
-        item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_management)) }
-        item(contentType = "category") {
-            CategoryItem(
-                title = stringResource(R.string.settings_section_household),
-                subtitle = stringResource(R.string.settings_hub_household_subtitle),
-                icon = Icons.Default.Home,
-                onClick = { onSectionClick(SettingsSection.HOUSEHOLD) }
-            )
-        }
-        item(contentType = "category") {
-            CategoryItem(
-                title = stringResource(R.string.settings_system_title),
-                subtitle = stringResource(R.string.settings_system_subtitle),
-                icon = Icons.Default.Compress,
-                onClick = { onSectionClick(SettingsSection.SYSTEM) }
-            )
-        }
-        item(contentType = "category") {
-            CategoryItem(
-                title = stringResource(R.string.settings_hub_logout),
-                subtitle = stringResource(R.string.settings_hub_logout_subtitle),
-                icon = Icons.AutoMirrored.Filled.Logout,
-                color = MaterialTheme.colorScheme.error,
-                onClick = onLogout
-            )
-        }
-        
-        item {
-            Spacer(Modifier.height(24.dp))
-            Text(
-                stringResource(R.string.settings_version_footer, "v1.2.0"),
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline
-            )
-        }
+      }
     }
+
+    item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_account)) }
+    item(contentType = "category") {
+      CategoryItem(
+        title = stringResource(R.string.settings_account_title),
+        subtitle = if (isGoogleAccount) stringResource(R.string.settings_google_managed_title) else stringResource(R.string.settings_account_subtitle),
+        icon = Icons.Default.Security,
+        onClick = { onSectionClick(SettingsSection.ACCOUNT) }
+      )
+    }
+
+    item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_personalization)) }
+    item(contentType = "category") {
+      CategoryItem(
+        title = stringResource(R.string.settings_section_appearance_full),
+        subtitle = stringResource(R.string.settings_hub_appearance_subtitle),
+        icon = Icons.Default.NotificationsActive,
+        onClick = { onSectionClick(SettingsSection.APPEARANCE) }
+      )
+    }
+    item(contentType = "category") {
+      CategoryItem(
+        title = stringResource(R.string.settings_hub_preferences),
+        subtitle = stringResource(R.string.settings_hub_preferences_subtitle),
+        icon = Icons.Default.Payments,
+        onClick = { onSectionClick(SettingsSection.PREFERENCES) }
+      )
+    }
+
+    item(contentType = "header") { SettingsSectionHeader(stringResource(R.string.settings_hub_management)) }
+    item(contentType = "category") {
+      CategoryItem(
+        title = stringResource(R.string.settings_section_household),
+        subtitle = stringResource(R.string.settings_hub_household_subtitle),
+        icon = Icons.Default.Home,
+        onClick = { onSectionClick(SettingsSection.HOUSEHOLD) }
+      )
+    }
+    item(contentType = "category") {
+      CategoryItem(
+        title = stringResource(R.string.settings_system_title),
+        subtitle = stringResource(R.string.settings_system_subtitle),
+        icon = Icons.Default.Compress,
+        onClick = { onSectionClick(SettingsSection.SYSTEM) }
+      )
+    }
+    item(contentType = "category") {
+      CategoryItem(
+        title = stringResource(R.string.settings_hub_logout),
+        subtitle = stringResource(R.string.settings_hub_logout_subtitle),
+        icon = Icons.AutoMirrored.Filled.Logout,
+        color = MaterialTheme.colorScheme.error,
+        onClick = onLogout
+      )
+    }
+        
+    item {
+      Spacer(Modifier.height(24.dp))
+      Text(
+        stringResource(R.string.settings_version_footer, "v1.2.0"),
+        modifier = Modifier.fillMaxWidth(),
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.outline
+      )
+    }
+  }
 }
 
 @Composable
 fun HogarSection(
-    householdName: String,
-    householdCode: String,
-    allHouseholds: List<Household>,
-    isAdmin: Boolean,
-    onUpdateName: (String) -> Unit,
-    onRegenerateCode: () -> Unit,
-    onSwitchHogar: (Long) -> Unit
+  householdName: String,
+  householdCode: String,
+  allHouseholds: List<Household>,
+  isAdmin: Boolean,
+  onUpdateName: (String) -> Unit,
+  onRegenerateCode: () -> Unit,
+  onSwitchHogar: (String) -> Unit
 ) {
-    var showNameDialog by remember { mutableStateOf(false) }
-    var showRegenerateConfirm by remember { mutableStateOf(false) }
+  var showNameDialog by remember { mutableStateOf(false) }
+  var showRegenerateConfirm by remember { mutableStateOf(false) }
 
-    if (showNameDialog) {
-        EditValueDialog(
-            title = stringResource(R.string.settings_household_name_title),
-            initialValue = householdName,
-            onDismiss = { showNameDialog = false },
-            onConfirm = { onUpdateName(it); showNameDialog = false }
+  if (showNameDialog) {
+    EditValueDialog(
+      title = stringResource(R.string.settings_household_name_title),
+      initialValue = householdName,
+      onDismiss = { showNameDialog = false },
+      onConfirm = { onUpdateName(it); showNameDialog = false }
+    )
+  }
+
+  if (showRegenerateConfirm) {
+    AlertDialog(
+      onDismissRequest = { showRegenerateConfirm = false },
+      title = { Text(stringResource(R.string.settings_regenerate_code_title)) },
+      text = { Text(stringResource(R.string.settings_regenerate_code_desc)) },
+      confirmButton = {
+        Button(onClick = { onRegenerateCode(); showRegenerateConfirm = false }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+          Text(stringResource(R.string.settings_confirm))
+        }
+      },
+      dismissButton = { TextButton(onClick = { showRegenerateConfirm = false }) { Text(stringResource(R.string.settings_btn_cancel)) } }
+    )
+  }
+
+  LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    if (allHouseholds.size > 1) {
+      item(contentType = "switch") {
+        Text(
+          text = stringResource(R.string.setup_switch_title),
+          style = MaterialTheme.typography.titleSmall,
+          color = MaterialTheme.colorScheme.primary,
+          fontWeight = FontWeight.Bold,
+          modifier = Modifier.padding(bottom = 8.dp)
         )
+        AppCasaCard(useGlassmorphism = false) {
+          Column {
+            allHouseholds.forEach { house ->
+              val actuallyCurrent = house.nombre == householdName 
+              ListItem(
+                headlineContent = { 
+                  Text(
+                    house.nombre, 
+                    fontWeight = if (actuallyCurrent) FontWeight.Bold else FontWeight.Normal,
+                    color = if (actuallyCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                  ) 
+                },
+                leadingContent = { 
+                  Icon(
+                    Icons.Default.Home, 
+                    null, 
+                    tint = if (actuallyCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline 
+                  ) 
+                },
+                trailingContent = {
+                  if (actuallyCurrent) {
+                    Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.primary)
+                  }
+                },
+                modifier = Modifier.clickable(!actuallyCurrent) { onSwitchHogar(house.id) },
+                colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
+              )
+              if (house != allHouseholds.last()) {
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+              }
+            }
+          }
+        }
+      }
     }
 
-    if (showRegenerateConfirm) {
-        AlertDialog(
-            onDismissRequest = { showRegenerateConfirm = false },
-            title = { Text(stringResource(R.string.settings_regenerate_code_title)) },
-            text = { Text(stringResource(R.string.settings_regenerate_code_desc)) },
-            confirmButton = {
-                Button(onClick = { onRegenerateCode(); showRegenerateConfirm = false }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
-                    Text(stringResource(R.string.settings_confirm))
-                }
-            },
-            dismissButton = { TextButton(onClick = { showRegenerateConfirm = false }) { Text(stringResource(R.string.settings_btn_cancel)) } }
+    item(contentType = "item") {
+      AppCasaCard(onClick = { if (isAdmin) showNameDialog = true }, useGlassmorphism = false) {
+        ListItem(
+          headlineContent = { Text(stringResource(R.string.settings_household_name_title)) },
+          supportingContent = { Text(householdName) },
+          leadingContent = { Icon(Icons.Default.Home, null, tint = MaterialTheme.colorScheme.primary) },
+          trailingContent = { if (isAdmin) Icon(Icons.Default.ChevronRight, null) },
+          colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
         )
+      }
     }
-
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        if (allHouseholds.size > 1) {
-            item(contentType = "switch") {
-                Text(
-                    text = stringResource(R.string.setup_switch_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                AppCasaCard(useGlassmorphism = false) {
-                    Column {
-                        allHouseholds.forEach { house ->
-                            val actuallyCurrent = house.nombre == householdName 
-                            ListItem(
-                                headlineContent = { 
-                                    Text(
-                                        house.nombre, 
-                                        fontWeight = if (actuallyCurrent) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (actuallyCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                    ) 
-                                },
-                                leadingContent = { 
-                                    Icon(
-                                        Icons.Default.Home, 
-                                        null, 
-                                        tint = if (actuallyCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline 
-                                    ) 
-                                },
-                                trailingContent = {
-                                    if (actuallyCurrent) {
-                                        Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.primary)
-                                    }
-                                },
-                                modifier = Modifier.clickable(!actuallyCurrent) { onSwitchHogar(house.id) },
-                                colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
-                            )
-                            if (house != allHouseholds.last()) {
-                                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        item(contentType = "item") {
-            AppCasaCard(onClick = { if (isAdmin) showNameDialog = true }, useGlassmorphism = false) {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.settings_household_name_title)) },
-                    supportingContent = { Text(householdName) },
-                    leadingContent = { Icon(Icons.Default.Home, null, tint = MaterialTheme.colorScheme.primary) },
-                    trailingContent = { if (isAdmin) Icon(Icons.Default.ChevronRight, null) },
-                    colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
-                )
-            }
-        }
         
-        item(contentType = "qr") {
-            AppCasaCard(useGlassmorphism = false) {
-                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(stringResource(R.string.setup_label_code), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(householdCode, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
-                        if (isAdmin) {
-                            IconButton(onClick = { showRegenerateConfirm = true }) {
-                                Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.primary)
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(16.dp))
-                    val qr = remember(householdCode) { QRUtils.generateQRCode(householdCode, 400) }
-                    qr?.let {
-                        androidx.compose.foundation.Image(
-                            bitmap = it.asImageBitmap(),
-                            contentDescription = stringResource(R.string.cd_qr),
-                            modifier = Modifier.size(200.dp).clip(RoundedCornerShape(8.dp))
-                        )
-                    }
-                    Spacer(Modifier.height(16.dp))
-                    Text(stringResource(R.string.settings_qr_subtitle), 
-                        textAlign = TextAlign.Center, 
-                        style = MaterialTheme.typography.bodySmall)
-                }
+    item(contentType = "qr") {
+      AppCasaCard(useGlassmorphism = false) {
+        Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+          Text(stringResource(R.string.setup_label_code), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(householdCode, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
+            if (isAdmin) {
+              IconButton(onClick = { showRegenerateConfirm = true }) {
+                Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.primary)
+              }
             }
+          }
+          Spacer(Modifier.height(16.dp))
+          val qr = remember(householdCode) { QRUtils.generateQRCode(householdCode, 400) }
+          qr?.let {
+            androidx.compose.foundation.Image(
+              bitmap = it.asImageBitmap(),
+              contentDescription = stringResource(R.string.cd_qr),
+              modifier = Modifier.size(200.dp).clip(RoundedCornerShape(8.dp))
+            )
+          }
+          Spacer(Modifier.height(16.dp))
+          Text(stringResource(R.string.settings_qr_subtitle), 
+            textAlign = TextAlign.Center, 
+            style = MaterialTheme.typography.bodySmall)
         }
+      }
     }
+  }
 }
 
 @Composable
 fun AparienciaSection(
-    configs: Map<String, String>,
-    onUpdateConfig: (String, String) -> Unit
+  configs: Map<String, String>,
+  onUpdateConfig: (String, String) -> Unit
 ) {
   val darkMode = configs[Constants.Config.DARK_MODE] == Constants.Config.TRUE
   val notifications = configs[Constants.Config.NOTIFICATIONS_ACTIVE] != Constants.Config.FALSE
@@ -658,13 +658,13 @@ fun AparienciaSection(
 
 @Composable
 fun PreferenciasSection(
-    configs: Map<String, String>,
-    listas: List<Lista>,
-    onUpdateConfig: (String, String) -> Unit
+  configs: Map<String, String>,
+  listas: List<Lista>,
+  onUpdateConfig: (String, String) -> Unit
 ) {
   val currency = configs[Constants.Config.CURRENCY] ?: Constants.Config.DEFAULT_CURRENCY
   val shopMode = configs[Constants.Config.SHOP_MODE] == Constants.Config.TRUE
-  val preferredListId = configs[Constants.Config.MAIN_LIST_ID]?.toLongOrNull()
+  val preferredListId = configs[Constants.Config.MAIN_LIST_ID]?.toString()
   val preferredListName = listas.find { it.id == preferredListId }?.nombre ?: stringResource(R.string.settings_no_list_selected)
 
   var showCurrencyDialog by remember { mutableStateOf(false) }
@@ -683,7 +683,7 @@ fun PreferenciasSection(
       listas = listas,
       selectedListId = preferredListId,
       onDismiss = { showListSelector = false },
-      onSelect = { onUpdateConfig(Constants.Config.MAIN_LIST_ID, it.toString()); showListSelector = false }
+      onSelect = { onUpdateConfig(Constants.Config.MAIN_LIST_ID, it); showListSelector = false }
     )
   }
 
@@ -718,11 +718,11 @@ fun PreferenciasSection(
 
 @Composable
 fun MiCuentaSection(
-    configs: Map<String, String>,
-    isGoogleAccount: Boolean,
-    onUpdateEmail: (String) -> Unit,
-    onUpdatePassword: (String) -> Unit,
-    onUpdateConfig: (String, String) -> Unit
+  configs: Map<String, String>,
+  isGoogleAccount: Boolean,
+  onUpdateEmail: (String) -> Unit,
+  onUpdatePassword: (String) -> Unit,
+  onUpdateConfig: (String, String) -> Unit
 ) {
   val biometricAppLock = configs[Constants.Config.BIOMETRIC_LOCK] == Constants.Config.TRUE
   var showEmailDialog by remember { mutableStateOf(false) }
@@ -808,50 +808,50 @@ fun MiCuentaSection(
 
 @Composable
 fun SistemaSection(
-    isSyncing: Boolean,
-    isExporting: Boolean,
-    onForceSync: () -> Unit,
-    onExportData: () -> Unit
+  isSyncing: Boolean,
+  isExporting: Boolean,
+  onForceSync: () -> Unit,
+  onExportData: () -> Unit
 ) {
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item {
-            SettingsItem(
-                icon = Icons.Default.Refresh,
-                title = stringResource(R.string.settings_force_sync_label),
-                subtitle = if (isSyncing) stringResource(R.string.settings_sync_in_progress) else stringResource(R.string.settings_force_sync_desc),
-                enabled = !isSyncing,
-                onClick = onForceSync
-            )
-        }
-        item {
-            SettingsItem(
-                icon = Icons.Default.FileUpload,
-                title = stringResource(R.string.settings_export_json_label),
-                subtitle = if (isExporting) stringResource(R.string.settings_export_in_progress) else stringResource(R.string.settings_export_json_desc),
-                enabled = !isExporting,
-                onClick = onExportData
-            )
-        }
+  LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    item {
+      SettingsItem(
+        icon = Icons.Default.Refresh,
+        title = stringResource(R.string.settings_force_sync_label),
+        subtitle = if (isSyncing) stringResource(R.string.settings_sync_in_progress) else stringResource(R.string.settings_force_sync_desc),
+        enabled = !isSyncing,
+        onClick = onForceSync
+      )
     }
+    item {
+      SettingsItem(
+        icon = Icons.Default.FileUpload,
+        title = stringResource(R.string.settings_export_json_label),
+        subtitle = if (isExporting) stringResource(R.string.settings_export_in_progress) else stringResource(R.string.settings_export_json_desc),
+        enabled = !isExporting,
+        onClick = onExportData
+      )
+    }
+  }
 }
 
 @Composable
 fun CategoryItem(
-    title: String,
-    subtitle: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary,
-    onClick: () -> Unit
+  title: String,
+  subtitle: String,
+  icon: androidx.compose.ui.graphics.vector.ImageVector,
+  color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary,
+  onClick: () -> Unit
 ) {
-    AppCasaCard(onClick = onClick, useGlassmorphism = false) {
-        ListItem(
-            headlineContent = { Text(title, fontWeight = FontWeight.SemiBold) },
-            supportingContent = { Text(subtitle, style = MaterialTheme.typography.bodySmall) },
-            leadingContent = { Icon(icon, null, tint = color) },
-            trailingContent = { Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.outline) },
-            colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
-        )
-    }
+  AppCasaCard(onClick = onClick, useGlassmorphism = false) {
+    ListItem(
+      headlineContent = { Text(title, fontWeight = FontWeight.SemiBold) },
+      supportingContent = { Text(subtitle, style = MaterialTheme.typography.bodySmall) },
+      leadingContent = { Icon(icon, null, tint = color) },
+      trailingContent = { Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.outline) },
+      colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
+    )
+  }
 }
 
 @Composable
@@ -915,9 +915,9 @@ fun CurrencySelectorDialog(
 @Composable
 fun ListSelectorDialog(
   listas: List<Lista>,
-  selectedListId: Long?,
+  selectedListId: String?,
   onDismiss: () -> Unit,
-  onSelect: (Long) -> Unit
+  onSelect: (String) -> Unit
 ) {
   AlertDialog(
     onDismissRequest = onDismiss,
@@ -1036,4 +1036,3 @@ fun SettingsPreview() {
     )
   }
 }
-

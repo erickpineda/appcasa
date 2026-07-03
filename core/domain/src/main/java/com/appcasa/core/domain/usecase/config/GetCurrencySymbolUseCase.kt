@@ -7,7 +7,7 @@ import javax.inject.Inject
 class GetCurrencySymbolUseCase @Inject constructor(
     private val repository: SettingsRepository
 ) {
-    operator fun invoke(hogarId: Long): Flow<String> {
+    operator fun invoke(hogarId: String): Flow<String> {
         return repository.getCurrencySymbol(hogarId)
     }
 }

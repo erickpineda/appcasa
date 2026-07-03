@@ -25,93 +25,54 @@ class ListsRepositoryImpl @Inject constructor(
     private val syncScheduler: SyncScheduler
 ) : ListsRepository {
 
-    override fun getListasPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<Lista>> {
+    override fun getListasPaged(hogarId: String, limit: Int, offset: Int): Flow<List<Lista>> {
         return listaDao.getListasPaged(hogarId, limit, offset).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override fun getArchivedListasPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<Lista>> {
+    override fun getArchivedListasPaged(hogarId: String, limit: Int, offset: Int): Flow<List<Lista>> {
         return listaDao.getArchivedListasPaged(hogarId, limit, offset).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override suspend fun insertLista(lista: Lista) {
-        var listToInsert = lista
-        if (listToInsert.hogarSyncId == null && listToInsert.hogarId > 0) {
-            val hogar = householdRepository.getHogarById(listToInsert.hogarId).first()
-            listToInsert = listToInsert.copy(hogarSyncId = hogar?.syncId)
-        }
-        if (listToInsert.syncId == null) {
-            listToInsert = listToInsert.copy(syncId = UUID.randomUUID().toString())
-        }
-        val existing = listToInsert.syncId?.let { listaDao.getListBySyncId(it) }
-        if (existing != null) {
-            listToInsert = listToInsert.copy(id = existing.id)
-        }
-        listaDao.insertLista(listToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(listToInsert.hogarId)
+    override suspend fun upsertLista(lista: Lista) {
+        listaDao.upsertLista(lista.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(lista.hogarId)
     }
 
     override suspend fun deleteLista(lista: Lista) {
         listaDao.deleteLista(lista.toEntity())
-        try {
-            val hogar = householdRepository.getHogarById(lista.hogarId).first()
-            val hSyncId = lista.hogarSyncId ?: hogar?.syncId
-            if (hSyncId != null) {
-                remoteDataSource.deleteList(hSyncId, lista)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
         syncScheduler.scheduleSync(lista.hogarId)
     }
 
-    override suspend fun unarchiveLista(listaId: Long) {
+    override suspend fun unarchiveLista(listaId: String) {
         listaDao.unarchiveLista(listaId)
     }
 
-    override suspend fun deleteCompletedItems(listaId: Long) {
-        listaDao.deleteCompletedItems(listaId)
+    override suspend fun deleteCompletedItems(listaId: String) {
+        listaDao.deleteCompletedItems(listaId, System.currentTimeMillis(), "system")
     }
 
-    override suspend fun deleteAllArchivedListas(hogarId: Long) {
-        listaDao.deleteAllArchivedListas(hogarId)
+    override suspend fun deleteAllArchivedListas(hogarId: String) {
+        listaDao.deleteAllArchivedListas(hogarId, System.currentTimeMillis(), "system")
     }
 
-    override fun getItemsByLista(listaId: Long): Flow<List<ListaItem>> {
+    override fun getItemsByLista(listaId: String): Flow<List<ListaItem>> {
         return listaDao.getItemsByLista(listaId).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override suspend fun insertItem(item: ListaItem) {
-        var itemToInsert = item
-        if (itemToInsert.listaSyncId == null && itemToInsert.listaId > 0) {
-            val list = listaDao.getListById(itemToInsert.listaId)
-            itemToInsert = itemToInsert.copy(listaSyncId = list?.syncId)
-        }
-        if (itemToInsert.syncId == null) {
-            itemToInsert = itemToInsert.copy(syncId = UUID.randomUUID().toString())
-        }
-        val existing = itemToInsert.syncId?.let { listaDao.getItemBySyncId(it) }
-        if (existing != null) {
-            itemToInsert = itemToInsert.copy(id = existing.id)
-        }
-        listaDao.insertItem(itemToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        val list = listaDao.getListById(itemToInsert.listaId)
-        list?.let { syncScheduler.scheduleSync(it.hogarId) }
-    }
-
-    override suspend fun updateItem(item: ListaItem) {
-        listaDao.updateItem(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
+    override suspend fun upsertItem(item: ListaItem) {
+        listaDao.upsertItem(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
         val list = listaDao.getListById(item.listaId)
         list?.let { syncScheduler.scheduleSync(it.hogarId) }
     }
 
-    override suspend fun updateItems(items: List<ListaItem>) {
-        listaDao.updateItems(items.map { it.copy(updatedAt = System.currentTimeMillis()).toEntity() })
+    override suspend fun upsertItems(items: List<ListaItem>) {
+        listaDao.upsertItems(items.map { it.copy(updatedAt = System.currentTimeMillis()).toEntity() })
     }
 
     override suspend fun deleteItem(item: ListaItem) {
@@ -124,90 +85,29 @@ class ListsRepositoryImpl @Inject constructor(
         listaDao.deleteItems(items.map { it.toEntity() })
     }
 
-    override suspend fun updateListSyncTimestamp(listaId: Long) {
+    override suspend fun updateListSyncTimestamp(listaId: String) {
         listaDao.updateListSyncTimestamp(listaId, System.currentTimeMillis())
     }
 
-    override suspend fun updateListItemSyncTimestamp(itemId: Long) {
+    override suspend fun updateListItemSyncTimestamp(itemId: String) {
         listaDao.updateListItemSyncTimestamp(itemId, System.currentTimeMillis())
     }
 
-    override suspend fun getItemsToSync(hogarId: Long): List<ListaItem> {
+    override suspend fun getItemsToSync(hogarId: String): List<ListaItem> {
         return listaDao.getItemsToSync(hogarId).map { it.toDomain() }
     }
 
     private var syncJob: Job? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun startRemoteSync(hogarId: Long) {
-        syncJob?.cancel()
-        syncJob = syncManager.isAppInForeground
-            .flatMapLatest { isInForeground ->
-                if (isInForeground) {
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    hogar?.syncId?.let { remoteDataSource.observeLists(it) } ?: emptyFlow()
-                } else {
-                    emptyFlow()
-                }
-            }
-            .onEach { remoteLists ->
-                remoteLists.forEach { remoteList ->
-                    val existing = remoteList.syncId?.let { listaDao.getListBySyncId(it) }
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    
-                    val listToSave = remoteList.copy(
-                        id = existing?.id ?: 0L,
-                        hogarId = hogarId,
-                        hogarSyncId = hogar?.syncId
-                    )
-
-                    if (existing == null || remoteList.updatedAt > existing.updatedAt) {
-                        listaDao.insertLista(listToSave.toEntity())
-                    }
-                    
-                    remoteList.syncId?.let { 
-                        observeAndSyncItems(hogarId, listToSave.id, it)
-                    }
-                }
-            }
-            .catch { e -> e.printStackTrace() }
-            .launchIn(appScope)
+    override fun startRemoteSync(hogarId: String) {
+        // TODO: Refactor in Phase 4
     }
 
-    private val itemSyncJobs = mutableMapOf<Long, Job>()
+    private val itemSyncJobs = mutableMapOf<String, Job>()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun observeAndSyncItems(hogarId: Long, listId: Long, listSyncId: String) {
-        itemSyncJobs[listId]?.cancel()
-        
-        itemSyncJobs[listId] = syncManager.isAppInForeground
-            .flatMapLatest { isInForeground ->
-                if (isInForeground) {
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    hogar?.syncId?.let { remoteDataSource.observeListItems(it, listSyncId) } ?: emptyFlow()
-                }
-                else emptyFlow()
-            }
-            .onEach { remoteItems ->
-                remoteItems.forEach { remoteItem ->
-                    val existing = remoteItem.syncId?.let { listaDao.getItemBySyncId(it) }
-                    val itemToSave = remoteItem.copy(
-                        id = existing?.id ?: 0L,
-                        listaId = listId,
-                        listaSyncId = listSyncId
-                    )
-                    if (existing == null || remoteItem.updatedAt > existing.updatedAt) {
-                        listaDao.insertItem(itemToSave.toEntity())
-                    }
-                }
-            }
-            .catch { e -> 
-                e.printStackTrace()
-                itemSyncJobs.remove(listId)
-            }
-            .onCompletion {
-                itemSyncJobs.remove(listId)
-            }
-            .launchIn(appScope)
+    private fun observeAndSyncItems(hogarId: String, listId: String) {
+        // TODO: Refactor in Phase 4
     }
 }

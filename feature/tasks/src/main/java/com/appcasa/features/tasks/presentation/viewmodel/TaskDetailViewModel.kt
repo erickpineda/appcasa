@@ -26,7 +26,7 @@ class TaskDetailViewModel @Inject constructor(
   private val getFamilyMembersUseCase: GetFamilyMembersUseCase
 ) : ViewModel() {
 
-  private val taskId: Long = checkNotNull(savedStateHandle["taskId"])
+  private val taskId: String = checkNotNull(savedStateHandle["taskId"])
 
   private val _task = MutableStateFlow<Task?>(null)
   val task: StateFlow<Task?> = _task.asStateFlow()
@@ -35,16 +35,16 @@ class TaskDetailViewModel @Inject constructor(
   val assignedMember: StateFlow<FamilyMember?> = _task.flatMapLatest { t ->
     if (t == null) flowOf(null)
     else {
-        flow<FamilyMember?> {
-            val asignaciones = getTaskAssignmentsUseCase(t.id).first()
-            val memberId = asignaciones.firstOrNull()?.miembroId
-            if (memberId == null) emit(null)
-            else {
-                getFamilyMembersUseCase(t.hogarId).collect { list ->
-                    emit(list.find { it.id == memberId })
-                }
-            }
+      flow<FamilyMember?> {
+        val asignaciones = getTaskAssignmentsUseCase(t.id).first()
+        val memberId = asignaciones.firstOrNull()?.miembroId
+        if (memberId == null) emit(null)
+        else {
+          getFamilyMembersUseCase(t.hogarId).collect { list ->
+            emit(list.find { it.id == memberId })
+          }
         }
+      }
     }
   }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -101,7 +101,7 @@ class TaskDetailViewModel @Inject constructor(
     }
   }
 
-  fun updateTask(
+  fun upsertTask(
     titulo: String, 
     descripcion: String?, 
     prioridad: Prioridad, 

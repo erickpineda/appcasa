@@ -24,91 +24,49 @@ class InventoryRepositoryImpl @Inject constructor(
     private val syncScheduler: SyncScheduler
 ) : InventoryRepository {
 
-    override fun getStockByHogar(hogarId: Long): Flow<List<StockItem>> {
+    override fun getStockByHogar(hogarId: String): Flow<List<StockItem>> {
         return stockDao.getStockByHogar(hogarId).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override fun getStockPaged(hogarId: Long, limit: Int, offset: Int): Flow<List<StockItem>> {
+    override fun getStockPaged(hogarId: String, limit: Int, offset: Int): Flow<List<StockItem>> {
         return stockDao.getStockPaged(hogarId, limit, offset).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override fun getLowStockItems(hogarId: Long): Flow<List<StockItem>> {
+    override fun getLowStockItems(hogarId: String): Flow<List<StockItem>> {
         return stockDao.getLowStockItems(hogarId).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override suspend fun insertStockItem(item: StockItem): Long {
-        var itemToInsert = item
-        if (itemToInsert.hogarSyncId == null && itemToInsert.hogarId > 0) {
-            val hogar = householdRepository.getHogarById(itemToInsert.hogarId).first()
-            itemToInsert = itemToInsert.copy(hogarSyncId = hogar?.syncId)
-        }
-        if (itemToInsert.syncId == null) {
-            itemToInsert = itemToInsert.copy(syncId = UUID.randomUUID().toString())
-        }
-        val existing = itemToInsert.syncId?.let { stockDao.getItemBySyncId(it) }
-        if (existing != null) {
-            itemToInsert = itemToInsert.copy(id = existing.id)
-        }
-        val id = stockDao.insertItem(itemToInsert.copy(updatedAt = System.currentTimeMillis()).toEntity())
-        syncScheduler.scheduleSync(itemToInsert.hogarId)
-        return id
+    override suspend fun upsertStockItem(item: StockItem) {
+        stockDao.upsertItem(item.copy(updatedAt = System.currentTimeMillis()).toEntity())
+        syncScheduler.scheduleSync(item.hogarId)
     }
 
     override suspend fun deleteStockItem(item: StockItem) {
         stockDao.deleteItem(item.toEntity())
-        try {
-            val hogar = householdRepository.getHogarById(item.hogarId).first()
-            val hSyncId = item.hogarSyncId ?: hogar?.syncId
-            if (hSyncId != null) {
-                remoteDataSource.deleteStock(hSyncId, item)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
         syncScheduler.scheduleSync(item.hogarId)
     }
 
-    override suspend fun updateStockSyncTimestamp(itemId: Long) {
+    override suspend fun updateStockSyncTimestamp(itemId: String) {
         stockDao.updateSyncTimestamp(itemId, System.currentTimeMillis())
     }
 
     private var syncJob: Job? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun startRemoteSync(hogarId: Long) {
-        syncJob?.cancel()
-        syncJob = syncManager.isAppInForeground
-            .flatMapLatest { isInForeground ->
-                if (isInForeground) {
-                    val hogar = householdRepository.getHogarById(hogarId).first()
-                    hogar?.syncId?.let { remoteDataSource.observeStock(it) } ?: emptyFlow()
-                } else {
-                    emptyFlow()
-                }
-            }
-            .onEach { remoteItems ->
-                remoteItems.forEach { remoteItem ->
-                    val existing = remoteItem.syncId?.let { stockDao.getItemBySyncId(it) }
-                    val hogar = householdRepository.getHogarById(hogarId).first()
+    override fun startRemoteSync(hogarId: String) {
+        // TODO: Refactor in Phase 4
+    }
 
-                    val itemToSave = remoteItem.copy(
-                        id = existing?.id ?: 0L,
-                        hogarId = hogarId,
-                        hogarSyncId = hogar?.syncId
-                    )
+    private val itemSyncJobs = mutableMapOf<String, Job>()
 
-                    if (existing == null || remoteItem.updatedAt > existing.updatedAt) {
-                        stockDao.insertItem(itemToSave.toEntity())
-                    }
-                }
-            }
-            .catch { e -> e.printStackTrace() }
-            .launchIn(appScope)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeAndSyncItems(hogarId: String, inventoryId: String) {
+        // TODO: Refactor in Phase 4
     }
 }

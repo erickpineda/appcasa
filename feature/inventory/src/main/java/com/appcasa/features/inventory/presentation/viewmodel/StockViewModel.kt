@@ -39,7 +39,7 @@ class StockViewModel @Inject constructor(
   private val _barcodeResult = MutableStateFlow<String?>(null)
   val barcodeResult = _barcodeResult.asStateFlow()
 
-  private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+  private val householdId: String get() = currentHouseholdProvider.getCurrentHouseholdId()
 
   private val _activePage = MutableStateFlow(1)
   val activePage = _activePage.asStateFlow()
@@ -53,12 +53,12 @@ class StockViewModel @Inject constructor(
   fun scanBarcode(image: InputImage) {
     val scanner = BarcodeScanning.getClient()
     scanner.process(image)
-        .addOnSuccessListener { barcodes: List<com.google.mlkit.vision.barcode.common.Barcode> ->
-            for (barcode in barcodes) {
-                _barcodeResult.value = barcode.rawValue
-                break
-            }
+      .addOnSuccessListener { barcodes: List<com.google.mlkit.vision.barcode.common.Barcode> ->
+        for (barcode in barcodes) {
+          _barcodeResult.value = barcode.rawValue
+          break
         }
+      }
   }
 
   fun clearBarcode() { _barcodeResult.value = null }
@@ -69,7 +69,7 @@ class StockViewModel @Inject constructor(
     _activePage
   ) { id, page -> id to page }
     .flatMapLatest { (id, page) -> 
-        getStockUseCase(id, page)
+      getStockUseCase(id, page)
     }
     .stateIn(
       scope = viewModelScope,
@@ -99,13 +99,13 @@ class StockViewModel @Inject constructor(
     }
   }
 
-  fun addToShoppingList(item: StockItem, listId: Long, quantity: Double) {
+  fun addToShoppingList(item: StockItem, listId: String, quantity: Double) {
     viewModelScope.launch {
       addToShoppingListUseCase(item, listId, quantity)
     }
   }
 
-  fun updateItem(item: StockItem) {
+  fun upsertItem(item: StockItem) {
     viewModelScope.launch {
       updateStockItemUseCase(item)
     }
@@ -122,13 +122,13 @@ class StockViewModel @Inject constructor(
     val currentCount = stockItems.value.size
     _activePage.value += 1
     viewModelScope.launch {
-        _isLoading.value = true
-        kotlinx.coroutines.delay(600)
-        if (stockItems.value.size <= currentCount) {
-            _toastEvent.emit("No hay más inventario para cargar")
-            _activePage.value -= 1
-        }
-        _isLoading.value = false
+      _isLoading.value = true
+      kotlinx.coroutines.delay(600)
+      if (stockItems.value.size <= currentCount) {
+        _toastEvent.emit("No hay más inventario para cargar")
+        _activePage.value -= 1
+      }
+      _isLoading.value = false
     }
   }
 }

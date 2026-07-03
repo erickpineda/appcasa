@@ -6,12 +6,11 @@ class UpdateMemberMoodUseCase @Inject constructor(
     private val getMemberByIdUseCase: GetMemberByIdUseCase,
     private val updateMemberUseCase: UpdateMemberUseCase
 ) {
-    suspend operator fun invoke(miembroId: Long, emoji: String?) {
+    suspend operator fun invoke(miembroId: String, emoji: String?) {
         val miembro = getMemberByIdUseCase(miembroId)
         miembro?.let {
             updateMemberUseCase(it.copy(
-                estadoAnimo = emoji,
-                estadoAnimoUpdatedAt = if (emoji != null) System.currentTimeMillis() else null
+                estadoAnimo = emoji
             ))
         }
     }

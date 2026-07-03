@@ -1,14 +1,14 @@
 package com.appcasa.core.domain.model
 
 data class Reminder(
-    val id: Long = 0,
-    val hogarId: Long,
-    val titulo: String,
+    val id: String = "",
+    val hogarId: String = "",
+    val titulo: String = "",
     val descripcion: String? = null,
-    val fechaHora: Long,
+    val fechaHora: Long = 0L,
     val tipoRepeticion: TipoRepeticion = TipoRepeticion.NINGUNA,
-    val tareaId: Long? = null,
-    val miembroId: Long? = null,
+    val tareaId: String? = null,
+    val miembroId: String? = null,
     val workerId: String? = null,
     val notificado: Boolean = false,
     val activo: Boolean = true,

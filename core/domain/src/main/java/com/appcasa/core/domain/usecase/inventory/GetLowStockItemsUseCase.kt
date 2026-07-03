@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetLowStockItemsUseCase @Inject constructor(
     private val repository: InventoryRepository
 ) {
-    operator fun invoke(hogarId: Long): Flow<List<StockItem>> {
+    operator fun invoke(hogarId: String): Flow<List<StockItem>> {
         return repository.getLowStockItems(hogarId)
     }
 }

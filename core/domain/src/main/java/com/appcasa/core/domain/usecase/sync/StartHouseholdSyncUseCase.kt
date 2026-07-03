@@ -18,8 +18,8 @@ class StartHouseholdSyncUseCase @Inject constructor(
     private val maintenanceRepository: MaintenanceRepository,
     private val documentRepository: DocumentRepository
 ) {
-    suspend operator fun invoke(householdId: Long) {
-        if (householdId != 0L) {
+    suspend operator fun invoke(householdId: String) {
+        if (householdId != "") {
             tasksRepository.startRemoteSync(householdId)
             financeRepository.startRemoteSync(householdId)
             familyRepository.startRemoteSync(householdId)

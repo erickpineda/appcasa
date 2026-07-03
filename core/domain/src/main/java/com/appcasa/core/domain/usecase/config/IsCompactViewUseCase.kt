@@ -7,7 +7,7 @@ import javax.inject.Inject
 class IsCompactViewUseCase @Inject constructor(
     private val repository: SettingsRepository
 ) {
-    operator fun invoke(hogarId: Long): Flow<Boolean> {
+    operator fun invoke(hogarId: String): Flow<Boolean> {
         return repository.isCompactView(hogarId)
     }
 }

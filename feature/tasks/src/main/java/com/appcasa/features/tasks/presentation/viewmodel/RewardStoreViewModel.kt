@@ -31,7 +31,7 @@ class RewardStoreViewModel @Inject constructor(
     private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-    private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+    private val householdId: String get() = currentHouseholdProvider.getCurrentHouseholdId()
 
     private val _events = MutableSharedFlow<RewardEvent>()
     val events = _events.asSharedFlow()
@@ -53,7 +53,7 @@ class RewardStoreViewModel @Inject constructor(
         }
     }
 
-    fun redeemReward(memberId: Long, recompensa: Reward) {
+    fun redeemReward(memberId: String, recompensa: Reward) {
         viewModelScope.launch {
             val success = redeemRewardUseCase(memberId, recompensa)
             if (success) {

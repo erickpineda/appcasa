@@ -4,6 +4,9 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.appcasa.core.data.local.base.Auditable
+import com.appcasa.core.data.local.base.Syncable
+import java.util.UUID
 
 /**
  * Registro de módulos y calculadoras disponibles en la app.
@@ -16,8 +19,9 @@ import androidx.room.PrimaryKey
 )
 data class UtilidadEntity(
 
-  @PrimaryKey(autoGenerate = true)
-  val id: Long = 0,
+  @PrimaryKey
+  @ColumnInfo(name = "id")
+  override val id: String = UUID.randomUUID().toString(),
 
   // Identificador único de la utilidad — ej: "CALC_DOSIS"
   @ColumnInfo(name = "codigo")
@@ -43,12 +47,26 @@ data class UtilidadEntity(
   @ColumnInfo(name = "categoria")
   val categoria: String = "General",
 
+  // --- Auditoría / Sync ---
   @ColumnInfo(name = "created_at")
-  val createdAt: Long = System.currentTimeMillis(),
+  override val createdAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "created_by")
+  override val createdBy: String? = null,
 
   @ColumnInfo(name = "updated_at")
-  val updatedAt: Long = System.currentTimeMillis(),
+  override val updatedAt: Long = System.currentTimeMillis(),
+
+  @ColumnInfo(name = "updated_by")
+  override val updatedBy: String? = null,
+
+  @ColumnInfo(name = "deleted_at")
+  override val deletedAt: Long? = null,
+
+  @ColumnInfo(name = "deleted_by")
+  override val deletedBy: String? = null,
 
   @ColumnInfo(name = "last_synced_at")
-  val lastSyncedAt: Long? = null
-)
+  override var lastSyncedAt: Long? = null
+
+) : Syncable, Auditable

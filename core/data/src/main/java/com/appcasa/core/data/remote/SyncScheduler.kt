@@ -12,13 +12,12 @@ import javax.inject.Singleton
 class SyncScheduler @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    fun scheduleSync(hogarId: Long) {
+    fun scheduleSync(hogarId: String) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
-
         val data = Data.Builder()
-            .putLong("hogarId", hogarId)
+            .putString("hogarId", hogarId)
             .build()
 
         val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()

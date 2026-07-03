@@ -99,33 +99,33 @@ fun SmartSafeScreen(
   fun Context.findActivity(): FragmentActivity? {
     var context = this
     while (context is ContextWrapper) {
-        if (context is FragmentActivity) return context
-        context = context.baseContext
+      if (context is FragmentActivity) return context
+      context = context.baseContext
     }
     return null
   }
 
   LaunchedEffect(Unit) {
     if (!isUnlocked) {
-        kotlinx.coroutines.delay(300) // Pequeño margen para estabilidad de la UI
-        context.findActivity()?.let { viewModel.authenticate(it) }
+      kotlinx.coroutines.delay(300) // Pequeño margen para estabilidad de la UI
+      context.findActivity()?.let { viewModel.authenticate(it) }
     }
   }
 
   if (!isUnlocked) {
-      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          Column(horizontalAlignment = Alignment.CenterHorizontally) {
-              Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
-              Spacer(Modifier.height(16.dp))
-              Text(stringResource(R.string.util_safe_locked), style = MaterialTheme.typography.titleLarge)
-              TextButton(onClick = { 
-                  context.findActivity()?.let { viewModel.authenticate(it) }
-              }) {
-                  Text(stringResource(R.string.util_safe_unlock_biometric))
-              }
-          }
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+      Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(16.dp))
+        Text(stringResource(R.string.util_safe_locked), style = MaterialTheme.typography.titleLarge)
+        TextButton(onClick = { 
+          context.findActivity()?.let { viewModel.authenticate(it) }
+        }) {
+          Text(stringResource(R.string.util_safe_unlock_biometric))
+        }
       }
-      return
+    }
+    return
   }
 
   val documentos by viewModel.documentos.collectAsStateWithLifecycle()
@@ -138,8 +138,8 @@ fun SmartSafeScreen(
     title = stringResource(R.string.util_safe_delete_title),
     text = stringResource(R.string.util_safe_delete_confirm, documentToDelete?.nombre ?: ""),
     onConfirm = {
-        documentToDelete?.let { viewModel.deleteDocumento(it) }
-        documentToDelete = null
+      documentToDelete?.let { viewModel.deleteDocumento(it) }
+      documentToDelete = null
     },
     onDismiss = { documentToDelete = null }
   )
@@ -160,9 +160,9 @@ fun SmartSafeScreen(
       onDismiss = { editingDocument = null },
       onConfirm = { nuevoNombre, nuevaCat, nuevaFecha ->
         viewModel.updateDocumento(editingDocument!!.copy(
-            nombre = nuevoNombre,
-            categoria = nuevaCat,
-            fechaVencimiento = nuevaFecha
+          nombre = nuevoNombre,
+          categoria = nuevaCat,
+          fechaVencimiento = nuevaFecha
         ))
         editingDocument = null
       }
@@ -222,15 +222,15 @@ fun SmartSafeScreen(
           DocumentCard(
             documento = doc,
             onOpen = {
-                try {
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(Uri.parse(doc.uriPdf), "application/pdf")
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.util_safe_open_doc_chooser)))
-                } catch (e: Exception) {
-                    e.printStackTrace()
+              try {
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                  setDataAndType(Uri.parse(doc.uriPdf), "application/pdf")
+                  addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
+                context.startActivity(Intent.createChooser(intent, context.getString(R.string.util_safe_open_doc_chooser)))
+              } catch (e: Exception) {
+                e.printStackTrace()
+              }
             },
             onEdit = { editingDocument = doc },
             onDelete = { documentToDelete = doc },
@@ -346,11 +346,11 @@ fun AddDocumentDialog(
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedTextField(
-            value = nombre, 
-            onValueChange = { nombre = it }, 
-            label = { Text(stringResource(R.string.util_safe_label_doc_name)) }, 
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+          value = nombre, 
+          onValueChange = { nombre = it }, 
+          label = { Text(stringResource(R.string.util_safe_label_doc_name)) }, 
+          modifier = Modifier.fillMaxWidth(),
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
         
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
@@ -382,7 +382,7 @@ fun AddDocumentDialog(
         }
 
         OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
-          val label = if (selectedDate == null) stringResource(R.string.util_safe_label_add_expiry) else stringResource(R.string.util_safe_expiry, SimpleDateFormat("dd/MM/yyyy").format(Date(selectedDate!!)))
+          val label = if (selectedDate == null) stringResource(R.string.util_safe_label_add_expiry) else stringResource(R.string.util_safe_expiry, SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(selectedDate!!)))
           Text(label)
         }
       }
@@ -444,11 +444,11 @@ fun EditDocumentDialog(
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedTextField(
-            value = nombre, 
-            onValueChange = { nombre = it }, 
-            label = { Text(stringResource(R.string.family_label_name)) }, 
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+          value = nombre, 
+          onValueChange = { nombre = it }, 
+          label = { Text(stringResource(R.string.family_label_name)) }, 
+          modifier = Modifier.fillMaxWidth(),
+          keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
         
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
@@ -471,7 +471,7 @@ fun EditDocumentDialog(
         }
 
         OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
-          val label = if (selectedDate == null) stringResource(R.string.util_safe_label_add_expiry_edit) else stringResource(R.string.util_safe_expiry, SimpleDateFormat("dd/MM/yyyy").format(Date(selectedDate!!)))
+          val label = if (selectedDate == null) stringResource(R.string.util_safe_label_add_expiry_edit) else stringResource(R.string.util_safe_expiry, SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(selectedDate!!)))
           Text(label)
         }
       }
@@ -486,4 +486,3 @@ fun EditDocumentDialog(
     }
   )
 }
-

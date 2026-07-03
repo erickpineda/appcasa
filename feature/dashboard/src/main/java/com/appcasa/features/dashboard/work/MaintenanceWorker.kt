@@ -23,10 +23,10 @@ class MaintenanceWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         val targetId = currentHouseholdProvider.getCurrentHouseholdId().let {
-            if (it == 0L) currentHouseholdProvider.householdId.first() else it
+            if (it == "") currentHouseholdProvider.householdId.first() else it
         }
 
-        if (targetId == 0L) return Result.success()
+        if (targetId == "") return Result.success()
 
         val now = System.currentTimeMillis()
         val tomorrow = now + (24 * 60 * 60 * 1000)
@@ -37,7 +37,7 @@ class MaintenanceWorker @AssistedInject constructor(
               .forEach { event ->
                   NotificationHelper.showNotification(
                       applicationContext,
-                      event.id.toInt() + 1000, // Offset para no colisionar con otros IDs
+                      event.id.hashCode() + 1000, // Offset para no colisionar con otros IDs
                       applicationContext.getString(com.appcasa.core.data.R.string.notif_maintenance_reminder_title, event.titulo),
                       applicationContext.getString(com.appcasa.core.data.R.string.notif_maintenance_reminder_msg)
                   )

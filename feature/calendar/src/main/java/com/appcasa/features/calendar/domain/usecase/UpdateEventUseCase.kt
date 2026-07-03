@@ -10,10 +10,10 @@ class UpdateEventUseCase @Inject constructor(
     private val reminderScheduler: ReminderScheduler
 ) {
     suspend operator fun invoke(event: Event) {
-        repository.insertEvent(event)
+        repository.upsertEvent(event)
         if (event.fecha > System.currentTimeMillis()) {
             reminderScheduler.scheduleReminder(
-              id = (event.id + 10000).toInt(),
+              id = (event.id + 10000).hashCode(),
               title = "Evento: ${event.titulo}",
               message = "Hoy tienes este evento programado",
               timeInMillis = event.fecha

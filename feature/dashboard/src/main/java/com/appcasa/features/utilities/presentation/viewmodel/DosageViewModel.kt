@@ -19,7 +19,7 @@ class DosageViewModel @Inject constructor(
     private val _petWeight = MutableStateFlow(0.0)
     val petWeight: StateFlow<Double> = _petWeight.asStateFlow()
 
-    fun updateWeightForPet(petId: Long) {
+    fun updateWeightForPet(petId: String) {
         viewModelScope.launch {
             val weights = getPetWeightsUseCase(petId).first()
             _petWeight.value = weights.lastOrNull()?.pesoKg ?: 0.0

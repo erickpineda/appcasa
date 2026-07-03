@@ -1,13 +1,11 @@
 package com.appcasa.core.domain.model
 
 data class Document(
-    val id: Long = 0,
-    val syncId: String? = null,
-    val hogarId: Long,
-    val hogarSyncId: String? = null,
-    val nombre: String,
-    val categoria: String,
-    val uriPdf: String,
+    val id: String = "",
+    val hogarId: String = "",
+    val nombre: String = "",
+    val categoria: String = "",
+    val uriPdf: String = "",
     val fechaVencimiento: Long? = null,
     val urlNube: String? = null,
     val sincronizado: Boolean = false,

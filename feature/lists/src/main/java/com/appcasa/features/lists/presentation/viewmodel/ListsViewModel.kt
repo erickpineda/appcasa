@@ -35,7 +35,7 @@ class ListsViewModel @Inject constructor(
     private val currentHouseholdProvider: CurrentHouseholdProvider
 ) : ViewModel() {
 
-    private val householdId: Long get() = currentHouseholdProvider.getCurrentHouseholdId()
+    private val householdId: String get() = currentHouseholdProvider.getCurrentHouseholdId()
 
     private val _activePage = MutableStateFlow(1)
     val activePage = _activePage.asStateFlow()
@@ -102,7 +102,7 @@ class ListsViewModel @Inject constructor(
         }
     }
 
-    fun unarchiveList(listaId: Long) {
+    fun unarchiveList(listaId: String) {
         viewModelScope.launch {
             unarchiveListUseCase(listaId)
         }
@@ -144,7 +144,7 @@ class ListsViewModel @Inject constructor(
         }
     }
 
-    fun purgeCompletedItems(listaId: Long) {
+    fun purgeCompletedItems(listaId: String) {
         viewModelScope.launch {
             purgeCompletedItemsUseCase(listaId)
         }

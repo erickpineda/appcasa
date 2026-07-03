@@ -80,4 +80,8 @@ object Constants {
   object Locales {
     val SPAIN = Locale("es", "ES")
   }
+
+  object Lists {
+    const val PREFIX_SHOPPING_ITEM = "COMPRAR: "
+  }
 }

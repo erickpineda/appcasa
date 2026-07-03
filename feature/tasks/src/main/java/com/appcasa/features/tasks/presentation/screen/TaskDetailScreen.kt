@@ -4,6 +4,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -120,7 +121,7 @@ fun TaskDetailScreen(
   val haptic = LocalHapticFeedback.current
   
   val isTaskCompleted = task?.estado == EstadoTarea.COMPLETADA
-  var selectedItems by remember { mutableStateOf(setOf<Long>()) }
+  var selectedItems by remember { mutableStateOf(setOf<String>()) }
   val isSelectionMode = selectedItems.isNotEmpty()
   var showEditDialog by remember { mutableStateOf(false) }
 
@@ -137,7 +138,7 @@ fun TaskDetailScreen(
       fotoUri = task!!.fotoUri,
       onDismiss = { showEditDialog = false },
       onConfirm = { t, d, p, per, perCont, esp, fecha, f, anticipacion ->
-        viewModel.updateTask(t, d.takeIf { it.isNotBlank() }, p, esp, f, fecha, anticipacion, per, perCont)
+        viewModel.upsertTask(t, d.takeIf { it.isNotBlank() }, p, esp, f, fecha, anticipacion, per, perCont)
         showEditDialog = false
       }
     )
@@ -147,69 +148,69 @@ fun TaskDetailScreen(
     Scaffold(
       topBar = {
         TopAppBar(
-        title = { 
-          if (isSelectionMode) {
-            Text(stringResource(R.string.task_selected_count, selectedItems.size))
-          } else {
-            Text(task?.titulo ?: stringResource(R.string.task_fallback_title)) 
-          }
-        },
-        navigationIcon = {
-          if (isSelectionMode) {
-            IconButton(onClick = { selectedItems = emptySet() }) {
-              Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_cd_cancel_selection))
+          title = { 
+            if (isSelectionMode) {
+              Text(stringResource(R.string.task_selected_count, selectedItems.size))
+            } else {
+              Text(task?.titulo ?: stringResource(R.string.task_fallback_title)) 
             }
-          } else {
-            IconButton(onClick = { navController.popBackStack() }) {
-              Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+          },
+          navigationIcon = {
+            if (isSelectionMode) {
+              IconButton(onClick = { selectedItems = emptySet() }) {
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.task_cd_cancel_selection))
+              }
+            } else {
+              IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+              }
             }
-          }
-        },
-        actions = {
-          if (isSelectionMode) {
-            val selectedSubTasks = subTasks.filter { selectedItems.contains(it.id) }
-            val allSelectedCompleted = selectedSubTasks.all { it.completado }
+          },
+          actions = {
+            if (isSelectionMode) {
+              val selectedSubTasks = subTasks.filter { selectedItems.contains(it.id) }
+              val allSelectedCompleted = selectedSubTasks.all { it.completado }
 
-            IconButton(onClick = {
-              haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-              viewModel.toggleSubTasksCompletion(selectedSubTasks, !allSelectedCompleted)
-              selectedItems = emptySet()
-            }) {
-              Icon(
-                imageVector = if (allSelectedCompleted) Icons.Default.RadioButtonUnchecked else Icons.Default.CheckCircle,
-                contentDescription = stringResource(R.string.task_cd_change_status)
-              )
-            }
-
-            IconButton(onClick = {
-              if (selectedItems.size == subTasks.size) {
+              IconButton(onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                viewModel.toggleSubTasksCompletion(selectedSubTasks, !allSelectedCompleted)
                 selectedItems = emptySet()
-              } else {
-                selectedItems = subTasks.map { it.id }.toSet()
+              }) {
+                Icon(
+                  imageVector = if (allSelectedCompleted) Icons.Default.RadioButtonUnchecked else Icons.Default.CheckCircle,
+                  contentDescription = stringResource(R.string.task_cd_change_status)
+                )
               }
-            }) {
-              Icon(
-                imageVector = if (selectedItems.size == subTasks.size) Icons.Default.Deselect else Icons.Default.SelectAll,
-                contentDescription = stringResource(R.string.task_cd_select_all)
-              )
-            }
-            IconButton(onClick = {
-              haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-              val toDelete = subTasks.filter { selectedItems.contains(it.id) }
-              viewModel.deleteSubTasks(toDelete)
-              selectedItems = emptySet()
-            }) {
-              Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.task_cd_delete_selected), tint = MaterialTheme.colorScheme.error)
-            }
-          } else {
-            if (!isTaskCompleted) {
-              IconButton(onClick = { showEditDialog = true }) {
-                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.task_edit_title))
+
+              IconButton(onClick = {
+                if (selectedItems.size == subTasks.size) {
+                  selectedItems = emptySet()
+                } else {
+                  selectedItems = subTasks.map { it.id }.toSet()
+                }
+              }) {
+                Icon(
+                  imageVector = if (selectedItems.size == subTasks.size) Icons.Default.Deselect else Icons.Default.SelectAll,
+                  contentDescription = stringResource(R.string.task_cd_select_all)
+                )
+              }
+              IconButton(onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                val toDelete = subTasks.filter { selectedItems.contains(it.id) }
+                viewModel.deleteSubTasks(toDelete)
+                selectedItems = emptySet()
+              }) {
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.task_cd_delete_selected), tint = MaterialTheme.colorScheme.error)
+              }
+            } else {
+              if (!isTaskCompleted) {
+                IconButton(onClick = { showEditDialog = true }) {
+                  Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.task_edit_title))
+                }
               }
             }
           }
-        }
-      )
+        )
       }
     ) { padding ->
       Column(
@@ -244,71 +245,71 @@ fun TaskDetailScreen(
               Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 // Badges de Estado/Asignación
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (isTaskCompleted) {
-                        SuggestionChip(
-                            onClick = {},
-                            label = { Text(stringResource(R.string.tasks_completed).uppercase()) },
-                            icon = { Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) },
-                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                labelColor = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                    }
+                  if (isTaskCompleted) {
                     SuggestionChip(
-                        onClick = {},
-                        label = { Text(currentTask.prioridad.name) },
-                        colors = SuggestionChipDefaults.suggestionChipColors(
-                            labelColor = when(currentTask.prioridad) {
-                                Prioridad.ALTA -> MaterialTheme.colorScheme.error
-                                else -> MaterialTheme.colorScheme.primary
-                            }
-                        )
+                      onClick = {},
+                      label = { Text(stringResource(R.string.tasks_completed).uppercase()) },
+                      icon = { Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) },
+                      colors = SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        labelColor = MaterialTheme.colorScheme.primary
+                      )
                     )
-                    assignedMember?.let { member ->
-                        SuggestionChip(
-                            onClick = {},
-                            label = { Text(member.nombre) },
-                            icon = { Icon(Icons.Default.Person, null, modifier = Modifier.size(16.dp)) }
-                        )
-                    }
-                    if (currentTask.periodicidad != Periodicidad.NINGUNA) {
-                        SuggestionChip(
-                            onClick = {},
-                            label = { Text(currentTask.periodicidad.name) },
-                            icon = { Icon(Icons.Default.Repeat, null, modifier = Modifier.size(16.dp)) }
-                        )
-                    }
+                  }
+                  SuggestionChip(
+                    onClick = {},
+                    label = { Text(currentTask.prioridad.name) },
+                    colors = SuggestionChipDefaults.suggestionChipColors(
+                      labelColor = when(currentTask.prioridad) {
+                        Prioridad.ALTA -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.primary
+                      }
+                    )
+                  )
+                  assignedMember?.let { member ->
+                    SuggestionChip(
+                      onClick = {},
+                      label = { Text(member.nombre) },
+                      icon = { Icon(Icons.Default.Person, null, modifier = Modifier.size(16.dp)) }
+                    )
+                  }
+                  if (currentTask.periodicidad != Periodicidad.NINGUNA) {
+                    SuggestionChip(
+                      onClick = {},
+                      label = { Text(currentTask.periodicidad.name) },
+                      icon = { Icon(Icons.Default.Repeat, null, modifier = Modifier.size(16.dp)) }
+                    )
+                  }
                 }
 
                 if (currentTask.fechaLimite != null) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                      Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-                      Spacer(Modifier.width(8.dp))
+                  Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(8.dp))
                       
-                      val date = Date(currentTask.fechaLimite!!)
-                      val cal = Calendar.getInstance().apply { time = date }
-                      val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
-                        Constants.Formatting.DAY_MONTH_ALL_DAY_ES
-                      } else {
-                        Constants.Formatting.DAY_MONTH_TIME_ES
-                      }
-                      
-                      Text(
-                        text = stringResource(R.string.task_label_vence, SimpleDateFormat(format, Constants.Locales.SPAIN).format(date)),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isTaskCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                      )
+                    val date = Date(currentTask.fechaLimite!!)
+                    val cal = Calendar.getInstance().apply { time = date }
+                    val format = if (cal.get(Calendar.HOUR_OF_DAY) == 0 && cal.get(Calendar.MINUTE) == 0) {
+                      Constants.Formatting.DAY_MONTH_ALL_DAY_ES
+                    } else {
+                      Constants.Formatting.DAY_MONTH_TIME_ES
                     }
+                      
+                    Text(
+                      text = stringResource(R.string.task_label_vence, SimpleDateFormat(format, Constants.Locales.SPAIN).format(date)),
+                      style = MaterialTheme.typography.labelMedium,
+                      color = if (isTaskCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                      fontWeight = FontWeight.Bold
+                    )
+                  }
                     
-                    if (currentTask.anticipacionMins > 0) {
-                        Text(
-                            stringResource(R.string.task_label_aviso_antes, currentTask.anticipacionMins),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                    }
+                  if (currentTask.anticipacionMins > 0) {
+                    Text(
+                      stringResource(R.string.task_label_aviso_antes, currentTask.anticipacionMins),
+                      style = MaterialTheme.typography.labelSmall,
+                      color = MaterialTheme.colorScheme.outline
+                    )
+                  }
                 }
               }
             }
@@ -317,21 +318,21 @@ fun TaskDetailScreen(
               if (currentTask.tipoContenido == TipoContenidoTarea.TEXTO) {
                 // MODO TEXTO: Mostrar descripción prominentemente
                 Column(modifier = Modifier.padding(16.dp)) {
-                    if (!currentTask.descripcion.isNullOrBlank()) {
-                        Text(
-                            text = currentTask.descripcion ?: "",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = if (isTaskCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                            textDecoration = if (isTaskCompleted) TextDecoration.LineThrough else null
-                        )
-                    } else {
-                        Box(modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
-                            Text(stringResource(R.string.task_no_note), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                        }
+                  if (!currentTask.descripcion.isNullOrBlank()) {
+                    Text(
+                      text = currentTask.descripcion ?: "",
+                      style = MaterialTheme.typography.bodyLarge,
+                      color = if (isTaskCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                      textDecoration = if (isTaskCompleted) TextDecoration.LineThrough else null
+                    )
+                  } else {
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
+                      Text(stringResource(R.string.task_no_note), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     }
+                  }
                 }
               } else {
-                // MODO LISTA: Mostrar descripciÃ³n pequeÃ±a (si existe) y luego la checklist
+                // MODO LISTA: Mostrar descripción pequeñea (si existe) y luego la checklist
                 if (!currentTask.descripcion.isNullOrBlank()) {
                   Text(
                     text = currentTask.descripcion ?: "",
@@ -464,11 +465,11 @@ fun CompactSubTaskItemEditable(
   val keyboardController = LocalSoftwareKeyboardController.current
 
   LaunchedEffect(isEditing) {
-      if (isEditing) {
-          delay(50)
-          focusRequester.requestFocus()
-          keyboardController?.show()
-      }
+    if (isEditing) {
+      delay(50)
+      focusRequester.requestFocus()
+      keyboardController?.show()
+    }
   }
 
   Row(
@@ -574,9 +575,9 @@ fun EditTaskMainDialog(
   val keyboardController = LocalSoftwareKeyboardController.current
 
   LaunchedEffect(Unit) {
-      delay(300)
-      focusRequester.requestFocus()
-      keyboardController?.show()
+    delay(300)
+    focusRequester.requestFocus()
+    keyboardController?.show()
   }
   
   val initialDate = fechaLimite ?: System.currentTimeMillis()
@@ -653,21 +654,21 @@ fun EditTaskMainDialog(
       LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         item {
           OutlinedTextField(
-              value = t, 
-              onValueChange = { t = it }, 
-              label = { Text(stringResource(R.string.task_label_title)) }, 
-              modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-              keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+            value = t, 
+            onValueChange = { t = it }, 
+            label = { Text(stringResource(R.string.task_label_title)) }, 
+            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
           )
         }
         item {
           OutlinedTextField(
-              value = d, 
-              onValueChange = { d = it }, 
-              label = { Text(stringResource(R.string.task_label_description)) }, 
-              modifier = Modifier.fillMaxWidth(), 
-              minLines = 2,
-              keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+            value = d, 
+            onValueChange = { d = it }, 
+            label = { Text(stringResource(R.string.task_label_description)) }, 
+            modifier = Modifier.fillMaxWidth(), 
+            minLines = 2,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
           )
         }
 
@@ -797,4 +798,3 @@ fun EditTaskMainDialog(
     }
   )
 }
-

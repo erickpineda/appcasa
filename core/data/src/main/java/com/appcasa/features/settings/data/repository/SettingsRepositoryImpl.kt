@@ -39,21 +39,21 @@ class SettingsRepositoryImpl @Inject constructor(
         sharedPreferences.edit().putBoolean("biometric_prompted_before", prompted).apply()
     }
 
-    override fun isCompactView(hogarId: Long): Flow<Boolean> {
+    override fun isCompactView(hogarId: String): Flow<Boolean> {
         return configuracionDao.getConfiguracion(hogarId)
             .map { list -> list.find { it.clave == "vista_compacta" }?.valor == "true" }
     }
 
-    override fun getCurrencySymbol(hogarId: Long): Flow<String> {
+    override fun getCurrencySymbol(hogarId: String): Flow<String> {
         return configuracionDao.getConfiguracion(hogarId)
             .map { list -> list.find { it.clave == "moneda" }?.valor ?: "€" }
     }
 
-    override suspend fun triggerManualSync(hogarId: Long) {
+    override suspend fun triggerManualSync(hogarId: String) {
         syncScheduler.scheduleSync(hogarId)
     }
 
-    override suspend fun exportData(hogarId: Long): String {
+    override suspend fun exportData(hogarId: String): String {
         return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val json = org.json.JSONObject()
