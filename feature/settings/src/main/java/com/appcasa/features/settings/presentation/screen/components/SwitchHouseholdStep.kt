@@ -19,79 +19,101 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.appcasa.core.domain.model.Household
+import com.appcasa.core.ui.components.AppCasaCard
 import com.appcasa.feature.settings.R
 
 @Composable
 fun SwitchHouseholdStep(
-    households: List<Household>,
-    onHouseholdClick: (Household) -> Unit,
-    onCreateNewClick: () -> Unit,
-    onJoinNewClick: () -> Unit,
-    modifier: Modifier = Modifier
+  households: List<Household>,
+  onHouseholdClick: (Household) -> Unit,
+  onCreateNewClick: () -> Unit,
+  onJoinNewClick: () -> Unit,
+  modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+  Column(
+    modifier = modifier.fillMaxWidth(),
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    Text(
+      text = stringResource(R.string.setup_switch_title),
+      style = MaterialTheme.typography.headlineMedium,
+      fontWeight = FontWeight.Bold
+    )
+    Text(
+      text = stringResource(R.string.setup_switch_desc),
+      style = MaterialTheme.typography.bodyMedium,
+      color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+
+    Spacer(Modifier.height(32.dp))
+
+    AppCasaCard(
+      useGlassmorphism = true,
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp)
     ) {
-        Text(
-            text = stringResource(R.string.setup_switch_title),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = stringResource(R.string.setup_switch_desc),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+      Column(
+        modifier = Modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+      ) {
+        LazyRow(
+          horizontalArrangement = Arrangement.spacedBy(16.dp),
+          contentPadding = PaddingValues(horizontal = 8.dp)
+        ) {
+          items(households) { household ->
+            Column(
+              horizontalAlignment = Alignment.CenterHorizontally,
+              modifier = Modifier.clickable { onHouseholdClick(household) }
+            ) {
+              Box(
+                modifier = Modifier
+                  .size(80.dp)
+                  .clip(CircleShape)
+                  .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+              ) {
+                Icon(
+                  imageVector = Icons.Default.Home,
+                  contentDescription = null,
+                  modifier = Modifier.size(40.dp),
+                  tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+              }
+              Spacer(Modifier.height(8.dp))
+              Text(
+                text = household.nombre,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
+              )
+            }
+          }
+        }
 
         Spacer(Modifier.height(32.dp))
 
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp)
+        Row(
+          horizontalArrangement = Arrangement.spacedBy(12.dp),
+          modifier = Modifier.fillMaxWidth()
         ) {
-            items(households) { household ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable { onHouseholdClick(household) }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = null,
-                            modifier = Modifier.size(40.dp),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = household.nombre,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+          OutlinedButton(
+            onClick = onCreateNewClick,
+            modifier = Modifier.weight(1f)
+          ) {
+            Icon(Icons.Default.Add, null)
+            Spacer(Modifier.width(4.dp))
+            Text(stringResource(R.string.setup_btn_create_new), style = MaterialTheme.typography.labelSmall)
+          }
+          OutlinedButton(
+            onClick = onJoinNewClick,
+            modifier = Modifier.weight(1f)
+          ) {
+            Icon(Icons.Default.VpnKey, null)
+            Spacer(Modifier.width(4.dp))
+            Text(stringResource(R.string.setup_btn_join_another), style = MaterialTheme.typography.labelSmall)
+          }
         }
-
-        Spacer(Modifier.height(48.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            OutlinedButton(onClick = onCreateNewClick) {
-                Icon(Icons.Default.Add, null)
-                Spacer(Modifier.width(4.dp))
-                Text(stringResource(R.string.setup_btn_create_new))
-            }
-            OutlinedButton(onClick = onJoinNewClick) {
-                Icon(Icons.Default.VpnKey, null)
-                Spacer(Modifier.width(4.dp))
-                Text(stringResource(R.string.setup_btn_join_another))
-            }
-        }
+      }
     }
+  }
 }

@@ -50,7 +50,8 @@ fun SelectProfileStep(
     Text(
       text = stringResource(R.string.setup_profile_who_are_you),
       style = MaterialTheme.typography.headlineMedium,
-      fontWeight = FontWeight.Bold
+      fontWeight = FontWeight.Bold,
+      color = MaterialTheme.colorScheme.onSurface
     )
     Text(
       text = stringResource(R.string.setup_select_profile_desc),
@@ -58,7 +59,7 @@ fun SelectProfileStep(
       color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(24.dp))
 
     if (existingHousehold != null) {
       AppCasaCard(
@@ -108,64 +109,62 @@ fun SelectProfileStep(
           }
         }
       }
-    } else if (isLoading) {
-      Box(
-        modifier = Modifier
-          .padding(horizontal = 16.dp)
-          .fillMaxWidth()
-          .height(72.dp)
-          .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), MaterialTheme.shapes.medium),
-        contentAlignment = Alignment.Center
-      ) {
-        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-      }
     }
 
-    Spacer(Modifier.height(32.dp))
+    Spacer(Modifier.height(24.dp))
 
-    Box(
+    AppCasaCard(
+      useGlassmorphism = true,
       modifier = Modifier
         .fillMaxWidth()
-        .heightIn(min = 120.dp),
-      contentAlignment = Alignment.Center
+        .padding(horizontal = 16.dp)
     ) {
-      if (isLoading) {
-        CircularProgressIndicator()
-      } else {
-        LazyRow(
-          horizontalArrangement = Arrangement.spacedBy(16.dp),
-          contentPadding = PaddingValues(horizontal = 16.dp)
-        ) {
-          val people = members.filter { it.tipo == TipoMiembro.PERSONA }
-          items(people) { member ->
-            ProfileAvatar(member) {
-              if (!isLoading) onMemberClick(member)
+      Box(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(vertical = 24.dp)
+          .heightIn(min = 100.dp),
+        contentAlignment = Alignment.Center
+      ) {
+        if (isLoading) {
+          CircularProgressIndicator()
+        } else {
+          LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp)
+          ) {
+            val people = members.filter { it.tipo == TipoMiembro.PERSONA }
+            items(people) { member ->
+              ProfileAvatar(member) {
+                if (!isLoading) onMemberClick(member)
+              }
             }
-          }
 
-          item {
-            Column(
-              horizontalAlignment = Alignment.CenterHorizontally,
-              modifier = Modifier.clickable(enabled = !isLoading) { onAddProfileClick() }
-            ) {
-              Box(
-                modifier = Modifier
-                  .size(80.dp)
-                  .clip(CircleShape)
-                  .background(MaterialTheme.colorScheme.secondaryContainer),
-                contentAlignment = Alignment.Center
+            item {
+              Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clickable(enabled = !isLoading) { onAddProfileClick() }
               ) {
-                Icon(
-                  imageVector = Icons.Default.Add,
-                  contentDescription = null,
-                  tint = MaterialTheme.colorScheme.onSecondaryContainer
+                Box(
+                  modifier = Modifier
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                  contentAlignment = Alignment.Center
+                ) {
+                  Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                  )
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                  text = stringResource(R.string.setup_btn_new_profile),
+                  style = MaterialTheme.typography.labelSmall,
+                  fontWeight = FontWeight.Medium
                 )
               }
-              Spacer(Modifier.height(8.dp))
-              Text(
-                text = stringResource(R.string.setup_btn_new_profile),
-                style = MaterialTheme.typography.labelSmall
-              )
             }
           }
         }
@@ -173,6 +172,7 @@ fun SelectProfileStep(
     }
 
     if (members.isEmpty() && !isLoading) {
+      Spacer(Modifier.height(16.dp))
       Text(
         text = stringResource(R.string.setup_no_members_error),
         style = MaterialTheme.typography.bodySmall,
@@ -180,7 +180,7 @@ fun SelectProfileStep(
       )
     }
 
-    Spacer(Modifier.height(48.dp))
+    Spacer(Modifier.weight(1f))
 
     if (showConfirmLogout) {
       AlertDialog(
@@ -206,8 +206,11 @@ fun SelectProfileStep(
       )
     }
 
-    TextButton(onClick = { showConfirmLogout = true }) {
-      Icon(Icons.Default.Logout, null)
+    TextButton(
+      onClick = { showConfirmLogout = true },
+      modifier = Modifier.padding(bottom = 16.dp)
+    ) {
+      Icon(Icons.Default.Logout, null, modifier = Modifier.size(18.dp))
       Spacer(Modifier.width(8.dp))
       Text(stringResource(R.string.logout_confirm_btn))
     }
@@ -222,15 +225,14 @@ private fun ProfileAvatar(member: FamilyMember, onClick: () -> Unit) {
   ) {
     Box(
       modifier = Modifier
-        .size(80.dp)
+        .size(72.dp)
         .clip(CircleShape)
         .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
       contentAlignment = Alignment.Center
     ) {
-      val imageModel = member.avatarUrl ?: member.avatarUrl
-      if (imageModel != null) {
+      if (member.avatarUrl != null) {
         AsyncImage(
-          model = imageModel,
+          model = member.avatarUrl,
           contentDescription = null,
           modifier = Modifier.fillMaxSize(),
           contentScale = ContentScale.Crop
@@ -239,7 +241,7 @@ private fun ProfileAvatar(member: FamilyMember, onClick: () -> Unit) {
         Icon(
           imageVector = Icons.Default.Person,
           contentDescription = null,
-          modifier = Modifier.size(40.dp),
+          modifier = Modifier.size(36.dp),
           tint = MaterialTheme.colorScheme.primary
         )
       }
