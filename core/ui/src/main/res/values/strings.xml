@@ -54,4 +54,8 @@
     <string name="cd_qr">Código QR</string>
     <string name="cd_sync_synced">Sincronizado</string>
     <string name="cd_sync_pending">Pendiente de sincronizar</string>
+
+    <string name="family_label_breed">Raza / Especie</string>
+    <string name="family_label_birth_date">Fecha de nacimiento</string>
+    <string name="family_label_birth_date_pet">¿Cuándo nació?</string>
 </resources>

@@ -98,11 +98,11 @@ class CreateHouseholdUseCase @Inject constructor(
       Household(nombre = houseName, codigoHogar = code)
     )
 
-    // 2. Insertar Miembro (ADMIN) - Comprobamos si ya existe por firebaseUid por si acaso
+    // 2. Insertar Miembro (ADMIN)
     val existingMembers = familyRepository.getMembersByHogar(hogarId).first()
     val alreadyExists = existingMembers.find { it.firebaseUid == currentUser?.uid }
     
-    val miembroId = alreadyExists?.id ?: currentUser?.uid ?: UUID.randomUUID().toString()
+    val miembroId = alreadyExists?.id ?: UUID.randomUUID().toString()
     
     val memberToInsert = FamilyMember(
       id = miembroId,
@@ -117,7 +117,7 @@ class CreateHouseholdUseCase @Inject constructor(
     familyRepository.upsertMember(memberToInsert)
     familyRepository.syncMember(memberToInsert)
 
-    // 3. Desactivar usuarios previos e insertar el nuevo Usuario local vinculado
+    // 3. Establecer sesión
     userRepository.deactivateAllUsers()
     userRepository.insertUser(
       User(
@@ -145,43 +145,69 @@ class JoinHouseholdUseCase @Inject constructor(
   private val firebaseMessaging: FirebaseMessaging,
   private val firebaseAuth: FirebaseAuth
 ) {
-  suspend operator fun invoke(code: String, userName: String, photoUri: String?): Boolean {
+  suspend operator fun invoke(
+    code: String, 
+    userName: String, 
+    photoUri: String?, 
+    tipo: TipoMiembro = TipoMiembro.PERSONA,
+    raza: String? = null,
+    fechaNacimiento: Long? = null
+  ): Boolean {
     val hogar = householdRepository.getHogarByCodigo(code) ?: householdRepository.findHouseholdRemotely(code)
     if (hogar == null) return false
         
     val localId = householdRepository.insertHogar(hogar)
     val currentUser = firebaseAuth.currentUser
 
-    // 1. Comprobar si este usuario YA es miembro (por firebaseUid)
     val existingMembers = familyRepository.getMembersByHogar(localId).first()
-    val memberByUid = existingMembers.find { it.firebaseUid == currentUser?.uid }
     
-    // 2. Comprobar si el NOMBRE ya está en uso por OTRA persona
-    if (memberByUid == null && existingMembers.any { it.nombre.equals(userName, ignoreCase = true) }) {
-      return false // Nombre duplicado
+    // Si el NOMBRE exacto ya existe para otra persona, bloqueamos duplicados
+    if (existingMembers.any { it.nombre.equals(userName, ignoreCase = true) }) {
+      return false 
+    }
+
+    // LÓGICA DE UNIÓN VS NUEVO PERFIL:
+    // Solo vinculamos el UID si este usuario NO tiene todavía ningún perfil vinculado en este hogar
+    // Y el tipo de perfil que se está creando es PERSONA.
+    val myExistingProfile = existingMembers.find { it.firebaseUid == currentUser?.uid }
+    
+    val firebaseUidToSet: String?
+    val emailToSet: String?
+    val finalMiembroId: String
+
+    if (myExistingProfile != null || tipo != TipoMiembro.PERSONA) {
+      firebaseUidToSet = null 
+      emailToSet = null
+      finalMiembroId = UUID.randomUUID().toString()
+    } else {
+      firebaseUidToSet = currentUser?.uid
+      emailToSet = currentUser?.email
+      finalMiembroId = currentUser?.uid ?: UUID.randomUUID().toString()
     }
         
-    val miembroId = memberByUid?.id ?: currentUser?.uid ?: UUID.randomUUID().toString()
     val memberToInsert = FamilyMember(
-      id = miembroId,
+      id = finalMiembroId,
       hogarId = localId,
       nombre = userName,
-      tipo = TipoMiembro.PERSONA,
-      rol = RolHogar.COLABORADOR,
+      tipo = tipo,
+      rol = if (tipo == TipoMiembro.PERSONA) RolHogar.COLABORADOR else RolHogar.SOLO_LECTURA,
       avatarUrl = photoUri,
-      firebaseUid = currentUser?.uid,
-      email = currentUser?.email
+      raza = raza,
+      fechaNacimiento = fechaNacimiento,
+      firebaseUid = firebaseUidToSet,
+      email = emailToSet
     )
     familyRepository.upsertMember(memberToInsert)
     familyRepository.syncMember(memberToInsert)
 
+    // Solo activamos la sesión si es necesario o si es el primer perfil
     userRepository.deactivateAllUsers()
     userRepository.insertUser(
       User(
         hogarId = localId,
-        miembroId = miembroId,
+        miembroId = finalMiembroId,
         nombre = userName,
-        email = currentUser?.email ?: "user_${miembroId}@appcasa.local",
+        email = currentUser?.email ?: "user_${finalMiembroId}@appcasa.local",
         rol = RolHogar.COLABORADOR,
         avatarUrl = photoUri,
         isActive = true

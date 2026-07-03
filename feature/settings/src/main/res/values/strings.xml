@@ -112,6 +112,11 @@
     <string name="setup_btn_recover_house">Recuperar mi Hogar</string>
     <string name="setup_selected_household_label">Hogar seleccionado</string>
     <string name="setup_error_recover_generic">Error al recuperar hogares: %s</string>
+    <string name="setup_add_profile_title">Añadir Perfil</string>
+    <string name="setup_add_profile_options_desc">¿Deseas crear un perfil gestionado por ti (para alguien sin la app) o cerrar sesión para vincular a otra persona?</string>
+    <string name="setup_option_managed_profile">Perfil Gestionado</string>
+    <string name="setup_option_switch_account">Cambiar de Cuenta</string>
+    <string name="setup_label_pet_name">Nombre de la mascota</string>
 
     <!-- Auth Strings -->
     <string name="auth_create_account">Crear Cuenta</string>

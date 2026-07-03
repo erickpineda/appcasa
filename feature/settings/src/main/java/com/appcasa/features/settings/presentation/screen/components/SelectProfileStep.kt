@@ -8,11 +8,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.SyncAlt
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.appcasa.core.domain.model.FamilyMember
@@ -42,6 +39,7 @@ fun SelectProfileStep(
   modifier: Modifier = Modifier
 ) {
   var showConfirmLogout by remember { mutableStateOf(false) }
+  var showAddOptions by remember { mutableStateOf(false) }
 
   Column(
     modifier = modifier.fillMaxWidth(),
@@ -143,7 +141,7 @@ fun SelectProfileStep(
             item {
               Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.clickable(enabled = !isLoading) { onAddProfileClick() }
+                modifier = Modifier.clickable(enabled = !isLoading) { showAddOptions = true }
               ) {
                 Box(
                   modifier = Modifier
@@ -181,6 +179,35 @@ fun SelectProfileStep(
     }
 
     Spacer(Modifier.weight(1f))
+
+    // Modal de opciones para "Nuevo"
+    if (showAddOptions) {
+      AlertDialog(
+        onDismissRequest = { showAddOptions = false },
+        title = { Text(stringResource(R.string.setup_add_profile_title)) },
+        text = { Text(stringResource(R.string.setup_add_profile_options_desc)) },
+        confirmButton = {
+          Button(
+            onClick = {
+              showAddOptions = false
+              onAddProfileClick()
+            }
+          ) {
+            Text(stringResource(R.string.setup_option_managed_profile))
+          }
+        },
+        dismissButton = {
+          OutlinedButton(
+            onClick = {
+              showAddOptions = false
+              onLogout()
+            }
+          ) {
+            Text(stringResource(R.string.setup_option_switch_account))
+          }
+        }
+      )
+    }
 
     if (showConfirmLogout) {
       AlertDialog(

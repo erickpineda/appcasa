@@ -284,11 +284,21 @@ private fun AppBottomBar(
         NavigationBarItem(
           selected = selected,
           onClick = {
+            if (item.screen == Screen.Dashboard) {
+              // Si pulsamos Home, limpiamos TODO el stack hasta el inicio real
+              navController.navigate(Screen.Dashboard) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                  inclusive = false
+                }
+                launchSingleTop = true
+              }
+              return@NavigationBarItem
+            }
+
             val isAlreadyOnSelectedTab = when (item.screen) {
-              Screen.Dashboard -> currentDestination?.hasRoute<Screen.Dashboard>() == true
-              Screen.Management -> currentDestination?.hasRoute<Screen.Management>() == true
-              Screen.FamilyHub -> currentDestination?.hasRoute<Screen.FamilyHub>() == true
-              Screen.Utilities -> currentDestination?.hasRoute<Screen.Utilities>() == true
+              Screen.Management -> currentDestination?.hierarchy?.any { it.hasRoute<Screen.ManagementGraph>() || it.hasRoute<Screen.Management>() } == true
+              Screen.FamilyHub -> currentDestination?.hierarchy?.any { it.hasRoute<Screen.FamilyGraph>() || it.hasRoute<Screen.FamilyHub>() } == true
+              Screen.Utilities -> currentDestination?.hierarchy?.any { it.hasRoute<Screen.UtilitiesGraph>() || it.hasRoute<Screen.Utilities>() } == true
               else -> false
             }
 

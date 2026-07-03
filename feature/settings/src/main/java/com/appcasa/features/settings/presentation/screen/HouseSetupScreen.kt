@@ -340,9 +340,9 @@ fun HouseSetupScreen(
               onUserNameChange = { inputUserName = it },
               onPhotoClick = { imagePickerLauncher.launch(Constants.Media.MIME_TYPE_IMAGE) },
               onBack = { step = SetupStep.SELECT_PROFILE },
-              onConfirm = {
+              onConfirm = { tipo, raza, birthDate ->
                 uiState.existingHousehold?.let {
-                  viewModel.handleIntent(SetupIntent.JoinHousehold(it.codigoHogar ?: "", inputUserName, userPhotoUri))
+                  viewModel.handleIntent(SetupIntent.JoinHousehold(it.codigoHogar ?: "", inputUserName, userPhotoUri, tipo, raza, birthDate))
                 }
               }
             )

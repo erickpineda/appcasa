@@ -129,7 +129,7 @@ class HouseSetupViewModel @Inject constructor(
       is SetupIntent.TryCompletePendingActions -> tryCompletePendingActions()
       is SetupIntent.ClearPendingStep -> clearPendingStep()
       is SetupIntent.CreateHousehold -> createHousehold(intent.houseName, intent.userName, intent.photoUri)
-      is SetupIntent.JoinHousehold -> joinHousehold(intent.code, intent.userName, intent.photoUri)
+      is SetupIntent.JoinHousehold -> joinHousehold(intent.code, intent.userName, intent.photoUri, intent.tipo, intent.raza, intent.fechaNacimiento)
       is SetupIntent.DiscoverAndJoin -> discoverAndJoin(intent.code)
       is SetupIntent.SelectMember -> selectMember(intent.member)
       is SetupIntent.SwitchHousehold -> switchHousehold(intent.id)
@@ -229,10 +229,17 @@ class HouseSetupViewModel @Inject constructor(
     }
   }
 
-  private fun joinHousehold(code: String, userName: String, photoUri: String?) {
+  private fun joinHousehold(
+    code: String, 
+    userName: String, 
+    photoUri: String?, 
+    tipo: com.appcasa.core.domain.model.TipoMiembro = com.appcasa.core.domain.model.TipoMiembro.PERSONA,
+    raza: String? = null,
+    fechaNacimiento: Long? = null
+  ) {
     viewModelScope.launch {
       _uiState.update { it.copy(isLoading = true, loadingMessage = UiText.StringResource(R.string.setup_loading_joining)) }
-      val success = joinHouseholdUseCase(code, userName, photoUri)
+      val success = joinHouseholdUseCase(code, userName, photoUri, tipo, raza, fechaNacimiento)
       _uiState.update { it.copy(isLoading = false) }
       if (success) {
         checkBiometricRequirementAndNavigate()
@@ -408,7 +415,14 @@ sealed interface SetupIntent {
   object TryCompletePendingActions : SetupIntent
   object ClearPendingStep : SetupIntent
   data class CreateHousehold(val houseName: String, val userName: String, val photoUri: String?) : SetupIntent
-  data class JoinHousehold(val code: String, val userName: String, val photoUri: String?) : SetupIntent
+  data class JoinHousehold(
+    val code: String, 
+    val userName: String, 
+    val photoUri: String?, 
+    val tipo: com.appcasa.core.domain.model.TipoMiembro = com.appcasa.core.domain.model.TipoMiembro.PERSONA,
+    val raza: String? = null,
+    val fechaNacimiento: Long? = null
+  ) : SetupIntent
   data class DiscoverAndJoin(val code: String) : SetupIntent
   data class SelectMember(val member: FamilyMember) : SetupIntent
   data class SwitchHousehold(val id: String) : SetupIntent
