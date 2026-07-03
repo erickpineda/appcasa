@@ -79,7 +79,7 @@ fun JoinStep(
                 ),
                 trailingIcon = {
                     IconButton(onClick = onScanClick, enabled = !isLoading) {
-                        Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan QR")
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.setup_cd_scan_qr))
                     }
                 }
             )

@@ -52,4 +52,6 @@
     <string name="location_reminder_title">Recordatorio de ubicación</string>
     <string name="location_reminder_desc">¡Estás cerca de un punto de interés!</string>
     <string name="cd_qr">Código QR</string>
+    <string name="cd_sync_synced">Sincronizado</string>
+    <string name="cd_sync_pending">Pendiente de sincronizar</string>
 </resources>

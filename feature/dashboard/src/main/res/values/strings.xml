@@ -257,6 +257,9 @@
     <string name="util_bmi_calculator">Calculadora IMC</string>
     <string name="util_bmi_save">Guardar</string>
     <string name="util_pet_dosage">Dosis Mascotas</string>
+    <string name="utilities_placeholder_ej_100">Ej: 100</string>
+    <string name="utilities_placeholder_ej_5">Ej: 5</string>
+    <string name="utilities_unit_kg">kg</string>
     <string name="util_age_calculator">Edad Exacta</string>
     <string name="util_safe_locked">Baúl bloqueado</string>
     <string name="util_safe_unlock_biometric">Desbloquear con biometría</string>

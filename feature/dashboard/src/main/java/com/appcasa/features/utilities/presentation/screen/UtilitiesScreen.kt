@@ -9,6 +9,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -149,10 +150,9 @@ fun UtilitiesContent(
               // Renderizamos las utilidades en filas de 2 manualmente para evitar el FlowRow bug
               val chunks = utils.chunked(2)
               items(
-                count = chunks.size,
-                key = { index -> "${categoria}_$index" }
-              ) { index ->
-                val rowUtils = chunks[index]
+                items = chunks,
+                key = { rowUtils -> rowUtils.first().codigo }
+              ) { rowUtils ->
                 Row(
                   modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                   horizontalArrangement = Arrangement.spacedBy(12.dp)

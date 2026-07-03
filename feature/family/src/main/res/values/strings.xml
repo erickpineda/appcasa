@@ -5,6 +5,7 @@
     <string name="family_label_photo">Foto</string>
     <string name="family_label_name">Nombre</string>
     <string name="family_error_name_required">El nombre es obligatorio</string>
+    <string name="family_error_name_exists">Ya existe un miembro con este nombre</string>
     <string name="family_label_type">Tipo</string>
     <string name="family_label_breed">Raza / Especie</string>
     <string name="family_label_color">Color / Descripción</string>

@@ -21,7 +21,7 @@ fun UtilidadEntity.toDomain(): Utility {
 
 fun Utility.toEntity(): UtilidadEntity {
     return UtilidadEntity(
-        id = id,
+        id = id.takeIf { it.isNotEmpty() } ?: java.util.UUID.randomUUID().toString(),
         codigo = codigo,
         nombre = nombre,
         descripcion = descripcion,

@@ -8,6 +8,7 @@ import com.appcasa.core.domain.usecase.lists.GetActiveListsUseCase
 import com.appcasa.core.domain.usecase.config.GetConfigurationUseCase
 import com.appcasa.core.domain.usecase.config.UpdateConfigurationUseCase
 import com.appcasa.core.domain.usecase.user.GetCurrentUserUseCase
+import com.appcasa.core.domain.usecase.household.GetFamilyMembersUseCase
 import com.appcasa.core.ui.utils.UiText
 import com.appcasa.feature.settings.R
 import com.appcasa.features.settings.domain.usecase.*
@@ -23,6 +24,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val getCurrentHouseholdUseCase: GetCurrentHouseholdUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val getFamilyMembersUseCase: GetFamilyMembersUseCase,
     private val getActiveListsUseCase: GetActiveListsUseCase,
     private val getConfigurationUseCase: GetConfigurationUseCase,
     private val updateConfigurationUseCase: UpdateConfigurationUseCase,
@@ -83,8 +85,20 @@ class SettingsViewModel @Inject constructor(
         _showLinkAccountDialog.value = false
     }
 
-    val isAdmin: StateFlow<Boolean> = usuarioActual.map { it?.rol == RolHogar.ADMIN }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val isAdmin: StateFlow<Boolean> = combine(
+        hogarActual,
+        usuarioActual,
+        hogarActual.flatMapLatest { hogar ->
+            hogar?.let { getFamilyMembersUseCase(it.id) } ?: flowOf(emptyList())
+        }
+    ) { hogar, usuario, miembros ->
+        if (hogar != null && usuario != null) {
+            val miembro = miembros.find { it.id == usuario.miembroId }
+            miembro?.rol == RolHogar.ADMIN
+        } else {
+            false
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val todasLasListas: StateFlow<List<Lista>> = hogarActual.flatMapLatest { hogar ->

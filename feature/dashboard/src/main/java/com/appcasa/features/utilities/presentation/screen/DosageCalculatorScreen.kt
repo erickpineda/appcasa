@@ -1,4 +1,4 @@
-﻿package com.appcasa.features.utilities.presentation.screen
+package com.appcasa.features.utilities.presentation.screen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
@@ -226,7 +226,7 @@ fun DosageCalculatorScreen(
             onValueChange = { concentrationMg = it },
             label = { Text(stringResource(R.string.util_dosage_label_total_mg)) },
             modifier = Modifier.weight(1f),
-            placeholder = { Text("Ej: 100") },
+            placeholder = { Text(stringResource(R.string.utilities_placeholder_ej_100)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
           )
@@ -235,7 +235,7 @@ fun DosageCalculatorScreen(
             onValueChange = { concentrationMl = it },
             label = { Text(stringResource(R.string.util_dosage_label_each_ml)) },
             modifier = Modifier.weight(1f),
-            placeholder = { Text("Ej: 5") },
+            placeholder = { Text(stringResource(R.string.utilities_placeholder_ej_5)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
           )

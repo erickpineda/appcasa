@@ -210,7 +210,7 @@ fun AddMemberScreen(
           if (nombreTouched && nombre.isBlank()) {
             Text(stringResource(R.string.family_error_name_required), color = MaterialTheme.colorScheme.error)
           } else if (isDuplicate) {
-            Text("Ya existe un miembro con este nombre", color = MaterialTheme.colorScheme.error)
+            Text(stringResource(R.string.family_error_name_exists), color = MaterialTheme.colorScheme.error)
           }
         }
       )

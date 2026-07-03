@@ -1,4 +1,4 @@
-﻿package com.appcasa.features.utilities.presentation.screen
+package com.appcasa.features.utilities.presentation.screen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.layout.Arrangement
@@ -176,7 +176,7 @@ fun FeedingCalculatorScreen(
             dosageViewModel.setManualWeight(it.toDoubleOrNull() ?: 0.0)
         },
         label = { Text(stringResource(R.string.util_feeding_label_weight)) },
-        suffix = { Text("kg") },
+        suffix = { Text(stringResource(R.string.utilities_unit_kg)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         singleLine = true,
         modifier = Modifier.fillMaxWidth()
